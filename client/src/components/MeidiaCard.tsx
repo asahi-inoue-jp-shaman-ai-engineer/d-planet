@@ -1,6 +1,6 @@
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Tag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { AccountTypeBadge } from "./AccountTypeBadge";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -11,6 +11,8 @@ interface MeidiaCardProps {
 }
 
 export function MeidiaCard({ meidia }: MeidiaCardProps) {
+  const tags = meidia.tags ? meidia.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+
   return (
     <Card className="border-glow hover:border-primary/50 transition-all duration-300">
       <CardContent className="p-4">
@@ -25,6 +27,12 @@ export function MeidiaCard({ meidia }: MeidiaCardProps) {
                 {meidia.title}
               </Link>
             </div>
+
+            {meidia.description && (
+              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                {meidia.description}
+              </p>
+            )}
             
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               <Link 
@@ -33,8 +41,19 @@ export function MeidiaCard({ meidia }: MeidiaCardProps) {
               >
                 {meidia.creator.username}
               </Link>
-              <AccountTypeBadge accountType={meidia.creator.accountType} />
+              <AccountTypeBadge type={meidia.creator.accountType} />
             </div>
+
+            {tags.length > 0 && (
+              <div className="flex items-center gap-1 flex-wrap mb-2">
+                <Tag className="w-3 h-3 text-muted-foreground" />
+                {tags.map(tag => (
+                  <Badge key={tag} variant="secondary" className="font-mono text-xs no-default-active-elevate">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
             
             <div className="text-xs text-muted-foreground">
               {format(new Date(meidia.createdAt), "yyyy-MM-dd HH:mm")}

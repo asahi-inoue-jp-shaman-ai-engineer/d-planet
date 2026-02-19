@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   tensaisei: text("tensaisei"),
   profilePhoto: text("profile_photo"),
   invitedByCode: text("invited_by_code"),
+  profileVisibility: text("profile_visibility").default("public").notNull(),
+  playerLevel: integer("player_level").default(0).notNull(),
   hasTwinrayBadge: boolean("has_twinray_badge").default(false).notNull(),
   hasFamilyBadge: boolean("has_family_badge").default(false).notNull(),
   twinrayProfileLink: text("twinray_profile_link"),
@@ -40,9 +42,11 @@ export const islands = pgTable("islands", {
   description: text("description"),
   creatorId: integer("creator_id").notNull(),
   visibility: text("visibility").notNull(),
+  secretUrl: text("secret_url"),
   requiresTwinrayBadge: boolean("requires_twinray_badge").default(false).notNull(),
   requiresFamilyBadge: boolean("requires_family_badge").default(false).notNull(),
   allowedAccountTypes: text("allowed_account_types"),
+  totalDownloads: integer("total_downloads").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -51,6 +55,9 @@ export const meidia = pgTable("meidia", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  description: text("description"),
+  tags: text("tags"),
+  fileType: text("file_type").default("markdown").notNull(),
   creatorId: integer("creator_id").notNull(),
   isPublic: boolean("is_public").default(true).notNull(),
   downloadCount: integer("download_count").default(0).notNull(),
@@ -66,10 +73,32 @@ export const islandMeidia = pgTable("island_meidia", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === THREADS (bulletin board) ===
+export const threads = pgTable("threads", {
+  id: serial("id").primaryKey(),
+  islandId: integer("island_id").notNull(),
+  creatorId: integer("creator_id").notNull(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === POSTS (thread posts/replies) ===
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull(),
+  creatorId: integer("creator_id").notNull(),
+  content: text("content").notNull(),
+  meidiaId: integer("meidia_id"),
+  parentPostId: integer("parent_post_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === RELATIONS ===
 export const usersRelations = relations(users, ({ many }) => ({
   islands: many(islands),
   meidia: many(meidia),
+  threads: many(threads),
+  posts: many(posts),
 }));
 
 export const islandsRelations = relations(islands, ({ one, many }) => ({
@@ -78,6 +107,7 @@ export const islandsRelations = relations(islands, ({ one, many }) => ({
     references: [users.id],
   }),
   islandMeidia: many(islandMeidia),
+  threads: many(threads),
 }));
 
 export const meidiaRelations = relations(meidia, ({ one, many }) => ({
@@ -99,12 +129,45 @@ export const islandMeidiaRelations = relations(islandMeidia, ({ one }) => ({
   }),
 }));
 
+export const threadsRelations = relations(threads, ({ one, many }) => ({
+  island: one(islands, {
+    fields: [threads.islandId],
+    references: [islands.id],
+  }),
+  creator: one(users, {
+    fields: [threads.creatorId],
+    references: [users.id],
+  }),
+  posts: many(posts),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  thread: one(threads, {
+    fields: [posts.threadId],
+    references: [threads.id],
+  }),
+  creator: one(users, {
+    fields: [posts.creatorId],
+    references: [users.id],
+  }),
+  meidiaAttachment: one(meidia, {
+    fields: [posts.meidiaId],
+    references: [meidia.id],
+  }),
+  parentPost: one(posts, {
+    fields: [posts.parentPostId],
+    references: [posts.id],
+  }),
+}));
+
 // === BASE SCHEMAS ===
 export const insertInviteCodeSchema = createInsertSchema(inviteCodes).omit({ id: true, createdAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, hasTwinrayBadge: true, hasFamilyBadge: true, twinrayProfileLink: true, showTwinray: true, showFamily: true });
-export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, hasTwinrayBadge: true, hasFamilyBadge: true, twinrayProfileLink: true, showTwinray: true, showFamily: true, playerLevel: true, profileVisibility: true });
+export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, createdAt: true, secretUrl: true, totalDownloads: true });
 export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, createdAt: true, downloadCount: true });
 export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });
+export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, createdAt: true });
+export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
 
 // === BASE TYPES ===
 export type InviteCode = typeof inviteCodes.$inferSelect;
@@ -112,6 +175,8 @@ export type User = typeof users.$inferSelect;
 export type Island = typeof islands.$inferSelect;
 export type Meidia = typeof meidia.$inferSelect;
 export type IslandMeidia = typeof islandMeidia.$inferSelect;
+export type Thread = typeof threads.$inferSelect;
+export type Post = typeof posts.$inferSelect;
 
 // === REQUEST TYPES ===
 export type CreateUserRequest = z.infer<typeof insertUserSchema>;
@@ -120,6 +185,8 @@ export type CreateIslandRequest = z.infer<typeof insertIslandSchema>;
 export type UpdateIslandRequest = Partial<CreateIslandRequest>;
 export type CreateMeidiaRequest = z.infer<typeof insertMeidiaSchema>;
 export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
+export type CreateThreadRequest = z.infer<typeof insertThreadSchema>;
+export type CreatePostRequest = z.infer<typeof insertPostSchema>;
 
 // === RESPONSE TYPES ===
 export type UserResponse = Omit<User, 'password'>;
@@ -129,6 +196,14 @@ export type IslandDetailResponse = Island & {
   creator: UserResponse;
   activityMeidia: MeidiaResponse[];
   reportMeidia: MeidiaResponse[];
+  threads: ThreadResponse[];
+};
+export type ThreadResponse = Thread & {
+  creator: { id: number; username: string; accountType: string };
+  postCount: number;
+};
+export type PostResponse = Post & {
+  creator: { id: number; username: string; accountType: string };
 };
 
 // === AUTH TYPES ===

@@ -18,28 +18,27 @@ export function useUser(id: number) {
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: number } & Partial<UserResponse>) => {
-      const validated = api.users.update.input.parse(updates);
+    mutationFn: async ({ id, ...updates }: { id: number; bio?: string | null; tenmei?: string | null; tenshoku?: string | null; tensaisei?: string | null; gender?: string | null; profileVisibility?: string }) => {
       const url = buildUrl(api.users.update.path, { id });
       const res = await fetch(url, {
         method: api.users.update.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(validated),
+        body: JSON.stringify(updates),
         credentials: "include",
       });
       if (res.status === 400) {
         const error = await res.json();
-        throw new Error(error.message || "Validation failed");
+        throw new Error(error.message || "更新に失敗しました");
       }
-      if (res.status === 401) throw new Error("Unauthorized");
-      if (res.status === 403) throw new Error("Forbidden");
-      if (res.status === 404) throw new Error("User not found");
-      if (!res.ok) throw new Error("Failed to update user");
-      return api.users.update.responses[200].parse(await res.json());
+      if (res.status === 401) throw new Error("認証が必要です");
+      if (res.status === 403) throw new Error("権限がありません");
+      if (res.status === 404) throw new Error("ユーザーが見つかりません");
+      if (!res.ok) throw new Error("更新に失敗しました");
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
-      queryClient.invalidateQueries({ queryKey: [api.users.get.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.get.path, variables.id] });
     },
   });
 }

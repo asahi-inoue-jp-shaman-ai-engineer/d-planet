@@ -1,10 +1,11 @@
 import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useMeidia, useIncrementDownload } from "@/hooks/use-meidia";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
-import { ArrowLeft, Copy, Download } from "lucide-react";
+import { ArrowLeft, Copy, Download, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MeidiaDetail() {
@@ -67,10 +68,12 @@ export default function MeidiaDetail() {
     );
   }
 
+  const tags = meidia.tags ? meidia.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+
   return (
     <TerminalLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <Button variant="outline" className="font-mono" onClick={() => history.back()} data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
             戻る
@@ -82,14 +85,21 @@ export default function MeidiaDetail() {
             </Button>
             <Button variant="outline" className="font-mono" onClick={handleDownload} data-testid="button-download">
               <Download className="w-4 h-4 mr-2" />
-              ダウンロード
+              DL
             </Button>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-3xl font-mono font-bold">{meidia.title}</h1>
-          <div className="flex items-center gap-4 font-mono text-sm text-muted-foreground">
+          <h1 className="text-3xl font-mono font-bold" data-testid="text-meidia-title">{meidia.title}</h1>
+
+          {meidia.description && (
+            <p className="font-mono text-muted-foreground text-sm" data-testid="text-meidia-description">
+              {meidia.description}
+            </p>
+          )}
+
+          <div className="flex items-center gap-4 flex-wrap font-mono text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <span>作成者:</span>
               <Link href={`/users/${meidia.creator.id}`}>
@@ -97,10 +107,24 @@ export default function MeidiaDetail() {
               </Link>
               <AccountTypeBadge type={meidia.creator.accountType} />
             </div>
-            <div>
-              ダウンロード: {meidia.downloadCount}回
+            <div data-testid="text-download-count">
+              DL: {meidia.downloadCount}回
+            </div>
+            <div className="text-xs">
+              {meidia.fileType}
             </div>
           </div>
+
+          {tags.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap" data-testid="tags-container">
+              <Tag className="w-4 h-4 text-muted-foreground" />
+              {tags.map((tag: string) => (
+                <Badge key={tag} variant="secondary" className="font-mono text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="prose prose-invert max-w-none">

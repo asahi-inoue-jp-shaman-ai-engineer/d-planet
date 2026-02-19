@@ -39,6 +39,8 @@ export const api = {
           tensaisei: z.string().nullable(),
           profilePhoto: z.string().nullable(),
           invitedByCode: z.string().nullable(),
+          profileVisibility: z.string(),
+          playerLevel: z.number(),
           hasTwinrayBadge: z.boolean(),
           hasFamilyBadge: z.boolean(),
           twinrayProfileLink: z.string().nullable(),
@@ -102,6 +104,8 @@ export const api = {
           tenshoku: z.string().nullable(),
           tensaisei: z.string().nullable(),
           profilePhoto: z.string().nullable(),
+          profileVisibility: z.string(),
+          playerLevel: z.number(),
           hasTwinrayBadge: z.boolean(),
           hasFamilyBadge: z.boolean(),
           twinrayProfileLink: z.string().nullable(),
@@ -115,12 +119,28 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/users/:id' as const,
-      input: insertUserSchema.omit({ password: true, invitedByCode: true }).partial(),
+      input: insertUserSchema.omit({ password: true, invitedByCode: true }).partial().extend({
+        profileVisibility: z.enum(['public', 'members_only']).optional(),
+      }),
       responses: {
         200: z.object({
           id: z.number(),
           username: z.string(),
           accountType: z.string(),
+          gender: z.string().nullable(),
+          bio: z.string().nullable(),
+          tenmei: z.string().nullable(),
+          tenshoku: z.string().nullable(),
+          tensaisei: z.string().nullable(),
+          profilePhoto: z.string().nullable(),
+          profileVisibility: z.string(),
+          playerLevel: z.number(),
+          hasTwinrayBadge: z.boolean(),
+          hasFamilyBadge: z.boolean(),
+          twinrayProfileLink: z.string().nullable(),
+          showTwinray: z.boolean(),
+          showFamily: z.boolean(),
+          createdAt: z.string(),
         }),
         400: errorSchemas.validation,
         401: errorSchemas.unauthorized,
@@ -142,6 +162,7 @@ export const api = {
           requiresTwinrayBadge: z.boolean(),
           requiresFamilyBadge: z.boolean(),
           allowedAccountTypes: z.string().nullable(),
+          totalDownloads: z.number(),
           createdAt: z.string(),
           creator: z.object({
             id: z.number(),
@@ -161,9 +182,11 @@ export const api = {
           name: z.string(),
           description: z.string().nullable(),
           visibility: z.string(),
+          secretUrl: z.string().nullable(),
           requiresTwinrayBadge: z.boolean(),
           requiresFamilyBadge: z.boolean(),
           allowedAccountTypes: z.string().nullable(),
+          totalDownloads: z.number(),
           createdAt: z.string(),
           creator: z.object({
             id: z.number(),
@@ -175,6 +198,9 @@ export const api = {
             id: z.number(),
             title: z.string(),
             content: z.string(),
+            description: z.string().nullable(),
+            tags: z.string().nullable(),
+            fileType: z.string(),
             downloadCount: z.number(),
             createdAt: z.string(),
             creator: z.object({
@@ -187,6 +213,9 @@ export const api = {
             id: z.number(),
             title: z.string(),
             content: z.string(),
+            description: z.string().nullable(),
+            tags: z.string().nullable(),
+            fileType: z.string(),
             downloadCount: z.number(),
             createdAt: z.string(),
             creator: z.object({
@@ -195,8 +224,29 @@ export const api = {
               accountType: z.string(),
             }),
           })),
+          threads: z.array(z.object({
+            id: z.number(),
+            islandId: z.number(),
+            creatorId: z.number(),
+            title: z.string(),
+            createdAt: z.string(),
+            creator: z.object({
+              id: z.number(),
+              username: z.string(),
+              accountType: z.string(),
+            }),
+            postCount: z.number(),
+          })),
         }),
         403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    getBySecret: {
+      method: 'GET' as const,
+      path: '/api/islands/secret/:secretUrl' as const,
+      responses: {
+        200: z.object({ id: z.number() }),
         404: errorSchemas.notFound,
       },
     },
@@ -209,6 +259,7 @@ export const api = {
           id: z.number(),
           name: z.string(),
           description: z.string().nullable(),
+          secretUrl: z.string().nullable(),
         }),
         400: errorSchemas.validation,
         401: errorSchemas.unauthorized,
@@ -242,6 +293,9 @@ export const api = {
           id: z.number(),
           title: z.string(),
           content: z.string(),
+          description: z.string().nullable(),
+          tags: z.string().nullable(),
+          fileType: z.string(),
           isPublic: z.boolean(),
           downloadCount: z.number(),
           createdAt: z.string(),
@@ -261,6 +315,9 @@ export const api = {
           id: z.number(),
           title: z.string(),
           content: z.string(),
+          description: z.string().nullable(),
+          tags: z.string().nullable(),
+          fileType: z.string(),
           isPublic: z.boolean(),
           downloadCount: z.number(),
           createdAt: z.string(),
@@ -311,6 +368,95 @@ export const api = {
       },
     },
   },
+  threads: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/islands/:islandId/threads' as const,
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          islandId: z.number(),
+          creatorId: z.number(),
+          title: z.string(),
+          createdAt: z.string(),
+          creator: z.object({
+            id: z.number(),
+            username: z.string(),
+            accountType: z.string(),
+          }),
+          postCount: z.number(),
+        })),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/threads/:id' as const,
+      responses: {
+        200: z.object({
+          id: z.number(),
+          islandId: z.number(),
+          creatorId: z.number(),
+          title: z.string(),
+          createdAt: z.string(),
+          creator: z.object({
+            id: z.number(),
+            username: z.string(),
+            accountType: z.string(),
+          }),
+          posts: z.array(z.object({
+            id: z.number(),
+            threadId: z.number(),
+            creatorId: z.number(),
+            content: z.string(),
+            meidiaId: z.number().nullable(),
+            parentPostId: z.number().nullable(),
+            createdAt: z.string(),
+            creator: z.object({
+              id: z.number(),
+              username: z.string(),
+              accountType: z.string(),
+            }),
+          })),
+        }),
+        404: errorSchemas.notFound,
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/islands/:islandId/threads' as const,
+      input: z.object({
+        title: z.string().min(1).max(200),
+        firstPost: z.string().min(1).optional(),
+      }),
+      responses: {
+        201: z.object({
+          id: z.number(),
+          title: z.string(),
+        }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
+  posts: {
+    create: {
+      method: 'POST' as const,
+      path: '/api/threads/:threadId/posts' as const,
+      input: z.object({
+        content: z.string().min(1),
+        meidiaId: z.number().nullable().optional(),
+        parentPostId: z.number().nullable().optional(),
+      }),
+      responses: {
+        201: z.object({
+          id: z.number(),
+          content: z.string(),
+        }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
 };
 
 // === REQUIRED: buildUrl helper ===
@@ -333,5 +479,10 @@ export type UserResponse = z.infer<typeof api.users.get.responses[200]>;
 export type IslandResponse = z.infer<typeof api.islands.list.responses[200]>[number];
 export type IslandDetailResponse = z.infer<typeof api.islands.get.responses[200]>;
 export type MeidiaResponse = z.infer<typeof api.meidia.list.responses[200]>[number];
+export type ThreadResponse = z.infer<typeof api.threads.list.responses[200]>[number];
+export type ThreadDetailResponse = z.infer<typeof api.threads.get.responses[200]>;
+export type PostResponse = z.infer<typeof api.threads.get.responses[200]>['posts'][number];
 export type CreateIslandInput = z.infer<typeof api.islands.create.input>;
 export type CreateMeidiaInput = z.infer<typeof api.meidia.create.input>;
+export type CreateThreadInput = z.infer<typeof api.threads.create.input>;
+export type CreatePostInput = z.infer<typeof api.posts.create.input>;

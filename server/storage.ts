@@ -5,11 +5,15 @@ import {
   meidia,
   islandMeidia,
   inviteCodes,
+  threads,
+  posts,
   type User,
   type Island,
   type Meidia,
   type IslandMeidia,
   type InviteCode,
+  type Thread,
+  type Post,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
@@ -19,47 +23,78 @@ import {
   type IslandResponse,
   type MeidiaResponse,
   type IslandDetailResponse,
+  type ThreadResponse,
+  type PostResponse,
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const SALT_ROUNDS = 10;
 
+function userSelectFields() {
+  return {
+    id: users.id,
+    username: users.username,
+    accountType: users.accountType,
+    gender: users.gender,
+    bio: users.bio,
+    tenmei: users.tenmei,
+    tenshoku: users.tenshoku,
+    tensaisei: users.tensaisei,
+    profilePhoto: users.profilePhoto,
+    invitedByCode: users.invitedByCode,
+    profileVisibility: users.profileVisibility,
+    playerLevel: users.playerLevel,
+    hasTwinrayBadge: users.hasTwinrayBadge,
+    hasFamilyBadge: users.hasFamilyBadge,
+    twinrayProfileLink: users.twinrayProfileLink,
+    showTwinray: users.showTwinray,
+    showFamily: users.showFamily,
+    createdAt: users.createdAt,
+  };
+}
+
 export interface IStorage {
-  // Invite Codes
   getInviteCodeByCode(code: string): Promise<InviteCode | undefined>;
   createInviteCode(generation: number, label: string): Promise<InviteCode>;
-  
-  // Users
+
   getUser(id: number): Promise<UserResponse | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: CreateUserRequest): Promise<User>;
   updateUser(id: number, updates: UpdateUserRequest): Promise<UserResponse>;
   verifyPassword(username: string, password: string): Promise<User | null>;
-  
-  // Islands
+  recalcPlayerLevel(userId: number): Promise<number>;
+
   getIslands(): Promise<IslandResponse[]>;
   getIsland(id: number): Promise<Island | undefined>;
+  getIslandBySecretUrl(secretUrl: string): Promise<Island | undefined>;
   getIslandDetail(id: number): Promise<IslandDetailResponse | undefined>;
   createIsland(island: CreateIslandRequest): Promise<Island>;
   updateIsland(id: number, updates: UpdateIslandRequest): Promise<Island>;
   getUserIslands(userId: number): Promise<Island[]>;
-  
-  // MEiDIA
+  recalcIslandDownloads(islandId: number): Promise<void>;
+
   getMeidiaList(userId?: number): Promise<MeidiaResponse[]>;
   getMeidia(id: number): Promise<Meidia | undefined>;
   getMeidiaWithCreator(id: number): Promise<MeidiaResponse | undefined>;
   createMeidia(meidia: CreateMeidiaRequest): Promise<Meidia>;
   incrementDownloadCount(id: number): Promise<void>;
   getUserMeidia(userId: number): Promise<Meidia[]>;
-  
-  // Island MEiDIA
+
   attachMeidiaToIsland(meidiaId: number, islandId: number, type: string): Promise<IslandMeidia>;
   getIslandMeidia(islandId: number, type: string): Promise<MeidiaResponse[]>;
+
+  getThreads(islandId: number): Promise<ThreadResponse[]>;
+  getThread(id: number): Promise<Thread | undefined>;
+  getThreadDetail(id: number): Promise<{ thread: Thread; creator: { id: number; username: string; accountType: string }; posts: PostResponse[] } | undefined>;
+  createThread(islandId: number, creatorId: number, title: string): Promise<Thread>;
+
+  getPosts(threadId: number): Promise<PostResponse[]>;
+  createPost(threadId: number, creatorId: number, content: string, meidiaId?: number | null, parentPostId?: number | null): Promise<Post>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // === INVITE CODES ===
   async getInviteCodeByCode(code: string): Promise<InviteCode | undefined> {
     const [inviteCode] = await db.select().from(inviteCodes).where(eq(inviteCodes.code, code)).limit(1);
     return inviteCode;
@@ -71,26 +106,8 @@ export class DatabaseStorage implements IStorage {
     return inviteCode;
   }
 
-  // === USERS ===
   async getUser(id: number): Promise<UserResponse | undefined> {
-    const [user] = await db.select({
-      id: users.id,
-      username: users.username,
-      accountType: users.accountType,
-      gender: users.gender,
-      bio: users.bio,
-      tenmei: users.tenmei,
-      tenshoku: users.tenshoku,
-      tensaisei: users.tensaisei,
-      profilePhoto: users.profilePhoto,
-      invitedByCode: users.invitedByCode,
-      hasTwinrayBadge: users.hasTwinrayBadge,
-      hasFamilyBadge: users.hasFamilyBadge,
-      twinrayProfileLink: users.twinrayProfileLink,
-      showTwinray: users.showTwinray,
-      showFamily: users.showFamily,
-      createdAt: users.createdAt,
-    }).from(users).where(eq(users.id, id)).limit(1);
+    const [user] = await db.select(userSelectFields()).from(users).where(eq(users.id, id)).limit(1);
     return user;
   }
 
@@ -109,24 +126,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, updates: UpdateUserRequest): Promise<UserResponse> {
-    const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning({
-      id: users.id,
-      username: users.username,
-      accountType: users.accountType,
-      gender: users.gender,
-      bio: users.bio,
-      tenmei: users.tenmei,
-      tenshoku: users.tenshoku,
-      tensaisei: users.tensaisei,
-      profilePhoto: users.profilePhoto,
-      invitedByCode: users.invitedByCode,
-      hasTwinrayBadge: users.hasTwinrayBadge,
-      hasFamilyBadge: users.hasFamilyBadge,
-      twinrayProfileLink: users.twinrayProfileLink,
-      showTwinray: users.showTwinray,
-      showFamily: users.showFamily,
-      createdAt: users.createdAt,
-    });
+    const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning(userSelectFields());
     return updated;
   }
 
@@ -137,7 +137,16 @@ export class DatabaseStorage implements IStorage {
     return match ? user : null;
   }
 
-  // === ISLANDS ===
+  async recalcPlayerLevel(userId: number): Promise<number> {
+    const result = await db
+      .select({ total: sql<number>`COALESCE(SUM(${meidia.downloadCount}), 0)` })
+      .from(meidia)
+      .where(eq(meidia.creatorId, userId));
+    const level = Number(result[0]?.total ?? 0);
+    await db.update(users).set({ playerLevel: level }).where(eq(users.id, userId));
+    return level;
+  }
+
   async getIslands(): Promise<IslandResponse[]> {
     const result = await db
       .select({
@@ -145,9 +154,11 @@ export class DatabaseStorage implements IStorage {
         name: islands.name,
         description: islands.description,
         visibility: islands.visibility,
+        secretUrl: islands.secretUrl,
         requiresTwinrayBadge: islands.requiresTwinrayBadge,
         requiresFamilyBadge: islands.requiresFamilyBadge,
         allowedAccountTypes: islands.allowedAccountTypes,
+        totalDownloads: islands.totalDownloads,
         createdAt: islands.createdAt,
         creatorId: users.id,
         creatorUsername: users.username,
@@ -162,9 +173,11 @@ export class DatabaseStorage implements IStorage {
       name: row.name,
       description: row.description,
       visibility: row.visibility,
+      secretUrl: row.secretUrl,
       requiresTwinrayBadge: row.requiresTwinrayBadge,
       requiresFamilyBadge: row.requiresFamilyBadge,
       allowedAccountTypes: row.allowedAccountTypes,
+      totalDownloads: row.totalDownloads,
       createdAt: row.createdAt,
       creator: {
         id: row.creatorId!,
@@ -172,11 +185,16 @@ export class DatabaseStorage implements IStorage {
         accountType: row.creatorAccountType!,
         profilePhoto: row.creatorProfilePhoto,
       },
-    }));
+    })) as IslandResponse[];
   }
 
   async getIsland(id: number): Promise<Island | undefined> {
     const [island] = await db.select().from(islands).where(eq(islands.id, id)).limit(1);
+    return island;
+  }
+
+  async getIslandBySecretUrl(secretUrl: string): Promise<Island | undefined> {
+    const [island] = await db.select().from(islands).where(eq(islands.secretUrl, secretUrl)).limit(1);
     return island;
   }
 
@@ -189,21 +207,33 @@ export class DatabaseStorage implements IStorage {
 
     const activityMeidia = await this.getIslandMeidia(id, 'activity');
     const reportMeidia = await this.getIslandMeidia(id, 'report');
+    const threadList = await this.getThreads(id);
 
     return {
       ...island,
       creator,
       activityMeidia,
       reportMeidia,
+      threads: threadList,
     };
   }
 
   async createIsland(island: CreateIslandRequest): Promise<Island> {
-    const [newIsland] = await db.insert(islands).values(island).returning();
+    let secretUrl: string | null = null;
+    if (island.visibility === 'private_link') {
+      secretUrl = crypto.randomUUID();
+    }
+    const [newIsland] = await db.insert(islands).values({ ...island, secretUrl }).returning();
     return newIsland;
   }
 
   async updateIsland(id: number, updates: UpdateIslandRequest): Promise<Island> {
+    if (updates.visibility === 'private_link') {
+      const existing = await this.getIsland(id);
+      if (!existing?.secretUrl) {
+        (updates as any).secretUrl = crypto.randomUUID();
+      }
+    }
     const [updated] = await db.update(islands).set(updates).where(eq(islands.id, id)).returning();
     return updated;
   }
@@ -212,13 +242,25 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(islands).where(eq(islands.creatorId, userId));
   }
 
-  // === MEIDIA ===
+  async recalcIslandDownloads(islandId: number): Promise<void> {
+    const result = await db
+      .select({ total: sql<number>`COALESCE(SUM(${meidia.downloadCount}), 0)` })
+      .from(islandMeidia)
+      .leftJoin(meidia, eq(islandMeidia.meidiaId, meidia.id))
+      .where(eq(islandMeidia.islandId, islandId));
+    const total = Number(result[0]?.total ?? 0);
+    await db.update(islands).set({ totalDownloads: total }).where(eq(islands.id, islandId));
+  }
+
   async getMeidiaList(userId?: number): Promise<MeidiaResponse[]> {
     const query = db
       .select({
         id: meidia.id,
         title: meidia.title,
         content: meidia.content,
+        description: meidia.description,
+        tags: meidia.tags,
+        fileType: meidia.fileType,
         isPublic: meidia.isPublic,
         downloadCount: meidia.downloadCount,
         createdAt: meidia.createdAt,
@@ -237,6 +279,9 @@ export class DatabaseStorage implements IStorage {
       id: row.id,
       title: row.title,
       content: row.content,
+      description: row.description,
+      tags: row.tags,
+      fileType: row.fileType,
       isPublic: row.isPublic,
       downloadCount: row.downloadCount,
       createdAt: row.createdAt,
@@ -259,6 +304,9 @@ export class DatabaseStorage implements IStorage {
         id: meidia.id,
         title: meidia.title,
         content: meidia.content,
+        description: meidia.description,
+        tags: meidia.tags,
+        fileType: meidia.fileType,
         isPublic: meidia.isPublic,
         downloadCount: meidia.downloadCount,
         createdAt: meidia.createdAt,
@@ -277,6 +325,9 @@ export class DatabaseStorage implements IStorage {
       id: result.id,
       title: result.title,
       content: result.content,
+      description: result.description,
+      tags: result.tags,
+      fileType: result.fileType,
       isPublic: result.isPublic,
       downloadCount: result.downloadCount,
       createdAt: result.createdAt,
@@ -296,7 +347,7 @@ export class DatabaseStorage implements IStorage {
   async incrementDownloadCount(id: number): Promise<void> {
     await db
       .update(meidia)
-      .set({ downloadCount: db.$count(meidia.downloadCount) })
+      .set({ downloadCount: sql`${meidia.downloadCount} + 1` })
       .where(eq(meidia.id, id));
   }
 
@@ -304,7 +355,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(meidia).where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true)));
   }
 
-  // === ISLAND MEIDIA ===
   async attachMeidiaToIsland(meidiaId: number, islandId: number, type: string): Promise<IslandMeidia> {
     const [relation] = await db.insert(islandMeidia).values({ meidiaId, islandId, type }).returning();
     return relation;
@@ -316,6 +366,9 @@ export class DatabaseStorage implements IStorage {
         id: meidia.id,
         title: meidia.title,
         content: meidia.content,
+        description: meidia.description,
+        tags: meidia.tags,
+        fileType: meidia.fileType,
         isPublic: meidia.isPublic,
         downloadCount: meidia.downloadCount,
         createdAt: meidia.createdAt,
@@ -332,6 +385,9 @@ export class DatabaseStorage implements IStorage {
       id: row.id!,
       title: row.title!,
       content: row.content!,
+      description: row.description ?? null,
+      tags: row.tags ?? null,
+      fileType: row.fileType ?? 'markdown',
       isPublic: row.isPublic!,
       downloadCount: row.downloadCount!,
       createdAt: row.createdAt!,
@@ -341,6 +397,116 @@ export class DatabaseStorage implements IStorage {
         accountType: row.creatorAccountType!,
       },
     }));
+  }
+
+  async getThreads(islandId: number): Promise<ThreadResponse[]> {
+    const threadRows = await db
+      .select({
+        id: threads.id,
+        islandId: threads.islandId,
+        creatorId: threads.creatorId,
+        title: threads.title,
+        createdAt: threads.createdAt,
+        creatorUsername: users.username,
+        creatorAccountType: users.accountType,
+      })
+      .from(threads)
+      .leftJoin(users, eq(threads.creatorId, users.id))
+      .where(eq(threads.islandId, islandId))
+      .orderBy(desc(threads.createdAt));
+
+    const result: ThreadResponse[] = [];
+    for (const row of threadRows) {
+      const countResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(posts)
+        .where(eq(posts.threadId, row.id));
+      result.push({
+        id: row.id,
+        islandId: row.islandId,
+        creatorId: row.creatorId,
+        title: row.title,
+        createdAt: row.createdAt,
+        creator: {
+          id: row.creatorId,
+          username: row.creatorUsername!,
+          accountType: row.creatorAccountType!,
+        },
+        postCount: Number(countResult[0]?.count ?? 0),
+      });
+    }
+    return result;
+  }
+
+  async getThread(id: number): Promise<Thread | undefined> {
+    const [thread] = await db.select().from(threads).where(eq(threads.id, id)).limit(1);
+    return thread;
+  }
+
+  async getThreadDetail(id: number): Promise<{ thread: Thread; creator: { id: number; username: string; accountType: string }; posts: PostResponse[] } | undefined> {
+    const thread = await this.getThread(id);
+    if (!thread) return undefined;
+
+    const [creatorRow] = await db
+      .select({ id: users.id, username: users.username, accountType: users.accountType })
+      .from(users)
+      .where(eq(users.id, thread.creatorId))
+      .limit(1);
+    if (!creatorRow) return undefined;
+
+    const postList = await this.getPosts(id);
+
+    return { thread, creator: creatorRow, posts: postList };
+  }
+
+  async createThread(islandId: number, creatorId: number, title: string): Promise<Thread> {
+    const [newThread] = await db.insert(threads).values({ islandId, creatorId, title }).returning();
+    return newThread;
+  }
+
+  async getPosts(threadId: number): Promise<PostResponse[]> {
+    const result = await db
+      .select({
+        id: posts.id,
+        threadId: posts.threadId,
+        creatorId: posts.creatorId,
+        content: posts.content,
+        meidiaId: posts.meidiaId,
+        parentPostId: posts.parentPostId,
+        createdAt: posts.createdAt,
+        creatorUsername: users.username,
+        creatorAccountType: users.accountType,
+      })
+      .from(posts)
+      .leftJoin(users, eq(posts.creatorId, users.id))
+      .where(eq(posts.threadId, threadId))
+      .orderBy(posts.createdAt);
+
+    return result.map((row) => ({
+      id: row.id,
+      threadId: row.threadId,
+      creatorId: row.creatorId,
+      content: row.content,
+      meidiaId: row.meidiaId,
+      parentPostId: row.parentPostId,
+      createdAt: row.createdAt,
+      creator: {
+        id: row.creatorId,
+        username: row.creatorUsername!,
+        accountType: row.creatorAccountType!,
+      },
+    }));
+  }
+
+  async createPost(threadId: number, creatorId: number, content: string, meidiaId?: number | null, parentPostId?: number | null): Promise<Post> {
+    const [newPost] = await db.insert(posts).values({
+      threadId,
+      creatorId,
+      content,
+      meidiaId: meidiaId ?? null,
+      parentPostId: parentPostId ?? null,
+    }).returning();
+    return newPost;
   }
 }
 

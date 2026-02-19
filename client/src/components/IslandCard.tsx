@@ -43,8 +43,8 @@ export function IslandCard({ island }: IslandCardProps) {
                     <Users className="w-3 h-3 text-secondary" />
                   </div>
                 )}
-                {island.visibility === "private" && (
-                  <div className="p-1 bg-destructive/20 rounded border border-destructive/50" title="非公開">
+                {(island.visibility === "private_link" || island.visibility === "twinray_only" || island.visibility === "family_only") && (
+                  <div className="p-1 bg-destructive/20 rounded border border-destructive/50" title={island.visibility}>
                     <Lock className="w-3 h-3 text-destructive" />
                   </div>
                 )}
@@ -64,14 +64,14 @@ export function IslandCard({ island }: IslandCardProps) {
               >
                 Creator: {island.creator.username}
               </Link>
-              <AccountTypeBadge accountType={island.creator.accountType} />
+              <AccountTypeBadge type={island.creator.accountType} />
               
               {allowedTypes.length > 0 && (
                 <div className="flex items-center gap-1">
                   <span>•</span>
                   <span>許可:</span>
                   {allowedTypes.map(type => (
-                    <AccountTypeBadge key={type} accountType={type} />
+                    <AccountTypeBadge key={type} type={type} />
                   ))}
                 </div>
               )}

@@ -5,17 +5,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { useCreateIsland } from "@/hooks/use-islands";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Globe, Users, Lock, LinkIcon, Shield } from "lucide-react";
 import { Link } from "wouter";
+
+const VISIBILITY_OPTIONS = [
+  { value: "public_open", label: "全体公開", description: "誰でもアクセス可能", icon: Globe },
+  { value: "members_only", label: "メンバー限定", description: "ログインユーザーのみ", icon: Users },
+  { value: "twinray_only", label: "ツインレイ限定", description: "ツインレイ認証者のみ", icon: Shield },
+  { value: "family_only", label: "ファミリー限定", description: "ファミリー認証者のみ", icon: Lock },
+  { value: "private_link", label: "秘密リンク", description: "URLを知っている人のみ", icon: LinkIcon },
+];
 
 export default function CreateIsland() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState("public");
+  const [visibility, setVisibility] = useState("public_open");
   const [requiresTwinray, setRequiresTwinray] = useState(false);
   const [requiresFamily, setRequiresFamily] = useState(false);
   const [accountTypes, setAccountTypes] = useState<string[]>([]);
@@ -33,7 +42,13 @@ export default function CreateIsland() {
         requiresFamilyBadge: requiresFamily,
         allowedAccountTypes: accountTypes.length > 0 ? accountTypes.join(',') : null,
       });
-      toast({ title: "作成完了", description: "アイランドを作成しました" });
+
+      let successMessage = "アイランドを作成しました";
+      if (result.secretUrl) {
+        successMessage += `\n秘密URL: ${window.location.origin}/islands/secret/${result.secretUrl}`;
+      }
+
+      toast({ title: "作成完了", description: successMessage });
       setLocation(`/islands/${result.id}`);
     } catch (error: any) {
       toast({
@@ -53,7 +68,7 @@ export default function CreateIsland() {
   return (
     <TerminalLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-mono font-bold">アイランド作成</h1>
           <Link href="/islands">
             <Button variant="outline" className="font-mono" data-testid="button-back">
@@ -88,8 +103,41 @@ export default function CreateIsland() {
             />
           </div>
 
+          <div className="space-y-3">
+            <Label className="font-mono">公開範囲</Label>
+            <div className="grid gap-2">
+              {VISIBILITY_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = visibility === option.value;
+                return (
+                  <Card
+                    key={option.value}
+                    className={`cursor-pointer transition-all ${isSelected ? "border-primary" : ""}`}
+                    onClick={() => setVisibility(option.value)}
+                    data-testid={`radio-visibility-${option.value}`}
+                  >
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className={`p-2 rounded ${isSelected ? "bg-primary/20" : "bg-muted"}`}>
+                        <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-mono text-sm font-semibold ${isSelected ? "text-primary" : ""}`}>
+                          {option.label}
+                        </div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {option.description}
+                        </div>
+                      </div>
+                      <div className={`w-4 h-4 rounded-full border-2 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground"}`} />
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="space-y-4">
-            <Label className="font-mono">アクセス制限</Label>
+            <Label className="font-mono">追加アクセス制限</Label>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox

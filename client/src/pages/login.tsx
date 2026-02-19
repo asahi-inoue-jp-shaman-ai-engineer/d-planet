@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -23,18 +23,17 @@ export default function Login() {
 
     try {
       if (isRegister) {
-        await apiRequest("/api/auth/register", {
-          method: "POST",
-          body: JSON.stringify({ username, password, accountType, inviteCode }),
+        await apiRequest("POST", "/api/auth/register", {
+          username, password, accountType, inviteCode,
         });
         toast({ title: "登録完了", description: "ログインしました" });
       } else {
-        await apiRequest("/api/auth/login", {
-          method: "POST",
-          body: JSON.stringify({ username, password }),
+        await apiRequest("POST", "/api/auth/login", {
+          username, password,
         });
         toast({ title: "ログイン完了" });
       }
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       setLocation("/islands");
     } catch (error: any) {
       toast({

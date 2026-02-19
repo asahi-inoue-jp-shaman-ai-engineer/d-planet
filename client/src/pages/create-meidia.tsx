@@ -8,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { useCreateMeidia, useAttachMeidiaToIsland } from "@/hooks/use-meidia";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Tag } from "lucide-react";
 import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
 
 export default function CreateMeidia() {
   const [, setLocation] = useLocation();
@@ -17,12 +18,34 @@ export default function CreateMeidia() {
   const islandId = searchParams.get('islandId');
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [description, setDescription] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
   const [attachToIsland, setAttachToIsland] = useState(!!islandId);
   const [attachType, setAttachType] = useState<'activity' | 'report'>('report');
   const createMeidia = useCreateMeidia();
   const attachMeidia = useAttachMeidiaToIsland();
   const { toast } = useToast();
+
+  const addTag = () => {
+    const tag = tagInput.trim();
+    if (tag && !tags.includes(tag)) {
+      setTags([...tags, tag]);
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +54,9 @@ export default function CreateMeidia() {
         title,
         content,
         isPublic,
+        description: description || null,
+        tags: tags.length > 0 ? tags.join(',') : null,
+        fileType: "markdown",
       });
 
       if (attachToIsland && islandId) {
@@ -42,7 +68,7 @@ export default function CreateMeidia() {
       }
 
       toast({ title: "作成完了", description: "MEiDIAを作成しました" });
-      
+
       if (islandId) {
         setLocation(`/islands/${islandId}`);
       } else {
@@ -60,7 +86,7 @@ export default function CreateMeidia() {
   return (
     <TerminalLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-mono font-bold">MEiDIA作成</h1>
           <Button variant="outline" className="font-mono" onClick={() => history.back()} data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -79,6 +105,53 @@ export default function CreateMeidia() {
               className="font-mono"
               data-testid="input-title"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="font-mono">説明（任意）</Label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="この MEiDIA の概要"
+              className="font-mono"
+              data-testid="input-description"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-mono flex items-center gap-2">
+              <Tag className="w-4 h-4" />
+              タグ（任意）
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                placeholder="タグを入力してEnter"
+                className="font-mono flex-1"
+                data-testid="input-tag"
+              />
+              <Button type="button" variant="outline" className="font-mono" onClick={addTag} data-testid="button-add-tag">
+                追加
+              </Button>
+            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="cursor-pointer font-mono"
+                    onClick={() => removeTag(tag)}
+                    data-testid={`badge-tag-${tag}`}
+                  >
+                    {tag} x
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
