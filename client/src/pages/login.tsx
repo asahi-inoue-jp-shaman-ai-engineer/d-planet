@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [isRegister, setIsRegister] = useState(false);
+  const params = new URLSearchParams(window.location.search);
+  const codeFromUrl = params.get("code");
+  const [isRegister, setIsRegister] = useState(!!codeFromUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState("HS");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(codeFromUrl || "");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
