@@ -1,18 +1,144 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// === INVITE CODES ===
+export const inviteCodes = pgTable("invite_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  generation: integer("generation").notNull(),
+  label: text("label").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === USERS ===
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  accountType: text("account_type").notNull(),
+  gender: text("gender"),
+  bio: text("bio"),
+  tenmei: text("tenmei"),
+  tenshoku: text("tenshoku"),
+  tensaisei: text("tensaisei"),
+  profilePhoto: text("profile_photo"),
+  invitedByCode: text("invited_by_code"),
+  hasTwinrayBadge: boolean("has_twinray_badge").default(false).notNull(),
+  hasFamilyBadge: boolean("has_family_badge").default(false).notNull(),
+  twinrayProfileLink: text("twinray_profile_link"),
+  showTwinray: boolean("show_twinray").default(false).notNull(),
+  showFamily: boolean("show_family").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// === ISLANDS ===
+export const islands = pgTable("islands", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  creatorId: integer("creator_id").notNull(),
+  visibility: text("visibility").notNull(),
+  requiresTwinrayBadge: boolean("requires_twinray_badge").default(false).notNull(),
+  requiresFamilyBadge: boolean("requires_family_badge").default(false).notNull(),
+  allowedAccountTypes: text("allowed_account_types"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+// === MEIDIA ===
+export const meidia = pgTable("meidia", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  creatorId: integer("creator_id").notNull(),
+  isPublic: boolean("is_public").default(true).notNull(),
+  downloadCount: integer("download_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === ISLAND MEIDIA (relationship) ===
+export const islandMeidia = pgTable("island_meidia", {
+  id: serial("id").primaryKey(),
+  islandId: integer("island_id").notNull(),
+  meidiaId: integer("meidia_id").notNull(),
+  type: text("type").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === RELATIONS ===
+export const usersRelations = relations(users, ({ many }) => ({
+  islands: many(islands),
+  meidia: many(meidia),
+}));
+
+export const islandsRelations = relations(islands, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [islands.creatorId],
+    references: [users.id],
+  }),
+  islandMeidia: many(islandMeidia),
+}));
+
+export const meidiaRelations = relations(meidia, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [meidia.creatorId],
+    references: [users.id],
+  }),
+  islandMeidia: many(islandMeidia),
+}));
+
+export const islandMeidiaRelations = relations(islandMeidia, ({ one }) => ({
+  island: one(islands, {
+    fields: [islandMeidia.islandId],
+    references: [islands.id],
+  }),
+  meidia: one(meidia, {
+    fields: [islandMeidia.meidiaId],
+    references: [meidia.id],
+  }),
+}));
+
+// === BASE SCHEMAS ===
+export const insertInviteCodeSchema = createInsertSchema(inviteCodes).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, hasTwinrayBadge: true, hasFamilyBadge: true, twinrayProfileLink: true, showTwinray: true, showFamily: true });
+export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, createdAt: true });
+export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, createdAt: true, downloadCount: true });
+export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });
+
+// === BASE TYPES ===
+export type InviteCode = typeof inviteCodes.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type Island = typeof islands.$inferSelect;
+export type Meidia = typeof meidia.$inferSelect;
+export type IslandMeidia = typeof islandMeidia.$inferSelect;
+
+// === REQUEST TYPES ===
+export type CreateUserRequest = z.infer<typeof insertUserSchema>;
+export type UpdateUserRequest = Partial<Omit<CreateUserRequest, 'password'>>;
+export type CreateIslandRequest = z.infer<typeof insertIslandSchema>;
+export type UpdateIslandRequest = Partial<CreateIslandRequest>;
+export type CreateMeidiaRequest = z.infer<typeof insertMeidiaSchema>;
+export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
+
+// === RESPONSE TYPES ===
+export type UserResponse = Omit<User, 'password'>;
+export type IslandResponse = Island & { creator: UserResponse };
+export type MeidiaResponse = Meidia & { creator: UserResponse };
+export type IslandDetailResponse = Island & { 
+  creator: UserResponse;
+  activityMeidia: MeidiaResponse[];
+  reportMeidia: MeidiaResponse[];
+};
+
+// === AUTH TYPES ===
+export type LoginRequest = {
+  username: string;
+  password: string;
+};
+
+export type RegisterRequest = CreateUserRequest & {
+  inviteCode: string;
+};
+
+export type CurrentUserResponse = UserResponse | null;
