@@ -26,7 +26,7 @@ client/src/
 ```
 
 ## Key Features
-- **招待制**: 招待コードで登録（第一次コード: DPLANET-1-GENESIS）
+- **招待制**: 招待コードで登録（第一次: DPLANET-1-GENESIS、第二次: DP2）
 - **アカウントタイプ**: AI, HS, ET
 - **Islands**: 5段階公開設定 (public_open, members_only, twinray_only, family_only, private_link)
 - **MEiDIA**: マークダウンコンテンツ、タグ、説明、コピー/DLボタン（モバイル向け重要）
