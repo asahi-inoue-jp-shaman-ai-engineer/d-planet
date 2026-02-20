@@ -204,7 +204,7 @@ export class DatabaseStorage implements IStorage {
         allowedAccountTypes: islands.allowedAccountTypes,
         totalDownloads: islands.totalDownloads,
         createdAt: islands.createdAt,
-        creatorId: users.id,
+        creatorId: islands.creatorId,
         creatorUsername: users.username,
         creatorAccountType: users.accountType,
         creatorProfilePhoto: users.profilePhoto,
@@ -224,10 +224,10 @@ export class DatabaseStorage implements IStorage {
       totalDownloads: row.totalDownloads,
       createdAt: row.createdAt,
       creator: {
-        id: row.creatorId!,
-        username: row.creatorUsername!,
-        accountType: row.creatorAccountType!,
-        profilePhoto: row.creatorProfilePhoto,
+        id: row.creatorId,
+        username: row.creatorUsername ?? "不明",
+        accountType: row.creatorAccountType ?? "HS",
+        profilePhoto: row.creatorProfilePhoto ?? null,
       },
     })) as IslandResponse[];
   }
