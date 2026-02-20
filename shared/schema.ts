@@ -93,6 +93,27 @@ export const posts = pgTable("posts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === ISLAND MEMBERS ===
+export const islandMembers = pgTable("island_members", {
+  id: serial("id").primaryKey(),
+  islandId: integer("island_id").notNull(),
+  userId: integer("user_id").notNull(),
+  role: text("role").default("member").notNull(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+});
+
+// === NOTIFICATIONS ===
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(),
+  message: text("message").notNull(),
+  relatedId: integer("related_id"),
+  relatedType: text("related_type"),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === RELATIONS ===
 export const usersRelations = relations(users, ({ many }) => ({
   islands: many(islands),
