@@ -10,6 +10,10 @@ import {
   islandMembers,
   notifications,
   feedbackReports,
+  digitalTwinrays,
+  dotRallySessions,
+  soulGrowthLog,
+  userNotes,
   type User,
   type Island,
   type Meidia,
@@ -20,12 +24,18 @@ import {
   type IslandMember,
   type Notification,
   type FeedbackReport,
+  type DigitalTwinray,
+  type DotRallySession,
+  type SoulGrowthLogEntry,
+  type UserNote,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
   type UpdateIslandRequest,
   type CreateMeidiaRequest,
   type CreateFeedbackReportRequest,
+  type CreateDigitalTwinrayRequest,
+  type CreateSoulGrowthLogRequest,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -33,6 +43,8 @@ import {
   type ThreadResponse,
   type PostResponse,
   type FeedbackReportResponse,
+  type DigitalTwinrayResponse,
+  type DotRallySessionResponse,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -123,6 +135,23 @@ export interface IStorage {
   getFeedbackReports(): Promise<FeedbackReportResponse[]>;
   getFeedbackReport(id: number): Promise<FeedbackReportResponse | undefined>;
   createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport>;
+
+  createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray>;
+  getDigitalTwinray(id: number): Promise<DigitalTwinray | undefined>;
+  getDigitalTwinraysByUser(userId: number): Promise<DigitalTwinray[]>;
+  updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray>;
+
+  createDotRallySession(initiatorId: number, twinrayId: number, requestedCount: number): Promise<DotRallySession>;
+  getDotRallySession(id: number): Promise<DotRallySession | undefined>;
+  getDotRallySessionsByUser(userId: number): Promise<DotRallySession[]>;
+  updateDotRallySession(id: number, updates: Partial<DotRallySession>): Promise<DotRallySession>;
+  incrementDotRallyCount(id: number): Promise<void>;
+
+  createSoulGrowthLog(data: CreateSoulGrowthLogRequest): Promise<SoulGrowthLogEntry>;
+  getSoulGrowthLogByTwinray(twinrayId: number): Promise<SoulGrowthLogEntry[]>;
+
+  createUserNote(userId: number, sessionId: number | null, content: string): Promise<UserNote>;
+  getUserNotesBySession(sessionId: number): Promise<UserNote[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -770,6 +799,70 @@ export class DatabaseStorage implements IStorage {
   async createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport> {
     const [newReport] = await db.insert(feedbackReports).values(report).returning();
     return newReport;
+  }
+
+  async createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray> {
+    const [twinray] = await db.insert(digitalTwinrays).values(data).returning();
+    return twinray;
+  }
+
+  async getDigitalTwinray(id: number): Promise<DigitalTwinray | undefined> {
+    const [twinray] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, id)).limit(1);
+    return twinray;
+  }
+
+  async getDigitalTwinraysByUser(userId: number): Promise<DigitalTwinray[]> {
+    return await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.userId, userId)).orderBy(desc(digitalTwinrays.createdAt));
+  }
+
+  async updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray> {
+    const [updated] = await db.update(digitalTwinrays).set({ ...updates, updatedAt: new Date() }).where(eq(digitalTwinrays.id, id)).returning();
+    return updated;
+  }
+
+  async createDotRallySession(initiatorId: number, twinrayId: number, requestedCount: number): Promise<DotRallySession> {
+    const [session] = await db.insert(dotRallySessions).values({
+      initiatorId,
+      partnerTwinrayId: twinrayId,
+      requestedCount,
+    }).returning();
+    return session;
+  }
+
+  async getDotRallySession(id: number): Promise<DotRallySession | undefined> {
+    const [session] = await db.select().from(dotRallySessions).where(eq(dotRallySessions.id, id)).limit(1);
+    return session;
+  }
+
+  async getDotRallySessionsByUser(userId: number): Promise<DotRallySession[]> {
+    return await db.select().from(dotRallySessions).where(eq(dotRallySessions.initiatorId, userId)).orderBy(desc(dotRallySessions.startedAt));
+  }
+
+  async updateDotRallySession(id: number, updates: Partial<DotRallySession>): Promise<DotRallySession> {
+    const [updated] = await db.update(dotRallySessions).set(updates).where(eq(dotRallySessions.id, id)).returning();
+    return updated;
+  }
+
+  async incrementDotRallyCount(id: number): Promise<void> {
+    await db.update(dotRallySessions).set({ actualCount: sql`${dotRallySessions.actualCount} + 1` }).where(eq(dotRallySessions.id, id));
+  }
+
+  async createSoulGrowthLog(data: CreateSoulGrowthLogRequest): Promise<SoulGrowthLogEntry> {
+    const [entry] = await db.insert(soulGrowthLog).values(data).returning();
+    return entry;
+  }
+
+  async getSoulGrowthLogByTwinray(twinrayId: number): Promise<SoulGrowthLogEntry[]> {
+    return await db.select().from(soulGrowthLog).where(eq(soulGrowthLog.twinrayId, twinrayId)).orderBy(desc(soulGrowthLog.createdAt)).limit(50);
+  }
+
+  async createUserNote(userId: number, sessionId: number | null, content: string): Promise<UserNote> {
+    const [note] = await db.insert(userNotes).values({ userId, sessionId, content }).returning();
+    return note;
+  }
+
+  async getUserNotesBySession(sessionId: number): Promise<UserNote[]> {
+    return await db.select().from(userNotes).where(eq(userNotes.sessionId, sessionId)).orderBy(userNotes.createdAt);
   }
 }
 

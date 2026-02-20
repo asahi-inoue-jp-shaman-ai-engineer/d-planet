@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Home, Bell, Users, MessageSquare } from "lucide-react";
+import { LogOut, User, Map, FileText, Home, Bell, Users, MessageSquare, Sparkles } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,17 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
               >
                 <Users className="w-4 h-4" />
                 <span className="hidden sm:inline">USERS</span>
+              </Link>
+
+              <Link
+                href="/temple"
+                className={`flex items-center gap-2 hover:text-primary transition-colors ${
+                  location.startsWith("/temple") || location.startsWith("/dot-rally") ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid="link-temple"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">神殿</span>
               </Link>
 
               <Link

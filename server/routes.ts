@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { registerDotRallyRoutes } from "./dot-rally";
 
 declare module "express-session" {
   interface SessionData {
@@ -40,6 +41,7 @@ export async function registerRoutes(
   };
 
   registerObjectStorageRoutes(app);
+  registerDotRallyRoutes(app);
 
   // === 認証 ===
   app.get(api.auth.me.path, async (req, res) => {

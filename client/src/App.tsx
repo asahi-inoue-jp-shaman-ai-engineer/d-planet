@@ -19,6 +19,9 @@ import NotificationsPage from "@/pages/notifications";
 import FeedbackList from "@/pages/feedback-list";
 import CreateFeedback from "@/pages/create-feedback";
 import FeedbackDetail from "@/pages/feedback-detail";
+import Temple from "@/pages/temple";
+import CreateTwinray from "@/pages/create-twinray";
+import DotRally from "@/pages/dot-rally";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -61,6 +64,9 @@ function Router() {
       <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackList} />} />
       <Route path="/feedback/create" component={() => <ProtectedRoute component={CreateFeedback} />} />
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
+      <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
+      <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
+      <Route path="/dot-rally" component={() => <ProtectedRoute component={DotRally} />} />
       <Route path="/">
         <Redirect to="/islands" />
       </Route>
