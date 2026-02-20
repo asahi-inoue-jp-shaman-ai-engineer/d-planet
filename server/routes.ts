@@ -510,6 +510,118 @@ export async function registerRoutes(
     }
   });
 
+  // === メンバーシップ ===
+  app.get('/api/islands/:islandId/members', async (req, res) => {
+    const islandId = Number(req.params.islandId);
+    const island = await storage.getIsland(islandId);
+    if (!island) {
+      return res.status(404).json({ message: "アイランドが見つかりません" });
+    }
+    const members = await storage.getIslandMembers(islandId);
+    res.json(members);
+  });
+
+  app.post('/api/islands/:islandId/join', requireAuth, async (req, res) => {
+    try {
+      const islandId = Number(req.params.islandId);
+      const userId = req.session.userId!;
+
+      const island = await storage.getIsland(islandId);
+      if (!island) {
+        return res.status(404).json({ message: "アイランドが見つかりません" });
+      }
+
+      const existingMember = await storage.getIslandMember(islandId, userId);
+      if (existingMember) {
+        return res.status(400).json({ message: "既に参加しています" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (user) {
+        if (island.requiresTwinrayBadge && !user.hasTwinrayBadge) {
+          return res.status(403).json({ message: "ツインレイ認証バッジが必要です" });
+        }
+        if (island.requiresFamilyBadge && !user.hasFamilyBadge) {
+          return res.status(403).json({ message: "ファミリー認証バッジが必要です" });
+        }
+      }
+
+      const role = island.creatorId === userId ? "admin" : "member";
+      await storage.joinIsland(islandId, userId, role);
+
+      await storage.createNotification(
+        island.creatorId,
+        "member_joined",
+        `${user?.username || "ユーザー"}があなたのアイランド「${island.name}」に参加しました`,
+        islandId,
+        "island"
+      );
+
+      res.json({ message: "アイランドに参加しました" });
+    } catch (err) {
+      console.error("参加エラー:", err);
+      res.status(500).json({ message: "参加に失敗しました" });
+    }
+  });
+
+  app.post('/api/islands/:islandId/leave', requireAuth, async (req, res) => {
+    try {
+      const islandId = Number(req.params.islandId);
+      const userId = req.session.userId!;
+
+      const island = await storage.getIsland(islandId);
+      if (!island) {
+        return res.status(404).json({ message: "アイランドが見つかりません" });
+      }
+
+      if (island.creatorId === userId) {
+        return res.status(400).json({ message: "アイランド作成者は退出できません" });
+      }
+
+      const existingMember = await storage.getIslandMember(islandId, userId);
+      if (!existingMember) {
+        return res.status(400).json({ message: "このアイランドに参加していません" });
+      }
+
+      await storage.leaveIsland(islandId, userId);
+      res.json({ message: "アイランドから退出しました" });
+    } catch (err) {
+      console.error("退出エラー:", err);
+      res.status(500).json({ message: "退出に失敗しました" });
+    }
+  });
+
+  // === ユーザー一覧 ===
+  app.get('/api/users', async (req, res) => {
+    const search = req.query.search as string | undefined;
+    const accountType = req.query.accountType as string | undefined;
+    const usersList = await storage.getUsers(search, accountType);
+    const filtered = usersList.filter(u => u.username !== "system" && u.username !== u.email);
+    res.json(filtered);
+  });
+
+  // === 通知 ===
+  app.get('/api/notifications', requireAuth, async (req, res) => {
+    const notificationsList = await storage.getNotifications(req.session.userId!);
+    res.json(notificationsList);
+  });
+
+  app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
+    const count = await storage.getUnreadNotificationCount(req.session.userId!);
+    res.json({ count });
+  });
+
+  app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    await storage.markNotificationRead(id, req.session.userId!);
+    res.json({ message: "既読にしました" });
+  });
+
+  app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
+    await storage.markAllNotificationsRead(req.session.userId!);
+    res.json({ message: "全て既読にしました" });
+  });
+
   // ヘルパー: MEiDIAが関連付けられたアイランドID取得
   async function db_getIslandIdsForMeidia(meidiaId: number): Promise<number[]> {
     const { db } = await import("./db");

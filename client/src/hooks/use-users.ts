@@ -1,6 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type UserResponse } from "@shared/routes";
 
+export function useUsers(search?: string, accountType?: string) {
+  return useQuery({
+    queryKey: ['/api/users', search, accountType],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (accountType) params.set('accountType', accountType);
+      const url = `/api/users${params.toString() ? `?${params}` : ''}`;
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+  });
+}
+
 export function useUser(id: number) {
   return useQuery({
     queryKey: [api.users.get.path, id],

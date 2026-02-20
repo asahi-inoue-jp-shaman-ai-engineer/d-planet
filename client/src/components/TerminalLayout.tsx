@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Home } from "lucide-react";
+import { LogOut, User, Map, FileText, Home, Bell, Users } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
+import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,8 +13,10 @@ interface TerminalLayoutProps {
 export function TerminalLayout({ children }: TerminalLayoutProps) {
   const [location] = useLocation();
   const { data: user, isLoading } = useCurrentUser();
+  const { data: unreadData } = useUnreadCount();
   const logout = useLogout();
   const { toast } = useToast();
+  const unreadCount = unreadData?.count ?? 0;
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -22,7 +25,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           title: "ログアウトしました",
           description: "またのご利用をお待ちしております",
         });
-        window.location.href = "/login";
+        window.location.replace("/login");
       },
       onError: (error) => {
         toast({
@@ -79,13 +82,39 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                 <FileText className="w-4 h-4" />
                 <span className="hidden sm:inline">MEiDIA</span>
               </Link>
+
+              <Link 
+                href="/users" 
+                className={`flex items-center gap-2 hover:text-primary transition-colors ${
+                  location === "/users" ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid="link-users"
+              >
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">USERS</span>
+              </Link>
               
               {user && (
                 <>
                   <Link 
-                    href="/profile" 
+                    href="/notifications" 
+                    className={`relative flex items-center gap-2 hover:text-primary transition-colors ${
+                      location === "/notifications" ? "text-primary" : "text-muted-foreground"
+                    }`}
+                    data-testid="link-notifications"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center" data-testid="badge-unread-count">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  <Link 
+                    href={`/users/${user.id}`}
                     className={`flex items-center gap-2 hover:text-primary transition-colors ${
-                      location === "/profile" ? "text-primary" : "text-muted-foreground"
+                      location === `/users/${user.id}` ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
                     <User className="w-4 h-4" />
@@ -97,6 +126,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                     size="sm"
                     onClick={handleLogout}
                     className="text-muted-foreground hover:text-destructive"
+                    data-testid="button-logout"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline ml-2">LOGOUT</span>

@@ -7,10 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useIsland } from "@/hooks/use-islands";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useCreateThread, useCreatePost } from "@/hooks/use-threads";
+import { useIslandMembership, useJoinIsland, useLeaveIsland } from "@/hooks/use-members";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { MeidiaCard } from "@/components/MeidiaCard";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
-import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -36,6 +37,9 @@ export default function IslandDetail() {
   const { id } = useParams();
   const { data: island, isLoading, error } = useIsland(Number(id));
   const { data: currentUser } = useCurrentUser();
+  const { data: membership } = useIslandMembership(Number(id));
+  const joinIsland = useJoinIsland();
+  const leaveIsland = useLeaveIsland();
   const createThread = useCreateThread();
   const createPost = useCreatePost();
   const { toast } = useToast();
@@ -45,6 +49,30 @@ export default function IslandDetail() {
   const [newThreadContent, setNewThreadContent] = useState("");
   const [expandedThread, setExpandedThread] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
+
+  const [showMembers, setShowMembers] = useState(false);
+
+  const handleJoin = async () => {
+    try {
+      await joinIsland.mutateAsync(Number(id));
+      toast({ title: "参加完了", description: "アイランドに参加しました" });
+    } catch (error: any) {
+      let message = "参加に失敗しました";
+      try { message = JSON.parse(error.message.replace(/^\d+:\s*/, "")).message || message; } catch {}
+      toast({ title: "エラー", description: message, variant: "destructive" });
+    }
+  };
+
+  const handleLeave = async () => {
+    try {
+      await leaveIsland.mutateAsync(Number(id));
+      toast({ title: "退出完了", description: "アイランドから退出しました" });
+    } catch (error: any) {
+      let message = "退出に失敗しました";
+      try { message = JSON.parse(error.message.replace(/^\d+:\s*/, "")).message || message; } catch {}
+      toast({ title: "エラー", description: message, variant: "destructive" });
+    }
+  };
 
   const handleCreateThread = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +175,77 @@ export default function IslandDetail() {
             {island.totalDownloads > 0 && (
               <span className="text-muted-foreground">DL: {island.totalDownloads}</span>
             )}
+            {membership?.members && (
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                {membership.members.length}人
+              </span>
+            )}
           </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {currentUser && membership && !membership.isMember && (
+              <Button
+                variant="outline"
+                className="font-mono"
+                onClick={handleJoin}
+                disabled={joinIsland.isPending}
+                data-testid="button-join-island"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {joinIsland.isPending ? "参加中..." : "参加する"}
+              </Button>
+            )}
+            {currentUser && membership?.isMember && island.creator.id !== currentUser.id && (
+              <Button
+                variant="outline"
+                className="font-mono"
+                onClick={handleLeave}
+                disabled={leaveIsland.isPending}
+                data-testid="button-leave-island"
+              >
+                <UserMinus className="w-4 h-4 mr-2" />
+                {leaveIsland.isPending ? "退出中..." : "退出する"}
+              </Button>
+            )}
+            {membership?.isMember && (
+              <span className="font-mono text-xs text-primary">参加中</span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="font-mono"
+              onClick={() => setShowMembers(!showMembers)}
+              data-testid="button-toggle-members"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              メンバー一覧
+            </Button>
+          </div>
+
+          {showMembers && membership?.members && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  {membership.members.length > 0 ? (
+                    membership.members.map((member: any) => (
+                      <Link key={member.id} href={`/users/${member.userId}`}>
+                        <div className="flex items-center gap-2 p-2 rounded hover-elevate font-mono text-sm" data-testid={`link-member-${member.userId}`}>
+                          <span data-testid={`text-member-name-${member.userId}`}>{member.user.username}</span>
+                          <AccountTypeBadge type={member.user.accountType} />
+                          {member.role === "admin" && (
+                            <span className="text-xs text-primary">管理者</span>
+                          )}
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="font-mono text-sm text-muted-foreground">メンバーはいません</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {island.activityMeidia && island.activityMeidia.length > 0 && (
