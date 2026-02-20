@@ -9,6 +9,7 @@ import ProfileSetup from "@/pages/profile-setup";
 import Islands from "@/pages/islands";
 import IslandDetail from "@/pages/island-detail";
 import CreateIsland from "@/pages/create-island";
+import MeidiaList from "@/pages/meidia-list";
 import MeidiaDetail from "@/pages/meidia-detail";
 import CreateMeidia from "@/pages/create-meidia";
 import UserProfile from "@/pages/user-profile";
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/islands" component={() => <ProtectedRoute component={Islands} />} />
       <Route path="/islands/create" component={() => <ProtectedRoute component={CreateIsland} />} />
       <Route path="/islands/:id" component={() => <ProtectedRoute component={IslandDetail} />} />
+      <Route path="/meidia" component={() => <ProtectedRoute component={MeidiaList} />} />
       <Route path="/meidia/create" component={() => <ProtectedRoute component={CreateMeidia} />} />
       <Route path="/meidia/:id" component={() => <ProtectedRoute component={MeidiaDetail} />} />
       <Route path="/threads/:id" component={() => <ProtectedRoute component={ThreadDetail} />} />
