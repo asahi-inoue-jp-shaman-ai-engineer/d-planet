@@ -1,12 +1,98 @@
 import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useMeidia, useIncrementDownload } from "@/hooks/use-meidia";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
-import { ArrowLeft, Copy, Download, Tag } from "lucide-react";
+import { ArrowLeft, Copy, Download, Tag, FileText, Music, Youtube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+function getYoutubeEmbedId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+function AttachmentSection({ meidia }: { meidia: any }) {
+  if (!meidia.attachmentUrl && !meidia.youtubeUrl) return null;
+
+  return (
+    <div className="space-y-4">
+      {meidia.attachmentUrl && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 font-mono text-sm font-semibold">
+              {meidia.attachmentType === "audio" ? (
+                <Music className="w-4 h-4 text-primary" />
+              ) : (
+                <FileText className="w-4 h-4 text-primary" />
+              )}
+              添付ファイル
+            </div>
+
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="font-mono text-sm text-muted-foreground" data-testid="text-attachment-name">
+                {meidia.attachmentName || "添付ファイル"}
+              </span>
+              <a
+                href={meidia.attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={meidia.attachmentName}
+              >
+                <Button variant="outline" size="sm" className="font-mono" data-testid="button-download-attachment">
+                  <Download className="w-4 h-4 mr-2" />
+                  ダウンロード
+                </Button>
+              </a>
+            </div>
+
+            {meidia.attachmentType === "audio" && (
+              <audio controls className="w-full" data-testid="audio-player">
+                <source src={meidia.attachmentUrl} />
+                お使いのブラウザは音声再生に対応していません
+              </audio>
+            )}
+
+            {meidia.attachmentType === "pdf" && (
+              <iframe
+                src={meidia.attachmentUrl}
+                className="w-full h-96 rounded border border-border"
+                title="PDF プレビュー"
+                data-testid="pdf-viewer"
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {meidia.youtubeUrl && (() => {
+        const embedId = getYoutubeEmbedId(meidia.youtubeUrl);
+        if (!embedId) return null;
+        return (
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 font-mono text-sm font-semibold">
+                <Youtube className="w-4 h-4 text-primary" />
+                YouTube
+              </div>
+              <div className="aspect-video rounded overflow-hidden" data-testid="youtube-embed">
+                <iframe
+                  src={`https://www.youtube.com/embed/${embedId}`}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="YouTube video"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+    </div>
+  );
+}
 
 export default function MeidiaDetail() {
   const { id } = useParams();
@@ -57,7 +143,7 @@ export default function MeidiaDetail() {
       <TerminalLayout>
         <div className="space-y-4">
           <div className="font-mono">MEiDIAが見つかりません</div>
-          <Link href="/islands">
+          <Link href="/meidia">
             <Button variant="outline" className="font-mono">
               <ArrowLeft className="w-4 h-4 mr-2" />
               戻る
@@ -74,10 +160,12 @@ export default function MeidiaDetail() {
     <TerminalLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <Button variant="outline" className="font-mono" onClick={() => history.back()} data-testid="button-back">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            戻る
-          </Button>
+          <Link href="/meidia">
+            <Button variant="outline" className="font-mono" data-testid="button-back">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              戻る
+            </Button>
+          </Link>
           <div className="flex gap-2">
             <Button variant="outline" className="font-mono" onClick={handleCopy} data-testid="button-copy">
               <Copy className="w-4 h-4 mr-2" />
@@ -126,6 +214,8 @@ export default function MeidiaDetail() {
             </div>
           )}
         </div>
+
+        <AttachmentSection meidia={meidia} />
 
         <div className="prose prose-invert max-w-none">
           <MarkdownRenderer content={meidia.content} />

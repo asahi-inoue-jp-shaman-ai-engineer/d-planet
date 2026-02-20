@@ -62,6 +62,10 @@ export const meidia = pgTable("meidia", {
   creatorId: integer("creator_id").notNull(),
   isPublic: boolean("is_public").default(true).notNull(),
   downloadCount: integer("download_count").default(0).notNull(),
+  attachmentUrl: text("attachment_url"),
+  attachmentType: text("attachment_type"),
+  attachmentName: text("attachment_name"),
+  youtubeUrl: text("youtube_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -247,7 +251,7 @@ export type CreatePostRequest = z.infer<typeof insertPostSchema>;
 // === RESPONSE TYPES ===
 export type UserResponse = Omit<User, 'password'>;
 export type IslandResponse = Island & { creator: UserResponse };
-export type MeidiaResponse = Meidia & { creator: UserResponse };
+export type MeidiaResponse = Meidia & { creator: { id: number; username: string; accountType: string } };
 export type IslandDetailResponse = Island & { 
   creator: UserResponse;
   activityMeidia: MeidiaResponse[];

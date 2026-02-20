@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 declare module "express-session" {
   interface SessionData {
@@ -37,6 +38,8 @@ export async function registerRoutes(
     }
     next();
   };
+
+  registerObjectStorageRoutes(app);
 
   // === 認証 ===
   app.get(api.auth.me.path, async (req, res) => {

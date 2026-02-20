@@ -310,6 +310,10 @@ export const api = {
           fileType: z.string(),
           isPublic: z.boolean(),
           downloadCount: z.number(),
+          attachmentUrl: z.string().nullable(),
+          attachmentType: z.string().nullable(),
+          attachmentName: z.string().nullable(),
+          youtubeUrl: z.string().nullable(),
           createdAt: z.string(),
           creator: z.object({
             id: z.number(),
@@ -332,6 +336,10 @@ export const api = {
           fileType: z.string(),
           isPublic: z.boolean(),
           downloadCount: z.number(),
+          attachmentUrl: z.string().nullable(),
+          attachmentType: z.string().nullable(),
+          attachmentName: z.string().nullable(),
+          youtubeUrl: z.string().nullable(),
           createdAt: z.string(),
           creator: z.object({
             id: z.number(),

@@ -35,13 +35,35 @@ export function registerObjectStorageRoutes(app: Express): void {
    * IMPORTANT: The client should NOT send the file to this endpoint.
    * Send JSON metadata only, then upload the file directly to uploadURL.
    */
-  app.post("/api/uploads/request-url", async (req, res) => {
+  app.post("/api/uploads/request-url", async (req: any, res) => {
     try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "認証が必要です" });
+      }
+
       const { name, size, contentType } = req.body;
 
       if (!name) {
         return res.status(400).json({
           error: "Missing required field: name",
+        });
+      }
+
+      const allowedTypes = [
+        "text/plain", "text/markdown", "text/x-markdown",
+        "application/pdf",
+        "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac", "audio/webm",
+      ];
+      if (contentType && !allowedTypes.includes(contentType)) {
+        return res.status(400).json({
+          error: "許可されていないファイル形式です。テキスト、マークダウン、PDF、音声ファイルのみアップロード可能です。",
+        });
+      }
+
+      const maxSize = 50 * 1024 * 1024;
+      if (size && size > maxSize) {
+        return res.status(400).json({
+          error: "ファイルサイズが大きすぎます（最大50MB）",
         });
       }
 
@@ -70,7 +92,7 @@ export function registerObjectStorageRoutes(app: Express): void {
    * This serves files from object storage. For public files, no auth needed.
    * For protected files, add authentication middleware and ACL checks.
    */
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  app.get("/objects/{*objectPath}", async (req, res) => {
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
       await objectStorageService.downloadObject(objectFile, res);
