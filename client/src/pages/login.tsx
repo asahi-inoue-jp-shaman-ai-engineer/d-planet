@@ -52,8 +52,12 @@ export default function Login() {
         });
         toast({ title: "ログイン完了" });
       }
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setLocation("/islands");
+      const meRes = await fetch("/api/auth/me", { credentials: "include" });
+      if (meRes.ok) {
+        const userData = await meRes.json();
+        queryClient.setQueryData(["/api/auth/me"], userData);
+      }
+      window.location.href = "/islands";
     } catch (error: any) {
       toast({
         title: "エラー",
