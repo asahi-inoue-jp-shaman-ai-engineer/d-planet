@@ -119,6 +119,19 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === FEEDBACK REPORTS ===
+export const feedbackReports = pgTable("feedback_reports", {
+  id: serial("id").primaryKey(),
+  creatorId: integer("creator_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  screenshotUrl: text("screenshot_url"),
+  status: text("status").default("open").notNull(),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === RELATIONS ===
 export const usersRelations = relations(users, ({ many }) => ({
   islands: many(islands),
@@ -127,6 +140,11 @@ export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   islandMemberships: many(islandMembers),
   notifications: many(notifications),
+  feedbackReports: many(feedbackReports),
+}));
+
+export const feedbackReportsRelations = relations(feedbackReports, ({ one }) => ({
+  creator: one(users, { fields: [feedbackReports.creatorId], references: [users.id] }),
 }));
 
 export const islandsRelations = relations(islands, ({ one, many }) => ({
@@ -226,6 +244,7 @@ export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, c
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
 export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
+export const insertFeedbackReportSchema = createInsertSchema(feedbackReports).omit({ id: true, createdAt: true, status: true, adminNote: true });
 
 // === BASE TYPES ===
 export type InviteCode = typeof inviteCodes.$inferSelect;
@@ -237,6 +256,7 @@ export type Thread = typeof threads.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type IslandMember = typeof islandMembers.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type FeedbackReport = typeof feedbackReports.$inferSelect;
 
 // === REQUEST TYPES ===
 export type CreateUserRequest = z.infer<typeof insertUserSchema>;
@@ -247,6 +267,7 @@ export type CreateMeidiaRequest = z.infer<typeof insertMeidiaSchema>;
 export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
 export type CreateThreadRequest = z.infer<typeof insertThreadSchema>;
 export type CreatePostRequest = z.infer<typeof insertPostSchema>;
+export type CreateFeedbackReportRequest = z.infer<typeof insertFeedbackReportSchema>;
 
 // === RESPONSE TYPES ===
 export type UserResponse = Omit<User, 'password'>;
@@ -263,6 +284,9 @@ export type ThreadResponse = Thread & {
   postCount: number;
 };
 export type PostResponse = Post & {
+  creator: { id: number; username: string; accountType: string };
+};
+export type FeedbackReportResponse = FeedbackReport & {
   creator: { id: number; username: string; accountType: string };
 };
 

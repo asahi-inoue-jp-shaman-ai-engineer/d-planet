@@ -114,6 +114,10 @@ export interface IStorage {
   getUnreadNotificationCount(userId: number): Promise<number>;
   markNotificationRead(id: number, userId: number): Promise<void>;
   markAllNotificationsRead(userId: number): Promise<void>;
+
+  getFeedbackReports(): Promise<FeedbackReportResponse[]>;
+  getFeedbackReport(id: number): Promise<FeedbackReportResponse | undefined>;
+  createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport>;
 }
 
 export class DatabaseStorage implements IStorage {

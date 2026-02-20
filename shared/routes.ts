@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertIslandSchema, insertMeidiaSchema, registerSchema, loginSchema, profileSetupSchema } from './schema';
+import { insertUserSchema, insertIslandSchema, insertMeidiaSchema, insertFeedbackReportSchema, registerSchema, loginSchema, profileSetupSchema } from './schema';
 
 // === ERROR SCHEMAS ===
 export const errorSchemas = {
@@ -582,6 +582,63 @@ export const api = {
       },
     },
   },
+  feedback: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/feedback' as const,
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          creatorId: z.number(),
+          type: z.string(),
+          title: z.string(),
+          content: z.string(),
+          screenshotUrl: z.string().nullable(),
+          status: z.string(),
+          adminNote: z.string().nullable(),
+          createdAt: z.string(),
+          creator: z.object({
+            id: z.number(),
+            username: z.string(),
+            accountType: z.string(),
+          }),
+        })),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/feedback/:id' as const,
+      responses: {
+        200: z.object({
+          id: z.number(),
+          creatorId: z.number(),
+          type: z.string(),
+          title: z.string(),
+          content: z.string(),
+          screenshotUrl: z.string().nullable(),
+          status: z.string(),
+          adminNote: z.string().nullable(),
+          createdAt: z.string(),
+          creator: z.object({
+            id: z.number(),
+            username: z.string(),
+            accountType: z.string(),
+          }),
+        }),
+        404: errorSchemas.notFound,
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/feedback' as const,
+      input: insertFeedbackReportSchema.omit({ creatorId: true }),
+      responses: {
+        201: z.object({ id: z.number(), title: z.string() }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
 };
 
 // === REQUIRED: buildUrl helper ===
@@ -611,3 +668,5 @@ export type CreateIslandInput = z.infer<typeof api.islands.create.input>;
 export type CreateMeidiaInput = z.infer<typeof api.meidia.create.input>;
 export type CreateThreadInput = z.infer<typeof api.threads.create.input>;
 export type CreatePostInput = z.infer<typeof api.posts.create.input>;
+export type CreateFeedbackInput = z.infer<typeof api.feedback.create.input>;
+export type FeedbackReportResponse = z.infer<typeof api.feedback.list.responses[200]>[number];
