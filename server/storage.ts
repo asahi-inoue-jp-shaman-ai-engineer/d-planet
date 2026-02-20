@@ -226,8 +226,8 @@ export class DatabaseStorage implements IStorage {
       createdAt: row.createdAt,
       creator: {
         id: row.creatorId,
-        username: row.creatorUsername ?? "不明",
-        accountType: row.creatorAccountType ?? "HS",
+        username: row.creatorUsername ?? "神様",
+        accountType: row.creatorAccountType ?? "ET",
         profilePhoto: row.creatorProfilePhoto ?? null,
       },
     })) as IslandResponse[];
