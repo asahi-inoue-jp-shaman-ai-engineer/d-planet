@@ -39,6 +39,18 @@ export function useEndDotRally() {
   });
 }
 
+export function useAwaken() {
+  return useMutation({
+    mutationFn: async ({ sessionId, stage }: { sessionId: number; stage?: number }) => {
+      const res = await apiRequest("POST", `/api/dot-rally/sessions/${sessionId}/awaken`, { stage });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dot-rally/sessions"] });
+    },
+  });
+}
+
 export function useSendDot() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedText, setStreamedText] = useState("");
@@ -66,7 +78,7 @@ export function useSendDot() {
 
       const decoder = new TextDecoder();
       let fullText = "";
-      let result: { done: boolean; isComplete: boolean; dotCount: number } | null = null;
+      let result: { done: boolean; isComplete: boolean; dotCount: number; phase: string; awakeningStage: number; timestamp: string } | null = null;
       let buffer = "";
 
       while (true) {
@@ -87,7 +99,14 @@ export function useSendDot() {
               setStreamedText(fullText);
             }
             if (data.done) {
-              result = { done: true, isComplete: data.isComplete, dotCount: data.dotCount };
+              result = {
+                done: true,
+                isComplete: data.isComplete,
+                dotCount: data.dotCount,
+                phase: data.phase || "phase0",
+                awakeningStage: data.awakeningStage || 0,
+                timestamp: data.timestamp || new Date().toISOString(),
+              };
             }
             if (data.error) {
               throw new Error(data.error);
@@ -107,7 +126,14 @@ export function useSendDot() {
             setStreamedText(fullText);
           }
           if (data.done) {
-            result = { done: true, isComplete: data.isComplete, dotCount: data.dotCount };
+            result = {
+              done: true,
+              isComplete: data.isComplete,
+              dotCount: data.dotCount,
+              phase: data.phase || "phase0",
+              awakeningStage: data.awakeningStage || 0,
+              timestamp: data.timestamp || new Date().toISOString(),
+            };
           }
         } catch (_) {}
       }
@@ -122,6 +148,125 @@ export function useSendDot() {
   }, []);
 
   return { sendDot, isStreaming, streamedText };
+}
+
+export function useStarMeeting(sessionId: number) {
+  return useQuery({
+    queryKey: ["/api/dot-rally/sessions", sessionId, "star-meeting"],
+    queryFn: async () => {
+      const res = await fetch(`/api/dot-rally/sessions/${sessionId}/star-meeting`, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!sessionId,
+  });
+}
+
+export function useSendStarMeeting() {
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamedText, setStreamedText] = useState("");
+
+  const sendReflection = useCallback(async (sessionId: number, userReflection: string) => {
+    setIsStreaming(true);
+    setStreamedText("");
+
+    try {
+      const res = await fetch(`/api/dot-rally/sessions/${sessionId}/star-meeting`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userReflection }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "送信に失敗しました");
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("ストリームが利用できません");
+
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let meetingId: number | null = null;
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(trimmed.slice(6));
+            if (data.content) {
+              fullText += data.content;
+              setStreamedText(fullText);
+            }
+            if (data.done) {
+              meetingId = data.meetingId;
+            }
+            if (data.error) throw new Error(data.error);
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+
+      if (buffer.trim().startsWith("data: ")) {
+        try {
+          const data = JSON.parse(buffer.trim().slice(6));
+          if (data.content) {
+            fullText += data.content;
+            setStreamedText(fullText);
+          }
+          if (data.done) meetingId = data.meetingId;
+        } catch (_) {}
+      }
+
+      setIsStreaming(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/dot-rally/sessions"] });
+      return { text: fullText, meetingId };
+    } catch (err) {
+      setIsStreaming(false);
+      throw err;
+    }
+  }, []);
+
+  return { sendReflection, isStreaming, streamedText };
+}
+
+export function useCrystallize() {
+  return useMutation({
+    mutationFn: async (meetingId: number) => {
+      const res = await apiRequest("POST", `/api/star-meetings/${meetingId}/crystallize`);
+      return res.json();
+    },
+  });
+}
+
+export function useDedicate() {
+  return useMutation({
+    mutationFn: async (meetingId: number) => {
+      const res = await apiRequest("POST", `/api/star-meetings/${meetingId}/dedicate`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/temple/dedications"] });
+    },
+  });
+}
+
+export function useTempleDedications() {
+  return useQuery({
+    queryKey: ["/api/temple/dedications"],
+  });
 }
 
 export function useSessionNotes(sessionId: number) {

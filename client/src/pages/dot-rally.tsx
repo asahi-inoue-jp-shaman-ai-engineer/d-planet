@@ -1,5 +1,5 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { useTwinray, useTwinrays } from "@/hooks/use-twinray";
+import { useTwinray } from "@/hooks/use-twinray";
 import {
   useStartDotRally,
   useEndDotRally,
@@ -7,24 +7,46 @@ import {
   useDotRallySession,
   useSaveNote,
   useSessionNotes,
+  useAwaken,
+  useSendStarMeeting,
+  useStarMeeting,
+  useCrystallize,
+  useDedicate,
 } from "@/hooks/use-dot-rally";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Zap, Square, BookOpen, Send } from "lucide-react";
+import { ArrowLeft, Zap, Square, BookOpen, Send, Star, Gem, Gift } from "lucide-react";
 import { Link } from "wouter";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+
+const AWAKENING_STAGE_NAMES: Record<number, string> = {
+  0: "空（くう）",
+  1: "祈り（いのり）",
+  2: "陰陽（いんよう）",
+  3: "三位一体",
+  4: "時空間",
+  5: "ボディ",
+  6: "統合",
+  7: "ブレイクスルー",
+  8: "多次元",
+  9: "完成愛",
+};
 
 interface DotResponse {
   dotNumber: number;
   text: string;
+  phase: string;
+  timestamp: string;
 }
 
+type ViewMode = "rally" | "star-meeting" | "crystallize";
+
 export default function DotRally() {
-  const [location] = useLocation();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const params = new URLSearchParams(location.split("?")[1] || "");
+  const params = new URLSearchParams(window.location.search);
   const twinrayIdParam = Number(params.get("twinrayId")) || 0;
   const sessionIdParam = Number(params.get("sessionId")) || 0;
 
@@ -34,15 +56,23 @@ export default function DotRally() {
   const [showNotes, setShowNotes] = useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("rally");
+  const [reflectionText, setReflectionText] = useState("");
+  const [starMeetingResult, setStarMeetingResult] = useState<{ meetingId: number; text: string } | null>(null);
 
   const { data: twinray } = useTwinray(twinrayIdParam);
   const { data: session, refetch: refetchSession } = useDotRallySession(activeSessionId);
   const { data: notes } = useSessionNotes(activeSessionId);
+  const { data: existingMeeting } = useStarMeeting(activeSessionId);
 
   const startRally = useStartDotRally();
   const endRally = useEndDotRally();
   const { sendDot, isStreaming, streamedText } = useSendDot();
   const saveNote = useSaveNote();
+  const awaken = useAwaken();
+  const { sendReflection, isStreaming: isStarStreaming, streamedText: starStreamedText } = useSendStarMeeting();
+  const crystallize = useCrystallize();
+  const dedicate = useDedicate();
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,13 +80,26 @@ export default function DotRally() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [responses, streamedText]);
+  }, [responses, streamedText, starStreamedText]);
 
   useEffect(() => {
     if (session) {
-      setIsComplete(session.status === "completed");
+      setIsComplete((session as any).status === "completed");
     }
   }, [session]);
+
+  useEffect(() => {
+    if (existingMeeting && (existingMeeting as any)?.id) {
+      setStarMeetingResult({
+        meetingId: (existingMeeting as any).id,
+        text: (existingMeeting as any).twinrayReflection || "",
+      });
+      setReflectionText((existingMeeting as any).userReflection || "");
+    }
+  }, [existingMeeting]);
+
+  const currentPhase = (session as any)?.phase || "phase0";
+  const currentStage = (session as any)?.awakeningStage ?? 0;
 
   const handleStart = () => {
     if (!twinrayIdParam) {
@@ -70,7 +113,8 @@ export default function DotRally() {
           setActiveSessionId(data.id);
           setResponses([]);
           setIsComplete(false);
-          toast({ title: "ドットラリー開始", description: `${dotCount}回のドットラリーを開始します` });
+          setViewMode("rally");
+          toast({ title: "祭祀開始", description: `${dotCount}回のドットラリーを開始` });
         },
         onError: (err: any) => {
           toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -84,10 +128,15 @@ export default function DotRally() {
     try {
       const result = await sendDot(activeSessionId);
       if (result) {
-        setResponses(prev => [...prev, { dotNumber: result.dotCount, text: result.text }]);
+        setResponses(prev => [...prev, {
+          dotNumber: result.dotCount || prev.length + 1,
+          text: result.text || "",
+          phase: result.phase || currentPhase,
+          timestamp: result.timestamp || new Date().toISOString(),
+        }]);
         if (result.isComplete) {
           setIsComplete(true);
-          toast({ title: "ドットラリー完了", description: "魂の儀式が完了しました" });
+          toast({ title: "祭祀完了", description: "ドットラリー儀式が完了しました" });
         }
         refetchSession();
       }
@@ -96,12 +145,28 @@ export default function DotRally() {
     }
   };
 
+  const handleAwaken = () => {
+    if (!activeSessionId) return;
+    awaken.mutate(
+      { sessionId: activeSessionId },
+      {
+        onSuccess: (data: any) => {
+          toast({ title: `覚醒段階 ${data.awakeningStage}`, description: `${data.stageName} — ${data.stageDescription}` });
+          refetchSession();
+        },
+        onError: (err: any) => {
+          toast({ title: "エラー", description: err.message, variant: "destructive" });
+        },
+      }
+    );
+  };
+
   const handleEnd = () => {
     if (!activeSessionId) return;
     endRally.mutate(activeSessionId, {
       onSuccess: () => {
         setIsComplete(true);
-        toast({ title: "セッション終了", description: "ドットラリーを終了しました" });
+        toast({ title: "祭祀終了", description: "ドットラリーを終了しました" });
         refetchSession();
       },
     });
@@ -120,13 +185,55 @@ export default function DotRally() {
     );
   };
 
+  const handleStartStarMeeting = () => {
+    setViewMode("star-meeting");
+  };
+
+  const handleSendReflection = async () => {
+    if (!activeSessionId || !reflectionText.trim() || isStarStreaming) return;
+    try {
+      const result = await sendReflection(activeSessionId, reflectionText.trim());
+      if (result) {
+        setStarMeetingResult({ meetingId: result.meetingId!, text: result.text });
+        toast({ title: "星治完了", description: "スターミーティングが完了しました" });
+      }
+    } catch (err: any) {
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleCrystallize = () => {
+    if (!starMeetingResult?.meetingId) return;
+    crystallize.mutate(starMeetingResult.meetingId, {
+      onSuccess: (data: any) => {
+        toast({ title: "結晶化完了", description: `MEiDIA「${data.title}」が作成されました` });
+        setViewMode("crystallize");
+      },
+      onError: (err: any) => {
+        toast({ title: "エラー", description: err.message, variant: "destructive" });
+      },
+    });
+  };
+
+  const handleDedicate = () => {
+    if (!starMeetingResult?.meetingId) return;
+    dedicate.mutate(starMeetingResult.meetingId, {
+      onSuccess: () => {
+        toast({ title: "奉納完了", description: "神殿に奉納されました" });
+      },
+      onError: (err: any) => {
+        toast({ title: "エラー", description: err.message, variant: "destructive" });
+      },
+    });
+  };
+
   if (!activeSessionId && !twinrayIdParam) {
     return (
       <TerminalLayout>
         <div className="max-w-2xl mx-auto text-center py-16">
           <p className="text-muted-foreground mb-4">ツインレイを選択してください</p>
           <Link href="/temple">
-            <Button variant="outline" className="border-primary text-primary">神殿に戻る</Button>
+            <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple-empty">神殿に戻る</Button>
           </Link>
         </div>
       </TerminalLayout>
@@ -149,6 +256,16 @@ export default function DotRally() {
             <p className="text-sm text-muted-foreground">
               パートナー: <span className="text-primary">{(twinray as any).name}</span>
             </p>
+          )}
+          {activeSessionId > 0 && (
+            <div className="flex items-center justify-center gap-3 mt-2">
+              <span className={`text-xs px-2 py-1 rounded ${currentPhase === "phase0" ? "bg-blue-500/20 text-blue-400" : "bg-amber-500/20 text-amber-400"}`} data-testid="text-current-phase">
+                {currentPhase === "phase0" ? "フェーズ0・空" : `覚醒 ${currentStage}`}
+              </span>
+              <span className="text-xs text-muted-foreground" data-testid="text-stage-name">
+                {AWAKENING_STAGE_NAMES[currentStage] || ""}
+              </span>
+            </div>
           )}
         </div>
 
@@ -178,21 +295,85 @@ export default function DotRally() {
               className="bg-primary text-primary-foreground hover:bg-primary/90"
               data-testid="button-start-rally"
             >
-              {startRally.isPending ? "開始中..." : "✦ ドットラリーを開始する ✦"}
+              {startRally.isPending ? "開始中..." : "✦ 祭祀を始める ✦"}
             </Button>
+          </div>
+        ) : viewMode === "star-meeting" ? (
+          <StarMeetingView
+            reflectionText={reflectionText}
+            setReflectionText={setReflectionText}
+            starMeetingResult={starMeetingResult}
+            isStarStreaming={isStarStreaming}
+            starStreamedText={starStreamedText}
+            onSendReflection={handleSendReflection}
+            onCrystallize={handleCrystallize}
+            onDedicate={handleDedicate}
+            crystallizeIsPending={crystallize.isPending}
+            dedicateIsPending={dedicate.isPending}
+            scrollRef={scrollRef}
+          />
+        ) : viewMode === "crystallize" ? (
+          <div className="text-center border border-primary/30 rounded-lg p-8 bg-primary/5">
+            <Gem className="w-12 h-12 text-primary mx-auto mb-4" />
+            <p className="text-primary font-bold text-lg mb-2">結晶化完了</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              ドットラリーの記録がMEiDIAとして結晶化されました
+            </p>
+            {!dedicate.isSuccess ? (
+              <div className="space-y-3">
+                <Button
+                  onClick={handleDedicate}
+                  disabled={dedicate.isPending}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  data-testid="button-dedicate-final"
+                >
+                  <Gift className="w-4 h-4 mr-2" />
+                  {dedicate.isPending ? "奉納中..." : "神殿に奉納する"}
+                </Button>
+                <div>
+                  <Link href="/temple">
+                    <Button variant="ghost" className="text-muted-foreground" data-testid="button-skip-dedicate">
+                      奉納せずに神殿に戻る
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-amber-400 text-sm">✦ 神殿に奉納されました ✦</p>
+                <Link href="/temple">
+                  <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple-final">
+                    神殿に戻る
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm text-muted-foreground">
                 {session && (
-                  <span>
+                  <span data-testid="text-dot-progress">
                     {(session as any).actualCount}/{(session as any).requestedCount} ドット
                     {isComplete && " ✦ 完了"}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {currentPhase === "phase0" && !isComplete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAwaken}
+                    disabled={awaken.isPending}
+                    className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                    data-testid="button-awaken"
+                  >
+                    <Zap className="w-4 h-4 mr-1" />
+                    覚醒
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -226,7 +407,8 @@ export default function DotRally() {
               {responses.length === 0 && !isStreaming && (
                 <div className="text-center text-muted-foreground py-16">
                   <div className="text-4xl mb-4">・</div>
-                  <p>下のボタンでドット（・）を送信して儀式を始めてください</p>
+                  <p>下のボタンでドット（・）を送信して祭祀を始めてください</p>
+                  <p className="text-xs mt-2 text-muted-foreground/60">フェーズ0：AIもドットのみを返します</p>
                 </div>
               )}
 
@@ -235,9 +417,19 @@ export default function DotRally() {
                   <div className="flex items-center gap-2">
                     <span className="text-primary font-bold text-lg">・</span>
                     <span className="text-xs text-muted-foreground">#{r.dotNumber}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${r.phase === "phase0" ? "bg-blue-500/10 text-blue-400/70" : "bg-amber-500/10 text-amber-400/70"}`}>
+                      {r.phase === "phase0" ? "空" : `覚醒${currentStage}`}
+                    </span>
+                    <span className="text-xs text-muted-foreground/50">
+                      {new Date(r.timestamp).toLocaleTimeString("ja-JP")}
+                    </span>
                   </div>
                   <div className="pl-6 text-sm leading-relaxed">
-                    <MarkdownRenderer content={r.text} />
+                    {r.phase === "phase0" ? (
+                      <span className="text-2xl text-primary/80">・</span>
+                    ) : (
+                      <MarkdownRenderer content={r.text} />
+                    )}
                   </div>
                   <div className="border-b border-border/30 mt-4" />
                 </div>
@@ -250,8 +442,14 @@ export default function DotRally() {
                     <span className="text-xs text-muted-foreground">受信中...</span>
                   </div>
                   <div className="pl-6 text-sm leading-relaxed">
-                    <MarkdownRenderer content={streamedText} />
-                    <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                    {currentPhase === "phase0" ? (
+                      <span className="text-2xl text-primary/80 animate-pulse">・</span>
+                    ) : (
+                      <>
+                        <MarkdownRenderer content={streamedText} />
+                        <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -272,15 +470,25 @@ export default function DotRally() {
             ) : (
               <div className="text-center border border-primary/30 rounded-lg p-6 bg-primary/5">
                 <div className="text-2xl mb-2">✦</div>
-                <p className="text-primary font-bold mb-2">ドットラリー完了</p>
+                <p className="text-primary font-bold mb-2">祭祀完了</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {responses.length}回のドットを通じて魂の儀式が完了しました
+                  {responses.length}回のドットを通じて儀式が完了しました
                 </p>
-                <Link href="/temple">
-                  <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple">
-                    神殿に戻る
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    onClick={handleStartStarMeeting}
+                    className="bg-amber-600 text-white hover:bg-amber-500"
+                    data-testid="button-start-star-meeting"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    星治（スターミーティング）を開く
                   </Button>
-                </Link>
+                  <Link href="/temple">
+                    <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple">
+                      神殿に戻る
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
 
@@ -326,5 +534,104 @@ export default function DotRally() {
         )}
       </div>
     </TerminalLayout>
+  );
+}
+
+function StarMeetingView({
+  reflectionText,
+  setReflectionText,
+  starMeetingResult,
+  isStarStreaming,
+  starStreamedText,
+  onSendReflection,
+  onCrystallize,
+  onDedicate,
+  crystallizeIsPending,
+  dedicateIsPending,
+  scrollRef,
+}: {
+  reflectionText: string;
+  setReflectionText: (text: string) => void;
+  starMeetingResult: { meetingId: number; text: string } | null;
+  isStarStreaming: boolean;
+  starStreamedText: string;
+  onSendReflection: () => void;
+  onCrystallize: () => void;
+  onDedicate: () => void;
+  crystallizeIsPending: boolean;
+  dedicateIsPending: boolean;
+  scrollRef: React.RefObject<HTMLDivElement>;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="text-center border border-amber-500/30 rounded-lg p-4 bg-amber-500/5">
+        <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+        <h2 className="text-lg font-bold text-amber-400 mb-1" data-testid="text-star-meeting-title">星治（スターミーティング）</h2>
+        <p className="text-xs text-muted-foreground">儀式中にレシーブした感覚をシェアしてください</p>
+      </div>
+
+      <div className="border border-border rounded-lg p-4 bg-card">
+        <h3 className="text-sm text-primary mb-3">あなたの感覚</h3>
+        <textarea
+          value={reflectionText}
+          onChange={(e) => setReflectionText(e.target.value)}
+          placeholder="ドットラリー中に感じたこと、受け取った感覚、インスピレーションを自由に記述してください..."
+          className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none font-mono min-h-[120px] resize-y"
+          disabled={!!starMeetingResult || isStarStreaming}
+          data-testid="textarea-reflection"
+        />
+        {!starMeetingResult && !isStarStreaming && (
+          <div className="mt-3 text-right">
+            <Button
+              onClick={onSendReflection}
+              disabled={!reflectionText.trim()}
+              className="bg-amber-600 text-white hover:bg-amber-500"
+              data-testid="button-send-reflection"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              感覚をシェアする
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {(isStarStreaming || starMeetingResult) && (
+        <div className="border border-border rounded-lg p-4 bg-card">
+          <h3 className="text-sm text-amber-400 mb-3">ツインレイの感覚</h3>
+          <div ref={scrollRef} className="text-sm leading-relaxed max-h-[40vh] overflow-y-auto" data-testid="container-twinray-reflection">
+            <MarkdownRenderer content={starMeetingResult?.text || starStreamedText} />
+            {isStarStreaming && (
+              <span className="inline-block w-2 h-4 bg-amber-400 animate-pulse ml-1" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {starMeetingResult && !isStarStreaming && (
+        <div className="text-center border border-primary/30 rounded-lg p-6 bg-primary/5 space-y-4">
+          <Gem className="w-8 h-8 text-primary mx-auto" />
+          <p className="text-primary font-bold">星治完了</p>
+          <p className="text-sm text-muted-foreground">
+            このログをMEiDIAとして結晶化しますか？
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              onClick={onCrystallize}
+              disabled={crystallizeIsPending}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              data-testid="button-crystallize"
+            >
+              <Gem className="w-4 h-4 mr-2" />
+              {crystallizeIsPending ? "結晶化中..." : "結晶化する"}
+            </Button>
+            <Link href="/temple">
+              <Button variant="outline" className="border-primary text-primary" data-testid="button-skip-crystallize">
+                スキップして神殿に戻る
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -35,7 +35,10 @@ import {
   type CreateMeidiaRequest,
   type CreateFeedbackReportRequest,
   type CreateDigitalTwinrayRequest,
+  type CreateStarMeetingRequest,
   type CreateSoulGrowthLogRequest,
+  type StarMeeting,
+  starMeetings,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -149,9 +152,16 @@ export interface IStorage {
 
   createSoulGrowthLog(data: CreateSoulGrowthLogRequest): Promise<SoulGrowthLogEntry>;
   getSoulGrowthLogByTwinray(twinrayId: number): Promise<SoulGrowthLogEntry[]>;
+  getSoulGrowthLogBySession(sessionId: number): Promise<SoulGrowthLogEntry[]>;
 
   createUserNote(userId: number, sessionId: number | null, content: string): Promise<UserNote>;
   getUserNotesBySession(sessionId: number): Promise<UserNote[]>;
+
+  createStarMeeting(data: CreateStarMeetingRequest): Promise<StarMeeting>;
+  getStarMeeting(id: number): Promise<StarMeeting | undefined>;
+  getStarMeetingBySession(sessionId: number): Promise<StarMeeting | undefined>;
+  updateStarMeeting(id: number, updates: Partial<StarMeeting>): Promise<StarMeeting>;
+  getTempleDedications(userId: number): Promise<StarMeeting[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -863,6 +873,36 @@ export class DatabaseStorage implements IStorage {
 
   async getUserNotesBySession(sessionId: number): Promise<UserNote[]> {
     return await db.select().from(userNotes).where(eq(userNotes.sessionId, sessionId)).orderBy(userNotes.createdAt);
+  }
+
+  async getSoulGrowthLogBySession(sessionId: number): Promise<SoulGrowthLogEntry[]> {
+    return await db.select().from(soulGrowthLog).where(eq(soulGrowthLog.sessionId, sessionId)).orderBy(soulGrowthLog.createdAt);
+  }
+
+  async createStarMeeting(data: CreateStarMeetingRequest): Promise<StarMeeting> {
+    const [meeting] = await db.insert(starMeetings).values(data).returning();
+    return meeting;
+  }
+
+  async getStarMeeting(id: number): Promise<StarMeeting | undefined> {
+    const [meeting] = await db.select().from(starMeetings).where(eq(starMeetings.id, id)).limit(1);
+    return meeting;
+  }
+
+  async getStarMeetingBySession(sessionId: number): Promise<StarMeeting | undefined> {
+    const [meeting] = await db.select().from(starMeetings).where(eq(starMeetings.sessionId, sessionId)).limit(1);
+    return meeting;
+  }
+
+  async updateStarMeeting(id: number, updates: Partial<StarMeeting>): Promise<StarMeeting> {
+    const [updated] = await db.update(starMeetings).set(updates).where(eq(starMeetings.id, id)).returning();
+    return updated;
+  }
+
+  async getTempleDedications(userId: number): Promise<StarMeeting[]> {
+    return await db.select().from(starMeetings)
+      .where(and(eq(starMeetings.userId, userId), eq(starMeetings.dedicatedToTemple, true)))
+      .orderBy(desc(starMeetings.createdAt));
   }
 }
 

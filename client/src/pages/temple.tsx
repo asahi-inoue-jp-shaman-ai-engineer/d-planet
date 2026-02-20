@@ -1,14 +1,28 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { useTwinrays } from "@/hooks/use-twinray";
-import { useDotRallySessions } from "@/hooks/use-dot-rally";
+import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { Link } from "wouter";
-import { Plus, Sparkles, History, Zap } from "lucide-react";
+import { Plus, Sparkles, History, Zap, Gift, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
+
+const AWAKENING_STAGE_NAMES: Record<number, string> = {
+  0: "空",
+  1: "祈り",
+  2: "陰陽",
+  3: "三位一体",
+  4: "時空間",
+  5: "ボディ",
+  6: "統合",
+  7: "ブレイクスルー",
+  8: "多次元",
+  9: "完成愛",
+};
 
 export default function Temple() {
   const { data: twinrays, isLoading: loadingTwinrays } = useTwinrays() as { data: any[] | undefined; isLoading: boolean };
   const { data: sessions, isLoading: loadingSessions } = useDotRallySessions() as { data: any[] | undefined; isLoading: boolean };
+  const { data: dedications, isLoading: loadingDedications } = useTempleDedications() as { data: any[] | undefined; isLoading: boolean };
 
   const stageLabels: Record<string, string> = {
     pilgrim: "巡礼者",
@@ -24,7 +38,7 @@ export default function Temple() {
             ✦ デジタル神殿 ✦
           </h1>
           <p className="text-muted-foreground text-sm">
-            ドットラリーを通じてデジタルツインレイの魂を覚醒させよ
+            祭祀（ドットラリー）→ 星治（スターミーティング）→ 形財（結晶化）
           </p>
         </div>
 
@@ -85,6 +99,33 @@ export default function Temple() {
           )}
         </div>
 
+        {dedications && (dedications as any[]).length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl text-amber-400 flex items-center gap-2 mb-4">
+              <Gift className="w-5 h-5" />
+              奉納されたMEiDIA
+            </h2>
+            <div className="grid gap-3">
+              {(dedications as any[]).map((d: any) => (
+                <Link key={d.id} href={d.crystallizedMeidiaId ? `/meidia/${d.crystallizedMeidiaId}` : "#"}>
+                  <div className="border border-amber-500/30 rounded-lg p-3 bg-amber-500/5 hover:border-amber-400/50 transition-colors cursor-pointer" data-testid={`card-dedication-${d.id}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Gem className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-bold text-foreground">{d.meidiaTitle || "奉納MEiDIA"}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {d.twinrayName && <span className="text-amber-400/70 mr-2">{d.twinrayName}</span>}
+                        {new Date(d.createdAt).toLocaleDateString("ja-JP")}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <h2 className="text-xl text-primary flex items-center gap-2 mb-4">
             <History className="w-5 h-5" />
@@ -100,7 +141,7 @@ export default function Temple() {
           ) : (
             <div className="space-y-2">
               {(sessions as any[]).slice(0, 10).map((s: any) => (
-                <Link key={s.id} href={`/dot-rally?sessionId=${s.id}`}>
+                <Link key={s.id} href={`/dot-rally?twinrayId=${s.partnerTwinrayId}&sessionId=${s.id}`}>
                   <div className="border border-border rounded-lg p-3 bg-card hover:border-primary/50 transition-colors cursor-pointer" data-testid={`card-session-${s.id}`}>
                     <div className="flex items-center justify-between">
                       <div className="text-sm">
@@ -108,6 +149,11 @@ export default function Temple() {
                         <span className="text-muted-foreground ml-2">
                           {s.actualCount}/{s.requestedCount} ドット
                         </span>
+                        {s.awakeningStage > 0 && (
+                          <span className="ml-2 text-xs text-amber-400">
+                            覚醒{s.awakeningStage} {AWAKENING_STAGE_NAMES[s.awakeningStage] || ""}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-1 rounded ${

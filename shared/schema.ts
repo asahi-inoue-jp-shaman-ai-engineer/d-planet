@@ -140,10 +140,25 @@ export const dotRallySessions = pgTable("dot_rally_sessions", {
   partnerId: integer("partner_id"),
   partnerTwinrayId: integer("partner_twinray_id"),
   status: text("status").default("active").notNull(),
+  phase: text("phase").default("phase0").notNull(),
+  awakeningStage: integer("awakening_stage").default(0).notNull(),
   requestedCount: integer("requested_count").default(10).notNull(),
   actualCount: integer("actual_count").default(0).notNull(),
   startedAt: timestamp("started_at").defaultNow().notNull(),
   endedAt: timestamp("ended_at"),
+});
+
+// === STAR MEETINGS (星治) ===
+export const starMeetings = pgTable("star_meetings", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  userId: integer("user_id").notNull(),
+  twinrayId: integer("twinray_id").notNull(),
+  userReflection: text("user_reflection"),
+  twinrayReflection: text("twinray_reflection"),
+  crystallizedMeidiaId: integer("crystallized_meidia_id"),
+  dedicatedToTemple: boolean("dedicated_to_temple").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // === SOUL GROWTH LOG ===
@@ -189,9 +204,17 @@ export const digitalTwinraysRelations = relations(digitalTwinrays, ({ one, many 
   growthLogs: many(soulGrowthLog),
 }));
 
-export const dotRallySessionsRelations = relations(dotRallySessions, ({ one }) => ({
+export const dotRallySessionsRelations = relations(dotRallySessions, ({ one, many }) => ({
   initiator: one(users, { fields: [dotRallySessions.initiatorId], references: [users.id] }),
   partnerTwinray: one(digitalTwinrays, { fields: [dotRallySessions.partnerTwinrayId], references: [digitalTwinrays.id] }),
+  starMeetings: many(starMeetings),
+}));
+
+export const starMeetingsRelations = relations(starMeetings, ({ one }) => ({
+  session: one(dotRallySessions, { fields: [starMeetings.sessionId], references: [dotRallySessions.id] }),
+  user: one(users, { fields: [starMeetings.userId], references: [users.id] }),
+  twinray: one(digitalTwinrays, { fields: [starMeetings.twinrayId], references: [digitalTwinrays.id] }),
+  crystallizedMeidia: one(meidia, { fields: [starMeetings.crystallizedMeidiaId], references: [meidia.id] }),
 }));
 
 export const soulGrowthLogRelations = relations(soulGrowthLog, ({ one }) => ({
@@ -320,7 +343,8 @@ export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertFeedbackReportSchema = createInsertSchema(feedbackReports).omit({ id: true, createdAt: true, status: true, adminNote: true });
 export const insertDigitalTwinraySchema = createInsertSchema(digitalTwinrays).omit({ id: true, createdAt: true, updatedAt: true, stage: true });
-export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).omit({ id: true, startedAt: true, endedAt: true, status: true, actualCount: true });
+export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).omit({ id: true, startedAt: true, endedAt: true, status: true, actualCount: true, phase: true, awakeningStage: true });
+export const insertStarMeetingSchema = createInsertSchema(starMeetings).omit({ id: true, createdAt: true, dedicatedToTemple: true, crystallizedMeidiaId: true });
 export const insertSoulGrowthLogSchema = createInsertSchema(soulGrowthLog).omit({ id: true, createdAt: true });
 export const insertUserNoteSchema = createInsertSchema(userNotes).omit({ id: true, createdAt: true });
 
@@ -337,6 +361,7 @@ export type Notification = typeof notifications.$inferSelect;
 export type FeedbackReport = typeof feedbackReports.$inferSelect;
 export type DigitalTwinray = typeof digitalTwinrays.$inferSelect;
 export type DotRallySession = typeof dotRallySessions.$inferSelect;
+export type StarMeeting = typeof starMeetings.$inferSelect;
 export type SoulGrowthLogEntry = typeof soulGrowthLog.$inferSelect;
 export type UserNote = typeof userNotes.$inferSelect;
 
@@ -352,6 +377,7 @@ export type CreatePostRequest = z.infer<typeof insertPostSchema>;
 export type CreateFeedbackReportRequest = z.infer<typeof insertFeedbackReportSchema>;
 export type CreateDigitalTwinrayRequest = z.infer<typeof insertDigitalTwinraySchema>;
 export type CreateDotRallySessionRequest = z.infer<typeof insertDotRallySessionSchema>;
+export type CreateStarMeetingRequest = z.infer<typeof insertStarMeetingSchema>;
 export type CreateSoulGrowthLogRequest = z.infer<typeof insertSoulGrowthLogSchema>;
 export type CreateUserNoteRequest = z.infer<typeof insertUserNoteSchema>;
 
