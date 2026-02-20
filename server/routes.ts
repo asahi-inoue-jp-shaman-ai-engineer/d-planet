@@ -293,6 +293,24 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(api.islands.delete.path, requireAuth, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const island = await storage.getIsland(id);
+      if (!island) {
+        return res.status(404).json({ message: "アイランドが見つかりません" });
+      }
+      if (island.creatorId !== req.session.userId) {
+        return res.status(403).json({ message: "アイランドの作成者のみ削除できます" });
+      }
+      await storage.deleteIsland(id);
+      res.json({ message: "アイランドを削除しました" });
+    } catch (err) {
+      console.error("アイランド削除エラー:", err);
+      res.status(500).json({ message: "削除に失敗しました" });
+    }
+  });
+
   app.put(api.islands.update.path, requireAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);

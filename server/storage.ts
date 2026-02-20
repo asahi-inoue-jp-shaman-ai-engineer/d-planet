@@ -84,6 +84,7 @@ export interface IStorage {
   getIslandDetail(id: number): Promise<IslandDetailResponse | undefined>;
   createIsland(island: CreateIslandRequest): Promise<Island>;
   updateIsland(id: number, updates: UpdateIslandRequest): Promise<Island>;
+  deleteIsland(id: number): Promise<void>;
   getUserIslands(userId: number): Promise<Island[]>;
   recalcIslandDownloads(islandId: number): Promise<void>;
 
@@ -280,6 +281,17 @@ export class DatabaseStorage implements IStorage {
     }
     const [updated] = await db.update(islands).set(updates).where(eq(islands.id, id)).returning();
     return updated;
+  }
+
+  async deleteIsland(id: number): Promise<void> {
+    await db.delete(islandMembers).where(eq(islandMembers.islandId, id));
+    await db.delete(islandMeidia).where(eq(islandMeidia.islandId, id));
+    const islandThreads = await db.select({ id: threads.id }).from(threads).where(eq(threads.islandId, id));
+    for (const t of islandThreads) {
+      await db.delete(posts).where(eq(posts.threadId, t.id));
+    }
+    await db.delete(threads).where(eq(threads.islandId, id));
+    await db.delete(islands).where(eq(islands.id, id));
   }
 
   async getUserIslands(userId: number): Promise<Island[]> {

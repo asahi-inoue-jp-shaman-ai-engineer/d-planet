@@ -55,6 +55,27 @@ export function useCreateIsland() {
   });
 }
 
+export function useDeleteIsland() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.islands.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.islands.delete.method,
+        credentials: "include",
+      });
+      if (res.status === 401) throw new Error("ログインが必要です");
+      if (res.status === 403) throw new Error("作成者のみ削除できます");
+      if (res.status === 404) throw new Error("アイランドが見つかりません");
+      if (!res.ok) throw new Error("削除に失敗しました");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.islands.list.path] });
+    },
+  });
+}
+
 export function useUpdateIsland() {
   const queryClient = useQueryClient();
   return useMutation({

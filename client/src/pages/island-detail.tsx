@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { useIsland } from "@/hooks/use-islands";
+import { useIsland, useDeleteIsland } from "@/hooks/use-islands";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useCreateThread, useCreatePost } from "@/hooks/use-threads";
 import { useIslandMembership, useJoinIsland, useLeaveIsland } from "@/hooks/use-members";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { MeidiaCard } from "@/components/MeidiaCard";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
-import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus } from "lucide-react";
+import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -40,11 +40,14 @@ export default function IslandDetail() {
   const { data: membership } = useIslandMembership(Number(id));
   const joinIsland = useJoinIsland();
   const leaveIsland = useLeaveIsland();
+  const deleteIsland = useDeleteIsland();
   const createThread = useCreateThread();
   const createPost = useCreatePost();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const [showNewThread, setShowNewThread] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [newThreadContent, setNewThreadContent] = useState("");
   const [expandedThread, setExpandedThread] = useState<number | null>(null);
@@ -221,7 +224,61 @@ export default function IslandDetail() {
               <Users className="w-4 h-4 mr-2" />
               メンバー一覧
             </Button>
+            {currentUser && island.creator.id === currentUser.id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-mono text-destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+                data-testid="button-delete-island"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                削除
+              </Button>
+            )}
           </div>
+
+          {showDeleteConfirm && (
+            <Card className="border-destructive">
+              <CardContent className="p-4 space-y-3">
+                <p className="font-mono text-sm text-destructive font-semibold">
+                  このアイランドを削除しますか？
+                </p>
+                <p className="font-mono text-xs text-muted-foreground">
+                  関連するスレッド・投稿・メンバー情報もすべて削除されます。この操作は取り消せません。
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="font-mono"
+                    disabled={deleteIsland.isPending}
+                    onClick={async () => {
+                      try {
+                        await deleteIsland.mutateAsync(Number(id));
+                        toast({ title: "削除完了", description: "アイランドを削除しました" });
+                        setLocation("/islands");
+                      } catch (err: any) {
+                        toast({ title: "エラー", description: err.message, variant: "destructive" });
+                      }
+                    }}
+                    data-testid="button-confirm-delete"
+                  >
+                    {deleteIsland.isPending ? "削除中..." : "削除する"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="font-mono"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    data-testid="button-cancel-delete"
+                  >
+                    キャンセル
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {showMembers && membership?.members && (
             <Card>
