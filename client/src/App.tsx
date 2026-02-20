@@ -16,6 +16,9 @@ import UserProfile from "@/pages/user-profile";
 import UsersList from "@/pages/users-list";
 import ThreadDetail from "@/pages/thread-detail";
 import NotificationsPage from "@/pages/notifications";
+import FeedbackList from "@/pages/feedback-list";
+import CreateFeedback from "@/pages/create-feedback";
+import FeedbackDetail from "@/pages/feedback-detail";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -55,6 +58,9 @@ function Router() {
       <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
       <Route path="/users/:id" component={() => <ProtectedRoute component={UserProfile} />} />
       <Route path="/notifications" component={() => <ProtectedRoute component={NotificationsPage} />} />
+      <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackList} />} />
+      <Route path="/feedback/create" component={() => <ProtectedRoute component={CreateFeedback} />} />
+      <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
       <Route path="/">
         <Redirect to="/islands" />
       </Route>

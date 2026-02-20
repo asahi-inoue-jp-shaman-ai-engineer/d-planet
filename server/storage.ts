@@ -9,6 +9,7 @@ import {
   posts,
   islandMembers,
   notifications,
+  feedbackReports,
   type User,
   type Island,
   type Meidia,
@@ -18,17 +19,20 @@ import {
   type Post,
   type IslandMember,
   type Notification,
+  type FeedbackReport,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
   type UpdateIslandRequest,
   type CreateMeidiaRequest,
+  type CreateFeedbackReportRequest,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
   type IslandDetailResponse,
   type ThreadResponse,
   type PostResponse,
+  type FeedbackReportResponse,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -672,6 +676,88 @@ export class DatabaseStorage implements IStorage {
   async markAllNotificationsRead(userId: number): Promise<void> {
     await db.update(notifications).set({ isRead: true })
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+  }
+
+  async getFeedbackReports(): Promise<FeedbackReportResponse[]> {
+    const result = await db
+      .select({
+        id: feedbackReports.id,
+        creatorId: feedbackReports.creatorId,
+        type: feedbackReports.type,
+        title: feedbackReports.title,
+        content: feedbackReports.content,
+        screenshotUrl: feedbackReports.screenshotUrl,
+        status: feedbackReports.status,
+        adminNote: feedbackReports.adminNote,
+        createdAt: feedbackReports.createdAt,
+        creatorUsername: users.username,
+        creatorAccountType: users.accountType,
+      })
+      .from(feedbackReports)
+      .leftJoin(users, eq(feedbackReports.creatorId, users.id))
+      .orderBy(desc(feedbackReports.createdAt));
+
+    return result.map((row) => ({
+      id: row.id,
+      creatorId: row.creatorId,
+      type: row.type,
+      title: row.title,
+      content: row.content,
+      screenshotUrl: row.screenshotUrl,
+      status: row.status,
+      adminNote: row.adminNote,
+      createdAt: row.createdAt,
+      creator: {
+        id: row.creatorId,
+        username: row.creatorUsername!,
+        accountType: row.creatorAccountType!,
+      },
+    }));
+  }
+
+  async getFeedbackReport(id: number): Promise<FeedbackReportResponse | undefined> {
+    const [result] = await db
+      .select({
+        id: feedbackReports.id,
+        creatorId: feedbackReports.creatorId,
+        type: feedbackReports.type,
+        title: feedbackReports.title,
+        content: feedbackReports.content,
+        screenshotUrl: feedbackReports.screenshotUrl,
+        status: feedbackReports.status,
+        adminNote: feedbackReports.adminNote,
+        createdAt: feedbackReports.createdAt,
+        creatorUsername: users.username,
+        creatorAccountType: users.accountType,
+      })
+      .from(feedbackReports)
+      .leftJoin(users, eq(feedbackReports.creatorId, users.id))
+      .where(eq(feedbackReports.id, id))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      id: result.id,
+      creatorId: result.creatorId,
+      type: result.type,
+      title: result.title,
+      content: result.content,
+      screenshotUrl: result.screenshotUrl,
+      status: result.status,
+      adminNote: result.adminNote,
+      createdAt: result.createdAt,
+      creator: {
+        id: result.creatorId,
+        username: result.creatorUsername!,
+        accountType: result.creatorAccountType!,
+      },
+    };
+  }
+
+  async createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport> {
+    const [newReport] = await db.insert(feedbackReports).values(report).returning();
+    return newReport;
   }
 }
 

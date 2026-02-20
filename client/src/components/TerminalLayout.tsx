@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Home, Bell, Users } from "lucide-react";
+import { LogOut, User, Map, FileText, Home, Bell, Users, MessageSquare } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,17 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
               >
                 <Users className="w-4 h-4" />
                 <span className="hidden sm:inline">USERS</span>
+              </Link>
+
+              <Link
+                href="/feedback"
+                className={`flex items-center gap-2 hover:text-primary transition-colors ${
+                  location.startsWith("/feedback") ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid="link-feedback"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">FB</span>
               </Link>
               
               {user && (

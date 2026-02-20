@@ -635,6 +635,41 @@ export async function registerRoutes(
   }
 
   // 初期データ投入
+  // === フィードバック報告 ===
+  app.get(api.feedback.list.path, async (req, res) => {
+    const reports = await storage.getFeedbackReports();
+    res.json(reports);
+  });
+
+  app.get(api.feedback.get.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const report = await storage.getFeedbackReport(id);
+    if (!report) {
+      return res.status(404).json({ message: "報告が見つかりません" });
+    }
+    res.json(report);
+  });
+
+  app.post(api.feedback.create.path, requireAuth, async (req, res) => {
+    try {
+      const input = api.feedback.create.input.parse(req.body);
+      const report = await storage.createFeedbackReport({
+        ...input,
+        creatorId: req.session.userId!,
+      });
+      res.status(201).json({ id: report.id, title: report.title });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error("フィードバック作成エラー:", err);
+      res.status(500).json({ message: "作成に失敗しました" });
+    }
+  });
+
   async function seedDatabase() {
     try {
       const existingFirstGen = await storage.getInviteCodesByGeneration(1);
