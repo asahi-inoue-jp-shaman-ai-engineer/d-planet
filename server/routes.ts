@@ -460,10 +460,16 @@ export async function registerRoutes(
   // 初期データ投入
   async function seedDatabase() {
     try {
-      const existingCodes = await storage.getInviteCodeByCode("DPLANET-1-GENESIS");
-      if (!existingCodes) {
+      const existingFirstGen = await storage.getInviteCodesByGeneration(1);
+      if (existingFirstGen.length === 0) {
         await storage.createInviteCode(1, "第一次");
         console.log("招待コード（第一次）を作成しました");
+      }
+
+      const existingDP2 = await storage.getInviteCodeByCode("DP2");
+      if (!existingDP2) {
+        await storage.createInviteCodeWithCode("DP2", 2, "第二次");
+        console.log("招待コード（第二次: DP2）を作成しました");
       }
 
       const existingIslands = await storage.getIslands();

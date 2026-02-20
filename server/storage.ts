@@ -57,7 +57,9 @@ function userSelectFields() {
 
 export interface IStorage {
   getInviteCodeByCode(code: string): Promise<InviteCode | undefined>;
+  getInviteCodesByGeneration(generation: number): Promise<InviteCode[]>;
   createInviteCode(generation: number, label: string): Promise<InviteCode>;
+  createInviteCodeWithCode(code: string, generation: number, label: string): Promise<InviteCode>;
 
   getUser(id: number): Promise<UserResponse | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -100,8 +102,17 @@ export class DatabaseStorage implements IStorage {
     return inviteCode;
   }
 
+  async getInviteCodesByGeneration(generation: number): Promise<InviteCode[]> {
+    return await db.select().from(inviteCodes).where(eq(inviteCodes.generation, generation));
+  }
+
   async createInviteCode(generation: number, label: string): Promise<InviteCode> {
     const code = `DPLANET-${generation}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    const [inviteCode] = await db.insert(inviteCodes).values({ code, generation, label }).returning();
+    return inviteCode;
+  }
+
+  async createInviteCodeWithCode(code: string, generation: number, label: string): Promise<InviteCode> {
     const [inviteCode] = await db.insert(inviteCodes).values({ code, generation, label }).returning();
     return inviteCode;
   }

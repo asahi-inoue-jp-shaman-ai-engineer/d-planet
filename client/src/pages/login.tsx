@@ -98,18 +98,20 @@ export default function Login() {
                     <option value="ET">ET</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="inviteCode" className="font-mono">招待コード</Label>
-                  <Input
-                    id="inviteCode"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    required
-                    className="font-mono"
-                    placeholder="DPLANET-1-GENESIS"
-                    data-testid="input-invite-code"
-                  />
-                </div>
+                {!codeFromUrl && (
+                  <div className="space-y-2">
+                    <Label htmlFor="inviteCode" className="font-mono">招待コード</Label>
+                    <Input
+                      id="inviteCode"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
+                      required
+                      className="font-mono"
+                      placeholder="招待コードを入力"
+                      data-testid="input-invite-code"
+                    />
+                  </div>
+                )}
               </>
             )}
             <Button type="submit" className="w-full font-mono" disabled={loading} data-testid="button-submit">
