@@ -120,6 +120,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   meidia: many(meidia),
   threads: many(threads),
   posts: many(posts),
+  islandMemberships: many(islandMembers),
+  notifications: many(notifications),
 }));
 
 export const islandsRelations = relations(islands, ({ one, many }) => ({
@@ -129,6 +131,16 @@ export const islandsRelations = relations(islands, ({ one, many }) => ({
   }),
   islandMeidia: many(islandMeidia),
   threads: many(threads),
+  members: many(islandMembers),
+}));
+
+export const islandMembersRelations = relations(islandMembers, ({ one }) => ({
+  island: one(islands, { fields: [islandMembers.islandId], references: [islands.id] }),
+  user: one(users, { fields: [islandMembers.userId], references: [users.id] }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));
 
 export const meidiaRelations = relations(meidia, ({ one, many }) => ({
@@ -189,6 +201,8 @@ export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, cr
 export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });
 export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, createdAt: true });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
+export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 
 // === BASE TYPES ===
 export type InviteCode = typeof inviteCodes.$inferSelect;
@@ -198,6 +212,8 @@ export type Meidia = typeof meidia.$inferSelect;
 export type IslandMeidia = typeof islandMeidia.$inferSelect;
 export type Thread = typeof threads.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type IslandMember = typeof islandMembers.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
 
 // === REQUEST TYPES ===
 export type CreateUserRequest = z.infer<typeof insertUserSchema>;

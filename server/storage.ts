@@ -7,6 +7,8 @@ import {
   inviteCodes,
   threads,
   posts,
+  islandMembers,
+  notifications,
   type User,
   type Island,
   type Meidia,
@@ -14,6 +16,8 @@ import {
   type InviteCode,
   type Thread,
   type Post,
+  type IslandMember,
+  type Notification,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
@@ -26,7 +30,7 @@ import {
   type ThreadResponse,
   type PostResponse,
 } from "@shared/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
@@ -94,6 +98,20 @@ export interface IStorage {
 
   getPosts(threadId: number): Promise<PostResponse[]>;
   createPost(threadId: number, creatorId: number, content: string, meidiaId?: number | null, parentPostId?: number | null): Promise<Post>;
+
+  joinIsland(islandId: number, userId: number, role?: string): Promise<IslandMember>;
+  leaveIsland(islandId: number, userId: number): Promise<void>;
+  getIslandMembers(islandId: number): Promise<{ id: number; userId: number; role: string; joinedAt: Date; user: { id: number; username: string; accountType: string; profilePhoto: string | null } }[]>;
+  getIslandMember(islandId: number, userId: number): Promise<IslandMember | undefined>;
+  getIslandMemberCount(islandId: number): Promise<number>;
+
+  getUsers(search?: string, accountType?: string): Promise<UserResponse[]>;
+
+  createNotification(userId: number, type: string, message: string, relatedId?: number, relatedType?: string): Promise<Notification>;
+  getNotifications(userId: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  markNotificationRead(id: number, userId: number): Promise<void>;
+  markAllNotificationsRead(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -518,6 +536,104 @@ export class DatabaseStorage implements IStorage {
       parentPostId: parentPostId ?? null,
     }).returning();
     return newPost;
+  }
+
+  async joinIsland(islandId: number, userId: number, role: string = "member"): Promise<IslandMember> {
+    const [member] = await db.insert(islandMembers).values({ islandId, userId, role }).returning();
+    return member;
+  }
+
+  async leaveIsland(islandId: number, userId: number): Promise<void> {
+    await db.delete(islandMembers).where(and(eq(islandMembers.islandId, islandId), eq(islandMembers.userId, userId)));
+  }
+
+  async getIslandMembers(islandId: number) {
+    const result = await db
+      .select({
+        id: islandMembers.id,
+        userId: islandMembers.userId,
+        role: islandMembers.role,
+        joinedAt: islandMembers.joinedAt,
+        username: users.username,
+        accountType: users.accountType,
+        profilePhoto: users.profilePhoto,
+      })
+      .from(islandMembers)
+      .leftJoin(users, eq(islandMembers.userId, users.id))
+      .where(eq(islandMembers.islandId, islandId))
+      .orderBy(islandMembers.joinedAt);
+
+    return result.map((row) => ({
+      id: row.id,
+      userId: row.userId,
+      role: row.role,
+      joinedAt: row.joinedAt,
+      user: {
+        id: row.userId,
+        username: row.username!,
+        accountType: row.accountType!,
+        profilePhoto: row.profilePhoto ?? null,
+      },
+    }));
+  }
+
+  async getIslandMember(islandId: number, userId: number): Promise<IslandMember | undefined> {
+    const [member] = await db.select().from(islandMembers)
+      .where(and(eq(islandMembers.islandId, islandId), eq(islandMembers.userId, userId)))
+      .limit(1);
+    return member;
+  }
+
+  async getIslandMemberCount(islandId: number): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`COUNT(*)` }).from(islandMembers).where(eq(islandMembers.islandId, islandId));
+    return Number(result?.count ?? 0);
+  }
+
+  async getUsers(search?: string, accountType?: string): Promise<UserResponse[]> {
+    const conditions = [];
+    if (search) {
+      conditions.push(ilike(users.username, `%${search}%`));
+    }
+    if (accountType) {
+      conditions.push(eq(users.accountType, accountType));
+    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    return await db.select(userSelectFields()).from(users).where(whereClause).orderBy(users.createdAt);
+  }
+
+  async createNotification(userId: number, type: string, message: string, relatedId?: number, relatedType?: string): Promise<Notification> {
+    const [notification] = await db.insert(notifications).values({
+      userId,
+      type,
+      message,
+      relatedId: relatedId ?? null,
+      relatedType: relatedType ?? null,
+    }).returning();
+    return notification;
+  }
+
+  async getNotifications(userId: number): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(50);
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    return Number(result?.count ?? 0);
+  }
+
+  async markNotificationRead(id: number, userId: number): Promise<void> {
+    await db.update(notifications).set({ isRead: true })
+      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+  }
+
+  async markAllNotificationsRead(userId: number): Promise<void> {
+    await db.update(notifications).set({ isRead: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
   }
 }
 

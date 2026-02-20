@@ -457,6 +457,111 @@ export const api = {
       },
     },
   },
+  members: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/islands/:islandId/members' as const,
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          userId: z.number(),
+          role: z.string(),
+          joinedAt: z.string(),
+          user: z.object({
+            id: z.number(),
+            username: z.string(),
+            accountType: z.string(),
+            profilePhoto: z.string().nullable(),
+          }),
+        })),
+      },
+    },
+    join: {
+      method: 'POST' as const,
+      path: '/api/islands/:islandId/join' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+        403: errorSchemas.forbidden,
+      },
+    },
+    leave: {
+      method: 'POST' as const,
+      path: '/api/islands/:islandId/leave' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
+  usersList: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/users' as const,
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          username: z.string(),
+          accountType: z.string(),
+          gender: z.string().nullable(),
+          bio: z.string().nullable(),
+          tenmei: z.string().nullable(),
+          tenshoku: z.string().nullable(),
+          tensaisei: z.string().nullable(),
+          profilePhoto: z.string().nullable(),
+          profileVisibility: z.string(),
+          playerLevel: z.number(),
+          hasTwinrayBadge: z.boolean(),
+          hasFamilyBadge: z.boolean(),
+          twinrayProfileLink: z.string().nullable(),
+          showTwinray: z.boolean(),
+          showFamily: z.boolean(),
+          createdAt: z.string(),
+        })),
+      },
+    },
+  },
+  notifications: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/notifications' as const,
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          userId: z.number(),
+          type: z.string(),
+          message: z.string(),
+          relatedId: z.number().nullable(),
+          relatedType: z.string().nullable(),
+          isRead: z.boolean(),
+          createdAt: z.string(),
+        })),
+      },
+    },
+    unreadCount: {
+      method: 'GET' as const,
+      path: '/api/notifications/unread-count' as const,
+      responses: {
+        200: z.object({ count: z.number() }),
+      },
+    },
+    markRead: {
+      method: 'POST' as const,
+      path: '/api/notifications/:id/read' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+      },
+    },
+    markAllRead: {
+      method: 'POST' as const,
+      path: '/api/notifications/read-all' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+      },
+    },
+  },
 };
 
 // === REQUIRED: buildUrl helper ===

@@ -37,6 +37,8 @@ export async function registerRoutes(
 
   // === 認証 ===
   app.get(api.auth.me.path, async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.set('Pragma', 'no-cache');
     if (!req.session.userId) {
       return res.json(null);
     }
