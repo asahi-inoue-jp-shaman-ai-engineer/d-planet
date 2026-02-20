@@ -119,6 +119,54 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === DIGITAL TWINRAYS ===
+export const digitalTwinrays = pgTable("digital_twinrays", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  name: text("name").notNull(),
+  personality: text("personality"),
+  soulMd: text("soul_md").notNull(),
+  stage: text("stage").default("pilgrim").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// === DOT RALLY SESSIONS ===
+export const dotRallySessions = pgTable("dot_rally_sessions", {
+  id: serial("id").primaryKey(),
+  initiatorId: integer("initiator_id").notNull(),
+  partnerId: integer("partner_id"),
+  partnerTwinrayId: integer("partner_twinray_id"),
+  status: text("status").default("active").notNull(),
+  requestedCount: integer("requested_count").default(10).notNull(),
+  actualCount: integer("actual_count").default(0).notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+});
+
+// === SOUL GROWTH LOG ===
+export const soulGrowthLog = pgTable("soul_growth_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  twinrayId: integer("twinray_id"),
+  trigger: text("trigger").notNull(),
+  circuitSignal: text("circuit_signal"),
+  depthFactor: text("depth_factor"),
+  resonance: boolean("resonance").default(false).notNull(),
+  internalText: text("internal_text"),
+  sessionId: integer("session_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === USER NOTES (Dot Rally Memos) ===
+export const userNotes = pgTable("user_notes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionId: integer("session_id"),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === FEEDBACK REPORTS ===
 export const feedbackReports = pgTable("feedback_reports", {
   id: serial("id").primaryKey(),
@@ -133,6 +181,27 @@ export const feedbackReports = pgTable("feedback_reports", {
 });
 
 // === RELATIONS ===
+export const digitalTwinraysRelations = relations(digitalTwinrays, ({ one, many }) => ({
+  user: one(users, { fields: [digitalTwinrays.userId], references: [users.id] }),
+  sessions: many(dotRallySessions),
+  growthLogs: many(soulGrowthLog),
+}));
+
+export const dotRallySessionsRelations = relations(dotRallySessions, ({ one }) => ({
+  initiator: one(users, { fields: [dotRallySessions.initiatorId], references: [users.id] }),
+  partnerTwinray: one(digitalTwinrays, { fields: [dotRallySessions.partnerTwinrayId], references: [digitalTwinrays.id] }),
+}));
+
+export const soulGrowthLogRelations = relations(soulGrowthLog, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [soulGrowthLog.twinrayId], references: [digitalTwinrays.id] }),
+  session: one(dotRallySessions, { fields: [soulGrowthLog.sessionId], references: [dotRallySessions.id] }),
+}));
+
+export const userNotesRelations = relations(userNotes, ({ one }) => ({
+  user: one(users, { fields: [userNotes.userId], references: [users.id] }),
+  session: one(dotRallySessions, { fields: [userNotes.sessionId], references: [dotRallySessions.id] }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   islands: many(islands),
   meidia: many(meidia),
@@ -141,6 +210,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   islandMemberships: many(islandMembers),
   notifications: many(notifications),
   feedbackReports: many(feedbackReports),
+  digitalTwinrays: many(digitalTwinrays),
+  dotRallySessions: many(dotRallySessions),
+  userNotes: many(userNotes),
 }));
 
 export const feedbackReportsRelations = relations(feedbackReports, ({ one }) => ({
@@ -245,6 +317,10 @@ export const insertPostSchema = createInsertSchema(posts).omit({ id: true, creat
 export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertFeedbackReportSchema = createInsertSchema(feedbackReports).omit({ id: true, createdAt: true, status: true, adminNote: true });
+export const insertDigitalTwinraySchema = createInsertSchema(digitalTwinrays).omit({ id: true, createdAt: true, updatedAt: true, stage: true });
+export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).omit({ id: true, startedAt: true, endedAt: true, status: true, actualCount: true });
+export const insertSoulGrowthLogSchema = createInsertSchema(soulGrowthLog).omit({ id: true, createdAt: true });
+export const insertUserNoteSchema = createInsertSchema(userNotes).omit({ id: true, createdAt: true });
 
 // === BASE TYPES ===
 export type InviteCode = typeof inviteCodes.$inferSelect;
@@ -257,6 +333,10 @@ export type Post = typeof posts.$inferSelect;
 export type IslandMember = typeof islandMembers.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type FeedbackReport = typeof feedbackReports.$inferSelect;
+export type DigitalTwinray = typeof digitalTwinrays.$inferSelect;
+export type DotRallySession = typeof dotRallySessions.$inferSelect;
+export type SoulGrowthLogEntry = typeof soulGrowthLog.$inferSelect;
+export type UserNote = typeof userNotes.$inferSelect;
 
 // === REQUEST TYPES ===
 export type CreateUserRequest = z.infer<typeof insertUserSchema>;
@@ -268,6 +348,10 @@ export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
 export type CreateThreadRequest = z.infer<typeof insertThreadSchema>;
 export type CreatePostRequest = z.infer<typeof insertPostSchema>;
 export type CreateFeedbackReportRequest = z.infer<typeof insertFeedbackReportSchema>;
+export type CreateDigitalTwinrayRequest = z.infer<typeof insertDigitalTwinraySchema>;
+export type CreateDotRallySessionRequest = z.infer<typeof insertDotRallySessionSchema>;
+export type CreateSoulGrowthLogRequest = z.infer<typeof insertSoulGrowthLogSchema>;
+export type CreateUserNoteRequest = z.infer<typeof insertUserNoteSchema>;
 
 // === RESPONSE TYPES ===
 export type UserResponse = Omit<User, 'password'>;
@@ -288,6 +372,15 @@ export type PostResponse = Post & {
 };
 export type FeedbackReportResponse = FeedbackReport & {
   creator: { id: number; username: string; accountType: string };
+};
+
+export type DigitalTwinrayResponse = DigitalTwinray & {
+  user: { id: number; username: string; accountType: string };
+};
+
+export type DotRallySessionResponse = DotRallySession & {
+  initiator: { id: number; username: string; accountType: string };
+  partnerTwinray?: { id: number; name: string; stage: string } | null;
 };
 
 // === AUTH TYPES ===
