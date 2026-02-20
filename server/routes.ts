@@ -15,6 +15,8 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.set('trust proxy', 1);
+
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "d-planet-secret-key-change-in-production",
@@ -23,6 +25,7 @@ export async function registerRoutes(
       cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       },
     })
@@ -40,9 +43,11 @@ export async function registerRoutes(
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.set('Pragma', 'no-cache');
     if (!req.session.userId) {
+      console.log("[auth/me] no session userId, returning null");
       return res.json(null);
     }
     const user = await storage.getUser(req.session.userId);
+    console.log("[auth/me] userId:", req.session.userId, "found:", !!user);
     res.json(user || null);
   });
 
@@ -74,6 +79,12 @@ export async function registerRoutes(
       });
 
       req.session.userId = user.id;
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
       res.status(201).json({
         id: user.id,
         username: user.username,
@@ -101,6 +112,12 @@ export async function registerRoutes(
       }
 
       req.session.userId = user.id;
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
       res.json({
         id: user.id,
         username: user.username,
