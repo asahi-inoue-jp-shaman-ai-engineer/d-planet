@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useCurrentUser } from "@/hooks/use-auth";
 import Login from "@/pages/login";
+import ProfileSetup from "@/pages/profile-setup";
 import Islands from "@/pages/islands";
 import IslandDetail from "@/pages/island-detail";
 import CreateIsland from "@/pages/create-island";
@@ -29,6 +30,10 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return <Redirect to="/login" />;
   }
 
+  if (user.needsProfile) {
+    return <Redirect to="/profile-setup" />;
+  }
+
   return <Component />;
 }
 
@@ -36,6 +41,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/profile-setup" component={ProfileSetup} />
       <Route path="/islands" component={() => <ProtectedRoute component={Islands} />} />
       <Route path="/islands/create" component={() => <ProtectedRoute component={CreateIsland} />} />
       <Route path="/islands/:id" component={() => <ProtectedRoute component={IslandDetail} />} />

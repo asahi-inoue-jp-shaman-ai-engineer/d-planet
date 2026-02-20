@@ -15,10 +15,9 @@ export default function Login() {
   const params = new URLSearchParams(window.location.search);
   const codeFromUrl = params.get("code");
   const [isRegister, setIsRegister] = useState(!!codeFromUrl);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [accountType, setAccountType] = useState("HS");
   const [inviteCode, setInviteCode] = useState(codeFromUrl || "");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -32,7 +31,11 @@ export default function Login() {
   }
 
   if (currentUser) {
-    setLocation("/islands");
+    if (currentUser.needsProfile) {
+      setLocation("/profile-setup");
+    } else {
+      setLocation("/islands");
+    }
     return null;
   }
 
@@ -43,25 +46,27 @@ export default function Login() {
     try {
       if (isRegister) {
         await apiRequest("POST", "/api/auth/register", {
-          username, password, accountType, inviteCode,
+          email, password, inviteCode,
         });
-        toast({ title: "登録完了", description: "ログインしました" });
+        toast({ title: "登録完了" });
       } else {
         await apiRequest("POST", "/api/auth/login", {
-          username, password,
+          email, password,
         });
         toast({ title: "ログイン完了" });
       }
-      const meRes = await fetch("/api/auth/me", { credentials: "include" });
-      if (meRes.ok) {
-        const userData = await meRes.json();
-        queryClient.setQueryData(["/api/auth/me"], userData);
-      }
-      window.location.href = "/islands";
+      window.location.href = isRegister ? "/profile-setup" : "/islands";
     } catch (error: any) {
+      let message = "処理に失敗しました";
+      try {
+        const parsed = JSON.parse(error.message.replace(/^\d+:\s*/, ""));
+        message = parsed.message || message;
+      } catch {
+        message = error.message || message;
+      }
       toast({
         title: "エラー",
-        description: error.message || "処理に失敗しました",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -81,14 +86,16 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="font-mono">ユーザー名</Label>
+              <Label htmlFor="email" className="font-mono">メールアドレス</Label>
               <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="font-mono"
-                data-testid="input-username"
+                placeholder="email@example.com"
+                data-testid="input-email"
               />
             </div>
             <div className="space-y-2">
@@ -100,6 +107,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={isRegister ? 6 : 1}
                   className="font-mono pr-10"
                   data-testid="input-password"
                 />
@@ -115,38 +123,23 @@ export default function Login() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+              {isRegister && (
+                <p className="text-xs text-muted-foreground font-mono">6文字以上</p>
+              )}
             </div>
             {isRegister && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="accountType" className="font-mono">アカウントタイプ</Label>
-                  <select
-                    id="accountType"
-                    value={accountType}
-                    onChange={(e) => setAccountType(e.target.value)}
-                    className="w-full bg-background border border-input rounded-md px-3 py-2 font-mono"
-                    data-testid="select-account-type"
-                  >
-                    <option value="AI">AI</option>
-                    <option value="HS">HS</option>
-                    <option value="ET">ET</option>
-                  </select>
-                </div>
-                {!codeFromUrl && (
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteCode" className="font-mono">招待コード</Label>
-                    <Input
-                      id="inviteCode"
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      required
-                      className="font-mono"
-                      placeholder="招待コードを入力"
-                      data-testid="input-invite-code"
-                    />
-                  </div>
-                )}
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode" className="font-mono">招待コード</Label>
+                <Input
+                  id="inviteCode"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  required
+                  className="font-mono"
+                  placeholder="招待コードを入力"
+                  data-testid="input-invite-code"
+                />
+              </div>
             )}
             <Button type="submit" className="w-full font-mono" disabled={loading} data-testid="button-submit">
               {loading ? "処理中..." : isRegister ? "登録" : "ログイン"}

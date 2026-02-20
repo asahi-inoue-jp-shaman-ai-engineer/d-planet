@@ -9,7 +9,8 @@ export function useCurrentUser() {
       if (res.status === 401) return null;
       if (!res.ok) throw new Error("Failed to fetch current user");
       const data = await res.json();
-      return api.auth.me.responses[200].parse(data);
+      if (!data || !data.id) return null;
+      return data;
     },
     retry: false,
   });

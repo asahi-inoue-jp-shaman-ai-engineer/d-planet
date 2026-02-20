@@ -15,9 +15,10 @@ export const inviteCodes = pgTable("invite_codes", {
 // === USERS ===
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  accountType: text("account_type").notNull(),
+  accountType: text("account_type").notNull().default("HS"),
   gender: text("gender"),
   bio: text("bio"),
   tenmei: text("tenmei"),
@@ -196,6 +197,24 @@ export const postsRelations = relations(posts, ({ one }) => ({
 // === BASE SCHEMAS ===
 export const insertInviteCodeSchema = createInsertSchema(inviteCodes).omit({ id: true, createdAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, hasTwinrayBadge: true, hasFamilyBadge: true, twinrayProfileLink: true, showTwinray: true, showFamily: true, playerLevel: true, profileVisibility: true });
+export const registerSchema = z.object({
+  email: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(6, "パスワードは6文字以上で入力してください"),
+  inviteCode: z.string().min(1, "招待コードを入力してください"),
+});
+export const loginSchema = z.object({
+  email: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(1, "パスワードを入力してください"),
+});
+export const profileSetupSchema = z.object({
+  username: z.string().min(1, "ユーザー名を入力してください").max(30),
+  accountType: z.enum(["AI", "HS", "ET"]),
+  gender: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  tenmei: z.string().nullable().optional(),
+  tenshoku: z.string().nullable().optional(),
+  tensaisei: z.string().nullable().optional(),
+});
 export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, createdAt: true, secretUrl: true, totalDownloads: true });
 export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, createdAt: true, downloadCount: true });
 export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });

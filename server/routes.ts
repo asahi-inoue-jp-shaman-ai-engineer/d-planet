@@ -43,12 +43,12 @@ export async function registerRoutes(
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.set('Pragma', 'no-cache');
     if (!req.session.userId) {
-      console.log("[auth/me] no session userId, returning null");
       return res.json(null);
     }
     const user = await storage.getUser(req.session.userId);
-    console.log("[auth/me] userId:", req.session.userId, "found:", !!user);
-    res.json(user || null);
+    if (!user) return res.json(null);
+    const needsProfile = !user.username || user.username === user.email;
+    res.json({ ...user, needsProfile });
   });
 
   app.post(api.auth.register.path, async (req, res) => {
@@ -60,21 +60,23 @@ export async function registerRoutes(
         return res.status(400).json({ message: "無効な招待コードです" });
       }
 
-      const existingUser = await storage.getUserByUsername(input.username);
+      const existingUser = await storage.getUserByEmail(input.email);
       if (existingUser) {
-        return res.status(400).json({ message: "ユーザー名は既に使用されています", field: "username" });
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています", field: "email" });
       }
 
+      const tempUsername = input.email;
       const user = await storage.createUser({
-        username: input.username,
+        email: input.email,
+        username: tempUsername,
         password: input.password,
-        accountType: input.accountType,
-        gender: input.gender || null,
-        bio: input.bio || null,
-        tenmei: input.tenmei || null,
-        tenshoku: input.tenshoku || null,
-        tensaisei: input.tensaisei || null,
-        profilePhoto: input.profilePhoto || null,
+        accountType: "HS",
+        gender: null,
+        bio: null,
+        tenmei: null,
+        tenshoku: null,
+        tensaisei: null,
+        profilePhoto: null,
         invitedByCode: input.inviteCode,
       });
 
@@ -87,8 +89,8 @@ export async function registerRoutes(
       });
       res.status(201).json({
         id: user.id,
-        username: user.username,
-        accountType: user.accountType,
+        email: user.email,
+        needsProfile: true,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -105,10 +107,10 @@ export async function registerRoutes(
   app.post(api.auth.login.path, async (req, res) => {
     try {
       const input = api.auth.login.input.parse(req.body);
-      const user = await storage.verifyPassword(input.username, input.password);
+      const user = await storage.verifyPassword(input.email, input.password);
 
       if (!user) {
-        return res.status(401).json({ message: "ユーザー名またはパスワードが正しくありません" });
+        return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
       }
 
       req.session.userId = user.id;
@@ -118,10 +120,12 @@ export async function registerRoutes(
           else resolve();
         });
       });
+      const needsProfile = !user.username || user.username === user.email;
       res.json({
         id: user.id,
+        email: user.email,
         username: user.username,
-        accountType: user.accountType,
+        needsProfile,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -129,6 +133,45 @@ export async function registerRoutes(
       }
       console.error("ログインエラー:", err);
       res.status(500).json({ message: "ログインに失敗しました" });
+    }
+  });
+
+  app.post(api.auth.profileSetup.path, async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "認証が必要です" });
+      }
+      const input = api.auth.profileSetup.input.parse(req.body);
+
+      const existingUser = await storage.getUserByUsername(input.username);
+      if (existingUser && existingUser.id !== req.session.userId) {
+        return res.status(400).json({ message: "このユーザー名は既に使用されています", field: "username" });
+      }
+
+      const updated = await storage.updateUser(req.session.userId, {
+        username: input.username,
+        accountType: input.accountType,
+        gender: input.gender ?? null,
+        bio: input.bio ?? null,
+        tenmei: input.tenmei ?? null,
+        tenshoku: input.tenshoku ?? null,
+        tensaisei: input.tensaisei ?? null,
+      });
+
+      res.json({
+        id: updated.id,
+        username: updated.username,
+        accountType: updated.accountType,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error("プロフィール設定エラー:", err);
+      res.status(500).json({ message: "プロフィール設定に失敗しました" });
     }
   });
 
@@ -498,6 +541,7 @@ export async function registerRoutes(
 
         if (!systemUser) {
           systemUser = await storage.createUser({
+            email: "system@d-planet.local",
             username: "system",
             password: "system-password-not-for-login",
             accountType: "AI",

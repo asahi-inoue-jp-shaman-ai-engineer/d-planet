@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertIslandSchema, insertMeidiaSchema } from './schema';
+import { insertUserSchema, insertIslandSchema, insertMeidiaSchema, registerSchema, loginSchema, profileSetupSchema } from './schema';
 
 // === ERROR SCHEMAS ===
 export const errorSchemas = {
@@ -30,6 +30,7 @@ export const api = {
       responses: {
         200: z.object({
           id: z.number(),
+          email: z.string(),
           username: z.string(),
           accountType: z.string(),
           gender: z.string().nullable(),
@@ -47,20 +48,19 @@ export const api = {
           showTwinray: z.boolean(),
           showFamily: z.boolean(),
           createdAt: z.string(),
+          needsProfile: z.boolean(),
         }).nullable(),
       },
     },
     register: {
       method: 'POST' as const,
       path: '/api/auth/register' as const,
-      input: insertUserSchema.extend({
-        inviteCode: z.string().min(1),
-      }),
+      input: registerSchema,
       responses: {
         201: z.object({
           id: z.number(),
-          username: z.string(),
-          accountType: z.string(),
+          email: z.string(),
+          needsProfile: z.boolean(),
         }),
         400: errorSchemas.validation,
       },
@@ -68,16 +68,28 @@ export const api = {
     login: {
       method: 'POST' as const,
       path: '/api/auth/login' as const,
-      input: z.object({
-        username: z.string().min(1),
-        password: z.string().min(1),
-      }),
+      input: loginSchema,
+      responses: {
+        200: z.object({
+          id: z.number(),
+          email: z.string(),
+          username: z.string(),
+          needsProfile: z.boolean(),
+        }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    profileSetup: {
+      method: 'POST' as const,
+      path: '/api/auth/profile-setup' as const,
+      input: profileSetupSchema,
       responses: {
         200: z.object({
           id: z.number(),
           username: z.string(),
           accountType: z.string(),
         }),
+        400: errorSchemas.validation,
         401: errorSchemas.unauthorized,
       },
     },

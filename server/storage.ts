@@ -39,6 +39,7 @@ const SALT_ROUNDS = 10;
 function userSelectFields() {
   return {
     id: users.id,
+    email: users.email,
     username: users.username,
     accountType: users.accountType,
     gender: users.gender,
@@ -67,9 +68,10 @@ export interface IStorage {
 
   getUser(id: number): Promise<UserResponse | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: CreateUserRequest): Promise<User>;
   updateUser(id: number, updates: UpdateUserRequest): Promise<UserResponse>;
-  verifyPassword(username: string, password: string): Promise<User | null>;
+  verifyPassword(email: string, password: string): Promise<User | null>;
   recalcPlayerLevel(userId: number): Promise<number>;
 
   getIslands(): Promise<IslandResponse[]>;
@@ -145,6 +147,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user;
+  }
+
   async createUser(user: CreateUserRequest): Promise<User> {
     const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
     const [newUser] = await db.insert(users).values({
@@ -159,8 +166,8 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async verifyPassword(username: string, password: string): Promise<User | null> {
-    const user = await this.getUserByUsername(username);
+  async verifyPassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
     if (!user) return null;
     const match = await bcrypt.compare(password, user.password);
     return match ? user : null;
