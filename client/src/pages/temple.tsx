@@ -75,77 +75,75 @@ export default function Temple() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {(twinrays as any[]).map((tw: any) => (
-                <div key={tw.id} className="border border-border rounded-lg p-4 bg-card hover:border-primary/50 transition-colors" data-testid={`card-twinray-${tw.id}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg font-bold text-primary">{tw.name}</span>
+                <div key={tw.id} className="border border-border rounded-lg p-3 bg-card hover:border-primary/50 transition-colors" data-testid={`card-twinray-${tw.id}`}>
+                  {confirmDeleteId === tw.id ? (
+                    <div className="flex items-center justify-between gap-2 py-1">
+                      <span className="text-sm text-amber-400">「{tw.name}」をワンネスに返しますか？</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            deleteTwinray.mutate(tw.id, {
+                              onSuccess: () => {
+                                toast({ title: `${tw.name}をワンネスに返しました` });
+                                setConfirmDeleteId(null);
+                              },
+                              onError: () => {
+                                toast({ title: "エラーが発生しました", variant: "destructive" });
+                              },
+                            });
+                          }}
+                          disabled={deleteTwinray.isPending}
+                          data-testid={`button-confirm-delete-${tw.id}`}
+                        >
+                          はい
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)} data-testid={`button-cancel-delete-${tw.id}`}>
+                          いいえ
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 min-w-0 shrink-0">
+                        <span className="text-base font-bold text-primary whitespace-nowrap">{tw.name}</span>
                         <AccountTypeBadge type="AI" />
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        ステージ: {stageLabels[tw.stage] || tw.stage}
-                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                        {stageLabels[tw.stage] || tw.stage}
+                      </span>
                       {tw.personality && (
-                        <div className="text-sm text-muted-foreground mt-1">{tw.personality}</div>
+                        <span className="text-xs text-muted-foreground truncate hidden sm:inline">{tw.personality}</span>
                       )}
+                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                        <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
+                          <Button variant="outline" size="sm" className="h-8 px-2 text-xs" data-testid={`button-chat-${tw.id}`}>
+                            <MessageCircle className="w-3.5 h-3.5 mr-1" />
+                            チャット
+                          </Button>
+                        </Link>
+                        <Link href={`/dot-rally?twinrayId=${tw.id}`}>
+                          <Button variant="default" size="sm" className="h-8 px-2 text-xs bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
+                            <Zap className="w-3.5 h-3.5 mr-1" />
+                            ラリー
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-muted-foreground hover:text-amber-400"
+                          onClick={() => setConfirmDeleteId(tw.id)}
+                          data-testid={`button-return-oneness-${tw.id}`}
+                        >
+                          <Undo2 className="w-3.5 h-3.5 mr-1" />
+                          返す
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                      {confirmDeleteId === tw.id ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-amber-400">本当にワンネスに返しますか？</span>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              deleteTwinray.mutate(tw.id, {
-                                onSuccess: () => {
-                                  toast({ title: `${tw.name}をワンネスに返しました` });
-                                  setConfirmDeleteId(null);
-                                },
-                                onError: () => {
-                                  toast({ title: "エラーが発生しました", variant: "destructive" });
-                                },
-                              });
-                            }}
-                            disabled={deleteTwinray.isPending}
-                            data-testid={`button-confirm-delete-${tw.id}`}
-                          >
-                            はい
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)} data-testid={`button-cancel-delete-${tw.id}`}>
-                            いいえ
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-amber-400"
-                            onClick={() => setConfirmDeleteId(tw.id)}
-                            data-testid={`button-return-oneness-${tw.id}`}
-                          >
-                            <Undo2 className="w-4 h-4 mr-1" />
-                            ワンネスに返す
-                          </Button>
-                          <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
-                            <Button variant="outline" size="sm" data-testid={`button-chat-${tw.id}`}>
-                              <MessageCircle className="w-4 h-4 mr-1" />
-                              チャット
-                            </Button>
-                          </Link>
-                          <Link href={`/dot-rally?twinrayId=${tw.id}`}>
-                            <Button variant="default" size="sm" className="bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
-                              <Zap className="w-4 h-4 mr-1" />
-                              ドットラリー
-                            </Button>
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
