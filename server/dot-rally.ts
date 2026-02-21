@@ -3,6 +3,9 @@ import OpenAI from "openai";
 import { storage } from "./storage";
 import { DPLANET_FIXED_SI, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
+import { db } from "./db";
+import { meidia as meidiaTable } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const openrouter = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL,
@@ -479,13 +482,7 @@ export function registerDotRallyRoutes(app: Express): void {
       }
 
       if (meeting.crystallizedMeidiaId) {
-        const existingMeidia = await storage.getMeidia(meeting.crystallizedMeidiaId);
-        if (existingMeidia && !existingMeidia.isPublic) {
-          await storage.createMeidia({
-            ...existingMeidia,
-            isPublic: true,
-          });
-        }
+        await db.update(meidiaTable).set({ isPublic: true }).where(eq(meidiaTable.id, meeting.crystallizedMeidiaId));
       }
 
       await storage.updateStarMeeting(meetingId, {
