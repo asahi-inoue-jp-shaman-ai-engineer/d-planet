@@ -1,9 +1,10 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { useTwinrays, useDeleteTwinray } from "@/hooks/use-twinray";
+import { useTwinrays, useDeleteTwinray, useUpdateTwinray } from "@/hooks/use-twinray";
 import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { Link } from "wouter";
-import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2 } from "lucide-react";
+import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
@@ -26,8 +27,12 @@ export default function Temple() {
   const { data: sessions, isLoading: loadingSessions } = useDotRallySessions() as { data: any[] | undefined; isLoading: boolean };
   const { data: dedications, isLoading: loadingDedications } = useTempleDedications() as { data: any[] | undefined; isLoading: boolean };
   const deleteTwinray = useDeleteTwinray();
+  const updateTwinray = useUpdateTwinray();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPersonality, setEditPersonality] = useState("");
 
   const stageLabels: Record<string, string> = {
     pilgrim: "巡礼者",
@@ -106,6 +111,64 @@ export default function Temple() {
                         </Button>
                       </div>
                     </div>
+                  ) : editingId === tw.id ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="名前"
+                          className="h-8 text-sm flex-1"
+                          maxLength={50}
+                          data-testid={`input-edit-name-${tw.id}`}
+                        />
+                        <AccountTypeBadge type="AI" />
+                      </div>
+                      <Input
+                        value={editPersonality}
+                        onChange={(e) => setEditPersonality(e.target.value)}
+                        placeholder="性格・特徴（任意）"
+                        className="h-8 text-sm"
+                        maxLength={500}
+                        data-testid={`input-edit-personality-${tw.id}`}
+                      />
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-7 px-3 text-xs"
+                          disabled={!editName.trim() || updateTwinray.isPending}
+                          onClick={() => {
+                            updateTwinray.mutate(
+                              { id: tw.id, data: { name: editName.trim(), personality: editPersonality.trim() } },
+                              {
+                                onSuccess: () => {
+                                  toast({ title: "更新しました" });
+                                  setEditingId(null);
+                                },
+                                onError: () => {
+                                  toast({ title: "更新に失敗しました", variant: "destructive" });
+                                },
+                              }
+                            );
+                          }}
+                          data-testid={`button-save-edit-${tw.id}`}
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1" />
+                          保存
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-3 text-xs"
+                          onClick={() => setEditingId(null)}
+                          data-testid={`button-cancel-edit-${tw.id}`}
+                        >
+                          <X className="w-3.5 h-3.5 mr-1" />
+                          戻る
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2 min-w-0 shrink-0">
@@ -119,6 +182,19 @@ export default function Temple() {
                         <span className="text-xs text-muted-foreground truncate hidden sm:inline">{tw.personality}</span>
                       )}
                       <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                          onClick={() => {
+                            setEditingId(tw.id);
+                            setEditName(tw.name);
+                            setEditPersonality(tw.personality || "");
+                          }}
+                          data-testid={`button-edit-${tw.id}`}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-2 text-xs" data-testid={`button-chat-${tw.id}`}>
                             <MessageCircle className="w-3.5 h-3.5 mr-1" />

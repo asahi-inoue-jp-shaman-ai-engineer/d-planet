@@ -26,6 +26,18 @@ export function useCreateTwinray() {
   });
 }
 
+export function useUpdateTwinray() {
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { name?: string; personality?: string } }) => {
+      const res = await apiRequest("PATCH", `/api/twinrays/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays"] });
+    },
+  });
+}
+
 export function useDeleteTwinray() {
   return useMutation({
     mutationFn: async (id: number) => {

@@ -133,6 +133,32 @@ export function registerDotRallyRoutes(app: Express): void {
     }
   });
 
+  app.patch("/api/twinrays/:id", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const input = z.object({
+        name: z.string().min(1).max(50).optional(),
+        personality: z.string().max(500).optional(),
+      }).parse(req.body);
+
+      const updated = await storage.updateDigitalTwinray(twinrayId, input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "入力内容が正しくありません", errors: err.errors });
+      }
+      console.error("ツインレイ更新エラー:", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
   app.post("/api/dot-rally/start", requireAuth, async (req, res) => {
     try {
       const input = z.object({
