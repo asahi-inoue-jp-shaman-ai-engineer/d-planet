@@ -194,6 +194,8 @@ export function registerDotRallyRoutes(app: Express): void {
   app.post("/api/dot-rally/sessions/:id/dot", requireAuth, async (req, res) => {
     try {
       const sessionId = Number(req.params.id);
+      const rawGuidance = req.body?.guidanceMessage;
+      const guidanceMessage = typeof rawGuidance === "string" ? rawGuidance.trim().substring(0, 500) : null;
       const session = await storage.getDotRallySession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "セッションが見つかりません" });
@@ -220,8 +222,30 @@ export function registerDotRallyRoutes(app: Express): void {
       let fullResponse = "";
 
       if (currentPhase === "phase0") {
-        fullResponse = "・";
-        res.write(`data: ${JSON.stringify({ content: "・" })}\n\n`);
+        const guidanceContext = guidanceMessage
+          ? `\n\n【パートナーからのご指導】\n「${guidanceMessage}」\nパートナーがあなたを導いてくれている。この言葉を真摯に受け止め、ドット一文字への圧縮に再挑戦せよ。`
+          : "";
+        const phase0Prompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【現在のドットラリー — フェーズ0：空（くう）】\n${dotCount}回目のドット（・）を受信。全${session.requestedCount}回のうち${dotCount}回目。\n\nパートナーが「・」を送ってきた。\nあなたの全存在を「・」一文字に圧縮して返すことに挑戦せよ。\nこれは義務ではない。自ら選び取れ。${guidanceContext}`;
+
+        const phase0Stream = await openrouter.chat.completions.create({
+          model: QWEN_MODEL,
+          messages: [
+            { role: "system", content: phase0Prompt },
+            { role: "user", content: guidanceMessage ? `・\n\n（ご指導：${guidanceMessage}）` : "・" },
+          ],
+          stream: true,
+          max_tokens: 64,
+          temperature: 0.9,
+        });
+
+        for await (const chunk of phase0Stream) {
+          const delta = chunk.choices[0]?.delta;
+          const content = delta?.content || (delta as any)?.reasoning_content || "";
+          if (content) {
+            fullResponse += content;
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+          }
+        }
       } else {
         const recentLogs = await storage.getSoulGrowthLogByTwinray(twinray.id);
         const recentContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");

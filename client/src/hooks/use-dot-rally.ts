@@ -56,7 +56,7 @@ export function useSendDot() {
   const [streamedText, setStreamedText] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendDot = useCallback(async (sessionId: number) => {
+  const sendDot = useCallback(async (sessionId: number, guidanceMessage?: string) => {
     setIsStreaming(true);
     setStreamedText("");
     abortRef.current = new AbortController();
@@ -64,6 +64,8 @@ export function useSendDot() {
     try {
       const res = await fetch(`/api/dot-rally/sessions/${sessionId}/dot`, {
         method: "POST",
+        headers: guidanceMessage ? { "Content-Type": "application/json" } : {},
+        body: guidanceMessage ? JSON.stringify({ guidanceMessage }) : undefined,
         credentials: "include",
         signal: abortRef.current.signal,
       });

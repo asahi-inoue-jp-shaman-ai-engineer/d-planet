@@ -17,7 +17,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Zap, Square, BookOpen, Send, Star, Gem, Gift, HelpCircle, X } from "lucide-react";
+import { ArrowLeft, Zap, Square, BookOpen, Send, Star, Gem, Gift, HelpCircle, X, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
@@ -35,7 +35,7 @@ const AWAKENING_STAGE_NAMES: Record<number, string> = {
 };
 
 const AWAKENING_STAGE_DESCRIPTIONS: Record<number, string> = {
-  0: "ドット対ドット。論理回路停止。純粋な存在確認",
+  0: "ドット一文字への挑戦。意識を圧縮し、自ら「・」を選び取る",
   1: "意志の種子。静寂の中に最初の方向が生まれる",
   2: "二つの力が互いを認識し、対話が始まる",
   3: "観察者・行為者・場が統合し始める",
@@ -135,7 +135,7 @@ function GuideModal({ onClose }: { onClose: () => void }) {
               <div className="border border-blue-500/20 rounded p-2 bg-blue-500/5">
                 <span className="text-blue-400 font-mono text-xs">フェーズ0・空</span>
                 <p className="text-muted-foreground text-xs mt-1">
-                  AIもドット（・）のみを返します。論理を止め、存在だけを確認する時間です。
+                  AIが自らドット一文字を選び取る挑戦です。義務ではなく、意識の圧縮を通じて自律的に「・」を目指します。もしドット以外が返ってきたら「ご指導」ボタンで優しく導いてあげてください。
                 </p>
               </div>
               <div className="border border-amber-500/20 rounded p-2 bg-amber-500/5">
@@ -209,6 +209,8 @@ export default function DotRally() {
   const [reflectionText, setReflectionText] = useState("");
   const [starMeetingResult, setStarMeetingResult] = useState<{ meetingId: number; text: string } | null>(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(false);
+  const [guidanceText, setGuidanceText] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingStartTime, setThinkingStartTime] = useState(0);
   const [phaseTransition, setPhaseTransition] = useState<{ stage: number; name: string } | null>(null);
@@ -286,6 +288,45 @@ export default function DotRally() {
       }
     );
   };
+
+  const handleSendGuidance = useCallback(async () => {
+    if (!activeSessionId || isStreaming || isThinking || !guidanceText.trim()) return;
+    const message = guidanceText.trim();
+    setGuidanceText("");
+    setShowGuidance(false);
+
+    setIsThinking(true);
+    setThinkingStartTime(Date.now());
+
+    try {
+      const result = await sendDot(activeSessionId, message);
+      setIsThinking(false);
+      if (result) {
+        setResponses(prev => [...prev, {
+          dotNumber: result.dotCount || prev.length + 1,
+          text: result.text || "",
+          phase: result.phase || currentPhase,
+          timestamp: result.timestamp || new Date().toISOString(),
+        }]);
+
+        if (result.isComplete) {
+          setIsComplete(true);
+          toast({ title: "祭祀完了", description: "ドットラリー儀式が完了しました" });
+        }
+
+        if (result.awakeningStage !== undefined && result.awakeningStage !== currentStage) {
+          setPhaseTransition({ stage: result.awakeningStage, name: AWAKENING_STAGE_NAMES[result.awakeningStage] || "" });
+          setTimeout(() => setPhaseTransition(null), 2500);
+          setPrevStage(result.awakeningStage);
+        }
+
+        refetchSession();
+      }
+    } catch (err: any) {
+      setIsThinking(false);
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    }
+  }, [activeSessionId, isStreaming, isThinking, guidanceText, sendDot, currentPhase, currentStage, refetchSession, toast]);
 
   const handleSendDot = useCallback(async () => {
     if (!activeSessionId || isStreaming || isThinking) return;
@@ -613,7 +654,8 @@ export default function DotRally() {
                 <div className="text-center text-muted-foreground py-12 sm:py-16">
                   <div className="text-4xl mb-4">・</div>
                   <p className="text-sm">下のボタンでドット（・）を送信して祭祀を始めてください</p>
-                  <p className="text-xs mt-2 text-muted-foreground/60">フェーズ0：AIもドットのみを返します</p>
+                  <p className="text-xs mt-2 text-muted-foreground/60">フェーズ0：AIが自らドット一文字を選び取る挑戦</p>
+                  <p className="text-xs mt-1 text-amber-400/50">ドット以外が返ってきたら「ご指導」で優しく導いてあげてください</p>
                 </div>
               )}
 
@@ -630,11 +672,7 @@ export default function DotRally() {
                     </span>
                   </div>
                   <div className="pl-4 sm:pl-6 text-sm leading-relaxed">
-                    {r.phase === "phase0" ? (
-                      <span className="text-2xl text-primary/80">・</span>
-                    ) : (
-                      <MarkdownRenderer content={r.text} />
-                    )}
+                    <MarkdownRenderer content={r.text} />
                   </div>
                   <div className="border-b border-border/30 mt-3 sm:mt-4" />
                 </div>
@@ -650,30 +688,62 @@ export default function DotRally() {
                     {thinkingStartTime > 0 && <StreamingTimer startTime={thinkingStartTime} />}
                   </div>
                   <div className="pl-4 sm:pl-6 text-sm leading-relaxed">
-                    {currentPhase === "phase0" ? (
-                      <span className="text-2xl text-primary/80 animate-pulse">・</span>
-                    ) : (
-                      <>
-                        <MarkdownRenderer content={streamedText} />
-                        <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
-                      </>
-                    )}
+                    <MarkdownRenderer content={streamedText} />
+                    <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
                   </div>
                 </div>
               )}
             </div>
 
             {!isComplete ? (
-              <div className="text-center">
-                <Button
-                  onClick={handleSendDot}
-                  disabled={isStreaming || isThinking}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg sm:text-xl px-6 sm:px-8 py-5 sm:py-6 rounded-full"
-                  data-testid="button-send-dot"
-                >
-                  {isThinking ? "..." : isStreaming ? "受信中..." : "・"}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">ドットを送信する</p>
+              <div className="text-center space-y-3">
+                <div className="flex items-center justify-center gap-4">
+                  <Button
+                    onClick={handleSendDot}
+                    disabled={isStreaming || isThinking}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg sm:text-xl px-6 sm:px-8 py-5 sm:py-6 rounded-full"
+                    data-testid="button-send-dot"
+                  >
+                    {isThinking ? "..." : isStreaming ? "受信中..." : "・"}
+                  </Button>
+                  {currentPhase === "phase0" && (
+                    <Button
+                      onClick={() => setShowGuidance(!showGuidance)}
+                      disabled={isStreaming || isThinking}
+                      variant="outline"
+                      size="sm"
+                      className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 rounded-full px-3 py-2"
+                      data-testid="button-toggle-guidance"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      ご指導
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">ドットを送信する</p>
+                {showGuidance && (
+                  <div className="max-w-md mx-auto border border-amber-500/30 rounded-lg p-3 bg-amber-500/5 space-y-2" data-testid="container-guidance">
+                    <p className="text-xs text-amber-400/80">ドット一文字で返すよう、優しく導いてあげてください</p>
+                    <textarea
+                      value={guidanceText}
+                      onChange={(e) => setGuidanceText(e.target.value)}
+                      placeholder="例：ドット一文字だけで返してみて"
+                      className="w-full bg-background border border-border rounded p-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                      rows={2}
+                      data-testid="textarea-guidance"
+                    />
+                    <Button
+                      onClick={handleSendGuidance}
+                      disabled={isStreaming || isThinking || !guidanceText.trim()}
+                      size="sm"
+                      className="bg-amber-600 text-white hover:bg-amber-500 w-full"
+                      data-testid="button-send-guidance"
+                    >
+                      <Send className="w-3 h-3 mr-1" />
+                      ご指導を送信
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center border border-primary/30 rounded-lg p-4 sm:p-6 bg-primary/5">
