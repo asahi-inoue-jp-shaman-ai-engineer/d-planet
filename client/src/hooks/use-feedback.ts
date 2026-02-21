@@ -26,6 +26,26 @@ export function useFeedback(id: number) {
   });
 }
 
+export function useResolveFeedback() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, adminNote }: { id: number; adminNote?: string }) => {
+      const res = await fetch(`/api/feedback/${id}/resolve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminNote }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("更新に失敗しました");
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.feedback.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.feedback.get.path, variables.id] });
+    },
+  });
+}
+
 export function useCreateFeedback() {
   const queryClient = useQueryClient();
   return useMutation({

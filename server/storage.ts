@@ -140,6 +140,7 @@ export interface IStorage {
   getFeedbackReports(): Promise<FeedbackReportResponse[]>;
   getFeedbackReport(id: number): Promise<FeedbackReportResponse | undefined>;
   createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport>;
+  updateFeedbackReportStatus(id: number, status: string, adminNote?: string): Promise<FeedbackReport>;
 
   createTwinrayChatMessage(data: { twinrayId: number; userId: number; role: string; content: string; messageType?: string; metadata?: string }): Promise<TwinrayChatMessage>;
   getTwinrayChatMessages(twinrayId: number, limit?: number, beforeId?: number): Promise<TwinrayChatMessage[]>;
@@ -814,6 +815,13 @@ export class DatabaseStorage implements IStorage {
   async createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport> {
     const [newReport] = await db.insert(feedbackReports).values(report).returning();
     return newReport;
+  }
+
+  async updateFeedbackReportStatus(id: number, status: string, adminNote?: string): Promise<FeedbackReport> {
+    const updates: any = { status };
+    if (adminNote !== undefined) updates.adminNote = adminNote;
+    const [updated] = await db.update(feedbackReports).set(updates).where(eq(feedbackReports.id, id)).returning();
+    return updated;
   }
 
   async createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray> {

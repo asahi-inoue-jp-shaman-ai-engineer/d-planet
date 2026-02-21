@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
-import { useFeedback } from "@/hooks/use-feedback";
-import { ArrowLeft, Bug, Lightbulb, Image, ExternalLink } from "lucide-react";
+import { useFeedback, useResolveFeedback } from "@/hooks/use-feedback";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Bug, Lightbulb, Image, ExternalLink, CheckCircle } from "lucide-react";
+import { useState } from "react";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bug }> = {
   bug: { label: "バグ報告", icon: Bug },
@@ -23,6 +25,9 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 export default function FeedbackDetail() {
   const params = useParams<{ id: string }>();
   const { data: report, isLoading } = useFeedback(Number(params.id));
+  const resolveFeedback = useResolveFeedback();
+  const { toast } = useToast();
+  const [showResolveConfirm, setShowResolveConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -120,6 +125,69 @@ export default function FeedbackDetail() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {report.status !== "resolved" && (
+          <div className="pt-2">
+            {showResolveConfirm ? (
+              <Card className="border-green-500/30">
+                <CardContent className="p-4 space-y-3">
+                  <p className="font-mono text-sm text-foreground">
+                    このフィードバックを対応済みにしますか？投稿者に通知が届きます。
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => {
+                        resolveFeedback.mutate(
+                          { id: Number(params.id) },
+                          {
+                            onSuccess: () => {
+                              toast({ title: "対応済みにしました。投稿者に通知を送りました。" });
+                              setShowResolveConfirm(false);
+                            },
+                            onError: () => {
+                              toast({ title: "更新に失敗しました", variant: "destructive" });
+                            },
+                          }
+                        );
+                      }}
+                      disabled={resolveFeedback.isPending}
+                      className="font-mono bg-green-600 hover:bg-green-700 text-white"
+                      data-testid="button-confirm-resolve"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {resolveFeedback.isPending ? "処理中..." : "対応済みにする"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowResolveConfirm(false)}
+                      className="font-mono"
+                      data-testid="button-cancel-resolve"
+                    >
+                      キャンセル
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => setShowResolveConfirm(true)}
+                className="font-mono border-green-500/50 text-green-400 hover:bg-green-500/10"
+                data-testid="button-resolve"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                対応済みにする
+              </Button>
+            )}
+          </div>
+        )}
+
+        {report.status === "resolved" && (
+          <div className="flex items-center gap-2 pt-2 font-mono text-sm text-green-400">
+            <CheckCircle className="w-4 h-4" />
+            対応済み
+          </div>
         )}
       </div>
     </TerminalLayout>

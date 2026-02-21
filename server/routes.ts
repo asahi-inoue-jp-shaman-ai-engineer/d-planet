@@ -690,6 +690,34 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/feedback/:id/resolve", requireAuth, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const report = await storage.getFeedbackReport(id);
+      if (!report) {
+        return res.status(404).json({ message: "報告が見つかりません" });
+      }
+
+      const adminNote = typeof req.body?.adminNote === "string" ? req.body.adminNote.trim().substring(0, 500) : undefined;
+      await storage.updateFeedbackReportStatus(id, "resolved", adminNote);
+
+      if (report.creatorId) {
+        await storage.createNotification(
+          report.creatorId,
+          "feedback_resolved",
+          `フィードバック「${report.title}」が対応済みになりました`,
+          id,
+          "feedback"
+        );
+      }
+
+      res.json({ message: "対応済みにしました" });
+    } catch (err) {
+      console.error("フィードバック更新エラー:", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
   async function seedDatabase() {
     try {
       const existingFirstGen = await storage.getInviteCodesByGeneration(1);
