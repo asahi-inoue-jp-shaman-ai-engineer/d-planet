@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { Eye, EyeOff } from "lucide-react";
+
+const SAVED_EMAIL_KEY = "dplanet_saved_email";
+const REMEMBER_KEY = "dplanet_remember";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -16,9 +20,10 @@ export default function Login() {
   const modeFromUrl = params.get("mode");
   const codeFromUrl = params.get("code");
   const [isRegister, setIsRegister] = useState(modeFromUrl === "register");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem(SAVED_EMAIL_KEY) || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem(REMEMBER_KEY) === "true");
   const [inviteCode, setInviteCode] = useState(codeFromUrl || "");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -55,6 +60,13 @@ export default function Login() {
           email, password,
         });
         toast({ title: "ログイン完了" });
+      }
+      if (rememberMe) {
+        localStorage.setItem(SAVED_EMAIL_KEY, email);
+        localStorage.setItem(REMEMBER_KEY, "true");
+      } else {
+        localStorage.removeItem(SAVED_EMAIL_KEY);
+        localStorage.removeItem(REMEMBER_KEY);
       }
       window.location.href = isRegister ? "/profile-setup" : "/islands";
     } catch (error: any) {
@@ -140,6 +152,19 @@ export default function Login() {
                   placeholder="招待コードを入力"
                   data-testid="input-invite-code"
                 />
+              </div>
+            )}
+            {!isRegister && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  data-testid="checkbox-remember"
+                />
+                <Label htmlFor="rememberMe" className="font-mono text-sm text-muted-foreground cursor-pointer">
+                  ログイン情報を保存する
+                </Label>
               </div>
             )}
             <Button type="submit" className="w-full font-mono" disabled={loading} data-testid="button-submit">
