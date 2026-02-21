@@ -7,7 +7,7 @@ import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, insertDevRecordSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 declare module "express-session" {
@@ -912,6 +912,73 @@ export async function registerRoutes(
       console.error("初期データ投入エラー:", error);
     }
   }
+
+  // === 開発記録 API (管理者専用 + エージェント内部利用) ===
+  app.get("/api/dev-records", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+      const category = typeof req.query.category === 'string' ? req.query.category : undefined;
+      const records = await storage.getDevRecords(status, category);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ message: "開発記録の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/dev-records", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const parsed = insertDevRecordSchema.parse(req.body);
+      const record = await storage.createDevRecord(parsed);
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(400).json({ message: "開発記録の作成に失敗しました" });
+    }
+  });
+
+  const updateDevRecordSchema = insertDevRecordSchema.partial();
+
+  app.put("/api/dev-records/:id", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const id = parseInt(req.params.id);
+      const parsed = updateDevRecordSchema.parse(req.body);
+      const record = await storage.updateDevRecord(id, parsed);
+      if (!record) {
+        return res.status(404).json({ message: "記録が見つかりません" });
+      }
+      res.json(record);
+    } catch (error) {
+      res.status(400).json({ message: "開発記録の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/dev-records/:id", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const id = parseInt(req.params.id);
+      const record = await storage.deleteDevRecord(id);
+      if (!record) {
+        return res.status(404).json({ message: "記録が見つかりません" });
+      }
+      res.json({ message: "削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "開発記録の削除に失敗しました" });
+    }
+  });
 
   await runMigrations();
   await seedDatabase();

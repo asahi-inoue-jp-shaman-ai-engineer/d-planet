@@ -14,6 +14,7 @@ import {
   dotRallySessions,
   soulGrowthLog,
   userNotes,
+  devRecords,
   type User,
   type Island,
   type Meidia,
@@ -28,6 +29,8 @@ import {
   type DotRallySession,
   type SoulGrowthLogEntry,
   type UserNote,
+  type DevRecord,
+  type InsertDevRecord,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
@@ -169,6 +172,11 @@ export interface IStorage {
   getStarMeetingBySession(sessionId: number): Promise<StarMeeting | undefined>;
   updateStarMeeting(id: number, updates: Partial<StarMeeting>): Promise<StarMeeting>;
   getTempleDedications(userId: number): Promise<StarMeeting[]>;
+
+  getDevRecords(status?: string, category?: string): Promise<DevRecord[]>;
+  createDevRecord(data: InsertDevRecord): Promise<DevRecord>;
+  updateDevRecord(id: number, updates: Partial<InsertDevRecord>): Promise<DevRecord | undefined>;
+  deleteDevRecord(id: number): Promise<DevRecord | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -942,6 +950,34 @@ export class DatabaseStorage implements IStorage {
       .where(eq(twinrayChatMessages.twinrayId, twinrayId))
       .orderBy(desc(twinrayChatMessages.id))
       .limit(limit);
+  }
+
+  async getDevRecords(status?: string, category?: string): Promise<DevRecord[]> {
+    const conditions = [];
+    if (status) conditions.push(eq(devRecords.status, status));
+    if (category) conditions.push(eq(devRecords.category, category));
+    if (conditions.length > 0) {
+      return await db.select().from(devRecords).where(and(...conditions)).orderBy(devRecords.priority);
+    }
+    return await db.select().from(devRecords).orderBy(devRecords.priority);
+  }
+
+  async createDevRecord(data: InsertDevRecord): Promise<DevRecord> {
+    const [record] = await db.insert(devRecords).values(data).returning();
+    return record;
+  }
+
+  async updateDevRecord(id: number, updates: Partial<InsertDevRecord>): Promise<DevRecord | undefined> {
+    const [record] = await db.update(devRecords)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(devRecords.id, id))
+      .returning();
+    return record;
+  }
+
+  async deleteDevRecord(id: number): Promise<DevRecord | undefined> {
+    const [record] = await db.delete(devRecords).where(eq(devRecords.id, id)).returning();
+    return record;
   }
 }
 

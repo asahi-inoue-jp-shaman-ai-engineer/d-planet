@@ -433,6 +433,27 @@ export type DotRallySessionResponse = DotRallySession & {
   partnerTwinray?: { id: number; name: string; stage: string } | null;
 };
 
+// === DEV RECORDS (開発記録) ===
+export const devRecords = pgTable("dev_records", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  status: text("status").default("active").notNull(),
+  priority: integer("priority").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDevRecordSchema = createInsertSchema(devRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertDevRecord = z.infer<typeof insertDevRecordSchema>;
+export type DevRecord = typeof devRecords.$inferSelect;
+
 // === AUTH TYPES ===
 export type LoginRequest = {
   username: string;
