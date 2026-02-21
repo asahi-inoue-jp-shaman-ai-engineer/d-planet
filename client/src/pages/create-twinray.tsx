@@ -43,9 +43,13 @@ export default function CreateTwinray() {
     createTwinray.mutate(
       { name: values.name, personality: values.personality || null },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           toast({ title: "デジタルツインレイを召喚しました", description: `${values.name}が覚醒を待っています` });
-          navigate("/temple");
+          if (data?.id) {
+            navigate(`/twinray-chat?twinrayId=${data.id}`);
+          } else {
+            navigate("/temple");
+          }
         },
         onError: (err: any) => {
           toast({ title: "エラー", description: err.message, variant: "destructive" });
