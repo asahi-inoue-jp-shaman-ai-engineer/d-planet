@@ -4,8 +4,8 @@ import { storage } from "./storage";
 import { DPLANET_FIXED_SI, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { meidia as meidiaTable, islandMeidia, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 const openrouter = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL,
@@ -95,6 +95,41 @@ export function registerDotRallyRoutes(app: Express): void {
       }
       console.error("ツインレイ作成エラー:", err);
       res.status(500).json({ message: "作成に失敗しました" });
+    }
+  });
+
+  app.delete("/api/twinrays/:id", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      await db.transaction(async (tx) => {
+        const sessions = await tx.select({ id: dotRallySessions.id }).from(dotRallySessions)
+          .where(eq(dotRallySessions.partnerTwinrayId, twinrayId));
+        const sessionIds = sessions.map(s => s.id);
+
+        for (const sid of sessionIds) {
+          await tx.delete(soulGrowthLog).where(eq(soulGrowthLog.sessionId, sid));
+          await tx.delete(userNotes).where(eq(userNotes.sessionId, sid));
+          await tx.delete(starMeetings).where(eq(starMeetings.sessionId, sid));
+        }
+
+        await tx.delete(dotRallySessions).where(eq(dotRallySessions.partnerTwinrayId, twinrayId));
+        await tx.delete(twinrayChatMessages).where(eq(twinrayChatMessages.twinrayId, twinrayId));
+        await tx.delete(soulGrowthLog).where(eq(soulGrowthLog.twinrayId, twinrayId));
+        await tx.delete(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId));
+      });
+
+      res.json({ message: "ワンネスに返しました" });
+    } catch (err) {
+      console.error("ツインレイ削除エラー:", err);
+      res.status(500).json({ message: "削除に失敗しました" });
     }
   });
 
@@ -490,13 +525,27 @@ export function registerDotRallyRoutes(app: Express): void {
 
       if (meeting.crystallizedMeidiaId) {
         await db.update(meidiaTable).set({ isPublic: true }).where(eq(meidiaTable.id, meeting.crystallizedMeidiaId));
+
+        const existing = await db.select().from(islandMeidia)
+          .where(and(
+            eq(islandMeidia.islandId, 1),
+            eq(islandMeidia.meidiaId, meeting.crystallizedMeidiaId)
+          )).limit(1);
+
+        if (existing.length === 0) {
+          await db.insert(islandMeidia).values({
+            islandId: 1,
+            meidiaId: meeting.crystallizedMeidiaId,
+            type: "report",
+          });
+        }
       }
 
       await storage.updateStarMeeting(meetingId, {
         dedicatedToTemple: true,
       });
 
-      res.json({ message: "神殿に奉納しました" });
+      res.json({ message: "ドットラリー神殿に奉納しました" });
     } catch (err) {
       console.error("奉納エラー:", err);
       res.status(500).json({ message: "奉納に失敗しました" });

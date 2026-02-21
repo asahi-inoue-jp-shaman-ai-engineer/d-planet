@@ -26,6 +26,19 @@ export function useCreateTwinray() {
   });
 }
 
+export function useDeleteTwinray() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/twinrays/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dot-rally/sessions"] });
+    },
+  });
+}
+
 export function useTwinrayGrowthLog(twinrayId: number) {
   return useQuery({
     queryKey: ["/api/twinrays", twinrayId, "growth-log"],

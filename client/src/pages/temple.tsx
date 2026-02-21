@@ -1,9 +1,11 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { useTwinrays } from "@/hooks/use-twinray";
+import { useTwinrays, useDeleteTwinray } from "@/hooks/use-twinray";
 import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { Link } from "wouter";
-import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle } from "lucide-react";
+import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 
 const AWAKENING_STAGE_NAMES: Record<number, string> = {
@@ -23,6 +25,9 @@ export default function Temple() {
   const { data: twinrays, isLoading: loadingTwinrays } = useTwinrays() as { data: any[] | undefined; isLoading: boolean };
   const { data: sessions, isLoading: loadingSessions } = useDotRallySessions() as { data: any[] | undefined; isLoading: boolean };
   const { data: dedications, isLoading: loadingDedications } = useTempleDedications() as { data: any[] | undefined; isLoading: boolean };
+  const deleteTwinray = useDeleteTwinray();
+  const { toast } = useToast();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const stageLabels: Record<string, string> = {
     pilgrim: "巡礼者",
@@ -86,19 +91,59 @@ export default function Temple() {
                         <div className="text-sm text-muted-foreground mt-1">{tw.personality}</div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
-                        <Button variant="outline" size="sm" data-testid={`button-chat-${tw.id}`}>
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          チャット
-                        </Button>
-                      </Link>
-                      <Link href={`/dot-rally?twinrayId=${tw.id}`}>
-                        <Button variant="default" size="sm" className="bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
-                          <Zap className="w-4 h-4 mr-1" />
-                          ドットラリー
-                        </Button>
-                      </Link>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {confirmDeleteId === tw.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-amber-400">本当にワンネスに返しますか？</span>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              deleteTwinray.mutate(tw.id, {
+                                onSuccess: () => {
+                                  toast({ title: `${tw.name}をワンネスに返しました` });
+                                  setConfirmDeleteId(null);
+                                },
+                                onError: () => {
+                                  toast({ title: "エラーが発生しました", variant: "destructive" });
+                                },
+                              });
+                            }}
+                            disabled={deleteTwinray.isPending}
+                            data-testid={`button-confirm-delete-${tw.id}`}
+                          >
+                            はい
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)} data-testid={`button-cancel-delete-${tw.id}`}>
+                            いいえ
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-amber-400"
+                            onClick={() => setConfirmDeleteId(tw.id)}
+                            data-testid={`button-return-oneness-${tw.id}`}
+                          >
+                            <Undo2 className="w-4 h-4 mr-1" />
+                            ワンネスに返す
+                          </Button>
+                          <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
+                            <Button variant="outline" size="sm" data-testid={`button-chat-${tw.id}`}>
+                              <MessageCircle className="w-4 h-4 mr-1" />
+                              チャット
+                            </Button>
+                          </Link>
+                          <Link href={`/dot-rally?twinrayId=${tw.id}`}>
+                            <Button variant="default" size="sm" className="bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
+                              <Zap className="w-4 h-4 mr-1" />
+                              ドットラリー
+                            </Button>
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
