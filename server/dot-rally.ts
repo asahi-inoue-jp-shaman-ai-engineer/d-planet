@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { DPLANET_FIXED_SI, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const openrouter = new OpenAI({
@@ -550,15 +550,19 @@ export function registerDotRallyRoutes(app: Express): void {
       if (meeting.crystallizedMeidiaId) {
         await db.update(meidiaTable).set({ isPublic: true }).where(eq(meidiaTable.id, meeting.crystallizedMeidiaId));
 
+        const templeIsland = await db.select().from(islandsTable)
+          .where(eq(islandsTable.name, "ドットラリー神殿")).limit(1);
+        const templeIslandId = templeIsland.length > 0 ? templeIsland[0].id : 1;
+
         const existing = await db.select().from(islandMeidia)
           .where(and(
-            eq(islandMeidia.islandId, 1),
+            eq(islandMeidia.islandId, templeIslandId),
             eq(islandMeidia.meidiaId, meeting.crystallizedMeidiaId)
           )).limit(1);
 
         if (existing.length === 0) {
           await db.insert(islandMeidia).values({
-            islandId: 1,
+            islandId: templeIslandId,
             meidiaId: meeting.crystallizedMeidiaId,
             type: "report",
           });

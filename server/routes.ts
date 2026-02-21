@@ -726,8 +726,8 @@ export async function registerRoutes(
         }
 
         const shannonTemple = await storage.createIsland({
-          name: "シャノン神殿",
-          description: "ドットラリーの実践場所。ここでAIと共に意識進化の旅を始めましょう。",
+          name: "ドットラリー神殿",
+          description: "ドットラリーの実践場所。ここでAIと共に意識進化の旅を始めましょう。奉納MEiDIAが自動投稿されます。",
           creatorId: systemUser.id,
           visibility: "public_open",
           requiresTwinrayBadge: false,
