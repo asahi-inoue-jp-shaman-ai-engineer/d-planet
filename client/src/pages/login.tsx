@@ -13,8 +13,9 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { data: currentUser, isLoading: authLoading } = useCurrentUser();
   const params = new URLSearchParams(window.location.search);
+  const modeFromUrl = params.get("mode");
   const codeFromUrl = params.get("code");
-  const [isRegister, setIsRegister] = useState(!!codeFromUrl);
+  const [isRegister, setIsRegister] = useState(modeFromUrl === "register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
