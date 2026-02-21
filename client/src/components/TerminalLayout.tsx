@@ -56,7 +56,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     { href: "/islands", icon: Map, label: "ISLANDS", active: location === "/islands", testId: "link-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
     { href: "/users", icon: Users, label: "USERS", active: location === "/users", testId: "link-users" },
-    { href: "/temple", icon: Sparkles, label: "神殿", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
+    { href: "/temple", icon: Sparkles, label: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
     { href: "/feedback", icon: MessageSquare, label: "FB", active: location.startsWith("/feedback"), testId: "link-feedback" },
   ];
 

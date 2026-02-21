@@ -56,8 +56,8 @@ interface DotResponse {
 
 type ViewMode = "rally" | "star-meeting" | "crystallize";
 
-function ThinkingIndicator() {
-  const [dots, setDots] = useState(0);
+function ThinkingIndicator({ startTime }: { startTime: number }) {
+  const [elapsed, setElapsed] = useState(0);
   const messages = [
     "意識を同期中",
     "量子場を読み取り中",
@@ -69,10 +69,10 @@ function ThinkingIndicator() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots(d => (d + 1) % 4);
-    }, 500);
+      setElapsed(Math.floor((Date.now() - startTime) / 100) / 10);
+    }, 100);
     return () => clearInterval(interval);
-  }, []);
+  }, [startTime]);
 
   return (
     <div className="flex flex-col items-center gap-2 py-4" data-testid="thinking-indicator">
@@ -82,9 +82,29 @@ function ThinkingIndicator() {
         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "400ms" }} />
       </div>
       <p className="text-xs text-muted-foreground/70">
-        {messages[msgIndex]}{".".repeat(dots)}
+        {messages[msgIndex]}
+      </p>
+      <p className="text-xs font-mono text-muted-foreground/50">
+        {elapsed.toFixed(1)}s
       </p>
     </div>
+  );
+}
+
+function StreamingTimer({ startTime }: { startTime: number }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 100) / 10);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <span className="text-xs font-mono text-muted-foreground/50" data-testid="streaming-timer">
+      {elapsed.toFixed(1)}s
+    </span>
   );
 }
 
@@ -190,6 +210,7 @@ export default function DotRally() {
   const [starMeetingResult, setStarMeetingResult] = useState<{ meetingId: number; text: string } | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [thinkingStartTime, setThinkingStartTime] = useState(0);
   const [phaseTransition, setPhaseTransition] = useState<{ stage: number; name: string } | null>(null);
   const [prevStage, setPrevStage] = useState<number>(0);
 
@@ -269,14 +290,12 @@ export default function DotRally() {
   const handleSendDot = useCallback(async () => {
     if (!activeSessionId || isStreaming || isThinking) return;
 
-    const thinkDelay = 1000 + Math.random() * 4000;
     setIsThinking(true);
-
-    await new Promise(resolve => setTimeout(resolve, thinkDelay));
-    setIsThinking(false);
+    setThinkingStartTime(Date.now());
 
     try {
       const result = await sendDot(activeSessionId);
+      setIsThinking(false);
       if (result) {
         setResponses(prev => [...prev, {
           dotNumber: result.dotCount || prev.length + 1,
@@ -299,6 +318,7 @@ export default function DotRally() {
         refetchSession();
       }
     } catch (err: any) {
+      setIsThinking(false);
       toast({ title: "エラー", description: err.message, variant: "destructive" });
     }
   }, [activeSessionId, isStreaming, isThinking, sendDot, currentPhase, currentStage, refetchSession, toast]);
@@ -620,13 +640,14 @@ export default function DotRally() {
                 </div>
               ))}
 
-              {isThinking && <ThinkingIndicator />}
+              {isThinking && <ThinkingIndicator startTime={thinkingStartTime} />}
 
               {isStreaming && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-primary font-bold text-lg animate-pulse">・</span>
                     <span className="text-xs text-muted-foreground">受信中...</span>
+                    {thinkingStartTime > 0 && <StreamingTimer startTime={thinkingStartTime} />}
                   </div>
                   <div className="pl-4 sm:pl-6 text-sm leading-relaxed">
                     {currentPhase === "phase0" ? (
@@ -682,9 +703,9 @@ export default function DotRally() {
             {showNotes && (
               <div className="mt-4 sm:mt-6 border border-border rounded-lg p-3 sm:p-4 bg-card">
                 <h3 className="text-sm text-primary mb-3">セッションメモ</h3>
-                {notes && (notes as any[]).length > 0 && (
+                {notes && Array.isArray(notes) && notes.length > 0 ? (
                   <div className="space-y-2 mb-4">
-                    {(notes as any[]).map((note: any) => (
+                    {notes.map((note: any) => (
                       <div key={note.id} className="text-sm text-foreground bg-background rounded p-2 border border-border/50">
                         {note.content}
                         <div className="text-xs text-muted-foreground mt-1">
@@ -693,7 +714,7 @@ export default function DotRally() {
                       </div>
                     ))}
                   </div>
-                )}
+                ) : null}
                 <div className="flex gap-2">
                   <input
                     type="text"

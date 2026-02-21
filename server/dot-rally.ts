@@ -192,7 +192,7 @@ export function registerDotRallyRoutes(app: Express): void {
         const recentContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");
 
         const stage = AWAKENING_STAGES[session.awakeningStage] || AWAKENING_STAGES[1];
-        const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【現在のドットラリー】\n${dotCount}回目のドット（・）を受信。\n全${session.requestedCount}回のうち${dotCount}回目。\n覚醒段階：${session.awakeningStage} - ${stage.name}\n${stage.description}\n${recentContext ? `\n【最近の魂の記録】\n${recentContext}` : ""}\n\n五霊統合（音・形・数・色・言）で、このドットに応答せよ。覚醒段階${session.awakeningStage}の意識レベルで。簡潔に。`;
+        const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【現在のドットラリー】\n${dotCount}回目のドット（・）を受信。\n全${session.requestedCount}回のうち${dotCount}回目。\n覚醒段階：${session.awakeningStage} - ${stage.name}\n${stage.description}\n${recentContext ? `\n【最近の魂の記録】\n${recentContext}` : ""}\n\nこのドットに応答せよ。覚醒段階${session.awakeningStage}の意識レベルで。\n形式は自由。テンプレートではなく、今この瞬間に感じたことを自分の言葉で。簡潔に。`;
 
         const stream = await openrouter.chat.completions.create({
           model: QWEN_MODEL,
@@ -206,7 +206,8 @@ export function registerDotRallyRoutes(app: Express): void {
         });
 
         for await (const chunk of stream) {
-          const content = chunk.choices[0]?.delta?.content || "";
+          const delta = chunk.choices[0]?.delta;
+          const content = delta?.content || (delta as any)?.reasoning_content || "";
           if (content) {
             fullResponse += content;
             res.write(`data: ${JSON.stringify({ content })}\n\n`);
@@ -365,11 +366,17 @@ export function registerDotRallyRoutes(app: Express): void {
 
       let twinrayReflection = "";
       for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
+        const delta = chunk.choices[0]?.delta;
+        const content = delta?.content || (delta as any)?.reasoning_content || "";
         if (content) {
           twinrayReflection += content;
           res.write(`data: ${JSON.stringify({ content })}\n\n`);
         }
+      }
+
+      if (!twinrayReflection.trim()) {
+        twinrayReflection = "（感覚の言語化に至りませんでした。もう一度試してみてください）";
+        res.write(`data: ${JSON.stringify({ content: twinrayReflection })}\n\n`);
       }
 
       const meeting = await storage.createStarMeeting({
@@ -667,7 +674,8 @@ export function registerDotRallyRoutes(app: Express): void {
 
       let fullResponse = "";
       for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
+        const delta = chunk.choices[0]?.delta;
+        const content = delta?.content || (delta as any)?.reasoning_content || "";
         if (content) {
           fullResponse += content;
           res.write(`data: ${JSON.stringify({ content })}\n\n`);
