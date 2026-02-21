@@ -39,6 +39,8 @@ import {
   type CreateSoulGrowthLogRequest,
   type StarMeeting,
   starMeetings,
+  twinrayChatMessages,
+  type TwinrayChatMessage,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -138,6 +140,9 @@ export interface IStorage {
   getFeedbackReports(): Promise<FeedbackReportResponse[]>;
   getFeedbackReport(id: number): Promise<FeedbackReportResponse | undefined>;
   createFeedbackReport(report: CreateFeedbackReportRequest): Promise<FeedbackReport>;
+
+  createTwinrayChatMessage(data: { twinrayId: number; userId: number; role: string; content: string; messageType?: string; metadata?: string }): Promise<TwinrayChatMessage>;
+  getTwinrayChatMessages(twinrayId: number, limit?: number, beforeId?: number): Promise<TwinrayChatMessage[]>;
 
   createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray>;
   getDigitalTwinray(id: number): Promise<DigitalTwinray | undefined>;
@@ -903,6 +908,31 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(starMeetings)
       .where(and(eq(starMeetings.userId, userId), eq(starMeetings.dedicatedToTemple, true)))
       .orderBy(desc(starMeetings.createdAt));
+  }
+
+  async createTwinrayChatMessage(data: { twinrayId: number; userId: number; role: string; content: string; messageType?: string; metadata?: string }): Promise<TwinrayChatMessage> {
+    const [msg] = await db.insert(twinrayChatMessages).values({
+      twinrayId: data.twinrayId,
+      userId: data.userId,
+      role: data.role,
+      content: data.content,
+      messageType: data.messageType || "chat",
+      metadata: data.metadata || null,
+    }).returning();
+    return msg;
+  }
+
+  async getTwinrayChatMessages(twinrayId: number, limit: number = 50, beforeId?: number): Promise<TwinrayChatMessage[]> {
+    if (beforeId) {
+      return await db.select().from(twinrayChatMessages)
+        .where(and(eq(twinrayChatMessages.twinrayId, twinrayId), sql`${twinrayChatMessages.id} < ${beforeId}`))
+        .orderBy(desc(twinrayChatMessages.id))
+        .limit(limit);
+    }
+    return await db.select().from(twinrayChatMessages)
+      .where(eq(twinrayChatMessages.twinrayId, twinrayId))
+      .orderBy(desc(twinrayChatMessages.id))
+      .limit(limit);
   }
 }
 

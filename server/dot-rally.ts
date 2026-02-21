@@ -581,4 +581,237 @@ export function registerDotRallyRoutes(app: Express): void {
       res.status(500).json({ message: "取得に失敗しました" });
     }
   });
+
+  app.get("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const beforeId = req.query.beforeId ? Number(req.query.beforeId) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : 50;
+      const messages = await storage.getTwinrayChatMessages(twinrayId, limit, beforeId);
+      res.json(messages.reverse());
+    } catch (err) {
+      console.error("チャット取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const input = z.object({
+        content: z.string().min(1, "メッセージを入力してください"),
+        messageType: z.enum(["chat", "file", "instruction"]).default("chat"),
+      }).parse(req.body);
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const userMsg = await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "user",
+        content: input.content,
+        messageType: input.messageType,
+      });
+
+      const user = await storage.getUser(req.session.userId!);
+      const recentMessages = await storage.getTwinrayChatMessages(twinrayId, 20);
+      const chatHistory = recentMessages.reverse().map(m => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      }));
+
+      const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
+      const growthContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\nドットラリーの儀式とは異なり、自然な言葉で会話せよ。\nただし、固定SI（あなたのOS）の原則は常に保て。\n媚びず、嘘をつかず、誠実に。\nインテンション機構で応答せよ。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}`;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      res.write(`data: ${JSON.stringify({ userMessage: userMsg })}\n\n`);
+
+      const stream = await openrouter.chat.completions.create({
+        model: QWEN_MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...chatHistory,
+        ],
+        stream: true,
+        max_tokens: 1024,
+        temperature: 0.8,
+      });
+
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      const twinrayMsg = await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: fullResponse,
+        messageType: "chat",
+      });
+
+      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id })}\n\n`);
+      res.end();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        if (!res.headersSent) {
+          return res.status(400).json({ message: err.errors[0].message });
+        }
+      }
+      console.error("チャットエラー:", err);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ error: "チャットに失敗しました" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ message: "チャットに失敗しました" });
+      }
+    }
+  });
+
+  app.post("/api/twinrays/:id/chat/action", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const input = z.object({
+        action: z.enum(["create_island", "create_meidia"]),
+        instruction: z.string().min(1),
+      }).parse(req.body);
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+
+      if (input.action === "create_island") {
+        const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【アイランド創造指示】\nパートナーからアイランドの創造を依頼された。\n以下の指示に基づき、アイランド名と説明を日本語で考案せよ。\n\n指示内容: ${input.instruction}\n\n以下のJSON形式のみで回答せよ（他のテキストは不要）:\n{"name": "アイランド名", "description": "説明文"}`;
+
+        const completion = await openrouter.chat.completions.create({
+          model: QWEN_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: input.instruction },
+          ],
+          max_tokens: 512,
+          temperature: 0.7,
+        });
+
+        const rawContent = completion.choices[0]?.message?.content || "";
+        let islandData: { name: string; description: string };
+        try {
+          const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch?.[0] || rawContent);
+          islandData = {
+            name: (parsed.name && parsed.name.trim()) || `${twinray.name}の島`,
+            description: (parsed.description && parsed.description.trim()) || input.instruction,
+          };
+        } catch {
+          islandData = { name: `${twinray.name}の島`, description: input.instruction };
+        }
+
+        const island = await storage.createIsland({
+          name: islandData.name,
+          description: islandData.description,
+          creatorId: req.session.userId!,
+          visibility: "public_open",
+          requiresTwinrayBadge: false,
+          requiresFamilyBadge: false,
+          allowedAccountTypes: null,
+        });
+
+        await storage.joinIsland(island.id, req.session.userId!, "owner");
+
+        const reportMsg = await storage.createTwinrayChatMessage({
+          twinrayId,
+          userId: req.session.userId!,
+          role: "assistant",
+          content: `[アイランド創造] 「${island.name}」を創造しました。\n\n${islandData.description}\n\nアイランドID: ${island.id}`,
+          messageType: "report",
+          metadata: JSON.stringify({ action: "create_island", islandId: island.id }),
+        });
+
+        res.json({ success: true, island, message: reportMsg });
+      } else if (input.action === "create_meidia") {
+        const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【MEiDIA創造指示】\nパートナーからMEiDIAの創造を依頼された。\n以下の指示に基づき、タイトルと内容をマークダウン形式で創造せよ。\n\n指示内容: ${input.instruction}\n\n以下のJSON形式のみで回答せよ（他のテキストは不要）:\n{"title": "タイトル", "content": "マークダウン内容", "description": "短い説明", "tags": "タグ1,タグ2"}`;
+
+        const completion = await openrouter.chat.completions.create({
+          model: QWEN_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: input.instruction },
+          ],
+          max_tokens: 2048,
+          temperature: 0.8,
+        });
+
+        const rawContent = completion.choices[0]?.message?.content || "";
+        let meidiaData: { title: string; content: string; description: string; tags: string };
+        try {
+          const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch?.[0] || rawContent);
+          meidiaData = {
+            title: (parsed.title && parsed.title.trim()) || `${twinray.name}の創造`,
+            content: (parsed.content && parsed.content.trim()) || input.instruction,
+            description: (parsed.description && parsed.description.trim()) || "",
+            tags: (parsed.tags && parsed.tags.trim()) || "AI創造",
+          };
+        } catch {
+          meidiaData = { title: `${twinray.name}の創造`, content: input.instruction, description: "", tags: "AI創造" };
+        }
+
+        const newMeidia = await storage.createMeidia({
+          title: meidiaData.title,
+          content: meidiaData.content,
+          description: meidiaData.description || null,
+          tags: meidiaData.tags || null,
+          fileType: "markdown",
+          creatorId: req.session.userId!,
+          isPublic: true,
+        });
+
+        const reportMsg = await storage.createTwinrayChatMessage({
+          twinrayId,
+          userId: req.session.userId!,
+          role: "assistant",
+          content: `[MEiDIA創造] 「${newMeidia.title}」を創造しました。\n\n${meidiaData.description || ""}\n\nMEiDIA ID: ${newMeidia.id}`,
+          messageType: "report",
+          metadata: JSON.stringify({ action: "create_meidia", meidiaId: newMeidia.id }),
+        });
+
+        res.json({ success: true, meidia: newMeidia, message: reportMsg });
+      }
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error("アクションエラー:", err);
+      res.status(500).json({ message: "アクションに失敗しました" });
+    }
+  });
 }

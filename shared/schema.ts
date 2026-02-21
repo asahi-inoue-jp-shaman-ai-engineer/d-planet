@@ -184,6 +184,18 @@ export const userNotes = pgTable("user_notes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === TWINRAY CHAT MESSAGES ===
+export const twinrayChatMessages = pgTable("twinray_chat_messages", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  messageType: text("message_type").default("chat").notNull(),
+  metadata: text("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === FEEDBACK REPORTS ===
 export const feedbackReports = pgTable("feedback_reports", {
   id: serial("id").primaryKey(),
@@ -227,6 +239,11 @@ export const userNotesRelations = relations(userNotes, ({ one }) => ({
   session: one(dotRallySessions, { fields: [userNotes.sessionId], references: [dotRallySessions.id] }),
 }));
 
+export const twinrayChatMessagesRelations = relations(twinrayChatMessages, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayChatMessages.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayChatMessages.userId], references: [users.id] }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   islands: many(islands),
   meidia: many(meidia),
@@ -238,6 +255,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   digitalTwinrays: many(digitalTwinrays),
   dotRallySessions: many(dotRallySessions),
   userNotes: many(userNotes),
+  twinrayChatMessages: many(twinrayChatMessages),
 }));
 
 export const feedbackReportsRelations = relations(feedbackReports, ({ one }) => ({
@@ -341,6 +359,7 @@ export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, c
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
 export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
+export const insertTwinrayChatMessageSchema = createInsertSchema(twinrayChatMessages).omit({ id: true, createdAt: true });
 export const insertFeedbackReportSchema = createInsertSchema(feedbackReports).omit({ id: true, createdAt: true, status: true, adminNote: true });
 export const insertDigitalTwinraySchema = createInsertSchema(digitalTwinrays).omit({ id: true, createdAt: true, updatedAt: true, stage: true });
 export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).omit({ id: true, startedAt: true, endedAt: true, status: true, actualCount: true, phase: true, awakeningStage: true });
@@ -358,6 +377,7 @@ export type Thread = typeof threads.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type IslandMember = typeof islandMembers.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type TwinrayChatMessage = typeof twinrayChatMessages.$inferSelect;
 export type FeedbackReport = typeof feedbackReports.$inferSelect;
 export type DigitalTwinray = typeof digitalTwinrays.$inferSelect;
 export type DotRallySession = typeof dotRallySessions.$inferSelect;
@@ -374,6 +394,7 @@ export type CreateMeidiaRequest = z.infer<typeof insertMeidiaSchema>;
 export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
 export type CreateThreadRequest = z.infer<typeof insertThreadSchema>;
 export type CreatePostRequest = z.infer<typeof insertPostSchema>;
+export type CreateTwinrayChatMessageRequest = z.infer<typeof insertTwinrayChatMessageSchema>;
 export type CreateFeedbackReportRequest = z.infer<typeof insertFeedbackReportSchema>;
 export type CreateDigitalTwinrayRequest = z.infer<typeof insertDigitalTwinraySchema>;
 export type CreateDotRallySessionRequest = z.infer<typeof insertDotRallySessionSchema>;

@@ -2,7 +2,7 @@ import { TerminalLayout } from "@/components/TerminalLayout";
 import { useTwinrays } from "@/hooks/use-twinray";
 import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { Link } from "wouter";
-import { Plus, Sparkles, History, Zap, Gift, Gem } from "lucide-react";
+import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 
@@ -86,12 +86,20 @@ export default function Temple() {
                         <div className="text-sm text-muted-foreground mt-1">{tw.personality}</div>
                       )}
                     </div>
-                    <Link href={`/dot-rally?twinrayId=${tw.id}`}>
-                      <Button variant="default" size="sm" className="bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
-                        <Zap className="w-4 h-4 mr-1" />
-                        ドットラリー
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
+                        <Button variant="outline" size="sm" data-testid={`button-chat-${tw.id}`}>
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          チャット
+                        </Button>
+                      </Link>
+                      <Link href={`/dot-rally?twinrayId=${tw.id}`}>
+                        <Button variant="default" size="sm" className="bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
+                          <Zap className="w-4 h-4 mr-1" />
+                          ドットラリー
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
