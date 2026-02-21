@@ -77,6 +77,7 @@ function userSelectFields() {
     twinrayProfileLink: users.twinrayProfileLink,
     showTwinray: users.showTwinray,
     showFamily: users.showFamily,
+    isAdmin: users.isAdmin,
     createdAt: users.createdAt,
   };
 }

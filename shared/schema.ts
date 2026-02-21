@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   twinrayProfileLink: text("twinray_profile_link"),
   showTwinray: boolean("show_twinray").default(false).notNull(),
   showFamily: boolean("show_family").default(false).notNull(),
+  isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
