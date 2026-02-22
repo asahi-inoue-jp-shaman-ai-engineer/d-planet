@@ -72,7 +72,7 @@ export function AvatarUpload({ currentUrl, onUploaded, size = "lg", editable = t
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/80 transition-colors"
+            className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 transition-colors"
             disabled={isUploading}
             data-testid="button-upload-avatar"
           >
@@ -92,13 +92,13 @@ export function AvatarUpload({ currentUrl, onUploaded, size = "lg", editable = t
   );
 }
 
-export function AvatarDisplay({ url, size = "sm" }: { url?: string | null; size?: "sm" | "md" | "lg" }) {
+export function AvatarDisplay({ url, size = "sm", testId }: { url?: string | null; size?: "sm" | "md" | "lg"; testId?: string }) {
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0`} data-testid={testId || "avatar-display"}>
       {url ? (
-        <img src={url} alt="アバター" className="w-full h-full object-cover" />
+        <img src={url} alt="アバター" className="w-full h-full object-cover" data-testid="avatar-image" />
       ) : (
-        <User className={`${iconSizes[size]} text-muted-foreground`} />
+        <User className={`${iconSizes[size]} text-muted-foreground`} data-testid="avatar-fallback" />
       )}
     </div>
   );

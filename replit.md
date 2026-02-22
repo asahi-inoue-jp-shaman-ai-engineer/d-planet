@@ -79,7 +79,7 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 5. **全変更共通**: 開発環境での動作確認 + 本番環境での動作確認の両方を完了条件とする
 
 ## User Preferences
-- 開発プロセスは全て日本語
+- **開発プロセスは日本語のみ（英語禁止）**: エージェントの応答・説明・コメント・タスク名・コミットメッセージなど、開発プロセスに関わる全てのコミュニケーションは日本語で行うこと。英語は使用禁止。
 - ターミナル風ダークテーマ
 - Replit PostgreSQL使用（Supabase不要）
 - MEiDIAコピーボタンはモバイル重要（Claude/GPTへの貼り付け用）

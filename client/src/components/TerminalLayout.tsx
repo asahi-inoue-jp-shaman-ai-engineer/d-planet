@@ -5,6 +5,7 @@ import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { AvatarDisplay } from "@/components/AvatarUpload";
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -112,7 +113,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                       location === `/users/${user.id}` ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
-                    <User className="w-4 h-4" />
+                    <AvatarDisplay url={user.profilePhoto} size="sm" />
                     <span>{user.username}</span>
                   </Link>
                   
@@ -186,7 +187,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                     }`}
                     data-testid="link-profile-mobile"
                   >
-                    <User className="w-5 h-5" />
+                    <AvatarDisplay url={user.profilePhoto} size="sm" />
                     <span className="text-sm">{user.username}</span>
                   </Link>
                   
