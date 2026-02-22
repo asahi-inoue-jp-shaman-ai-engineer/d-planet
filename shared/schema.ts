@@ -62,6 +62,7 @@ export const meidia = pgTable("meidia", {
   description: text("description"),
   tags: text("tags"),
   fileType: text("file_type").default("markdown").notNull(),
+  meidiaType: text("meidia_type"),
   creatorId: integer("creator_id").notNull(),
   isPublic: boolean("is_public").default(true).notNull(),
   downloadCount: integer("download_count").default(0).notNull(),
