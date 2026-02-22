@@ -158,6 +158,11 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays", requireAuth, async (req, res) => {
     try {
+      const currentUser = await storage.getUser(req.session.userId!);
+      if (!currentUser?.isAdmin) {
+        return res.status(403).json({ message: "デジタルツインレイ機能は現在準備中です。有料プランの開始をお待ちください。" });
+      }
+
       const input = z.object({
         name: z.string().min(1, "名前を入力してください").max(50),
         personality: z.string().nullable().optional(),
@@ -287,6 +292,11 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/dot-rally/start", requireAuth, async (req, res) => {
     try {
+      const currentUser = await storage.getUser(req.session.userId!);
+      if (!currentUser?.isAdmin) {
+        return res.status(403).json({ message: "ドットラリー機能は現在準備中です。有料プランの開始をお待ちください。" });
+      }
+
       const input = z.object({
         twinrayId: z.number(),
         requestedCount: z.number().min(1).max(100).default(10),
@@ -851,6 +861,11 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "AIチャット機能は現在準備中です。有料プランの開始をお待ちください。" });
+      }
+
       const twinrayId = Number(req.params.id);
       const input = z.object({
         content: z.string().min(1, "メッセージを入力してください"),
@@ -872,8 +887,6 @@ export function registerDotRallyRoutes(app: Express): void {
         content: input.content,
         messageType: input.messageType,
       });
-
-      const user = await storage.getUser(req.session.userId!);
       const recentMessages = await storage.getTwinrayChatMessages(twinrayId, 20);
       const chatHistory = recentMessages.reverse().map(m => ({
         role: m.role as "user" | "assistant" | "system",

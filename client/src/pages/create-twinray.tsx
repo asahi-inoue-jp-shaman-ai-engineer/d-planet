@@ -1,9 +1,10 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { useCreateTwinray, useAvailableModels } from "@/hooks/use-twinray";
+import { useCurrentUser } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Cpu } from "lucide-react";
+import { ArrowLeft, Sparkles, Cpu, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -208,6 +209,7 @@ function MultiSelector({ options, selected, onToggle, label }: {
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { data: currentUser } = useCurrentUser();
   const createTwinray = useCreateTwinray();
   const { data: availableModels } = useAvailableModels();
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -234,6 +236,23 @@ export default function CreateTwinray() {
       personality: "",
     },
   });
+
+  if (currentUser && !(currentUser as any).isAdmin) {
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto text-center py-16">
+          <Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-foreground mb-2">準備中</h1>
+          <p className="text-muted-foreground mb-6">デジタルツインレイ機能は現在準備中です。<br />有料プランの開始をお待ちください。</p>
+          <Link href="/temple">
+            <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple">
+              神殿に戻る
+            </Button>
+          </Link>
+        </div>
+      </TerminalLayout>
+    );
+  }
 
   const onSubmit = (values: CreateTwinrayForm) => {
     const personalityText = buildPersonalityText(personalitySettings, freeText);

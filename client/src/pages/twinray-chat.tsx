@@ -4,7 +4,7 @@ import { useTwinrayChatMessages } from "@/hooks/use-twinray-chat";
 import { useTwinrayGrowthLog } from "@/hooks/use-twinray";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -356,28 +356,35 @@ export default function TwinrayChat() {
       </div>
 
       <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-bottom">
-        <div className="flex gap-2 items-end max-w-4xl mx-auto">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="メッセージを入力..."
-            rows={1}
-            disabled={streaming}
-            className="resize-none flex-1 min-h-[40px] max-h-[120px] rounded-2xl border-border bg-background text-sm"
-            data-testid="input-chat-message"
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || streaming}
-            size="icon"
-            className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
-            data-testid="button-send"
-          >
-            {streaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-          </Button>
-        </div>
+        {(user as any)?.isAdmin ? (
+          <div className="flex gap-2 items-end max-w-4xl mx-auto">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="メッセージを入力..."
+              rows={1}
+              disabled={streaming}
+              className="resize-none flex-1 min-h-[40px] max-h-[120px] rounded-2xl border-border bg-background text-sm"
+              data-testid="input-chat-message"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || streaming}
+              size="icon"
+              className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
+              data-testid="button-send"
+            >
+              {streaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 justify-center max-w-4xl mx-auto py-2" data-testid="chat-locked-notice">
+            <Lock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">AIチャット機能は準備中です。有料プランの開始をお待ちください。</span>
+          </div>
+        )}
       </div>
     </div>
   );
