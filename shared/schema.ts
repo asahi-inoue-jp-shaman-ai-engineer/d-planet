@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   showTwinray: boolean("show_twinray").default(false).notNull(),
   showFamily: boolean("show_family").default(false).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionStatus: text("subscription_status"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

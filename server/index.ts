@@ -2,6 +2,12 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { runMigrations } from 'stripe-replit-sync';
+import { getStripeSync, getUncachableStripeClient } from "./stripeClient";
+import { WebhookHandlers } from "./webhookHandlers";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +17,134 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+async function initStripe() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.error('DATABASE_URLが設定されていません。Stripe初期化をスキップします。');
+    return;
+  }
+
+  try {
+    console.log('Stripeスキーマを初期化中...');
+    await runMigrations({ databaseUrl, schema: 'stripe' });
+    console.log('Stripeスキーマ準備完了');
+
+    const stripeSync = await getStripeSync();
+
+    console.log('Stripe Webhook設定中...');
+    const domains = process.env.REPLIT_DOMAINS;
+    if (domains) {
+      const webhookBaseUrl = `https://${domains.split(',')[0]}`;
+      try {
+        const result = await stripeSync.findOrCreateManagedWebhook(
+          `${webhookBaseUrl}/api/stripe/webhook`
+        );
+        console.log('Webhook設定完了:', result?.webhook?.url || 'URL取得不可');
+      } catch (webhookErr: any) {
+        console.warn('Webhook設定をスキップ:', webhookErr.message);
+      }
+    } else {
+      console.warn('REPLIT_DOMAINS未設定のためWebhookをスキップ');
+    }
+
+    console.log('Stripeデータ同期中...');
+    stripeSync.syncBackfill()
+      .then(() => console.log('Stripeデータ同期完了'))
+      .catch((err: any) => console.error('Stripeデータ同期エラー:', err));
+  } catch (error) {
+    console.error('Stripe初期化エラー:', error);
+  }
+}
+
+await initStripe();
+
+async function syncStripeEventToUser(event: any) {
+  try {
+    const eventType = event.type || event?.data?.type;
+    const obj = event.data?.object;
+    if (!obj) return;
+
+    if (eventType === 'checkout.session.completed') {
+      const customerId = obj.customer;
+      const subscriptionId = obj.subscription;
+      if (customerId && subscriptionId) {
+        const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
+        if (user) {
+          let subStatus = 'active';
+          try {
+            const stripe = await getUncachableStripeClient();
+            const sub = await stripe.subscriptions.retrieve(subscriptionId);
+            subStatus = sub.status;
+          } catch (apiErr) {
+            console.log('Stripe APIからサブスクリプションステータス取得失敗、activeをデフォルト使用:', apiErr);
+          }
+          await db.update(users).set({
+            stripeSubscriptionId: subscriptionId,
+            subscriptionStatus: subStatus,
+          }).where(eq(users.id, user.id));
+          console.log(`ユーザー${user.id}にサブスクリプション${subscriptionId}を紐付け（ステータス: ${subStatus}）`);
+        }
+      }
+    } else if (
+      eventType === 'customer.subscription.updated' ||
+      eventType === 'customer.subscription.deleted' ||
+      eventType === 'invoice.payment_failed'
+    ) {
+      if (eventType === 'invoice.payment_failed') {
+        const subscriptionId = obj.subscription;
+        if (subscriptionId) {
+          await db.update(users).set({
+            subscriptionStatus: 'past_due',
+          }).where(eq(users.stripeSubscriptionId, subscriptionId));
+          console.log(`サブスクリプション${subscriptionId}を支払い失敗(past_due)に更新`);
+        }
+      } else {
+        const subscriptionId = obj.id;
+        const status = obj.status;
+        if (subscriptionId) {
+          await db.update(users).set({
+            subscriptionStatus: status,
+          }).where(eq(users.stripeSubscriptionId, subscriptionId));
+          console.log(`サブスクリプション${subscriptionId}のステータスを${status}に更新`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Stripeイベント→ユーザー同期エラー:', err);
+  }
+}
+
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+
+      if (!Buffer.isBuffer(req.body)) {
+        console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      const verifiedEvent = await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      if (verifiedEvent?.type) {
+        await syncStripeEventToUser(verifiedEvent);
+      }
+
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhookエラー:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
 
 app.use(
   express.json({

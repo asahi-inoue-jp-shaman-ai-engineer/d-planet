@@ -81,6 +81,9 @@ function userSelectFields() {
     showTwinray: users.showTwinray,
     showFamily: users.showFamily,
     isAdmin: users.isAdmin,
+    stripeCustomerId: users.stripeCustomerId,
+    stripeSubscriptionId: users.stripeSubscriptionId,
+    subscriptionStatus: users.subscriptionStatus,
     createdAt: users.createdAt,
   };
 }

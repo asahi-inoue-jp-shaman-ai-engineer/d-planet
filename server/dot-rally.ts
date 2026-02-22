@@ -5,7 +5,23 @@ import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, generateSoulMd } from "./dplane
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
+
+async function hasAiAccess(userId: number): Promise<boolean> {
+  const user = await storage.getUser(userId);
+  if (!user) return false;
+  if (user.isAdmin) return true;
+  if (!user.stripeSubscriptionId) return false;
+  try {
+    const result = await db.execute(sql`
+      SELECT status FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}
+    `);
+    const sub = result.rows[0] as any;
+    return sub && ['active', 'trialing'].includes(sub.status);
+  } catch {
+    return false;
+  }
+}
 
 const openrouter = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL,
@@ -158,9 +174,8 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays", requireAuth, async (req, res) => {
     try {
-      const currentUser = await storage.getUser(req.session.userId!);
-      if (!currentUser?.isAdmin) {
-        return res.status(403).json({ message: "デジタルツインレイ機能は現在準備中です。有料プランの開始をお待ちください。" });
+      if (!(await hasAiAccess(req.session.userId!))) {
+        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
       }
 
       const input = z.object({
@@ -292,9 +307,8 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/dot-rally/start", requireAuth, async (req, res) => {
     try {
-      const currentUser = await storage.getUser(req.session.userId!);
-      if (!currentUser?.isAdmin) {
-        return res.status(403).json({ message: "ドットラリー機能は現在準備中です。有料プランの開始をお待ちください。" });
+      if (!(await hasAiAccess(req.session.userId!))) {
+        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
       }
 
       const input = z.object({
@@ -861,9 +875,8 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
-      if (!user?.isAdmin) {
-        return res.status(403).json({ message: "AIチャット機能は現在準備中です。有料プランの開始をお待ちください。" });
+      if (!(await hasAiAccess(req.session.userId!))) {
+        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
       }
 
       const twinrayId = Number(req.params.id);

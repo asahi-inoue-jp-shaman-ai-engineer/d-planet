@@ -8,7 +8,8 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { registerDotRallyRoutes } from "./dot-rally";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, insertDevRecordSchema } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 declare module "express-session" {
   interface SessionData {
@@ -1072,6 +1073,153 @@ export async function registerRoutes(
       res.json({ message: "削除しました" });
     } catch (error) {
       res.status(500).json({ message: "開発記録の削除に失敗しました" });
+    }
+  });
+
+  app.get("/api/stripe/publishable-key", async (_req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      console.error("Stripe公開キー取得エラー:", error);
+      res.status(500).json({ message: "Stripe設定の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/stripe/products", async (_req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          p.id as product_id,
+          p.name as product_name,
+          p.description as product_description,
+          p.active as product_active,
+          p.metadata as product_metadata,
+          pr.id as price_id,
+          pr.unit_amount,
+          pr.currency,
+          pr.recurring,
+          pr.active as price_active
+        FROM stripe.products p
+        LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
+        WHERE p.active = true
+        ORDER BY p.id, pr.unit_amount
+      `);
+
+      const productsMap = new Map();
+      for (const row of result.rows) {
+        const r = row as any;
+        if (!productsMap.has(r.product_id)) {
+          productsMap.set(r.product_id, {
+            id: r.product_id,
+            name: r.product_name,
+            description: r.product_description,
+            metadata: r.product_metadata,
+            prices: []
+          });
+        }
+        if (r.price_id) {
+          productsMap.get(r.product_id).prices.push({
+            id: r.price_id,
+            unitAmount: r.unit_amount,
+            currency: r.currency,
+            recurring: r.recurring,
+          });
+        }
+      }
+
+      res.json({ products: Array.from(productsMap.values()) });
+    } catch (error) {
+      console.error("Stripe商品取得エラー:", error);
+      res.status(500).json({ message: "商品情報の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/stripe/checkout", requireAuth, async (req, res) => {
+    try {
+      const { priceId } = req.body;
+      if (!priceId) {
+        return res.status(400).json({ message: "プランを選択してください" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: String(user.id) },
+        });
+        customerId = customer.id;
+        await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, user.id));
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: `${baseUrl}/subscription?status=success`,
+        cancel_url: `${baseUrl}/subscription?status=cancel`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Checkoutセッション作成エラー:", error);
+      res.status(500).json({ message: "決済セッションの作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/stripe/subscription", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      if (!user.stripeSubscriptionId) {
+        return res.json({ subscription: null, hasAccess: user.isAdmin });
+      }
+
+      const result = await db.execute(sql`
+        SELECT * FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}
+      `);
+      const subscription = result.rows[0] || null;
+
+      const activeStatuses = ['active', 'trialing'];
+      const hasAccess = user.isAdmin || (subscription && activeStatuses.includes((subscription as any).status));
+
+      res.json({ subscription, hasAccess });
+    } catch (error) {
+      console.error("サブスクリプション取得エラー:", error);
+      res.status(500).json({ message: "サブスクリプション情報の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/stripe/portal", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ message: "Stripeの顧客情報がありません" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${baseUrl}/subscription`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("カスタマーポータル作成エラー:", error);
+      res.status(500).json({ message: "管理ポータルの作成に失敗しました" });
     }
   });
 

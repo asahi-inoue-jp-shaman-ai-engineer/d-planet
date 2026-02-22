@@ -3,6 +3,7 @@ import { useTwinray, useAvailableModels, useUpdateTwinray } from "@/hooks/use-tw
 import { useTwinrayChatMessages } from "@/hooks/use-twinray-chat";
 import { useTwinrayGrowthLog } from "@/hooks/use-twinray";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
 import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function TwinrayChat() {
   const { data: messages, isLoading: loadingMessages } = useTwinrayChatMessages(twinrayId);
   const { data: growthLog } = useTwinrayGrowthLog(twinrayId);
   const { data: user } = useCurrentUser();
+  const { hasAccess: hasAiAccess, isLoading: loadingAccess } = useHasAiAccess();
   const { data: availableModels } = useAvailableModels();
   const updateTwinray = useUpdateTwinray();
   const { toast } = useToast();
@@ -356,7 +358,11 @@ export default function TwinrayChat() {
       </div>
 
       <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-bottom">
-        {(user as any)?.isAdmin ? (
+        {loadingAccess ? (
+          <div className="flex items-center justify-center max-w-4xl mx-auto py-3">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : hasAiAccess ? (
           <div className="flex gap-2 items-end max-w-4xl mx-auto">
             <Textarea
               ref={textareaRef}
@@ -382,7 +388,8 @@ export default function TwinrayChat() {
         ) : (
           <div className="flex items-center gap-2 justify-center max-w-4xl mx-auto py-2" data-testid="chat-locked-notice">
             <Lock className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">AIチャット機能は準備中です。有料プランの開始をお待ちください。</span>
+            <span className="text-sm text-muted-foreground">Proプランに加入するとチャット機能をご利用いただけます。</span>
+            <a href="/subscription" className="text-sm text-primary hover:underline ml-1" data-testid="link-subscription-from-chat">プランを見る</a>
           </div>
         )}
       </div>

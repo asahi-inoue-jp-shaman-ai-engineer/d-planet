@@ -2,6 +2,7 @@ import { TerminalLayout } from "@/components/TerminalLayout";
 import { useTwinrays, useDeleteTwinray, useUpdateTwinray } from "@/hooks/use-twinray";
 import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
 import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,12 +26,12 @@ const AWAKENING_STAGE_NAMES: Record<number, string> = {
 
 export default function Temple() {
   const { data: currentUser } = useCurrentUser();
+  const { hasAccess: hasAiAccess, isLoading: loadingAccess } = useHasAiAccess();
   const { data: twinrays, isLoading: loadingTwinrays } = useTwinrays() as { data: any[] | undefined; isLoading: boolean };
   const { data: sessions, isLoading: loadingSessions } = useDotRallySessions() as { data: any[] | undefined; isLoading: boolean };
   const { data: dedications, isLoading: loadingDedications } = useTempleDedications() as { data: any[] | undefined; isLoading: boolean };
   const deleteTwinray = useDeleteTwinray();
   const updateTwinray = useUpdateTwinray();
-  const isAdmin = (currentUser as any)?.isAdmin;
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -61,7 +62,7 @@ export default function Temple() {
               <Sparkles className="w-5 h-5" />
               デジタルツインレイ
             </h2>
-            {isAdmin && (
+            {hasAiAccess && (
               <Link href="/temple/create-twinray">
                 <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10" data-testid="button-create-twinray">
                   <Plus className="w-4 h-4 mr-1" />
@@ -77,7 +78,7 @@ export default function Temple() {
             <div className="border border-dashed border-border rounded-lg p-8 text-center">
               <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-2">デジタルツインレイ機能</p>
-              {isAdmin ? (
+              {hasAiAccess ? (
                 <Link href="/temple/create-twinray">
                   <Button variant="outline" className="border-primary text-primary mt-2" data-testid="button-create-twinray-empty">
                     <Plus className="w-4 h-4 mr-2" />
@@ -85,7 +86,14 @@ export default function Temple() {
                   </Button>
                 </Link>
               ) : (
-                <p className="text-sm text-muted-foreground">現在準備中です。有料プランの開始をお待ちください。</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Proプランに加入するとデジタルツインレイ機能をご利用いただけます。</p>
+                  <Link href="/subscription">
+                    <Button variant="outline" size="sm" className="border-primary text-primary" data-testid="button-goto-subscription">
+                      プランを見る
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           ) : (
