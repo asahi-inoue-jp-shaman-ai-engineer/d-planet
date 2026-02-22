@@ -132,6 +132,12 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   profilePhoto: text("profile_photo"),
   soulMd: text("soul_md").notNull(),
   stage: text("stage").default("pilgrim").notNull(),
+  preferredModel: text("preferred_model").default("qwen/qwen3-30b-a3b"),
+  nickname: text("nickname"),
+  firstPerson: text("first_person"),
+  greeting: text("greeting"),
+  interests: text("interests"),
+  humorLevel: text("humor_level"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

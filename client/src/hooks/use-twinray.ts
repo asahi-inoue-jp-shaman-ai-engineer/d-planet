@@ -16,7 +16,7 @@ export function useTwinray(id: number) {
 
 export function useCreateTwinray() {
   return useMutation({
-    mutationFn: async (data: { name: string; personality?: string | null; profilePhoto?: string | null }) => {
+    mutationFn: async (data: Record<string, any>) => {
       const res = await apiRequest("POST", "/api/twinrays", data);
       return res.json();
     },
@@ -28,13 +28,20 @@ export function useCreateTwinray() {
 
 export function useUpdateTwinray() {
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: { name?: string; personality?: string } }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Record<string, any> }) => {
       const res = await apiRequest("PATCH", `/api/twinrays/${id}`, data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: { id: number; data: Record<string, any> }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/twinrays"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", variables.id] });
     },
+  });
+}
+
+export function useAvailableModels() {
+  return useQuery({
+    queryKey: ["/api/available-models"],
   });
 }
 
