@@ -59,8 +59,6 @@ async function initStripe() {
   }
 }
 
-await initStripe();
-
 async function syncStripeEventToUser(event: any) {
   try {
     const eventType = event.type || event?.data?.type;
@@ -221,6 +219,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await initStripe();
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
