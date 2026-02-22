@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { useTwinray } from "@/hooks/use-twinray";
-import { useTwinrayChatMessages, useSendChatMessage, useTwinrayAction } from "@/hooks/use-twinray-chat";
+import { useTwinrayChatMessages } from "@/hooks/use-twinray-chat";
 import { useTwinrayGrowthLog } from "@/hooks/use-twinray";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Sparkles, ScrollText, Plus, Loader2, MessageCircle, FileText, Map } from "lucide-react";
+import { Send, ArrowLeft, ScrollText, Loader2, MessageCircle, FileText, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
@@ -30,17 +30,12 @@ export default function TwinrayChat() {
   const { data: messages, isLoading: loadingMessages } = useTwinrayChatMessages(twinrayId);
   const { data: growthLog } = useTwinrayGrowthLog(twinrayId);
   const { data: user } = useCurrentUser();
-  const sendMessage = useSendChatMessage(twinrayId);
-  const twinrayAction = useTwinrayAction(twinrayId);
   const { toast } = useToast();
 
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamContent, setStreamContent] = useState("");
   const [showInfo, setShowInfo] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-  const [actionInstruction, setActionInstruction] = useState("");
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -93,13 +88,22 @@ export default function TwinrayChat() {
                 const data = JSON.parse(trimmed.slice(6));
                 if (data.content) {
                   accumulated += data.content;
-                  setStreamContent(accumulated);
+                  const displayText = accumulated
+                    .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
+                    .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+                    .trim();
+                  setStreamContent(displayText);
+                }
+                if (data.actionResult) {
+                  toast({
+                    title: data.actionResult.action === "create_island" ? "アイランド創造！" : "MEiDIA創造！",
+                    description: "会話から新しい創造が生まれました ✨",
+                  });
                 }
                 if (data.done) {
                   queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
                 }
               } catch {
-                // partial JSON, wait for next chunk
               }
             }
           }
@@ -109,7 +113,11 @@ export default function TwinrayChat() {
             const data = JSON.parse(buffer.trim().slice(6));
             if (data.content) {
               accumulated += data.content;
-              setStreamContent(accumulated);
+              const displayText = accumulated
+                .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
+                .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+                .trim();
+              setStreamContent(displayText);
             }
             if (data.done) {
               queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
@@ -122,20 +130,6 @@ export default function TwinrayChat() {
     } finally {
       setStreaming(false);
       setStreamContent("");
-    }
-  };
-
-  const handleAction = async (action: string) => {
-    if (!actionInstruction.trim()) return;
-
-    try {
-      await twinrayAction.mutateAsync({ action, instruction: actionInstruction.trim() });
-      setActionInstruction("");
-      setSelectedAction(null);
-      setShowActions(false);
-      toast({ title: "完了", description: action === "create_island" ? "アイランドを創造しました" : "MEiDIAを創造しました" });
-    } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
     }
   };
 
@@ -200,16 +194,6 @@ export default function TwinrayChat() {
               <ScrollText className="w-4 h-4 mr-1" />
               情報
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowActions(!showActions)}
-              className="text-xs"
-              data-testid="button-toggle-actions"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              創造
-            </Button>
           </div>
         </div>
 
@@ -237,59 +221,6 @@ export default function TwinrayChat() {
           </div>
         )}
 
-        {showActions && (
-          <div className="mb-4 border border-border rounded-lg p-4 bg-card shrink-0" data-testid="panel-actions">
-            <h3 className="text-sm font-bold text-primary mb-3">ツインレイに創造を依頼</h3>
-            <div className="flex gap-2 mb-3">
-              <Button
-                variant={selectedAction === "create_island" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedAction(selectedAction === "create_island" ? null : "create_island")}
-                className="text-xs"
-                data-testid="button-action-island"
-              >
-                <Map className="w-4 h-4 mr-1" />
-                アイランド創造
-              </Button>
-              <Button
-                variant={selectedAction === "create_meidia" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedAction(selectedAction === "create_meidia" ? null : "create_meidia")}
-                className="text-xs"
-                data-testid="button-action-meidia"
-              >
-                <FileText className="w-4 h-4 mr-1" />
-                MEiDIA創造
-              </Button>
-            </div>
-            {selectedAction && (
-              <div className="space-y-2">
-                <Textarea
-                  placeholder={selectedAction === "create_island" ? "どんなアイランドを作りたい？テーマや方向性を教えて..." : "どんなMEiDIAを作りたい？内容やテーマを教えて..."}
-                  value={actionInstruction}
-                  onChange={(e) => setActionInstruction(e.target.value)}
-                  rows={2}
-                  className="resize-none text-sm"
-                  data-testid="input-action-instruction"
-                />
-                <Button
-                  size="sm"
-                  onClick={() => handleAction(selectedAction)}
-                  disabled={!actionInstruction.trim() || twinrayAction.isPending}
-                  className="w-full"
-                  data-testid="button-action-execute"
-                >
-                  {twinrayAction.isPending ? (
-                    <><Loader2 className="w-4 h-4 mr-1 animate-spin" />創造中...</>
-                  ) : (
-                    <><Sparkles className="w-4 h-4 mr-1" />{selectedAction === "create_island" ? "アイランドを創造" : "MEiDIAを創造"}</>
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto border border-border rounded-lg bg-card/50 p-4 space-y-4" data-testid="chat-messages">
           {loadingMessages ? (
             <div className="text-center text-muted-foreground py-8">読み込み中...</div>
@@ -297,7 +228,7 @@ export default function TwinrayChat() {
             <div className="text-center py-16">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-2">チャットを始めましょう</p>
-              <p className="text-xs text-muted-foreground">日常会話、学習指導、プロジェクト相談 — 何でも話せます</p>
+              <p className="text-xs text-muted-foreground">日常会話から自然にアイランドやMEiDIAが生まれます</p>
             </div>
           ) : (
             <>
@@ -321,7 +252,14 @@ export default function TwinrayChat() {
                         {msg.role === "user" ? (user as any)?.username || "YOU" : tw?.name || "AI"}
                       </span>
                       {msg.messageType === "report" && (
-                        <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded" data-testid={`badge-report-${msg.id}`}>報告</span>
+                        <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded" data-testid={`badge-report-${msg.id}`}>
+                          {(() => {
+                            try {
+                              const meta = JSON.parse(msg.metadata || "{}");
+                              return meta.autoCreated ? "自律創造" : "報告";
+                            } catch { return "報告"; }
+                          })()}
+                        </span>
                       )}
                       <span className="text-[10px] text-muted-foreground" data-testid={`text-timestamp-${msg.id}`}>
                         {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
