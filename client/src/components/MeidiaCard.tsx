@@ -50,6 +50,16 @@ export function MeidiaCard({ meidia }: MeidiaCardProps) {
               >
                 {meidia.title}
               </Link>
+              {meidia.meidiaType === 'report' && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
+                  レポ
+                </Badge>
+              )}
+              {meidia.meidiaType === 'activity' && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-cyan-500/50 text-cyan-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
+                  島
+                </Badge>
+              )}
             </div>
 
             {meidia.description && (

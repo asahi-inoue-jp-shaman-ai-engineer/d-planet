@@ -510,6 +510,11 @@ export async function registerRoutes(
         return res.status(404).json({ message: "アイランドが見つかりません" });
       }
 
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (island.creatorId !== req.session.userId && !userIsAdmin) {
+        return res.status(403).json({ message: "スレッドを作成できるのはアイランド主のみです" });
+      }
+
       const thread = await storage.createThread(islandId, req.session.userId!, input.title);
 
       if (input.firstPost) {

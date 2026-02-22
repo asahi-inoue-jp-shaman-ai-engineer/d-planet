@@ -338,7 +338,7 @@ export default function IslandDetail() {
               <MessageSquare className="w-5 h-5" />
               掲示板
             </h2>
-            {currentUser && (
+            {currentUser && (currentUser.id === island.creator.id || currentUser.isAdmin) && (
               <Button
                 variant="outline"
                 className="font-mono"

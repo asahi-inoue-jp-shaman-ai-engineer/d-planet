@@ -150,6 +150,7 @@ export default function CreateMeidia() {
         description: description || null,
         tags: tags.length > 0 ? tags.join(',') : null,
         fileType: "markdown",
+        meidiaType: islandId ? attachType : null,
       };
 
       if (uploadedPath && attachedFile) {
