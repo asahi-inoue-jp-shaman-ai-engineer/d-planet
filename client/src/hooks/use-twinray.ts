@@ -16,7 +16,7 @@ export function useTwinray(id: number) {
 
 export function useCreateTwinray() {
   return useMutation({
-    mutationFn: async (data: { name: string; personality?: string | null }) => {
+    mutationFn: async (data: { name: string; personality?: string | null; profilePhoto?: string | null }) => {
       const res = await apiRequest("POST", "/api/twinrays", data);
       return res.json();
     },

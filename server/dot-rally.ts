@@ -67,6 +67,7 @@ export function registerDotRallyRoutes(app: Express): void {
       const input = z.object({
         name: z.string().min(1, "名前を入力してください").max(50),
         personality: z.string().nullable().optional(),
+        profilePhoto: z.string().nullable().optional(),
       }).parse(req.body);
 
       const user = await storage.getUser(req.session.userId!);
@@ -85,6 +86,7 @@ export function registerDotRallyRoutes(app: Express): void {
         userId: req.session.userId!,
         name: input.name,
         personality: input.personality ?? null,
+        profilePhoto: input.profilePhoto ?? null,
         soulMd,
       });
 

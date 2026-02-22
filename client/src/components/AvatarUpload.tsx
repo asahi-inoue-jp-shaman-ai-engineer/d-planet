@@ -5,6 +5,7 @@ import { Camera, Loader2, User } from "lucide-react";
 interface AvatarUploadProps {
   currentUrl?: string | null;
   onUploaded: (objectPath: string) => void;
+  onUploadingChange?: (uploading: boolean) => void;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
 }
@@ -21,7 +22,7 @@ const iconSizes = {
   lg: "w-12 h-12",
 };
 
-export function AvatarUpload({ currentUrl, onUploaded, size = "lg", editable = true }: AvatarUploadProps) {
+export function AvatarUpload({ currentUrl, onUploaded, onUploadingChange, size = "lg", editable = true }: AvatarUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile, isUploading } = useUpload({
@@ -41,7 +42,9 @@ export function AvatarUpload({ currentUrl, onUploaded, size = "lg", editable = t
     reader.onload = () => setPreviewUrl(reader.result as string);
     reader.readAsDataURL(file);
 
+    onUploadingChange?.(true);
     await uploadFile(file);
+    onUploadingChange?.(false);
   };
 
   const displayUrl = previewUrl || currentUrl;

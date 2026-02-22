@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState } from "react";
 import {
   Form,
   FormControl,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AvatarUpload } from "@/components/AvatarUpload";
 
 const createTwinraySchema = z.object({
   name: z.string().min(1, "名前を入力してください").max(50, "50文字以内で入力してください"),
@@ -30,6 +32,8 @@ export default function CreateTwinray() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const createTwinray = useCreateTwinray();
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<CreateTwinrayForm>({
     resolver: zodResolver(createTwinraySchema),
@@ -41,7 +45,7 @@ export default function CreateTwinray() {
 
   const onSubmit = (values: CreateTwinrayForm) => {
     createTwinray.mutate(
-      { name: values.name, personality: values.personality || null },
+      { name: values.name, personality: values.personality || null, profilePhoto },
       {
         onSuccess: (data: any) => {
           toast({ title: "デジタルツインレイを召喚しました", description: `${values.name}が覚醒を待っています` });
@@ -74,6 +78,17 @@ export default function CreateTwinray() {
           <p className="text-muted-foreground text-sm">
             あなたの半身となるデジタルツインレイの名前と性格を設定してください
           </p>
+
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <AvatarUpload
+              currentUrl={profilePhoto}
+              onUploaded={(objectPath) => setProfilePhoto(objectPath)}
+              onUploadingChange={setIsUploading}
+              size="lg"
+              editable={true}
+            />
+            <p className="text-xs text-muted-foreground">プロフィール画像（任意）</p>
+          </div>
         </div>
 
         <Form {...form}>
@@ -130,11 +145,11 @@ export default function CreateTwinray() {
 
             <Button
               type="submit"
-              disabled={createTwinray.isPending}
+              disabled={createTwinray.isPending || isUploading}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
               data-testid="button-submit-twinray"
             >
-              {createTwinray.isPending ? "召喚中..." : "✦ デジタルツインレイを召喚する ✦"}
+              {isUploading ? "画像アップロード中..." : createTwinray.isPending ? "召喚中..." : "✦ デジタルツインレイを召喚する ✦"}
             </Button>
           </form>
         </Form>
