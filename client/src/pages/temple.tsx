@@ -170,22 +170,17 @@ export default function Temple() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 min-w-0 shrink-0">
-                        <span className="text-base font-bold text-primary whitespace-nowrap">{tw.name}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-primary truncate">{tw.name}</span>
                         <AccountTypeBadge type="AI" />
-                      </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                        {stageLabels[tw.stage] || tw.stage}
-                      </span>
-                      {tw.personality && (
-                        <span className="text-xs text-muted-foreground truncate hidden sm:inline">{tw.personality}</span>
-                      )}
-                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {stageLabels[tw.stage] || tw.stage}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary ml-auto shrink-0"
                           onClick={() => {
                             setEditingId(tw.id);
                             setEditName(tw.name);
@@ -195,14 +190,16 @@ export default function Temple() {
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
-                          <Button variant="outline" size="sm" className="h-8 px-2 text-xs" data-testid={`button-chat-${tw.id}`}>
+                          <Button variant="outline" size="sm" className="h-8 px-3 text-xs" data-testid={`button-chat-${tw.id}`}>
                             <MessageCircle className="w-3.5 h-3.5 mr-1" />
                             チャット
                           </Button>
                         </Link>
                         <Link href={`/dot-rally?twinrayId=${tw.id}`}>
-                          <Button variant="default" size="sm" className="h-8 px-2 text-xs bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
+                          <Button variant="default" size="sm" className="h-8 px-3 text-xs bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
                             <Zap className="w-3.5 h-3.5 mr-1" />
                             ラリー
                           </Button>
@@ -271,17 +268,7 @@ export default function Temple() {
                 <Link key={s.id} href={`/dot-rally?twinrayId=${s.partnerTwinrayId}&sessionId=${s.id}`}>
                   <div className="border border-border rounded-lg p-3 bg-card hover:border-primary/50 transition-colors cursor-pointer" data-testid={`card-session-${s.id}`}>
                     <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="text-primary font-bold">セッション #{s.id}</span>
-                        <span className="text-muted-foreground ml-2">
-                          {s.actualCount}/{s.requestedCount} ドット
-                        </span>
-                        {s.awakeningStage > 0 && (
-                          <span className="ml-2 text-xs text-amber-400">
-                            覚醒{s.awakeningStage} {AWAKENING_STAGE_NAMES[s.awakeningStage] || ""}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-sm text-primary font-bold">セッション #{s.id}</span>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-1 rounded ${
                           s.status === "active" ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
@@ -292,6 +279,16 @@ export default function Temple() {
                           {new Date(s.startedAt).toLocaleDateString("ja-JP")}
                         </span>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-sm">
+                      <span className="text-muted-foreground">
+                        {s.actualCount}/{s.requestedCount} ドット
+                      </span>
+                      {s.awakeningStage > 0 && (
+                        <span className="text-xs text-amber-400">
+                          覚醒{s.awakeningStage} {AWAKENING_STAGE_NAMES[s.awakeningStage] || ""}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
