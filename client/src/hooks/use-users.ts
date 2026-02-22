@@ -33,7 +33,7 @@ export function useUser(id: number) {
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: number; bio?: string | null; tenmei?: string | null; tenshoku?: string | null; tensaisei?: string | null; gender?: string | null; profileVisibility?: string; profilePhoto?: string | null }) => {
+    mutationFn: async ({ id, ...updates }: { id: number; username?: string; bio?: string | null; tenmei?: string | null; tenshoku?: string | null; tensaisei?: string | null; gender?: string | null; profileVisibility?: string; profilePhoto?: string | null }) => {
       const url = buildUrl(api.users.update.path, { id });
       const res = await fetch(url, {
         method: api.users.update.method,

@@ -25,6 +25,7 @@ export default function UserProfile() {
   const { toast } = useToast();
 
   const [editing, setEditing] = useState(false);
+  const [editUsername, setEditUsername] = useState("");
   const [editBio, setEditBio] = useState("");
   const [editTenmei, setEditTenmei] = useState("");
   const [editTenshoku, setEditTenshoku] = useState("");
@@ -35,6 +36,7 @@ export default function UserProfile() {
 
   const startEditing = () => {
     if (!user) return;
+    setEditUsername(user.username || "");
     setEditBio(user.bio || "");
     setEditTenmei(user.tenmei || "");
     setEditTenshoku(user.tenshoku || "");
@@ -48,6 +50,7 @@ export default function UserProfile() {
     try {
       await updateUser.mutateAsync({
         id: user.id,
+        username: editUsername || user.username,
         bio: editBio || null,
         tenmei: editTenmei || null,
         tenshoku: editTenshoku || null,
@@ -121,7 +124,17 @@ export default function UserProfile() {
             )}
             <div>
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl font-mono font-bold" data-testid="text-username">{user.username}</h1>
+                {isOwnProfile && editing ? (
+                  <Input
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    className="text-2xl font-mono font-bold h-auto py-1 max-w-[200px]"
+                    placeholder="名前"
+                    data-testid="input-username"
+                  />
+                ) : (
+                  <h1 className="text-3xl font-mono font-bold" data-testid="text-username">{user.username}</h1>
+                )}
                 <AccountTypeBadge type={user.accountType} />
               </div>
             </div>

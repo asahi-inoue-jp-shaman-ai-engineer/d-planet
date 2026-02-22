@@ -215,6 +215,12 @@ export async function registerRoutes(
       }
 
       const input = api.users.update.input.parse(req.body);
+      if (input.username) {
+        const existing = await storage.getUserByUsername(input.username);
+        if (existing && existing.id !== id) {
+          return res.status(400).json({ message: "このユーザー名は既に使用されています", field: "username" });
+        }
+      }
       const updated = await storage.updateUser(id, input);
       res.json(updated);
     } catch (err) {
