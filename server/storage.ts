@@ -113,6 +113,7 @@ export interface IStorage {
   getMeidia(id: number): Promise<Meidia | undefined>;
   getMeidiaWithCreator(id: number): Promise<MeidiaResponse | undefined>;
   createMeidia(meidia: CreateMeidiaRequest): Promise<Meidia>;
+  deleteMeidia(id: number): Promise<void>;
   incrementDownloadCount(id: number): Promise<void>;
   getUserMeidia(userId: number): Promise<Meidia[]>;
 
@@ -383,7 +384,7 @@ export class DatabaseStorage implements IStorage {
         creatorAccountType: users.accountType,
       })
       .from(meidia)
-      .leftJoin(users, eq(meidia.creatorId, users.id));
+      .innerJoin(users, eq(meidia.creatorId, users.id));
 
     const result = userId
       ? await query.where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true)))
@@ -438,7 +439,7 @@ export class DatabaseStorage implements IStorage {
         creatorAccountType: users.accountType,
       })
       .from(meidia)
-      .leftJoin(users, eq(meidia.creatorId, users.id))
+      .innerJoin(users, eq(meidia.creatorId, users.id))
       .where(eq(meidia.id, id))
       .limit(1);
 
@@ -470,6 +471,11 @@ export class DatabaseStorage implements IStorage {
   async createMeidia(meidiaData: CreateMeidiaRequest): Promise<Meidia> {
     const [newMeidia] = await db.insert(meidia).values(meidiaData).returning();
     return newMeidia;
+  }
+
+  async deleteMeidia(id: number): Promise<void> {
+    await db.delete(islandMeidia).where(eq(islandMeidia.meidiaId, id));
+    await db.delete(meidia).where(eq(meidia.id, id));
   }
 
   async incrementDownloadCount(id: number): Promise<void> {

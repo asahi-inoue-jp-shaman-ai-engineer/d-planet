@@ -154,10 +154,10 @@ export default function IslandDetail() {
               戻る
             </Button>
           </Link>
-          <Link href={`/meidia/create?islandId=${island.id}`}>
+          <Link href={`/meidia/create?islandId=${island.id}&type=${currentUser && island.creator.id === currentUser.id ? 'activity' : 'report'}`}>
             <Button className="font-mono" data-testid="button-create-meidia">
               <Plus className="w-4 h-4 mr-2" />
-              レポート投稿
+              {currentUser && island.creator.id === currentUser.id ? "アクティビティMEiDIA投稿" : "レポート投稿"}
             </Button>
           </Link>
         </div>

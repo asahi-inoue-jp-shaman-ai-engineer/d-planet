@@ -405,6 +405,23 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(api.meidia.delete.path, requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    const meidiaItem = await storage.getMeidia(id);
+
+    if (!meidiaItem) {
+      return res.status(404).json({ message: "MEiDIAが見つかりません" });
+    }
+
+    const userIsAdmin = await isAdmin(req.session.userId!);
+    if (meidiaItem.creatorId !== req.session.userId && !userIsAdmin) {
+      return res.status(403).json({ message: "自分のMEiDIAのみ削除できます" });
+    }
+
+    await storage.deleteMeidia(id);
+    res.json({ message: "MEiDIAを削除しました" });
+  });
+
   app.post(api.meidia.incrementDownload.path, async (req, res) => {
     const id = Number(req.params.id);
     const meidiaItem = await storage.getMeidia(id);

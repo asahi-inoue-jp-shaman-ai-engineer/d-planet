@@ -386,6 +386,16 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/meidia/:id' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+        401: errorSchemas.unauthorized,
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
     attachToIsland: {
       method: 'POST' as const,
       path: '/api/meidia/:id/attach' as const,

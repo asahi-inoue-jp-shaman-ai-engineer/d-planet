@@ -256,12 +256,12 @@ export default function UserProfile() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 overflow-hidden">
           <h2 className="text-xl font-mono font-semibold">公開MEiDIA</h2>
           {meidiaLoading ? (
             <div className="font-mono text-muted-foreground">読み込み中...</div>
           ) : meidia && meidia.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid gap-4 min-w-0">
               {meidia.map((item) => (
                 <MeidiaCard key={item.id} meidia={item} />
               ))}

@@ -76,6 +76,27 @@ export function useIncrementDownload() {
   });
 }
 
+export function useDeleteMeidia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.meidia.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.meidia.delete.method,
+        credentials: "include",
+      });
+      if (res.status === 401) throw new Error("Unauthorized");
+      if (res.status === 403) throw new Error("Forbidden");
+      if (res.status === 404) throw new Error("MEiDIA not found");
+      if (!res.ok) throw new Error("Failed to delete MEiDIA");
+      return api.meidia.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.meidia.list.path] });
+    },
+  });
+}
+
 export function useAttachMeidiaToIsland() {
   const queryClient = useQueryClient();
   return useMutation({
