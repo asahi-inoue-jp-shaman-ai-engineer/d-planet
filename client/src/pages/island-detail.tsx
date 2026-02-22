@@ -11,6 +11,7 @@ import { useIslandMembership, useJoinIsland, useLeaveIsland } from "@/hooks/use-
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { MeidiaCard } from "@/components/MeidiaCard";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
+import { AvatarDisplay } from "@/components/AvatarUpload";
 import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -170,7 +171,10 @@ export default function IslandDetail() {
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">作成者:</span>
               <Link href={`/users/${island.creator.id}`}>
-                <span className="hover:underline">{island.creator.username}</span>
+                <div className="flex items-center gap-2 hover:underline">
+                  <AvatarDisplay url={island.creator.profilePhoto} size="sm" />
+                  <span>{island.creator.username}</span>
+                </div>
               </Link>
               <AccountTypeBadge type={island.creator.accountType} />
             </div>
@@ -288,6 +292,7 @@ export default function IslandDetail() {
                     membership.members.map((member: any) => (
                       <Link key={member.id} href={`/users/${member.userId}`}>
                         <div className="flex items-center gap-2 p-2 rounded hover-elevate font-mono text-sm" data-testid={`link-member-${member.userId}`}>
+                          <AvatarDisplay url={member.user.profilePhoto} size="sm" />
                           <span data-testid={`text-member-name-${member.userId}`}>{member.user.username}</span>
                           <AccountTypeBadge type={member.user.accountType} />
                           {member.role === "admin" && (

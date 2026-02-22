@@ -8,6 +8,7 @@ import { useUsers } from "@/hooks/use-users";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { CertificationBadge } from "@/components/CertificationBadge";
+import { AvatarDisplay } from "@/components/AvatarUpload";
 import { Search, Star, Filter } from "lucide-react";
 
 export default function UsersList() {
@@ -67,11 +68,14 @@ export default function UsersList() {
               <Link key={user.id} href={`/users/${user.id}`}>
                 <Card className="hover-elevate cursor-pointer">
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-semibold text-lg" data-testid={`text-username-${user.id}`}>
-                        {user.username}
-                      </span>
-                      <AccountTypeBadge type={user.accountType} />
+                    <div className="flex items-center gap-3">
+                      <AvatarDisplay url={user.profilePhoto} size="sm" />
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-semibold text-lg" data-testid={`text-username-${user.id}`}>
+                          {user.username}
+                        </span>
+                        <AccountTypeBadge type={user.accountType} />
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">

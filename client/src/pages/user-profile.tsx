@@ -12,6 +12,7 @@ import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { CertificationBadge } from "@/components/CertificationBadge";
 import { MeidiaCard } from "@/components/MeidiaCard";
+import { AvatarUpload, AvatarDisplay } from "@/components/AvatarUpload";
 import { ArrowLeft, Edit2, Save, X, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -101,9 +102,29 @@ export default function UserProfile() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-mono font-bold" data-testid="text-username">{user.username}</h1>
-            <AccountTypeBadge type={user.accountType} />
+          <div className="flex items-center gap-4 flex-wrap">
+            {isOwnProfile && editing ? (
+              <AvatarUpload
+                currentUrl={user.profilePhoto}
+                onUploaded={async (path) => {
+                  try {
+                    await updateUser.mutateAsync({ id: user.id, profilePhoto: path });
+                    toast({ title: "プロフィール画像を更新しました" });
+                  } catch (err: any) {
+                    toast({ title: "エラー", description: err.message, variant: "destructive" });
+                  }
+                }}
+                size="lg"
+              />
+            ) : (
+              <AvatarDisplay url={user.profilePhoto} size="lg" />
+            )}
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl font-mono font-bold" data-testid="text-username">{user.username}</h1>
+                <AccountTypeBadge type={user.accountType} />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">

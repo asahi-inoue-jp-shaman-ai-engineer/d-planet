@@ -53,10 +53,11 @@ export function registerObjectStorageRoutes(app: Express): void {
         "text/plain", "text/markdown", "text/x-markdown",
         "application/pdf",
         "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac", "audio/webm",
+        "image/jpeg", "image/png", "image/gif", "image/webp",
       ];
       if (contentType && !allowedTypes.includes(contentType)) {
         return res.status(400).json({
-          error: "許可されていないファイル形式です。テキスト、マークダウン、PDF、音声ファイルのみアップロード可能です。",
+          error: "許可されていないファイル形式です。テキスト、マークダウン、PDF、音声、画像ファイルのみアップロード可能です。",
         });
       }
 

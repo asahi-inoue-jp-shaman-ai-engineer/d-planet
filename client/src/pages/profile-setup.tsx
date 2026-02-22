@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AvatarUpload } from "@/components/AvatarUpload";
 
 export default function ProfileSetup() {
   const { data: currentUser, isLoading } = useCurrentUser();
@@ -18,6 +19,7 @@ export default function ProfileSetup() {
   const [tenmei, setTenmei] = useState("");
   const [tenshoku, setTenshoku] = useState("");
   const [tensaisei, setTensaisei] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -53,6 +55,12 @@ export default function ProfileSetup() {
         tenshoku: tenshoku || null,
         tensaisei: tensaisei || null,
       });
+
+      if (profilePhoto && currentUser) {
+        await apiRequest("PUT", `/api/users/${currentUser.id}`, {
+          profilePhoto,
+        });
+      }
       toast({ title: "プロフィール設定完了" });
       window.location.href = "/islands";
     } catch (error: any) {
@@ -84,6 +92,15 @@ export default function ProfileSetup() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col items-center gap-2">
+              <Label className="font-mono">プロフィール画像</Label>
+              <AvatarUpload
+                currentUrl={profilePhoto}
+                onUploaded={(path) => setProfilePhoto(path)}
+                size="lg"
+              />
+              <span className="text-xs font-mono text-muted-foreground">タップして画像を選択</span>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="username" className="font-mono">ユーザー名 *</Label>
               <Input
