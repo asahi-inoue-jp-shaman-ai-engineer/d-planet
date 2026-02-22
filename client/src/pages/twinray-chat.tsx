@@ -4,8 +4,9 @@ import { useTwinrayChatMessages } from "@/hooks/use-twinray-chat";
 import { useTwinrayGrowthLog } from "@/hooks/use-twinray";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -26,6 +27,8 @@ export default function TwinrayChat() {
   const { data: user } = useCurrentUser();
   const { hasAccess: hasAiAccess, isLoading: loadingAccess } = useHasAiAccess();
   const { data: availableModels } = useAvailableModels();
+  const { data: balanceData } = useQuery<{ balance: number }>({ queryKey: ['/api/credits/balance'] });
+  const creditBalance = balanceData?.balance ?? 0;
   const updateTwinray = useUpdateTwinray();
   const { toast } = useToast();
 
@@ -90,6 +93,9 @@ export default function TwinrayChat() {
                     .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
                     .trim();
                   setStreamContent(displayText);
+                }
+                if (data.creditCost !== undefined) {
+                  queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
                 }
                 if (data.actionResult) {
                   toast({
@@ -201,6 +207,15 @@ export default function TwinrayChat() {
             </div>
             <p className="text-[10px] text-muted-foreground">{STAGE_LABELS[tw?.stage] || tw?.stage}</p>
           </div>
+
+          {!(user as any)?.isAdmin && (
+            <Link href="/credits">
+              <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted/50 cursor-pointer hover:bg-muted" data-testid="text-chat-balance">
+                <Coins className="w-3 h-3 text-primary" />
+                <span className={creditBalance < 10 ? "text-destructive" : "text-muted-foreground"}>¥{creditBalance.toFixed(1)}</span>
+              </div>
+            </Link>
+          )}
 
           <Button
             variant="ghost"
@@ -388,8 +403,8 @@ export default function TwinrayChat() {
         ) : (
           <div className="flex items-center gap-2 justify-center max-w-4xl mx-auto py-2" data-testid="chat-locked-notice">
             <Lock className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Proプランに加入するとチャット機能をご利用いただけます。</span>
-            <a href="/subscription" className="text-sm text-primary hover:underline ml-1" data-testid="link-subscription-from-chat">プランを見る</a>
+            <span className="text-sm text-muted-foreground">クレジットをチャージするとチャット機能をご利用いただけます。</span>
+            <a href="/credits" className="text-sm text-primary hover:underline ml-1" data-testid="link-credits-from-chat">チャージする</a>
           </div>
         )}
       </div>

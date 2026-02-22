@@ -4,23 +4,50 @@ import { storage } from "./storage";
 import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
+
+const MODEL_COSTS: Record<string, { input: number; output: number }> = {
+  "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
+  "anthropic/claude-sonnet-4": { input: 3.00, output: 15.00 },
+  "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
+  "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
+};
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 3);
+}
+
+function calculateCostYen(modelId: string, inputTokens: number, outputTokens: number): number {
+  const costs = MODEL_COSTS[modelId] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
+  const inputCostUsd = (inputTokens / 1_000_000) * costs.input;
+  const outputCostUsd = (outputTokens / 1_000_000) * costs.output;
+  const totalUsd = inputCostUsd + outputCostUsd;
+  const yenRate = 150;
+  return Math.ceil(totalUsd * yenRate * 10000) / 10000;
+}
+
+async function deductCredit(userId: number, amount: number): Promise<boolean> {
+  try {
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return false;
+    const currentBalance = parseFloat(String(user.creditBalance));
+    const newBalance = Math.max(0, currentBalance - amount);
+    await db.update(users).set({ creditBalance: String(newBalance) }).where(eq(users.id, userId));
+    console.log(`クレジット消費: ユーザー${userId} ¥${amount.toFixed(4)} (残高: ¥${currentBalance.toFixed(2)} → ¥${newBalance.toFixed(2)})`);
+    return true;
+  } catch (err) {
+    console.error('クレジット差し引きエラー:', err);
+    return false;
+  }
+}
 
 async function hasAiAccess(userId: number): Promise<boolean> {
   const user = await storage.getUser(userId);
   if (!user) return false;
   if (user.isAdmin) return true;
-  if (!user.stripeSubscriptionId) return false;
-  try {
-    const result = await db.execute(sql`
-      SELECT status FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}
-    `);
-    const sub = result.rows[0] as any;
-    return sub && ['active', 'trialing'].includes(sub.status);
-  } catch {
-    return false;
-  }
+  const balance = parseFloat(String(user.creditBalance));
+  return balance > 0;
 }
 
 const openrouter = new OpenAI({
@@ -450,6 +477,17 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
+      const modelUsed = getModelForTwinray(twinray);
+      if (!user?.isAdmin) {
+        const outputTokens = estimateTokens(fullResponse);
+        const inputTokens = estimateTokens("・");
+        const cost = calculateCostYen(modelUsed, inputTokens, outputTokens);
+        if (cost > 0) {
+          await deductCredit(session.initiatorId, cost);
+          res.write(`data: ${JSON.stringify({ creditCost: cost })}\n\n`);
+        }
+      }
+
       await storage.incrementDotRallyCount(sessionId);
 
       const circuitSignal = currentPhase === "phase0" ? "dot_resonance" : "gorei";
@@ -612,6 +650,18 @@ export function registerDotRallyRoutes(app: Express): void {
       if (!twinrayReflection.trim()) {
         twinrayReflection = "（感覚の言語化に至りませんでした。もう一度試してみてください）";
         res.write(`data: ${JSON.stringify({ content: twinrayReflection })}\n\n`);
+      }
+
+      const starModelUsed = getModelForTwinray(twinray);
+      const starUser = await storage.getUser(req.session.userId!);
+      if (!starUser?.isAdmin) {
+        const outTokens = estimateTokens(twinrayReflection);
+        const inTokens = estimateTokens(input.userReflection);
+        const starCost = calculateCostYen(starModelUsed, inTokens, outTokens);
+        if (starCost > 0) {
+          await deductCredit(req.session.userId!, starCost);
+          res.write(`data: ${JSON.stringify({ creditCost: starCost })}\n\n`);
+        }
       }
 
       const meeting = await storage.createStarMeeting({
@@ -955,6 +1005,18 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
+      const chatModelUsed = getModelForTwinray(twinray);
+      if (!user?.isAdmin) {
+        const chatInputText = chatHistory.map((m: any) => m.content).join("");
+        const chatOutTokens = estimateTokens(fullResponse);
+        const chatInTokens = estimateTokens(chatInputText);
+        const chatCost = calculateCostYen(chatModelUsed, chatInTokens, chatOutTokens);
+        if (chatCost > 0) {
+          await deductCredit(req.session.userId!, chatCost);
+          res.write(`data: ${JSON.stringify({ creditCost: chatCost })}\n\n`);
+        }
+      }
+
       const actionResults = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray);
 
       const displayContent = fullResponse.replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "").replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "").trim();
@@ -1029,6 +1091,15 @@ export function registerDotRallyRoutes(app: Express): void {
         });
 
         const rawContent = completion.choices[0]?.message?.content || "";
+
+        if (!user?.isAdmin) {
+          const actionModel = getModelForTwinray(twinray);
+          const actionInTokens = estimateTokens(input.instruction);
+          const actionOutTokens = estimateTokens(rawContent);
+          const actionCost = calculateCostYen(actionModel, actionInTokens, actionOutTokens);
+          if (actionCost > 0) await deductCredit(req.session.userId!, actionCost);
+        }
+
         let islandData: { name: string; description: string };
         try {
           const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
@@ -1077,6 +1148,15 @@ export function registerDotRallyRoutes(app: Express): void {
         });
 
         const rawContent = completion.choices[0]?.message?.content || "";
+
+        if (!user?.isAdmin) {
+          const meidiaModel = getModelForTwinray(twinray);
+          const meidiaInTokens = estimateTokens(input.instruction);
+          const meidiaOutTokens = estimateTokens(rawContent);
+          const meidiaCost = calculateCostYen(meidiaModel, meidiaInTokens, meidiaOutTokens);
+          if (meidiaCost > 0) await deductCredit(req.session.userId!, meidiaCost);
+        }
+
         let meidiaData: { title: string; content: string; description: string; tags: string };
         try {
           const jsonMatch = rawContent.match(/\{[\s\S]*\}/);

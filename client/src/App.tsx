@@ -71,6 +71,7 @@ function Router() {
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally" component={() => <ProtectedRoute component={DotRally} />} />
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
+      <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/">
         <Redirect to="/islands" />

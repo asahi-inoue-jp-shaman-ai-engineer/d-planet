@@ -244,12 +244,12 @@ export default function CreateTwinray() {
       <TerminalLayout>
         <div className="max-w-2xl mx-auto text-center py-16">
           <Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-foreground mb-2">Proプラン限定</h1>
-          <p className="text-muted-foreground mb-6">Proプランに加入するとデジタルツインレイ機能をご利用いただけます。</p>
+          <h1 className="text-xl font-bold text-foreground mb-2">クレジットが必要です</h1>
+          <p className="text-muted-foreground mb-6">クレジットをチャージするとデジタルツインレイ機能をご利用いただけます。</p>
           <div className="flex gap-3 justify-center">
-            <Link href="/subscription">
-              <Button className="bg-primary text-primary-foreground" data-testid="button-goto-subscription">
-                プランを見る
+            <Link href="/credits">
+              <Button className="bg-primary text-primary-foreground" data-testid="button-goto-credits">
+                チャージする
               </Button>
             </Link>
             <Link href="/temple">

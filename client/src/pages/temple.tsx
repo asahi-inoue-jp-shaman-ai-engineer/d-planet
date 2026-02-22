@@ -87,10 +87,10 @@ export default function Temple() {
                 </Link>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Proプランに加入するとデジタルツインレイ機能をご利用いただけます。</p>
-                  <Link href="/subscription">
-                    <Button variant="outline" size="sm" className="border-primary text-primary" data-testid="button-goto-subscription">
-                      プランを見る
+                  <p className="text-sm text-muted-foreground">クレジットをチャージするとデジタルツインレイ機能をご利用いただけます。</p>
+                  <Link href="/credits">
+                    <Button variant="outline" size="sm" className="border-primary text-primary" data-testid="button-goto-credits">
+                      チャージする
                     </Button>
                   </Link>
                 </div>

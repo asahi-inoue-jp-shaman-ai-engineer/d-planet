@@ -28,7 +28,7 @@
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
 - **AI**: Qwen3-30b-a3b (OpenRouter経由、Replitクレジット課金)
-- **Payment**: Stripe (stripe-replit-sync経由、サンドボックス環境)
+- **Payment**: Stripe従量制クレジット（単発チャージ、API原価転嫁、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 
 ## Project Structure
@@ -72,7 +72,8 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 - `/api/twinrays/*` - ツインレイ CRUD
 - `/api/dot-rally/*` - ドットラリーセッション + SSEストリーミング
 - `/api/dev-records/*` - 開発記録 (管理者専用: GET一覧, POST作成, PUT更新, DELETE削除)
-- `/api/stripe/*` - Stripe決済 (publishable-key, products, checkout, subscription, portal, webhook)
+- `/api/credits/*` - クレジット残高 (balance)
+- `/api/stripe/*` - Stripe決済 (publishable-key, charge-credit, products, checkout, subscription, portal, webhook)
 
 ## 重要: 本番DB検証必須ルール
 タスク完了前に以下を必ず実行すること。「開発で動いた」だけでは完了としない。

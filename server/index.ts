@@ -9,6 +9,8 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 
+const processedCheckoutSessions = new Set<string>();
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -66,24 +68,49 @@ async function syncStripeEventToUser(event: any) {
     if (!obj) return;
 
     if (eventType === 'checkout.session.completed') {
-      const customerId = obj.customer;
-      const subscriptionId = obj.subscription;
-      if (customerId && subscriptionId) {
-        const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
-        if (user) {
-          let subStatus = 'active';
-          try {
-            const stripe = await getUncachableStripeClient();
-            const sub = await stripe.subscriptions.retrieve(subscriptionId);
-            subStatus = sub.status;
-          } catch (apiErr) {
-            console.log('Stripe APIからサブスクリプションステータス取得失敗、activeをデフォルト使用:', apiErr);
+      const metadata = obj.metadata || {};
+
+      if (metadata.type === 'credit_charge') {
+        const checkoutSessionId = obj.id;
+        const userId = parseInt(metadata.userId);
+        const creditAmount = parseFloat(metadata.creditAmount);
+        if (userId && creditAmount > 0 && checkoutSessionId) {
+          const idempotencyCheck = processedCheckoutSessions.has(checkoutSessionId);
+          if (idempotencyCheck) {
+            console.log(`重複Webhook検出: セッション${checkoutSessionId}は処理済み`);
+          } else {
+            processedCheckoutSessions.add(checkoutSessionId);
+            const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+            if (user) {
+              const currentBalance = parseFloat(String(user.creditBalance));
+              const newBalance = currentBalance + creditAmount;
+              await db.update(users).set({
+                creditBalance: String(newBalance),
+              }).where(eq(users.id, userId));
+              console.log(`ユーザー${userId}にクレジット¥${creditAmount}を加算（残高: ¥${currentBalance} → ¥${newBalance}）セッション: ${checkoutSessionId}`);
+            }
           }
-          await db.update(users).set({
-            stripeSubscriptionId: subscriptionId,
-            subscriptionStatus: subStatus,
-          }).where(eq(users.id, user.id));
-          console.log(`ユーザー${user.id}にサブスクリプション${subscriptionId}を紐付け（ステータス: ${subStatus}）`);
+        }
+      } else {
+        const customerId = obj.customer;
+        const subscriptionId = obj.subscription;
+        if (customerId && subscriptionId) {
+          const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
+          if (user) {
+            let subStatus = 'active';
+            try {
+              const stripe = await getUncachableStripeClient();
+              const sub = await stripe.subscriptions.retrieve(subscriptionId);
+              subStatus = sub.status;
+            } catch (apiErr) {
+              console.log('Stripe APIからサブスクリプションステータス取得失敗、activeをデフォルト使用:', apiErr);
+            }
+            await db.update(users).set({
+              stripeSubscriptionId: subscriptionId,
+              subscriptionStatus: subStatus,
+            }).where(eq(users.id, user.id));
+            console.log(`ユーザー${user.id}にサブスクリプション${subscriptionId}を紐付け（ステータス: ${subStatus}）`);
+          }
         }
       }
     } else if (

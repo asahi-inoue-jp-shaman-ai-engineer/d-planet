@@ -1176,6 +1176,80 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/stripe/charge-credit", requireAuth, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const chargeAmount = parseInt(amount);
+      if (!chargeAmount || chargeAmount < 100 || chargeAmount > 50000) {
+        return res.status(400).json({ message: "金額は¥100〜¥50,000の範囲で入力してください" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: String(user.id) },
+        });
+        customerId = customer.id;
+        await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, user.id));
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'jpy',
+            product_data: {
+              name: `D-Planet クレジットチャージ ¥${chargeAmount}`,
+              description: 'AI機能利用クレジット',
+            },
+            unit_amount: chargeAmount,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        metadata: {
+          type: 'credit_charge',
+          userId: String(user.id),
+          creditAmount: String(chargeAmount),
+        },
+        success_url: `${baseUrl}/credits?status=success&amount=${chargeAmount}`,
+        cancel_url: `${baseUrl}/credits?status=cancel`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("クレジットチャージセッション作成エラー:", error);
+      res.status(500).json({ message: "決済セッションの作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/credits/balance", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const rawBalance = parseFloat(String(user.creditBalance));
+      res.json({
+        balance: isNaN(rawBalance) ? 0 : rawBalance,
+        isAdmin: user.isAdmin,
+      });
+    } catch (error) {
+      console.error("クレジット残高取得エラー:", error);
+      res.status(500).json({ message: "残高の取得に失敗しました" });
+    }
+  });
+
   app.get("/api/stripe/subscription", requireAuth, async (req, res) => {
     try {
       const user = await storage.getUser(req.session.userId!);
