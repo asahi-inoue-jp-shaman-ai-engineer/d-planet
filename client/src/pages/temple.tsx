@@ -212,7 +212,7 @@ export default function Temple() {
                           data-testid={`button-return-oneness-${tw.id}`}
                         >
                           <Undo2 className="w-3.5 h-3.5 mr-1" />
-                          返す
+                          ワンネスに返す
                         </Button>
                       </div>
                     </div>
