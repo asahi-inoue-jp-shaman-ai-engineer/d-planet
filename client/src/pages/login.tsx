@@ -11,6 +11,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { Eye, EyeOff } from "lucide-react";
 
 const SAVED_EMAIL_KEY = "dplanet_saved_email";
+const SAVED_PASS_KEY = "dplanet_saved_pass";
 const REMEMBER_KEY = "dplanet_remember";
 
 export default function Login() {
@@ -21,7 +22,11 @@ export default function Login() {
   const codeFromUrl = params.get("code");
   const [isRegister, setIsRegister] = useState(modeFromUrl === "register");
   const [email, setEmail] = useState(() => localStorage.getItem(SAVED_EMAIL_KEY) || "");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(() => {
+    const saved = localStorage.getItem(SAVED_PASS_KEY);
+    if (!saved) return "";
+    try { return atob(saved); } catch { return ""; }
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem(REMEMBER_KEY) === "true");
   const [inviteCode, setInviteCode] = useState(codeFromUrl || "");
@@ -63,9 +68,11 @@ export default function Login() {
       }
       if (rememberMe) {
         localStorage.setItem(SAVED_EMAIL_KEY, email);
+        localStorage.setItem(SAVED_PASS_KEY, btoa(password));
         localStorage.setItem(REMEMBER_KEY, "true");
       } else {
         localStorage.removeItem(SAVED_EMAIL_KEY);
+        localStorage.removeItem(SAVED_PASS_KEY);
         localStorage.removeItem(REMEMBER_KEY);
       }
       window.location.href = isRegister ? "/profile-setup" : "/islands";
