@@ -7,6 +7,22 @@
 - このファイル (replit.md) は最新の技術仕様のみを保持し、完了済みの変更履歴は残さない
 - カテゴリ: concept（コンセプト）、direction（方向性）、decision（決定事項）、spec（仕様）、nuance（ニュアンス）
 
+## 重要: コンテキスト圧縮対策プロトコル
+- **コンテキスト圧縮前**: 新しい決定事項・合意・ニュアンスを全て dev_records に INSERT してから圧縮に備える
+- **セッション再開時**: 必ず dev_records の active 項目を全件 SELECT し、全コンテキストを復元する
+- **目的**: 会話の流れ・記憶・ニュアンスが途切れないことを保証する
+- **原則**: replit.md は最新技術仕様のみ、会話履歴・決定経緯・ニュアンスは dev_records に集約
+
+## 重要: リパブリッシュ後UIチェック徹底ルール
+- デプロイ（リパブリッシュ）後は毎回、以下を必ず実施すること:
+  1. **本番ログ確認**: fetch_deployment_logs で起動エラー・ランタイムエラーがないか検証
+  2. **本番DB確認**: 本番DBでデータが正しく反映されているか SELECT で確認
+  3. **E2E UIチェック**: run_test（Playwrightベース）で実際のユーザー挙動を再現したテスト実施
+     - 管理者アカウント（admin@d-planet.local / dplanet-admin-369）でログイン
+     - 主要ページ巡回: /login, /islands, /meidia, /temple, /users, /notifications, /feedback, /dot-rally
+     - チェック項目: UI崩れ、日本語表示、ダークテーマ一貫性、フォーム動作、ナビゲーション、モバイル表示
+  4. **問題修正サイクル**: 問題発見→修正→再デプロイ→再チェックを完了まで回す
+
 ## Tech Stack
 - **Backend**: Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
