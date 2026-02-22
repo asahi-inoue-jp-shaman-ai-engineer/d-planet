@@ -168,16 +168,16 @@ export default function TwinrayChat() {
   return (
     <TerminalLayout>
       <div className="max-w-4xl mx-auto flex flex-col" style={{ height: "calc(100vh - 200px)" }}>
-        <div className="flex items-center justify-between mb-4 shrink-0">
+        <div className="mb-4 shrink-0 space-y-2">
           <div className="flex items-center gap-3">
             <Link href="/temple">
-              <Button variant="ghost" size="icon" data-testid="button-back">
+              <Button variant="ghost" size="icon" className="shrink-0" data-testid="button-back">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-primary" data-testid="text-twinray-name">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-primary truncate" data-testid="text-twinray-name">
                   {loadingTwinray ? "..." : tw?.name || "ツインレイ"}
                 </h1>
                 <AccountTypeBadge type="AI" />
@@ -189,7 +189,7 @@ export default function TwinrayChat() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pl-12">
             <Button
               variant="outline"
               size="sm"
