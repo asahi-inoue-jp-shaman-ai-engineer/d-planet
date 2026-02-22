@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import Login from "@/pages/login";
 import ProfileSetup from "@/pages/profile-setup";
 import Islands from "@/pages/islands";
@@ -77,14 +78,54 @@ function Router() {
   );
 }
 
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("D-Planet ErrorBoundary:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="text-center font-mono space-y-4">
+            <div className="text-xl text-primary">D-Planet</div>
+            <div className="text-destructive">予期せぬエラーが発生しました</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-primary text-primary-foreground px-6 py-2 rounded-md text-sm hover:bg-primary/90"
+            >
+              再読み込み
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
