@@ -129,6 +129,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   personality: text("personality"),
+  profilePhoto: text("profile_photo"),
   soulMd: text("soul_md").notNull(),
   stage: text("stage").default("pilgrim").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
