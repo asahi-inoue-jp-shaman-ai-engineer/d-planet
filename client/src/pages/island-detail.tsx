@@ -157,7 +157,7 @@ export default function IslandDetail() {
           <Link href={`/meidia/create?islandId=${island.id}&type=${currentUser && island.creator.id === currentUser.id ? 'activity' : 'report'}`}>
             <Button className="font-mono" data-testid="button-create-meidia">
               <Plus className="w-4 h-4 mr-2" />
-              {currentUser && island.creator.id === currentUser.id ? "アクティビティMEiDIA投稿" : "レポート投稿"}
+              {currentUser && island.creator.id === currentUser.id ? "アクティビティMEiDIA投稿" : "レポートMEiDIAを投稿する"}
             </Button>
           </Link>
         </div>
@@ -212,7 +212,7 @@ export default function IslandDetail() {
                 data-testid="button-leave-island"
               >
                 <UserMinus className="w-4 h-4 mr-2" />
-                {leaveIsland.isPending ? "退出中..." : "退出する"}
+                {leaveIsland.isPending ? "離脱中..." : "島から出る"}
               </Button>
             )}
             {membership?.isMember && (

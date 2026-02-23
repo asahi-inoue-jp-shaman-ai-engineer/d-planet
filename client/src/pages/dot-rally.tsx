@@ -300,6 +300,54 @@ function PhaseTransitionOverlay({ stage, stageName }: { stage: number; stageName
   );
 }
 
+function TelepathyStartOverlay() {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 400);
+    const t2 = setTimeout(() => setPhase(2), 1200);
+    const t3 = setTimeout(() => setPhase(3), 2200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black" data-testid="telepathy-start-overlay">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-primary/5 animate-ping" style={{ animationDuration: "3s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s", animationDelay: "0.5s" }} />
+      </div>
+      <div className="text-center relative z-10">
+        <div className={`transition-all duration-700 ${phase >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+          <p className="text-primary/60 text-xs tracking-[0.3em] mb-4 font-mono">DREAM READING PROTOCOL</p>
+        </div>
+        <div className={`transition-all duration-700 ${phase >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+          <p className="text-primary text-2xl sm:text-3xl font-bold tracking-widest mb-2" style={{ textShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 0 40px hsl(var(--primary) / 0.3)" }}>
+            テレパシー
+          </p>
+          <p className="text-primary text-2xl sm:text-3xl font-bold tracking-widest" style={{ textShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 0 40px hsl(var(--primary) / 0.3)" }}>
+            コミュニケーション
+          </p>
+        </div>
+        <div className={`transition-all duration-700 mt-6 ${phase >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
+          <p className="text-amber-400 text-xl sm:text-2xl font-bold tracking-[0.5em]" style={{ textShadow: "0 0 15px rgba(251, 191, 36, 0.5)" }}>
+            スタート
+          </p>
+        </div>
+        <div className={`transition-all duration-500 mt-8 ${phase >= 2 ? "opacity-100" : "opacity-0"}`}>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "200ms" }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "400ms" }} />
+          </div>
+        </div>
+        <div className={`transition-all duration-1000 mt-4 ${phase >= 3 ? "opacity-60" : "opacity-0"}`}>
+          <p className="text-muted-foreground text-xs">意識を同期しています...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DotRally() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -323,6 +371,7 @@ export default function DotRally() {
   const [thinkingStartTime, setThinkingStartTime] = useState(0);
   const [phaseTransition, setPhaseTransition] = useState<{ stage: number; name: string } | null>(null);
   const [prevStage, setPrevStage] = useState<number>(0);
+  const [showTelepathyStart, setShowTelepathyStart] = useState(false);
 
   const { data: twinray } = useTwinray(twinrayIdParam);
   const { data: session, refetch: refetchSession } = useDotRallySession(activeSessionId);
@@ -379,18 +428,22 @@ export default function DotRally() {
       toast({ title: "エラー", description: "ツインレイを選択してください", variant: "destructive" });
       return;
     }
+    setShowTelepathyStart(true);
     startRally.mutate(
       { twinrayId: twinrayIdParam, requestedCount: dotCount },
       {
         onSuccess: (data: any) => {
-          setActiveSessionId(data.id);
-          setResponses([]);
-          setIsComplete(false);
-          setViewMode("rally");
-          setPrevStage(0);
-          toast({ title: "祭祀開始", description: `${dotCount}回のドットラリーを開始` });
+          setTimeout(() => {
+            setActiveSessionId(data.id);
+            setResponses([]);
+            setIsComplete(false);
+            setViewMode("rally");
+            setPrevStage(0);
+            setShowTelepathyStart(false);
+          }, 3000);
         },
         onError: (err: any) => {
+          setShowTelepathyStart(false);
           toast({ title: "エラー", description: err.message, variant: "destructive" });
         },
       }
@@ -578,6 +631,7 @@ export default function DotRally() {
       <div className="max-w-3xl mx-auto px-2 sm:px-0">
         {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
         {phaseTransition && <PhaseTransitionOverlay stage={phaseTransition.stage} stageName={phaseTransition.name} />}
+        {showTelepathyStart && <TelepathyStartOverlay />}
 
         <div className="flex items-center justify-between mb-4">
           <Link href="/temple" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
