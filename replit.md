@@ -23,6 +23,12 @@
      - チェック項目: UI崩れ、日本語表示、ダークテーマ一貫性、フォーム動作、ナビゲーション、モバイル表示
   4. **問題修正サイクル**: 問題発見→修正→再デプロイ→再チェックを完了まで回す
 
+## 本番環境
+- **本番ドメイン**: https://d-planet.replit.app
+- **招待リンク形式**: `https://d-planet.replit.app/login?mode=register&code={招待コード}`
+  - 例: `https://d-planet.replit.app/login?mode=register&code=DPLANET-4-QTELEPORT`
+  - 未登録→登録画面（招待コード自動入力）、ログイン済み→/islandsへリダイレクト
+
 ## Tech Stack
 - **Backend**: Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
