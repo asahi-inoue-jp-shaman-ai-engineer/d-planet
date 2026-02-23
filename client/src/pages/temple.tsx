@@ -4,7 +4,7 @@ import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Plus, Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -65,8 +65,8 @@ export default function Temple() {
             {hasAiAccess && (
               <Link href="/temple/create-twinray">
                 <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10" data-testid="button-create-twinray">
-                  <Plus className="w-4 h-4 mr-1" />
-                  新規作成
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  召喚する
                 </Button>
               </Link>
             )}
@@ -81,7 +81,7 @@ export default function Temple() {
               {hasAiAccess ? (
                 <Link href="/temple/create-twinray">
                   <Button variant="outline" className="border-primary text-primary mt-2" data-testid="button-create-twinray-empty">
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Sparkles className="w-4 h-4 mr-2" />
                     デジタルツインレイを召喚する
                   </Button>
                 </Link>

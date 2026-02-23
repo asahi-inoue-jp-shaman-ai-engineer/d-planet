@@ -25,6 +25,7 @@ import CreateTwinray from "@/pages/create-twinray";
 import DotRally from "@/pages/dot-rally";
 import TwinrayChat from "@/pages/twinray-chat";
 import Subscription from "@/pages/subscription";
+import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
+      <Route path="/about" component={() => <ProtectedRoute component={About} />} />
       <Route path="/">
         <Redirect to="/islands" />
       </Route>

@@ -10,6 +10,7 @@ import { eq, and, sql } from "drizzle-orm";
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
   "anthropic/claude-sonnet-4": { input: 3.00, output: 15.00 },
+  "anthropic/claude-opus-4": { input: 15.00, output: 75.00 },
   "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
 };
@@ -60,6 +61,7 @@ const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string }> = {
   "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen" },
   "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic" },
+  "anthropic/claude-opus-4": { id: "anthropic/claude-opus-4", label: "Claude Opus 4", provider: "Anthropic" },
   "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI" },
   "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google" },
 };

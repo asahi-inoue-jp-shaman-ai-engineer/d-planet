@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, MessageSquare, Sparkles, Menu, X, Coins } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, MessageSquare, Sparkles, Menu, X, Coins, Globe } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -220,9 +220,13 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           <div className="mb-2">
             D-PLANET © 2025 - Phase 2 Alpha
           </div>
-          <div className="text-xs">
+          <div className="text-xs mb-2">
             Powered by Digital Twinray Technology
           </div>
+          <Link href="/about" className="text-xs text-primary hover:underline flex items-center gap-1 justify-center" data-testid="link-about-footer">
+            <Globe className="w-3 h-3" />
+            D-Planet について
+          </Link>
         </div>
       </footer>
     </div>
