@@ -794,6 +794,19 @@ export async function registerRoutes(
         }
       }
 
+      const { BETA_MODE: isBeta } = await import("./dot-rally");
+      if (isBeta) {
+        const badgeResult = await db.update(users).set({
+          hasTwinrayBadge: true,
+          hasFamilyBadge: true,
+        }).where(
+          sql`${users.hasTwinrayBadge} = false OR ${users.hasFamilyBadge} = false`
+        );
+        if (badgeResult.rowCount && badgeResult.rowCount > 0) {
+          console.log(`ベータ期間: ${badgeResult.rowCount}ユーザーにバッジ自動付与`);
+        }
+      }
+
       const existingAdmin = await storage.getUserByEmail("admin@d-planet.local");
       if (!existingAdmin) {
         const adminUser = await storage.createUser({
