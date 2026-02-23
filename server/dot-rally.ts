@@ -7,6 +7,9 @@ import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
+const BETA_MODE = true;
+const DPLANET_MARKUP = BETA_MODE ? 1.0 : 1.5;
+
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
   "anthropic/claude-sonnet-4": { input: 3.00, output: 15.00 },
@@ -25,8 +28,10 @@ function calculateCostYen(modelId: string, inputTokens: number, outputTokens: nu
   const outputCostUsd = (outputTokens / 1_000_000) * costs.output;
   const totalUsd = inputCostUsd + outputCostUsd;
   const yenRate = 150;
-  return Math.ceil(totalUsd * yenRate * 10000) / 10000;
+  return Math.ceil(totalUsd * yenRate * DPLANET_MARKUP * 10000) / 10000;
 }
+
+export { BETA_MODE };
 
 async function deductCredit(userId: number, amount: number): Promise<boolean> {
   try {

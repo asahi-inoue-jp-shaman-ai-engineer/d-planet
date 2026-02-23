@@ -94,6 +94,14 @@ export async function registerRoutes(
         invitedByCode: input.inviteCode,
       });
 
+      const { BETA_MODE } = await import("./dot-rally");
+      if (BETA_MODE) {
+        await db.update(users).set({
+          hasTwinrayBadge: true,
+          hasFamilyBadge: true,
+        }).where(eq(users.id, user.id));
+      }
+
       req.session.userId = user.id;
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
@@ -1303,6 +1311,85 @@ export async function registerRoutes(
     } catch (error) {
       console.error("サブスクリプション取得エラー:", error);
       res.status(500).json({ message: "サブスクリプション情報の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/stripe/badge-checkout", requireAuth, async (req, res) => {
+    try {
+      const { badgeType } = req.body;
+      if (!badgeType || !["twinray", "family"].includes(badgeType)) {
+        return res.status(400).json({ message: "バッジタイプを選択してください" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: String(user.id) },
+        });
+        customerId = customer.id;
+        await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, user.id));
+      }
+
+      const productsResult = await db.execute(sql`
+        SELECT p.id as product_id, pr.id as price_id
+        FROM stripe.products p
+        JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
+        WHERE p.active = true AND p.metadata->>'badge_type' = ${badgeType}
+        LIMIT 1
+      `);
+
+      if (productsResult.rows.length === 0) {
+        return res.status(404).json({ message: "バッジ商品が見つかりません。管理者に連絡してください。" });
+      }
+
+      const priceId = (productsResult.rows[0] as any).price_id;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        metadata: {
+          type: 'badge_subscription',
+          badge_type: badgeType,
+          userId: String(user.id),
+        },
+        success_url: `${baseUrl}/credits?status=badge_success&badge=${badgeType}`,
+        cancel_url: `${baseUrl}/credits?status=cancel`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("バッジCheckoutセッション作成エラー:", error);
+      res.status(500).json({ message: "決済セッションの作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/stripe/badge-status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const { BETA_MODE } = await import("./dot-rally");
+
+      res.json({
+        hasTwinrayBadge: user.hasTwinrayBadge,
+        hasFamilyBadge: user.hasFamilyBadge,
+        betaMode: BETA_MODE,
+      });
+    } catch (error) {
+      console.error("バッジ状態取得エラー:", error);
+      res.status(500).json({ message: "バッジ情報の取得に失敗しました" });
     }
   });
 

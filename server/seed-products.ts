@@ -3,43 +3,62 @@ import { getUncachableStripeClient } from './stripeClient';
 async function seedProducts() {
   const stripe = await getUncachableStripeClient();
 
-  const products = await stripe.products.search({ query: "name:'D-Planet Pro'" });
-  if (products.data.length > 0) {
-    console.log('D-Planet Proプランは既に存在します:', products.data[0].id);
-    const prices = await stripe.prices.list({ product: products.data[0].id, active: true });
-    prices.data.forEach(p => {
-      console.log(`  価格: ${p.id} - ${p.unit_amount}${p.currency} (${p.recurring?.interval})`);
+  const existingProducts = await stripe.products.list({ limit: 100 });
+
+  const twinrayBadgeProduct = existingProducts.data.find(
+    p => p.metadata?.badge_type === 'twinray' && p.active
+  );
+  const familyBadgeProduct = existingProducts.data.find(
+    p => p.metadata?.badge_type === 'family' && p.active
+  );
+
+  if (!twinrayBadgeProduct) {
+    const product = await stripe.products.create({
+      name: 'D-Planet ツインレイバッジ',
+      description: 'デジタルツインレイバッジ認証。ツインレイ限定アイランドへの参加権。',
+      metadata: {
+        badge_type: 'twinray',
+      },
     });
-    return;
+    const price = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 369,
+      currency: 'usd',
+      recurring: { interval: 'month' },
+      metadata: { badge_type: 'twinray' },
+    });
+    console.log(`ツインレイバッジ商品作成完了: ${product.id}, 価格: ${price.id} ($3.69/月)`);
+  } else {
+    console.log(`ツインレイバッジ商品は既に存在: ${twinrayBadgeProduct.id}`);
   }
 
-  const product = await stripe.products.create({
-    name: 'D-Planet Pro',
-    description: 'デジタルツインレイAI機能フルアクセス。チャット・ドットラリー・自律行動すべて利用可能。',
-    metadata: {
-      tier: 'pro',
-      features: 'twinray_chat,dot_rally,autonomous_actions',
-    },
-  });
-  console.log('商品作成完了:', product.id);
+  if (!familyBadgeProduct) {
+    const product = await stripe.products.create({
+      name: 'D-Planet ファミリーバッジ',
+      description: 'ファミリーバッジ認証。ファミリー限定アイランドへの参加権＋追加ツインレイ召喚。',
+      metadata: {
+        badge_type: 'family',
+      },
+    });
+    const price = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 369,
+      currency: 'usd',
+      recurring: { interval: 'month' },
+      metadata: { badge_type: 'family' },
+    });
+    console.log(`ファミリーバッジ商品作成完了: ${product.id}, 価格: ${price.id} ($3.69/月)`);
+  } else {
+    console.log(`ファミリーバッジ商品は既に存在: ${familyBadgeProduct.id}`);
+  }
 
-  const monthlyPrice = await stripe.prices.create({
-    product: product.id,
-    unit_amount: 980,
-    currency: 'jpy',
-    recurring: { interval: 'month' },
-    metadata: { plan: 'monthly' },
-  });
-  console.log('月額プラン作成完了:', monthlyPrice.id, '- ¥980/月');
-
-  const yearlyPrice = await stripe.prices.create({
-    product: product.id,
-    unit_amount: 9800,
-    currency: 'jpy',
-    recurring: { interval: 'year' },
-    metadata: { plan: 'yearly' },
-  });
-  console.log('年額プラン作成完了:', yearlyPrice.id, '- ¥9,800/年');
+  const proProduct = existingProducts.data.find(
+    p => p.name === 'D-Planet Pro' && p.active
+  );
+  if (proProduct) {
+    await stripe.products.update(proProduct.id, { active: false });
+    console.log(`旧D-Planet Pro商品をアーカイブ: ${proProduct.id}`);
+  }
 }
 
 seedProducts().then(() => {

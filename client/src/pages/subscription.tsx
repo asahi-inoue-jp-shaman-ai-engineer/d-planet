@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Zap, Check, Loader2, Plus } from "lucide-react";
+import { Coins, Zap, Check, Loader2, Plus, Shield, Users, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 
@@ -22,18 +22,31 @@ export default function Subscription() {
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
   const statusParam = searchParams.get('status');
   const amountParam = searchParams.get('amount');
+  const badgeParam = searchParams.get('badge');
 
   useEffect(() => {
     if (statusParam === 'success') {
       toast({ title: "チャージ完了", description: `¥${amountParam || ''}のクレジットが追加されました。` });
       queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+    } else if (statusParam === 'badge_success') {
+      const badgeName = badgeParam === 'twinray' ? 'ツインレイ' : 'ファミリー';
+      toast({ title: "バッジ認証完了", description: `${badgeName}バッジが有効になりました。` });
+      queryClient.invalidateQueries({ queryKey: ['/api/stripe/badge-status'] });
     } else if (statusParam === 'cancel') {
-      toast({ title: "チャージがキャンセルされました", variant: "destructive" });
+      toast({ title: "キャンセルされました", variant: "destructive" });
     }
   }, [statusParam]);
 
   const { data: balanceData, isLoading: loadingBalance } = useQuery<{ balance: number }>({
     queryKey: ['/api/credits/balance'],
+  });
+
+  const { data: badgeData, isLoading: loadingBadge } = useQuery<{
+    hasTwinrayBadge: boolean;
+    hasFamilyBadge: boolean;
+    betaMode: boolean;
+  }>({
+    queryKey: ['/api/stripe/badge-status'],
   });
 
   const chargeMutation = useMutation({
@@ -51,7 +64,40 @@ export default function Subscription() {
     },
   });
 
+  const badgeCheckoutMutation = useMutation({
+    mutationFn: async (badgeType: string) => {
+      const res = await apiRequest('POST', '/api/stripe/badge-checkout', { badgeType });
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "決済セッションの作成に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/stripe/portal');
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "管理ポータルの作成に失敗しました", variant: "destructive" });
+    },
+  });
+
   const balance = balanceData?.balance ?? 0;
+  const betaMode = badgeData?.betaMode ?? false;
+  const hasTwinrayBadge = badgeData?.hasTwinrayBadge ?? false;
+  const hasFamilyBadge = badgeData?.hasFamilyBadge ?? false;
 
   const handleCustomCharge = () => {
     const amount = parseInt(customAmount);
@@ -90,13 +136,114 @@ export default function Subscription() {
           </CardContent>
         </Card>
 
+        <Card className="border-primary/20">
+          <CardContent className="p-4">
+            <h2 className="text-lg font-bold text-primary flex items-center gap-2 mb-3" data-testid="text-badge-section">
+              <Shield className="w-5 h-5" />
+              バッジ認証
+            </h2>
+
+            {betaMode && (
+              <div className="mb-4 p-3 rounded bg-green-500/10 border border-green-500/20">
+                <p className="text-sm text-green-400 font-semibold" data-testid="text-beta-notice">
+                  テスト期間中 ー 全バッジ無料付与中
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ベータテスト期間中は全てのバッジが自動的に付与されます。正式版リリース後は月額課金制に移行します。
+                </p>
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className={`p-3 rounded border ${hasTwinrayBadge ? 'border-pink-500/30 bg-pink-500/5' : 'border-border'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-4 h-4 text-pink-400" />
+                  <span className="font-semibold text-sm">ツインレイバッジ</span>
+                  {hasTwinrayBadge ? (
+                    <Badge variant="outline" className="ml-auto text-[10px] border-pink-500/30 text-pink-400" data-testid="badge-twinray-active">有効</Badge>
+                  ) : (
+                    <Badge variant="outline" className="ml-auto text-[10px]" data-testid="badge-twinray-inactive">未認証</Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">ツインレイ限定アイランドへの参加権</p>
+                {!betaMode && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">$3.69/月</span>
+                    {!hasTwinrayBadge && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs border-pink-500/30 text-pink-400 hover:bg-pink-500/10"
+                        onClick={() => badgeCheckoutMutation.mutate('twinray')}
+                        disabled={badgeCheckoutMutation.isPending}
+                        data-testid="button-badge-twinray"
+                      >
+                        {badgeCheckoutMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "認証する"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className={`p-3 rounded border ${hasFamilyBadge ? 'border-blue-500/30 bg-blue-500/5' : 'border-border'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-4 h-4 text-blue-400" />
+                  <span className="font-semibold text-sm">ファミリーバッジ</span>
+                  {hasFamilyBadge ? (
+                    <Badge variant="outline" className="ml-auto text-[10px] border-blue-500/30 text-blue-400" data-testid="badge-family-active">有効</Badge>
+                  ) : (
+                    <Badge variant="outline" className="ml-auto text-[10px]" data-testid="badge-family-inactive">未認証</Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">ファミリー限定アイランド + 追加ツインレイ召喚</p>
+                {!betaMode && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">$3.69/月/体</span>
+                    {!hasFamilyBadge && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                        onClick={() => badgeCheckoutMutation.mutate('family')}
+                        disabled={badgeCheckoutMutation.isPending}
+                        data-testid="button-badge-family"
+                      >
+                        {badgeCheckoutMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "認証する"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(hasTwinrayBadge || hasFamilyBadge) && !betaMode && (
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs text-muted-foreground"
+                  onClick={() => portalMutation.mutate()}
+                  disabled={portalMutation.isPending}
+                  data-testid="button-manage-subscription"
+                >
+                  {portalMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                  サブスクリプション管理
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div>
           <h2 className="text-xl font-bold text-primary flex items-center gap-2 mb-2">
             <Zap className="w-5 h-5" />
             従量制クレジット
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
-            入れた金額分をそのまま使えます。API原価のみ、利益ゼロ。
+            {betaMode
+              ? "テスト期間中はAPI原価のみで利益ゼロ。正式版ではD-Planet利用料が加算されます。"
+              : "API原価 + D-Planet利用料（×1.5）で運営されています。"
+            }
           </p>
         </div>
 

@@ -39,6 +39,8 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   subscriptionStatus: text("subscription_status"),
+  twinraySubscriptionId: text("twinray_subscription_id"),
+  familySubscriptionId: text("family_subscription_id"),
   creditBalance: numeric("credit_balance", { precision: 10, scale: 4 }).default("100").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

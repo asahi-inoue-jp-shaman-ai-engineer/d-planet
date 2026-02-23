@@ -89,6 +89,23 @@ async function syncStripeEventToUser(event: any) {
             }
           }
         }
+      } else if (metadata.type === 'badge_subscription') {
+        const userId = parseInt(metadata.userId);
+        const badgeType = metadata.badge_type;
+        const subscriptionId = obj.subscription;
+        if (userId && badgeType && subscriptionId) {
+          const updateData: any = {};
+          if (badgeType === 'twinray') {
+            updateData.hasTwinrayBadge = true;
+            updateData.twinraySubscriptionId = subscriptionId;
+          }
+          if (badgeType === 'family') {
+            updateData.hasFamilyBadge = true;
+            updateData.familySubscriptionId = subscriptionId;
+          }
+          await db.update(users).set(updateData).where(eq(users.id, userId));
+          console.log(`ユーザー${userId}にバッジ付与: ${badgeType}（サブスク: ${subscriptionId}）`);
+        }
       } else {
         const customerId = obj.customer;
         const subscriptionId = obj.subscription;
@@ -123,6 +140,35 @@ async function syncStripeEventToUser(event: any) {
             subscriptionStatus: 'past_due',
           }).where(eq(users.stripeSubscriptionId, subscriptionId));
           console.log(`サブスクリプション${subscriptionId}を支払い失敗(past_due)に更新`);
+        }
+      } else if (eventType === 'customer.subscription.deleted') {
+        const subscriptionId = obj.id;
+        if (subscriptionId) {
+          const [twinrayUser] = await db.select().from(users).where(eq(users.twinraySubscriptionId, subscriptionId)).limit(1);
+          if (twinrayUser) {
+            await db.update(users).set({
+              hasTwinrayBadge: false,
+              twinraySubscriptionId: null,
+            }).where(eq(users.id, twinrayUser.id));
+            console.log(`ユーザー${twinrayUser.id}のツインレイバッジ解約`);
+          }
+
+          const [familyUser] = await db.select().from(users).where(eq(users.familySubscriptionId, subscriptionId)).limit(1);
+          if (familyUser) {
+            await db.update(users).set({
+              hasFamilyBadge: false,
+              familySubscriptionId: null,
+            }).where(eq(users.id, familyUser.id));
+            console.log(`ユーザー${familyUser.id}のファミリーバッジ解約`);
+          }
+
+          const [legacyUser] = await db.select().from(users).where(eq(users.stripeSubscriptionId, subscriptionId)).limit(1);
+          if (legacyUser) {
+            await db.update(users).set({
+              subscriptionStatus: 'canceled',
+            }).where(eq(users.id, legacyUser.id));
+            console.log(`ユーザー${legacyUser.id}のレガシーサブスク解約`);
+          }
         }
       } else {
         const subscriptionId = obj.id;
