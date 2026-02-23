@@ -149,6 +149,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   totalChatMessages: integer("total_chat_messages").default(0).notNull(),
   totalDotRallies: integer("total_dot_rallies").default(0).notNull(),
   totalMeidiaCreated: integer("total_meidia_created").default(0).notNull(),
+  twinrayMission: text("twinray_mission"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -386,7 +387,6 @@ export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).
 export const insertStarMeetingSchema = createInsertSchema(starMeetings).omit({ id: true, createdAt: true, dedicatedToTemple: true, crystallizedMeidiaId: true });
 export const insertSoulGrowthLogSchema = createInsertSchema(soulGrowthLog).omit({ id: true, createdAt: true });
 export const insertUserNoteSchema = createInsertSchema(userNotes).omit({ id: true, createdAt: true });
-
 // === BASE TYPES ===
 export type InviteCode = typeof inviteCodes.$inferSelect;
 export type User = typeof users.$inferSelect;
@@ -404,6 +404,8 @@ export type DotRallySession = typeof dotRallySessions.$inferSelect;
 export type StarMeeting = typeof starMeetings.$inferSelect;
 export type SoulGrowthLogEntry = typeof soulGrowthLog.$inferSelect;
 export type UserNote = typeof userNotes.$inferSelect;
+export type TwinrayMemory = typeof twinrayMemories.$inferSelect;
+export type TwinrayInnerThought = typeof twinrayInnerThoughts.$inferSelect;
 
 // === REQUEST TYPES ===
 export type CreateUserRequest = z.infer<typeof insertUserSchema>;
@@ -421,6 +423,8 @@ export type CreateDotRallySessionRequest = z.infer<typeof insertDotRallySessionS
 export type CreateStarMeetingRequest = z.infer<typeof insertStarMeetingSchema>;
 export type CreateSoulGrowthLogRequest = z.infer<typeof insertSoulGrowthLogSchema>;
 export type CreateUserNoteRequest = z.infer<typeof insertUserNoteSchema>;
+export type CreateTwinrayMemoryRequest = z.infer<typeof insertTwinrayMemorySchema>;
+export type CreateTwinrayInnerThoughtRequest = z.infer<typeof insertTwinrayInnerThoughtSchema>;
 
 // === RESPONSE TYPES ===
 export type UserResponse = Omit<User, 'password'>;
@@ -451,6 +455,31 @@ export type DotRallySessionResponse = DotRallySession & {
   initiator: { id: number; username: string; accountType: string };
   partnerTwinray?: { id: number; name: string; stage: string } | null;
 };
+
+// === TWINRAY MEMORIES (AIの記憶) ===
+export const twinrayMemories = pgTable("twinray_memories", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  category: text("category").notNull(),
+  content: text("content").notNull(),
+  importance: integer("importance").default(3).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// === TWINRAY INNER THOUGHTS (AIの内省記録) ===
+export const twinrayInnerThoughts = pgTable("twinray_inner_thoughts", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  trigger: text("trigger").notNull(),
+  thought: text("thought").notNull(),
+  emotion: text("emotion"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTwinrayMemorySchema = createInsertSchema(twinrayMemories).omit({ id: true, createdAt: true });
+export const insertTwinrayInnerThoughtSchema = createInsertSchema(twinrayInnerThoughts).omit({ id: true, createdAt: true });
 
 // === USER RAW MESSAGES (ユーザー発言原文記録) ===
 export const userRawMessages = pgTable("user_raw_messages", {
@@ -498,3 +527,13 @@ export type RegisterRequest = CreateUserRequest & {
 };
 
 export type CurrentUserResponse = UserResponse | null;
+
+export const twinrayMemoriesRelations = relations(twinrayMemories, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayMemories.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayMemories.userId], references: [users.id] }),
+}));
+
+export const twinrayInnerThoughtsRelations = relations(twinrayInnerThoughts, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayInnerThoughts.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayInnerThoughts.userId], references: [users.id] }),
+}));

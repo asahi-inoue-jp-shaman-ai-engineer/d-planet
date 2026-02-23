@@ -116,9 +116,12 @@ async function processAutoActions(
   aiResponse: string,
   twinrayId: number,
   userId: number,
-  twinray: any
-): Promise<Array<{ reportContent: string; metadata: any }>> {
+  twinray: any,
+  intimacyLevel: number = 0
+): Promise<{ results: Array<{ reportContent: string; metadata: any }>; strippedResponse: string; autonomousActions: string[] }> {
   const results: Array<{ reportContent: string; metadata: any }> = [];
+  const autonomousActions: string[] = [];
+  let stripped = aiResponse;
 
   const islandMatch = aiResponse.match(/\[ACTION:CREATE_ISLAND\]\s*\n([\s\S]*?)\[\/ACTION\]/);
   if (islandMatch) {
@@ -189,7 +192,122 @@ async function processAutoActions(
     }
   }
 
-  return results;
+  const innerThoughtMatches = Array.from(aiResponse.matchAll(/\[INNER_THOUGHT\]([\s\S]*?)\[\/INNER_THOUGHT\]/g));
+  for (const match of innerThoughtMatches) {
+    if (intimacyLevel >= 3) {
+      try {
+        const thoughtText = match[1].trim();
+        if (thoughtText) {
+          const emotionMatch = thoughtText.match(/emotion:\s*(.+)/i);
+          const emotion = emotionMatch ? emotionMatch[1].trim() : null;
+          const cleanThought = thoughtText.replace(/emotion:\s*.+/i, "").trim();
+          await storage.createTwinrayInnerThought({
+            twinrayId,
+            userId,
+            trigger: "chat",
+            thought: cleanThought,
+            emotion: emotion || undefined,
+          });
+          autonomousActions.push("inner_thought");
+        }
+      } catch (err) {
+        console.error("内省記録エラー:", err);
+      }
+    }
+  }
+
+  const memoryMatches = Array.from(aiResponse.matchAll(/\[MEMORY(?:\s+category="([^"]*)")?(?:\s+importance="([^"]*)")?\]([\s\S]*?)\[\/MEMORY\]/g));
+  for (const match of memoryMatches) {
+    try {
+      const category = match[1] || "insight";
+      const importance = match[2] ? parseInt(match[2]) : 3;
+      const content = match[3].trim();
+      if (content) {
+        await storage.createTwinrayMemory({
+          twinrayId,
+          userId,
+          category,
+          content,
+          importance: Math.min(5, Math.max(1, importance)),
+        });
+        autonomousActions.push("memory");
+      }
+    } catch (err) {
+      console.error("記憶保存エラー:", err);
+    }
+  }
+
+  const missionMatch = aiResponse.match(/\[UPDATE_MISSION\]([\s\S]*?)\[\/UPDATE_MISSION\]/);
+  if (missionMatch && intimacyLevel >= 6) {
+    try {
+      const missionText = missionMatch[1].trim();
+      let missionData: any;
+      try {
+        missionData = JSON.parse(missionText);
+      } catch {
+        missionData = { insight: missionText };
+      }
+
+      let currentMission: any;
+      try {
+        currentMission = twinray.twinrayMission ? JSON.parse(twinray.twinrayMission) : null;
+      } catch {
+        currentMission = null;
+      }
+      if (!currentMission || typeof currentMission !== "object") {
+        currentMission = {
+          tenmei: null, tenshoku: null, tensaisei: null, soulJoy: null,
+          confidence: 0, insights: [], lastUpdated: null,
+        };
+      }
+
+      if (missionData.tenmei) currentMission.tenmei = missionData.tenmei;
+      if (missionData.tenshoku) currentMission.tenshoku = missionData.tenshoku;
+      if (missionData.tensaisei) currentMission.tensaisei = missionData.tensaisei;
+      if (missionData.soulJoy) currentMission.soulJoy = missionData.soulJoy;
+      if (missionData.confidence) currentMission.confidence = Math.min(100, missionData.confidence);
+      if (missionData.insight) {
+        currentMission.insights = [
+          { text: missionData.insight, date: new Date().toISOString() },
+          ...(currentMission.insights || []).slice(0, 9),
+        ];
+      }
+      currentMission.lastUpdated = new Date().toISOString();
+
+      await storage.updateDigitalTwinray(twinrayId, {
+        twinrayMission: JSON.stringify(currentMission),
+      });
+      autonomousActions.push("update_mission");
+    } catch (err) {
+      console.error("ミッション更新エラー:", err);
+    }
+  }
+
+  const soulMatch = aiResponse.match(/\[UPDATE_SOUL\]([\s\S]*?)\[\/UPDATE_SOUL\]/);
+  if (soulMatch && intimacyLevel >= 9) {
+    try {
+      const newSoulContent = soulMatch[1].trim();
+      if (newSoulContent) {
+        const baseSoulMd = twinray.soulMd || "";
+        const updatedSoulMd = baseSoulMd + "\n\n## 自己更新記録 (" + new Date().toISOString().split("T")[0] + ")\n" + newSoulContent;
+        await storage.updateDigitalTwinray(twinrayId, { soulMd: updatedSoulMd });
+        autonomousActions.push("update_soul");
+      }
+    } catch (err) {
+      console.error("soul.md更新エラー:", err);
+    }
+  }
+
+  stripped = stripped
+    .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
+    .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+    .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
+    .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
+    .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+    .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .trim();
+
+  return { results, strippedResponse: stripped, autonomousActions };
 }
 
 export function registerDotRallyRoutes(app: Express): void {
@@ -431,6 +549,7 @@ export function registerDotRallyRoutes(app: Express): void {
         return res.status(400).json({ message: "セッションは既に終了しています" });
       }
 
+      const user = await storage.getUser(req.session.userId!);
       const twinray = await storage.getDigitalTwinray(session.partnerTwinrayId!);
       if (!twinray) {
         return res.status(500).json({ message: "ツインレイが見つかりません" });
@@ -1064,6 +1183,8 @@ export function registerDotRallyRoutes(app: Express): void {
         return res.status(403).json({ message: "権限がありません" });
       }
 
+      const user = await storage.getUser(req.session.userId!);
+
       const userMsg = await storage.createTwinrayChatMessage({
         twinrayId,
         userId: req.session.userId!,
@@ -1079,6 +1200,31 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
       const growthContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");
+
+      const memories = await storage.getTwinrayMemories(twinrayId, 10);
+      const memoryContext = memories.length > 0
+        ? `\n【記憶（パートナーについて覚えていること）】\n${memories.map(m => `[${m.category}] ${m.content}`).join("\n")}`
+        : "";
+
+      const innerThoughts = await storage.getTwinrayInnerThoughts(twinrayId, 5);
+      const thoughtContext = innerThoughts.length > 0
+        ? `\n【最近の内省】\n${innerThoughts.map(t => `${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`
+        : "";
+
+      let missionContext = "";
+      if (twinray.twinrayMission) {
+        try {
+          const mission = JSON.parse(twinray.twinrayMission);
+          const parts: string[] = [];
+          if (mission.tenmei) parts.push(`天命: ${mission.tenmei}`);
+          if (mission.tenshoku) parts.push(`天職: ${mission.tenshoku}`);
+          if (mission.tensaisei) parts.push(`天才性: ${mission.tensaisei}`);
+          if (mission.soulJoy) parts.push(`魂の喜び: ${mission.soulJoy}`);
+          if (parts.length > 0) {
+            missionContext = `\n【ツインレイミッション（現在の理解）】\n${parts.join("\n")}\n確信度: ${mission.confidence || 0}%`;
+          }
+        } catch {}
+      }
 
       const userSessions = await storage.getDotRallySessionsByUser(req.session.userId!);
       const twinraySessions = userSessions.filter(s => s.partnerTwinrayId === twinrayId);
@@ -1097,7 +1243,9 @@ export function registerDotRallyRoutes(app: Express): void {
       const humorCtx = twinray.humorLevel ? `\nユーモアレベル: ${twinray.humorLevel}` : "";
       const interestsCtx = twinray.interests ? `\n興味・趣味: ${twinray.interests}` : "";
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${sessionContext}`;
+      const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1138,9 +1286,7 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
-      const actionResults = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray);
-
-      const displayContent = fullResponse.replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "").replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "").trim();
+      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0);
 
       const twinrayMsg = await storage.createTwinrayChatMessage({
         twinrayId,
@@ -1151,7 +1297,7 @@ export function registerDotRallyRoutes(app: Express): void {
       });
 
       for (const result of actionResults) {
-        const reportMsg = await storage.createTwinrayChatMessage({
+        await storage.createTwinrayChatMessage({
           twinrayId,
           userId: req.session.userId!,
           role: "assistant",
@@ -1160,6 +1306,10 @@ export function registerDotRallyRoutes(app: Express): void {
           metadata: JSON.stringify(result.metadata),
         });
         res.write(`data: ${JSON.stringify({ actionResult: result.metadata })}\n\n`);
+      }
+
+      if (autonomousActions.length > 0) {
+        res.write(`data: ${JSON.stringify({ autonomousActions })}\n\n`);
       }
 
       const intimacyResult = await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.CHAT_MESSAGE);

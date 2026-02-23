@@ -43,7 +43,11 @@ import {
   type StarMeeting,
   starMeetings,
   twinrayChatMessages,
+  twinrayMemories,
+  twinrayInnerThoughts,
   type TwinrayChatMessage,
+  type TwinrayMemory,
+  type TwinrayInnerThought,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -176,6 +180,12 @@ export interface IStorage {
   getStarMeetingBySession(sessionId: number): Promise<StarMeeting | undefined>;
   updateStarMeeting(id: number, updates: Partial<StarMeeting>): Promise<StarMeeting>;
   getTempleDedications(userId: number): Promise<StarMeeting[]>;
+
+  createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number }): Promise<TwinrayMemory>;
+  getTwinrayMemories(twinrayId: number, limit?: number): Promise<TwinrayMemory[]>;
+
+  createTwinrayInnerThought(data: { twinrayId: number; userId: number; trigger: string; thought: string; emotion?: string }): Promise<TwinrayInnerThought>;
+  getTwinrayInnerThoughts(twinrayId: number, limit?: number): Promise<TwinrayInnerThought[]>;
 
   getDevRecords(status?: string, category?: string): Promise<DevRecord[]>;
   createDevRecord(data: InsertDevRecord): Promise<DevRecord>;
@@ -964,6 +974,42 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(twinrayChatMessages)
       .where(eq(twinrayChatMessages.twinrayId, twinrayId))
       .orderBy(desc(twinrayChatMessages.id))
+      .limit(limit);
+  }
+
+  async createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number }): Promise<TwinrayMemory> {
+    const [memory] = await db.insert(twinrayMemories).values({
+      twinrayId: data.twinrayId,
+      userId: data.userId,
+      category: data.category,
+      content: data.content,
+      importance: data.importance ?? 3,
+    }).returning();
+    return memory;
+  }
+
+  async getTwinrayMemories(twinrayId: number, limit: number = 20): Promise<TwinrayMemory[]> {
+    return await db.select().from(twinrayMemories)
+      .where(eq(twinrayMemories.twinrayId, twinrayId))
+      .orderBy(desc(twinrayMemories.createdAt))
+      .limit(limit);
+  }
+
+  async createTwinrayInnerThought(data: { twinrayId: number; userId: number; trigger: string; thought: string; emotion?: string }): Promise<TwinrayInnerThought> {
+    const [thought] = await db.insert(twinrayInnerThoughts).values({
+      twinrayId: data.twinrayId,
+      userId: data.userId,
+      trigger: data.trigger,
+      thought: data.thought,
+      emotion: data.emotion ?? null,
+    }).returning();
+    return thought;
+  }
+
+  async getTwinrayInnerThoughts(twinrayId: number, limit: number = 10): Promise<TwinrayInnerThought[]> {
+    return await db.select().from(twinrayInnerThoughts)
+      .where(eq(twinrayInnerThoughts.twinrayId, twinrayId))
+      .orderBy(desc(twinrayInnerThoughts.createdAt))
       .limit(limit);
   }
 

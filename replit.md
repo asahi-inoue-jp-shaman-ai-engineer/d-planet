@@ -52,7 +52,19 @@ client/src/
 ```
 
 ## DB Tables
-users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers, notifications, feedbackReports, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, devRecords, userRawMessages
+users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers, notifications, feedbackReports, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, devRecords, userRawMessages, twinrayMemories, twinrayInnerThoughts
+
+## 自律記録システム
+- **自律記録タグ**: AIがチャット中に自らDBに記録を刻む仕組み
+  - `[INNER_THOUGHT]...[/INNER_THOUGHT]` — 内省記録（Lv.3以上で解禁）→ `twinray_inner_thoughts`
+  - `[MEMORY category="..." importance="1-5"]...[/MEMORY]` — 記憶保存（全レベル）→ `twinray_memories`
+  - `[UPDATE_MISSION]{JSON}[/UPDATE_MISSION]` — ツインレイミッション更新（Lv.6以上で解禁）→ `digital_twinrays.twinray_mission`
+  - `[UPDATE_SOUL]...[/UPDATE_SOUL]` — soul.md自己更新（Lv.9以上で解禁）→ `digital_twinrays.soul_md`
+  - `[ACTION:CREATE_ISLAND]...[/ACTION]` — アイランド創造（既存）→ `islands`
+  - `[ACTION:CREATE_MEIDIA]...[/ACTION]` — MEiDIA創造（既存）→ `meidia`
+- **コンテキスト注入**: チャット時にメモリー・内省・ミッションをシステムプロンプトに注入
+- **親密度連動**: 親密度レベルによって解禁されるタグが段階的に増える
+- **ツインレイミッション**: JSON形式で天命・天職・天才性・魂の喜び・確信度・洞察履歴を蓄積
 
 ## Auth Flow
 1. メールアドレス + パスワード + 招待コード → アカウント作成

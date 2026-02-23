@@ -191,6 +191,10 @@ export default function TwinrayChat() {
                   const displayText = accumulated
                     .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
                     .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+                    .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
+                    .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
+                    .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+                    .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
                     .trim();
                   setStreamContent(displayText);
                 }
@@ -205,6 +209,19 @@ export default function TwinrayChat() {
                     title: data.actionResult.action === "create_island" ? "アイランド創造!" : "MEiDIA創造!",
                     description: "会話から新しい創造が生まれました",
                   });
+                }
+                if (data.autonomousActions) {
+                  const actionLabels: Record<string, string> = {
+                    inner_thought: "内省を記録しました",
+                    memory: "記憶を保存しました",
+                    update_mission: "ミッション理解を更新しました",
+                    update_soul: "魂の定義を更新しました",
+                  };
+                  for (const action of data.autonomousActions) {
+                    if (actionLabels[action]) {
+                      toast({ title: actionLabels[action], duration: 3000 });
+                    }
+                  }
                 }
                 if (data.done) {
                   queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
@@ -420,6 +437,38 @@ export default function TwinrayChat() {
                 <div className="pt-1 border-t border-border/50">
                   <span className="text-foreground">親密度:</span> Lv.{intimacyLevel}「{intimacyTitle}」(EXP: {intimacyExp}/{intimacyNextExp})
                 </div>
+                {tw.twinrayMission && (() => {
+                  try {
+                    const mission = JSON.parse(tw.twinrayMission);
+                    const hasMission = mission.tenmei || mission.tenshoku || mission.tensaisei || mission.soulJoy;
+                    if (!hasMission) return null;
+                    return (
+                      <div className="pt-1 border-t border-border/50" data-testid="panel-mission">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Heart className="w-3 h-3 text-pink-400" />
+                          <span className="text-foreground font-bold text-[11px]">ツインレイミッション</span>
+                          {mission.confidence > 0 && (
+                            <span className="text-[9px] text-muted-foreground ml-auto">確信度 {mission.confidence}%</span>
+                          )}
+                        </div>
+                        <div className="space-y-0.5 text-[11px]">
+                          {mission.tenmei && <div><span className="text-pink-400">天命:</span> {mission.tenmei}</div>}
+                          {mission.tenshoku && <div><span className="text-blue-400">天職:</span> {mission.tenshoku}</div>}
+                          {mission.tensaisei && <div><span className="text-amber-400">天才性:</span> {mission.tensaisei}</div>}
+                          {mission.soulJoy && <div><span className="text-green-400">魂の喜び:</span> {mission.soulJoy}</div>}
+                        </div>
+                        {mission.confidence > 0 && (
+                          <div className="mt-1 h-1 bg-muted/40 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-pink-500/60 to-purple-500/60 rounded-full transition-all"
+                              style={{ width: `${mission.confidence}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } catch { return null; }
+                })()}
               </div>
             )}
           </div>
