@@ -1,16 +1,18 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useCallback, useRef, useState } from "react";
 
 export function useDotRallySessions() {
   return useQuery({
     queryKey: ["/api/dot-rally/sessions"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 }
 
 export function useDotRallySession(id: number) {
   return useQuery({
     queryKey: ["/api/dot-rally/sessions", id],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!id,
   });
 }
@@ -160,7 +162,7 @@ export function useStarMeeting(sessionId: number) {
       if (!res.ok) return null;
       return res.json();
     },
-    enabled: !!sessionId,
+    enabled: sessionId > 0,
   });
 }
 
@@ -268,13 +270,15 @@ export function useDedicate() {
 export function useTempleDedications() {
   return useQuery({
     queryKey: ["/api/temple/dedications"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 }
 
 export function useSessionNotes(sessionId: number) {
   return useQuery({
     queryKey: ["/api/dot-rally/sessions", sessionId, "notes"],
-    enabled: !!sessionId,
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: sessionId > 0,
   });
 }
 
