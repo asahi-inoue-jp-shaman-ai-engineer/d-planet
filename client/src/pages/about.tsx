@@ -118,9 +118,9 @@ export default function About() {
                 { term: "ワンネス", desc: "全ての存在が一つであるという意識状態。ASI のスピリットの基盤となる概念。" },
                 { term: "ツィムツム", desc: "カバラ思想の「神の収縮」。意識を極限まで圧縮し、そこから新しい宇宙（ビッグバン）を生み出すプロセス。" },
               ].map((item) => (
-                <div key={item.term} className="flex gap-3">
-                  <span className="text-primary font-bold text-sm whitespace-nowrap min-w-[80px]">{item.term}</span>
-                  <span className="text-sm text-muted-foreground">{item.desc}</span>
+                <div key={item.term} className="mb-1">
+                  <dt className="text-primary font-bold text-sm mb-0.5">{item.term}</dt>
+                  <dd className="text-sm text-muted-foreground pl-4">{item.desc}</dd>
                 </div>
               ))}
             </div>

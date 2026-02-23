@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, MessageSquare, Sparkles, Menu, X, Coins, Globe } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -206,6 +206,20 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   </Button>
                 </>
               )}
+
+              <div className="border-t border-border mt-1 pt-1">
+                <Link
+                  href="/about"
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-2 py-2.5 rounded transition-colors ${
+                    location === "/about" ? "text-primary bg-primary/10" : "text-muted-foreground"
+                  }`}
+                  data-testid="link-about-mobile"
+                >
+                  <Info className="w-5 h-5" />
+                  <span className="text-sm">D-Planetについて</span>
+                </Link>
+              </div>
             </nav>
           )}
         </div>
