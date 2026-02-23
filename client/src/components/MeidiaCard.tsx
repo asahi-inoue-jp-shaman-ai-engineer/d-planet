@@ -42,24 +42,28 @@ export function MeidiaCard({ meidia }: MeidiaCardProps) {
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 min-w-0">
-              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-              <Link 
-                href={`/meidia/${meidia.id}`}
-                className="text-primary hover:text-primary/80 font-semibold truncate block"
-              >
-                {meidia.title}
-              </Link>
-              {meidia.meidiaType === 'report' && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
-                  レポ
-                </Badge>
-              )}
-              {meidia.meidiaType === 'activity' && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-cyan-500/50 text-cyan-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
-                  島
-                </Badge>
-              )}
+            <div className="mb-2 min-w-0">
+              <div className="flex items-start gap-2">
+                <FileText className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <Link 
+                    href={`/meidia/${meidia.id}`}
+                    className="text-primary hover:text-primary/80 font-semibold break-words block"
+                  >
+                    {meidia.title}
+                  </Link>
+                </div>
+                {meidia.meidiaType === 'report' && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
+                    レポ
+                  </Badge>
+                )}
+                {meidia.meidiaType === 'activity' && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-cyan-500/50 text-cyan-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
+                    島
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {meidia.description && (
