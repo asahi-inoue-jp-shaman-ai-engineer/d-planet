@@ -88,6 +88,12 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 - `/api/credits/*` - クレジット残高 (balance)
 - `/api/stripe/*` - Stripe決済 (publishable-key, charge-credit, products, checkout, subscription, portal, webhook, badge-checkout, badge-status)
 
+## 重要: 初期データ・マスターデータはrunMigrationsに組み込む
+- DB直接操作のみでデータ作成しない。開発DBに入れたデータは本番に反映されない
+- アイランド・MEiDIA・招待コード等の初期データは `server/routes.ts` の `runMigrations()` に作成ロジックを追加すること
+- 「存在しなければ作成」の冪等パターンで書くこと（重複作成を防ぐ）
+- これにより開発環境・本番環境どちらでもサーバー起動時に自動反映される
+
 ## 重要: 本番DB検証必須ルール
 タスク完了前に以下を必ず実行すること。「開発で動いた」だけでは完了としない。
 
