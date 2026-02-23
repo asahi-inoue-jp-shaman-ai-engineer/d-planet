@@ -33,7 +33,10 @@
 - **Backend**: Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
-- **AI**: Qwen3-30b-a3b (OpenRouter経由、Replitクレジット課金)
+- **AI**: OpenRouter経由、Replitクレジット課金。モデル選択制:
+  - Qwen Plus（おすすめ・日本語品質）、Qwen Max（最高品質）、Qwen3-30b-a3b（無料・軽量）
+  - Claude Sonnet 4、GPT-4.1 mini、Gemini 2.5 Flash（使い慣れたAI向け）
+  - 料金目安: おしゃべり30往復表示、ベータ期間×1.0 / 通常×1.5マークアップ
 - **Payment**: Stripe従量制クレジット（単発チャージ、API原価×1.5マークアップ、ベータ中×1.0）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 

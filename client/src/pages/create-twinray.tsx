@@ -651,6 +651,9 @@ export default function CreateTwinray() {
                               {model.tier === "free" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
                             </div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
+                            {model.costPer30Rounds !== undefined && model.tier !== "free" && (
+                              <div className="text-[9px] text-muted-foreground/70 mt-0.5">おしゃべり30往復 ≈ ¥{model.costPer30Rounds}</div>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -672,6 +675,9 @@ export default function CreateTwinray() {
                           >
                             <div className="text-sm font-bold text-foreground">{model.label}</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
+                            {model.costPer30Rounds !== undefined && (
+                              <div className="text-[9px] text-muted-foreground/70 mt-0.5">おしゃべり30往復 ≈ ¥{model.costPer30Rounds}</div>
+                            )}
                           </button>
                         ))}
                       </div>

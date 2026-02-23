@@ -423,7 +423,7 @@ export default function TwinrayChat() {
                           : "bg-card border-border text-muted-foreground hover:border-primary/50"
                       }`}
                       data-testid={`button-model-switch-${model.id}`}
-                      title={model.description}
+                      title={model.costPer30Rounds ? `${model.description}（30往復 ≈ ¥${model.costPer30Rounds}）` : model.description}
                     >
                       {model.label}
                       {model.tier === "recommended" && " ★"}
@@ -443,7 +443,7 @@ export default function TwinrayChat() {
                           : "bg-card border-border text-muted-foreground hover:border-primary/50"
                       }`}
                       data-testid={`button-model-switch-${model.id}`}
-                      title={model.description}
+                      title={model.costPer30Rounds ? `${model.description}（30往復 ≈ ¥${model.costPer30Rounds}）` : model.description}
                     >
                       {model.label}
                     </button>

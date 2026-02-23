@@ -455,7 +455,22 @@ export function registerDotRallyRoutes(app: Express): void {
   });
 
   app.get("/api/available-models", requireAuth, async (_req, res) => {
-    res.json(Object.values(AVAILABLE_MODELS));
+    const inputPerRound = 2000;
+    const outputPerRound = 400;
+    const yenRate = 150;
+    const markup = BETA_MODE ? 1.0 : DPLANET_MARKUP;
+
+    const modelsWithCost = Object.values(AVAILABLE_MODELS).map(model => {
+      const costs = MODEL_COSTS[model.id] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
+      const perRoundUsd = (inputPerRound / 1_000_000) * costs.input + (outputPerRound / 1_000_000) * costs.output;
+      const perRoundYen = perRoundUsd * yenRate * markup;
+      return {
+        ...model,
+        costPer30Rounds: Math.round(perRoundYen * 30 * 10) / 10,
+        isBeta: BETA_MODE,
+      };
+    });
+    res.json(modelsWithCost);
   });
 
   app.patch("/api/twinrays/:id", requireAuth, async (req, res) => {
