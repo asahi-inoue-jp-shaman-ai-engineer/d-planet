@@ -436,6 +436,7 @@ export type IslandDetailResponse = Island & {
   creator: UserResponse;
   activityMeidia: MeidiaResponse[];
   reportMeidia: MeidiaResponse[];
+  postedMeidia: MeidiaResponse[];
   threads: ThreadResponse[];
 };
 export type ThreadResponse = Thread & {

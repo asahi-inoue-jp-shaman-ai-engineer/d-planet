@@ -310,6 +310,17 @@ export default function IslandDetail() {
           )}
         </div>
 
+        {island.postedMeidia && island.postedMeidia.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-mono font-semibold" data-testid="text-posted-meidia-section">MEiDIA</h2>
+            <div className="grid gap-4">
+              {island.postedMeidia.map((m: any) => (
+                <MeidiaCard key={m.id} meidia={m} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {island.activityMeidia && island.activityMeidia.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-mono font-semibold">アクティビティMEiDIA</h2>

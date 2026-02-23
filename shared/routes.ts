@@ -240,6 +240,21 @@ export const api = {
               accountType: z.string(),
             }),
           })),
+          postedMeidia: z.array(z.object({
+            id: z.number(),
+            title: z.string(),
+            content: z.string(),
+            description: z.string().nullable(),
+            tags: z.string().nullable(),
+            fileType: z.string(),
+            downloadCount: z.number(),
+            createdAt: z.string(),
+            creator: z.object({
+              id: z.number(),
+              username: z.string(),
+              accountType: z.string(),
+            }),
+          })),
           threads: z.array(z.object({
             id: z.number(),
             islandId: z.number(),

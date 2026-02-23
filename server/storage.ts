@@ -320,6 +320,7 @@ export class DatabaseStorage implements IStorage {
 
     const activityMeidia = await this.getIslandMeidia(id, 'activity');
     const reportMeidia = await this.getIslandMeidia(id, 'report');
+    const postedMeidia = await this.getIslandMeidia(id, 'posted');
     const threadList = await this.getThreads(id);
 
     return {
@@ -327,6 +328,7 @@ export class DatabaseStorage implements IStorage {
       creator,
       activityMeidia,
       reportMeidia,
+      postedMeidia,
       threads: threadList,
     };
   }
