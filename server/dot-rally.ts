@@ -22,13 +22,14 @@ function estimateTokens(text: string): number {
   return Math.ceil(text.length / 3);
 }
 
-function calculateCostYen(modelId: string, inputTokens: number, outputTokens: number): number {
+function calculateCostYen(modelId: string, inputTokens: number, outputTokens: number, isAdmin: boolean = false): number {
   const costs = MODEL_COSTS[modelId] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
   const inputCostUsd = (inputTokens / 1_000_000) * costs.input;
   const outputCostUsd = (outputTokens / 1_000_000) * costs.output;
   const totalUsd = inputCostUsd + outputCostUsd;
   const yenRate = 150;
-  return Math.ceil(totalUsd * yenRate * DPLANET_MARKUP * 10000) / 10000;
+  const markup = isAdmin ? 1.0 : DPLANET_MARKUP;
+  return Math.ceil(totalUsd * yenRate * markup * 10000) / 10000;
 }
 
 export { BETA_MODE };

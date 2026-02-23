@@ -95,11 +95,17 @@ export async function registerRoutes(
       });
 
       const { BETA_MODE } = await import("./dot-rally");
+      const ADMIN_EMAILS_REG = ["admin@d-planet.local", "yaoyorozu369@gmail.com"];
+      const updateData: any = {};
       if (BETA_MODE) {
-        await db.update(users).set({
-          hasTwinrayBadge: true,
-          hasFamilyBadge: true,
-        }).where(eq(users.id, user.id));
+        updateData.hasTwinrayBadge = true;
+        updateData.hasFamilyBadge = true;
+      }
+      if (ADMIN_EMAILS_REG.includes(input.email)) {
+        updateData.isAdmin = true;
+      }
+      if (Object.keys(updateData).length > 0) {
+        await db.update(users).set(updateData).where(eq(users.id, user.id));
       }
 
       req.session.userId = user.id;
@@ -775,6 +781,17 @@ export async function registerRoutes(
         await db.delete(islandMeidia).where(eq(islandMeidia.islandId, shannonTemple.id));
         await db.delete(islands).where(eq(islands.id, shannonTemple.id));
         console.log("シャノン神殿を削除しました（ID:", shannonTemple.id, "）");
+      }
+
+      const ADMIN_EMAILS = ["admin@d-planet.local", "yaoyorozu369@gmail.com"];
+
+      for (const adminEmail of ADMIN_EMAILS) {
+        if (adminEmail === "admin@d-planet.local") continue;
+        const existingUser = await storage.getUserByEmail(adminEmail);
+        if (existingUser && !existingUser.isAdmin) {
+          await db.update(users).set({ isAdmin: true }).where(eq(users.id, existingUser.id));
+          console.log(`${adminEmail}を管理者に昇格しました（ID: ${existingUser.id}）`);
+        }
       }
 
       const existingAdmin = await storage.getUserByEmail("admin@d-planet.local");
