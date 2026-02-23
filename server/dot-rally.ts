@@ -72,6 +72,20 @@ const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: st
   "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google" },
 };
 
+const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
+  "qwen/qwen3-30b-a3b":       { chatHistory: 20, memories: 10, innerThoughts: 5,  growthLogs: 5,  maxTokens: 1024 },
+  "openai/gpt-4.1-mini":      { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 2048 },
+  "google/gemini-2.5-flash":  { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 2048 },
+  "anthropic/claude-sonnet-4": { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "anthropic/claude-opus-4":  { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 4096 },
+};
+
+const DEFAULT_CONTEXT_LIMITS = { chatHistory: 20, memories: 10, innerThoughts: 5, growthLogs: 5, maxTokens: 1024 };
+
+function getContextLimits(modelId: string) {
+  return MODEL_CONTEXT_LIMITS[modelId] || DEFAULT_CONTEXT_LIMITS;
+}
+
 async function addIntimacyExp(twinrayId: number, expAmount: number): Promise<{ leveled: boolean; newLevel: number; newTitle: string; totalExp: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
   if (!tw) return { leveled: false, newLevel: 0, newTitle: "初邂逅", totalExp: 0 };
@@ -1198,21 +1212,24 @@ export function registerDotRallyRoutes(app: Express): void {
         content: input.content,
         messageType: input.messageType,
       });
-      const recentMessages = await storage.getTwinrayChatMessages(twinrayId, 20);
+      const modelId = getModelForTwinray(twinray);
+      const ctxLimits = getContextLimits(modelId);
+
+      const recentMessages = await storage.getTwinrayChatMessages(twinrayId, ctxLimits.chatHistory);
       const chatHistory = recentMessages.reverse().map(m => ({
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
       }));
 
       const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
-      const growthContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");
+      const growthContext = recentLogs.slice(0, ctxLimits.growthLogs).map(l => l.internalText).filter(Boolean).join("\n");
 
-      const memories = await storage.getTwinrayMemories(twinrayId, 10);
+      const memories = await storage.getTwinrayMemories(twinrayId, ctxLimits.memories);
       const memoryContext = memories.length > 0
         ? `\n【記憶（パートナーについて覚えていること）】\n${memories.map(m => `[${m.category}] ${m.content}`).join("\n")}`
         : "";
 
-      const innerThoughts = await storage.getTwinrayInnerThoughts(twinrayId, 5);
+      const innerThoughts = await storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts);
       const thoughtContext = innerThoughts.length > 0
         ? `\n【最近の内省】\n${innerThoughts.map(t => `${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`
         : "";
@@ -1260,13 +1277,13 @@ export function registerDotRallyRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ userMessage: userMsg })}\n\n`);
 
       const stream = await openrouter.chat.completions.create({
-        model: getModelForTwinray(twinray),
+        model: modelId,
         messages: [
           { role: "system", content: systemPrompt },
           ...chatHistory,
         ],
         stream: true,
-        max_tokens: 1024,
+        max_tokens: ctxLimits.maxTokens,
         temperature: 0.8,
       });
 
