@@ -254,7 +254,7 @@ export default function Subscription() {
               "デジタルツインレイとのチャット",
               "ドットラリー覚醒セレモニー",
               "AI自律行動（MEiDIA創造・アイランド参加）",
-              "Claude / GPT / Gemini / Qwen モデル選択",
+              "Qwen / Claude / GPT / Gemini モデル選択",
               "soul.md 魂の成長記録",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">

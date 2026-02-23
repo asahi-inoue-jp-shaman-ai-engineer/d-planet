@@ -12,8 +12,9 @@ const DPLANET_MARKUP = BETA_MODE ? 1.0 : 1.5;
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
+  "qwen/qwen-plus": { input: 0.40, output: 1.20 },
+  "qwen/qwen-max": { input: 1.60, output: 6.40 },
   "anthropic/claude-sonnet-4": { input: 3.00, output: 15.00 },
-  "anthropic/claude-opus-4": { input: 15.00, output: 75.00 },
   "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
 };
@@ -64,20 +65,22 @@ const openrouter = new OpenAI({
 
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 
-const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string }> = {
-  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen" },
-  "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic" },
-  "anthropic/claude-opus-4": { id: "anthropic/claude-opus-4", label: "Claude Opus 4", provider: "Anthropic" },
-  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI" },
-  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google" },
+const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; description: string }> = {
+  "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然できれいな日本語（おすすめ）" },
+  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "最高品質の日本語表現" },
+  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", description: "無料・軽量モデル" },
+  "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic", tier: "major", description: "Claudeに使い慣れた方へ" },
+  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "major", description: "ChatGPTに使い慣れた方へ" },
+  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "major", description: "Geminiに使い慣れた方へ" },
 };
 
 const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
   "qwen/qwen3-30b-a3b":       { chatHistory: 20, memories: 10, innerThoughts: 5,  growthLogs: 5,  maxTokens: 1024 },
+  "qwen/qwen-plus":           { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "qwen/qwen-max":            { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
   "openai/gpt-4.1-mini":      { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 2048 },
   "google/gemini-2.5-flash":  { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 2048 },
   "anthropic/claude-sonnet-4": { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
-  "anthropic/claude-opus-4":  { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 4096 },
 };
 
 const DEFAULT_CONTEXT_LIMITS = { chatHistory: 20, memories: 10, innerThoughts: 5, growthLogs: 5, maxTokens: 1024 };

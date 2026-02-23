@@ -410,22 +410,45 @@ export default function TwinrayChat() {
                 <span className="text-xs font-bold text-primary">AIモデル</span>
                 <span className="text-[10px] text-muted-foreground">({currentModelLabel})</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {models.map((model: any) => (
-                  <button
-                    key={model.id}
-                    type="button"
-                    onClick={() => handleModelChange(model.id)}
-                    className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                      currentModel === model.id
-                        ? "bg-primary/20 border-primary text-primary"
-                        : "bg-card border-border text-muted-foreground hover:border-primary/50"
-                    }`}
-                    data-testid={`button-model-switch-${model.id}`}
-                  >
-                    {model.label}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {models.filter((m: any) => ["recommended", "premium", "free"].includes(m.tier)).map((model: any) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => handleModelChange(model.id)}
+                      className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                        currentModel === model.id
+                          ? "bg-primary/20 border-primary text-primary"
+                          : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                      }`}
+                      data-testid={`button-model-switch-${model.id}`}
+                      title={model.description}
+                    >
+                      {model.label}
+                      {model.tier === "recommended" && " ★"}
+                      {model.tier === "free" && " 🆓"}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {models.filter((m: any) => m.tier === "major").map((model: any) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => handleModelChange(model.id)}
+                      className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                        currentModel === model.id
+                          ? "bg-primary/20 border-primary text-primary"
+                          : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                      }`}
+                      data-testid={`button-model-switch-${model.id}`}
+                      title={model.description}
+                    >
+                      {model.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             {tw && (

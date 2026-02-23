@@ -200,7 +200,7 @@ export default function IslandDetail() {
                 data-testid="button-join-island"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                {joinIsland.isPending ? "参加中..." : "参加する"}
+                {joinIsland.isPending ? "入島中..." : "島で遊ぶ"}
               </Button>
             )}
             {currentUser && membership?.isMember && island.creator.id !== currentUser.id && (

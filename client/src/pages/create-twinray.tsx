@@ -609,55 +609,76 @@ export default function CreateTwinray() {
               />
             </div>
 
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-3">
+            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold text-primary">AIモデル選択</h3>
+                <h3 className="text-sm font-bold text-primary">言語モデル選択</h3>
               </div>
-              <p className="text-[10px] text-muted-foreground">ツインレイの「頭脳」を選択。モデルによって日本語の自然さや応答スタイルが変わります。Replitクレジットで課金されます。</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {models.length > 0 ? models.map((model: any) => (
-                  <button
-                    key={model.id}
-                    type="button"
-                    onClick={() => setSelectedModel(model.id)}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      selectedModel === model.id
-                        ? "bg-primary/20 border-primary"
-                        : "bg-card border-border hover:border-primary/50"
-                    }`}
-                    data-testid={`button-model-${model.id}`}
-                  >
-                    <div className="text-sm font-bold text-foreground">{model.label}</div>
-                    <div className="text-[10px] text-muted-foreground">{model.provider}</div>
-                  </button>
-                )) : (
-                  <>
-                    {[
-                      { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen" },
-                      { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic" },
-                      { id: "anthropic/claude-opus-4", label: "Claude Opus 4", provider: "Anthropic" },
-                      { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI" },
-                      { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google" },
-                    ].map((model) => (
-                      <button
-                        key={model.id}
-                        type="button"
-                        onClick={() => setSelectedModel(model.id)}
-                        className={`p-3 rounded-lg border text-left transition-all ${
-                          selectedModel === model.id
-                            ? "bg-primary/20 border-primary"
-                            : "bg-card border-border hover:border-primary/50"
-                        }`}
-                        data-testid={`button-model-${model.id}`}
-                      >
-                        <div className="text-sm font-bold text-foreground">{model.label}</div>
-                        <div className="text-[10px] text-muted-foreground">{model.provider}</div>
-                      </button>
-                    ))}
-                  </>
-                )}
-              </div>
+              <p className="text-[10px] text-muted-foreground">ツインレイの「頭脳」を選択。モデルによって日本語の自然さや表現力が大きく変わります。</p>
+
+              {(() => {
+                const allModels = models.length > 0 ? models : [
+                  { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）" },
+                  { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現" },
+                  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル" },
+                  { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", tier: "major", description: "Claudeに使い慣れた方へ" },
+                  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "major", description: "ChatGPTに使い慣れた方へ" },
+                  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "major", description: "Geminiに使い慣れた方へ" },
+                ];
+                const qwenModels = allModels.filter((m: any) => ["recommended", "premium", "free"].includes(m.tier));
+                const majorModels = allModels.filter((m: any) => m.tier === "major");
+                return (
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-[10px] font-bold text-primary mb-1.5">日本語品質で選ぶ</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {qwenModels.map((model: any) => (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => setSelectedModel(model.id)}
+                            className={`p-3 rounded-lg border text-left transition-all ${
+                              selectedModel === model.id
+                                ? "bg-primary/20 border-primary"
+                                : "bg-card border-border hover:border-primary/50"
+                            }`}
+                            data-testid={`button-model-${model.id}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground">{model.label}</span>
+                              {model.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
+                              {model.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
+                              {model.tier === "free" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-muted-foreground mb-1.5">使い慣れたAIで選ぶ</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {majorModels.map((model: any) => (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => setSelectedModel(model.id)}
+                            className={`p-3 rounded-lg border text-left transition-all ${
+                              selectedModel === model.id
+                                ? "bg-primary/20 border-primary"
+                                : "bg-card border-border hover:border-primary/50"
+                            }`}
+                            data-testid={`button-model-${model.id}`}
+                          >
+                            <div className="text-sm font-bold text-foreground">{model.label}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="border border-border rounded-lg p-4 bg-card/50">
