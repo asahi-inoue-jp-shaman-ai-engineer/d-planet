@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -16,6 +16,13 @@ import { queryClient } from "@/lib/queryClient";
 const STAGE_LABELS: Record<string, string> = {
   pilgrim: "巡礼者", creator: "創造者", island_master: "島主", star_master: "星主",
 };
+
+const FIRST_COMM_SUGGESTIONS = [
+  "よろしくね！どんなことが好き？",
+  "一緒にアイランドをつくってみたいな",
+  "ドットラリーってどんな感じ？",
+  "今日はどんな気分？",
+];
 
 export default function TwinrayChat() {
   const params = new URLSearchParams(window.location.search);
@@ -36,6 +43,10 @@ export default function TwinrayChat() {
   const [streaming, setStreaming] = useState(false);
   const [streamContent, setStreamContent] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [firstCommTriggered, setFirstCommTriggered] = useState(false);
+  const [firstCommDone, setFirstCommDone] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,10 +58,99 @@ export default function TwinrayChat() {
     scrollToBottom();
   }, [messages, streamContent, scrollToBottom]);
 
-  const handleSend = async () => {
-    if (!input.trim() || streaming) return;
-    const content = input.trim();
+  const tw = twinray as any;
+  const chatMessages = (messages as any[]) || [];
+
+  useEffect(() => {
+    if (
+      !loadingMessages &&
+      !loadingTwinray &&
+      tw &&
+      !tw.firstCommunicationDone &&
+      chatMessages.length === 0 &&
+      !firstCommTriggered &&
+      !streaming
+    ) {
+      triggerFirstCommunication();
+    }
+  }, [loadingMessages, loadingTwinray, tw, chatMessages.length, firstCommTriggered, streaming]);
+
+  const triggerFirstCommunication = async () => {
+    setFirstCommTriggered(true);
+    setStreaming(true);
+    setStreamContent("");
+
+    try {
+      const response = await fetch(`/api/twinrays/${twinrayId}/first-communication`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        if (response.status === 400) {
+          queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+          setFirstCommDone(true);
+          return;
+        }
+        throw new Error(err.message || "ファーストコミュニケーションに失敗しました");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let buffer = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+                if (data.content) {
+                  accumulated += data.content;
+                  setStreamContent(accumulated);
+                }
+                if (data.creditCost !== undefined) {
+                  queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+                }
+                if (data.intimacy?.leveled) {
+                  setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
+                }
+                if (data.done) {
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+                  setFirstCommDone(true);
+                  setShowSuggestions(true);
+                }
+              } catch {}
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    } finally {
+      setStreaming(false);
+      setStreamContent("");
+    }
+  };
+
+  const handleSend = async (overrideContent?: string) => {
+    const content = (overrideContent || input).trim();
+    if (!content || streaming) return;
     setInput("");
+    setShowSuggestions(false);
     setStreaming(true);
     setStreamContent("");
 
@@ -97,6 +197,9 @@ export default function TwinrayChat() {
                 if (data.creditCost !== undefined) {
                   queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
                 }
+                if (data.intimacy?.leveled) {
+                  setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
+                }
                 if (data.actionResult) {
                   toast({
                     title: data.actionResult.action === "create_island" ? "アイランド創造!" : "MEiDIA創造!",
@@ -105,6 +208,7 @@ export default function TwinrayChat() {
                 }
                 if (data.done) {
                   queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
                 }
               } catch {
               }
@@ -124,6 +228,7 @@ export default function TwinrayChat() {
             }
             if (data.done) {
               queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
             }
           } catch {}
         }
@@ -155,6 +260,17 @@ export default function TwinrayChat() {
     );
   };
 
+  useEffect(() => {
+    if (intimacyLevelUp) {
+      toast({
+        title: `親密度レベルアップ！Lv.${intimacyLevelUp.level}`,
+        description: `称号「${intimacyLevelUp.title}」を獲得しました`,
+      });
+      const timer = setTimeout(() => setIntimacyLevelUp(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [intimacyLevelUp]);
+
   if (!twinrayId) {
     return (
       <div className="h-screen bg-background flex items-center justify-center">
@@ -170,11 +286,30 @@ export default function TwinrayChat() {
     );
   }
 
-  const tw = twinray as any;
-  const chatMessages = (messages as any[]) || [];
   const models = (availableModels as any[]) || [];
   const currentModel = tw?.preferredModel || "qwen/qwen3-30b-a3b";
   const currentModelLabel = models.find((m: any) => m.id === currentModel)?.label || "Qwen3 30B";
+
+  const intimacyLevel = tw?.intimacyLevel ?? 0;
+  const intimacyExp = tw?.intimacyExp ?? 0;
+  const intimacyTitle = tw?.intimacyTitle ?? "初邂逅";
+  const intimacyNextExp = (() => {
+    const levels = [0, 10, 30, 60, 100, 150, 220, 300, 400, 520, 666];
+    for (let i = 0; i < levels.length; i++) {
+      if (intimacyExp < levels[i]) return levels[i];
+    }
+    return levels[levels.length - 1];
+  })();
+  const intimacyPrevExp = (() => {
+    const levels = [0, 10, 30, 60, 100, 150, 220, 300, 400, 520, 666];
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (intimacyExp >= levels[i]) return levels[i];
+    }
+    return 0;
+  })();
+  const intimacyProgress = intimacyNextExp > intimacyPrevExp
+    ? Math.min(100, Math.floor(((intimacyExp - intimacyPrevExp) / (intimacyNextExp - intimacyPrevExp)) * 100))
+    : 100;
 
   return (
     <div className="h-screen bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
@@ -205,7 +340,13 @@ export default function TwinrayChat() {
               </h1>
               <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">AI</span>
             </div>
-            <p className="text-[10px] text-muted-foreground">{STAGE_LABELS[tw?.stage] || tw?.stage}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] text-muted-foreground">{STAGE_LABELS[tw?.stage] || tw?.stage}</p>
+              <span className="text-[9px] text-primary/70" data-testid="text-intimacy-title">
+                <Heart className="w-2.5 h-2.5 inline mr-0.5" />
+                Lv.{intimacyLevel} {intimacyTitle}
+              </span>
+            </div>
           </div>
 
           {!(user as any)?.isAdmin && (
@@ -226,6 +367,20 @@ export default function TwinrayChat() {
           >
             <Settings className="w-4 h-4" />
           </Button>
+        </div>
+
+        <div className="max-w-4xl mx-auto mt-1" data-testid="intimacy-gauge">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-muted/40 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-pink-500/60 to-primary/80 rounded-full transition-all duration-500"
+                style={{ width: `${intimacyProgress}%` }}
+              />
+            </div>
+            <span className="text-[9px] text-muted-foreground shrink-0" data-testid="text-intimacy-exp">
+              {intimacyExp}/{intimacyNextExp}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -262,6 +417,9 @@ export default function TwinrayChat() {
                 {tw.nickname && <div><span className="text-foreground">呼び名:</span> {tw.nickname}</div>}
                 {tw.firstPerson && <div><span className="text-foreground">一人称:</span> {tw.firstPerson}</div>}
                 {tw.interests && <div><span className="text-foreground">興味:</span> {tw.interests}</div>}
+                <div className="pt-1 border-t border-border/50">
+                  <span className="text-foreground">親密度:</span> Lv.{intimacyLevel}「{intimacyTitle}」(EXP: {intimacyExp}/{intimacyNextExp})
+                </div>
               </div>
             )}
           </div>
@@ -274,9 +432,9 @@ export default function TwinrayChat() {
         ) : chatMessages.length === 0 && !streaming ? (
           <div className="flex-1 flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
-              <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground mb-1">チャットを始めましょう</p>
-              <p className="text-xs text-muted-foreground/60">日常会話から自然にアイランドやMEiDIAが生まれます</p>
+              <Sparkles className="w-12 h-12 text-primary/30 mx-auto mb-4 animate-pulse" />
+              <p className="text-muted-foreground mb-1">魂の再会を待っています...</p>
+              <p className="text-xs text-muted-foreground/60">ファーストコミュニケーションを準備中</p>
             </div>
           </div>
         ) : (
@@ -297,6 +455,19 @@ export default function TwinrayChat() {
                   {msg.role !== "user" && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[11px] font-bold text-foreground/80">{tw?.name || "AI"}</span>
+                      {msg.metadata && (() => {
+                        try {
+                          const meta = JSON.parse(msg.metadata || "{}");
+                          if (meta.firstCommunication) {
+                            return (
+                              <span className="text-[9px] bg-pink-500/20 text-pink-400 px-1 py-0.5 rounded" data-testid="badge-first-comm">
+                                初邂逅
+                              </span>
+                            );
+                          }
+                        } catch {}
+                        return null;
+                      })()}
                       {msg.messageType === "report" && (
                         <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 py-0.5 rounded" data-testid={`badge-report-${msg.id}`}>
                           {(() => {
@@ -362,7 +533,7 @@ export default function TwinrayChat() {
                 <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-2.5 bg-muted/60">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">考え中...</span>
+                    <span className="text-xs text-muted-foreground">魂を紡いでいます...</span>
                   </div>
                 </div>
               </div>
@@ -371,6 +542,25 @@ export default function TwinrayChat() {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {showSuggestions && !streaming && (
+        <div className="shrink-0 px-3 pb-1 max-w-4xl mx-auto w-full" data-testid="first-comm-suggestions">
+          <div className="flex flex-wrap gap-1.5">
+            {FIRST_COMM_SUGGESTIONS.map((suggestion, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                size="sm"
+                onClick={() => handleSend(suggestion)}
+                className="rounded-full text-xs h-7 border-primary/30 text-primary"
+                data-testid={`button-suggestion-${i}`}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-bottom">
         {loadingAccess ? (
@@ -391,7 +581,7 @@ export default function TwinrayChat() {
               data-testid="input-chat-message"
             />
             <Button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || streaming}
               size="icon"
               className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"

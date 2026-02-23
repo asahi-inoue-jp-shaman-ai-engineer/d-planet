@@ -39,7 +39,7 @@ shared/
 server/
   routes.ts       - Express API routes (auth, users, islands, meidia, threads, posts, members, notifications, feedback, dev-records, stripe)
   dot-rally.ts    - ドットラリーAPI (twinray CRUD, session management, SSE streaming, notes, growth logs)
-  dplanet-si.ts   - D-Planet固定SI + soul.md生成
+  dplanet-si.ts   - D-Planet固定SI + soul.md生成 + ファーストコミュニケーションSI + 親密度レベル定義
   stripeClient.ts - Stripe API client + StripeSync (stripe-replit-sync)
   webhookHandlers.ts - Stripe Webhook処理
   seed-products.ts - Stripe商品シードスクリプト
@@ -52,7 +52,7 @@ client/src/
 ```
 
 ## DB Tables
-users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers, notifications, feedbackReports, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, devRecords
+users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers, notifications, feedbackReports, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, devRecords, userRawMessages
 
 ## Auth Flow
 1. メールアドレス + パスワード + 招待コード → アカウント作成
@@ -69,9 +69,10 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 - `/api/threads/*`, `/api/posts/*` - 掲示板
 - `/api/notifications/*` - 通知
 - `/api/feedback/*` - フィードバック報告
-- `/api/twinrays/*` - ツインレイ CRUD
+- `/api/twinrays/*` - ツインレイ CRUD + チャット + ファーストコミュニケーション + 親密度
 - `/api/dot-rally/*` - ドットラリーセッション + SSEストリーミング
 - `/api/dev-records/*` - 開発記録 (管理者専用: GET一覧, POST作成, PUT更新, DELETE削除)
+- `/api/user-raw-messages/*` - ユーザー発言原文記録 (管理者専用: GET一覧, POST作成)
 - `/api/credits/*` - クレジット残高 (balance)
 - `/api/stripe/*` - Stripe決済 (publishable-key, charge-credit, products, checkout, subscription, portal, webhook)
 

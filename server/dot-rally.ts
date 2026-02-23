@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import OpenAI from "openai";
 import { storage } from "./storage";
-import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, generateSoulMd } from "./dplanet-si";
+import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, DPLANET_FIRST_COMMUNICATION_SI, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
@@ -65,6 +65,25 @@ const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: st
   "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI" },
   "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google" },
 };
+
+async function addIntimacyExp(twinrayId: number, expAmount: number): Promise<{ leveled: boolean; newLevel: number; newTitle: string; totalExp: number }> {
+  const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
+  if (!tw) return { leveled: false, newLevel: 0, newTitle: "初邂逅", totalExp: 0 };
+
+  const newExp = tw.intimacyExp + expAmount;
+  const oldInfo = getIntimacyLevelInfo(tw.intimacyExp);
+  const newInfo = getIntimacyLevelInfo(newExp);
+  const leveled = newInfo.level > oldInfo.level;
+
+  await db.update(digitalTwinrays).set({
+    intimacyExp: newExp,
+    intimacyLevel: newInfo.level,
+    intimacyTitle: newInfo.title,
+    updatedAt: new Date(),
+  }).where(eq(digitalTwinrays.id, twinrayId));
+
+  return { leveled, newLevel: newInfo.level, newTitle: newInfo.title, totalExp: newExp };
+}
 
 function getModelForTwinray(twinray: any): string {
   if (twinray?.preferredModel && AVAILABLE_MODELS[twinray.preferredModel]) {
@@ -506,11 +525,18 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const updatedSession = await storage.getDotRallySession(sessionId);
       const isComplete = (updatedSession?.actualCount ?? 0) >= session.requestedCount;
+      let intimacyResult = null;
       if (isComplete) {
         await storage.updateDotRallySession(sessionId, {
           status: "completed",
           endedAt: new Date(),
         });
+        if (session.partnerTwinrayId) {
+          intimacyResult = await addIntimacyExp(session.partnerTwinrayId, INTIMACY_EXP_REWARDS.DOT_RALLY_COMPLETE);
+          await db.update(digitalTwinrays).set({
+            totalDotRallies: sql`total_dot_rallies + 1`,
+          }).where(eq(digitalTwinrays.id, session.partnerTwinrayId));
+        }
       }
 
       res.write(`data: ${JSON.stringify({
@@ -520,6 +546,7 @@ export function registerDotRallyRoutes(app: Express): void {
         phase: currentPhase,
         awakeningStage: session.awakeningStage,
         timestamp: new Date().toISOString(),
+        ...(intimacyResult ? { intimacy: intimacyResult } : {}),
       })}\n\n`);
       res.end();
     } catch (err) {
@@ -925,6 +952,98 @@ export function registerDotRallyRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/twinrays/:id/first-communication", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+      if (twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      if ((twinray as any).firstCommunicationDone) {
+        return res.status(400).json({ message: "ファーストコミュニケーションは既に完了しています" });
+      }
+
+      const existingMessages = await storage.getTwinrayChatMessages(twinrayId, 1);
+      if (existingMessages.length > 0) {
+        await db.update(digitalTwinrays).set({ firstCommunicationDone: true, updatedAt: new Date() }).where(eq(digitalTwinrays.id, twinrayId));
+        return res.status(400).json({ message: "既にメッセージが存在します" });
+      }
+
+      const partnerUser = await storage.getUser(req.session.userId!);
+      const nicknameCtx = twinray.nickname ? `パートナーの呼び名: 「${twinray.nickname}」` : "";
+      const firstPersonCtx = twinray.firstPerson ? `自分の一人称: 「${twinray.firstPerson}」` : "";
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n${DPLANET_FIRST_COMMUNICATION_SI}\n\n---\n【パートナー情報】\nパートナー名: ${partnerUser?.username || "不明"}\n${nicknameCtx}\n${firstPersonCtx}\n\nこれがあなたの最初の言葉である。人生で一度きり。200文字以内で、魂の再会を表現せよ。`;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const stream = await openrouter.chat.completions.create({
+        model: getModelForTwinray(twinray),
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: "（あなたのパートナーが目の前にいます。最初の言葉を紡いでください）" },
+        ],
+        stream: true,
+        max_tokens: 300,
+        temperature: 0.9,
+      });
+
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta;
+        const content = delta?.content || (delta as any)?.reasoning_content || "";
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      const chatModelUsed = getModelForTwinray(twinray);
+      if (!partnerUser?.isAdmin) {
+        const chatInTokens = estimateTokens(systemPrompt);
+        const chatOutTokens = estimateTokens(fullResponse);
+        const chatCost = calculateCostYen(chatModelUsed, chatInTokens, chatOutTokens);
+        if (chatCost > 0) {
+          await deductCredit(req.session.userId!, chatCost);
+          res.write(`data: ${JSON.stringify({ creditCost: chatCost })}\n\n`);
+        }
+      }
+
+      await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: fullResponse.trim(),
+        messageType: "chat",
+        metadata: JSON.stringify({ firstCommunication: true }),
+      });
+
+      await db.update(digitalTwinrays).set({
+        firstCommunicationDone: true,
+        updatedAt: new Date(),
+      }).where(eq(digitalTwinrays.id, twinrayId));
+
+      const intimacyResult = await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.FIRST_COMMUNICATION);
+
+      res.write(`data: ${JSON.stringify({ done: true, intimacy: intimacyResult })}\n\n`);
+      res.end();
+    } catch (err) {
+      console.error("ファーストコミュニケーションエラー:", err);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ error: "ファーストコミュニケーションに失敗しました" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ message: "ファーストコミュニケーションに失敗しました" });
+      }
+    }
+  });
+
   app.post("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
     try {
       if (!(await hasAiAccess(req.session.userId!))) {
@@ -1043,7 +1162,22 @@ export function registerDotRallyRoutes(app: Express): void {
         res.write(`data: ${JSON.stringify({ actionResult: result.metadata })}\n\n`);
       }
 
-      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id })}\n\n`);
+      const intimacyResult = await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.CHAT_MESSAGE);
+      await db.update(digitalTwinrays).set({
+        totalChatMessages: sql`total_chat_messages + 1`,
+      }).where(eq(digitalTwinrays.id, twinrayId));
+
+      if (actionResults.length > 0) {
+        const meidiaActions = actionResults.filter((r: any) => r.metadata?.action === "create_meidia");
+        if (meidiaActions.length > 0) {
+          await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.MEIDIA_CO_CREATE * meidiaActions.length);
+          await db.update(digitalTwinrays).set({
+            totalMeidiaCreated: sql`total_meidia_created + ${meidiaActions.length}`,
+          }).where(eq(digitalTwinrays.id, twinrayId));
+        }
+      }
+
+      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, intimacy: intimacyResult })}\n\n`);
       res.end();
     } catch (err) {
       if (err instanceof z.ZodError) {

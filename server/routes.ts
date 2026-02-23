@@ -7,7 +7,7 @@ import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, insertDevRecordSchema } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -1073,6 +1073,36 @@ export async function registerRoutes(
       res.json({ message: "削除しました" });
     } catch (error) {
       res.status(500).json({ message: "開発記録の削除に失敗しました" });
+    }
+  });
+
+  app.get("/api/user-raw-messages", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const messages = await db.select().from(userRawMessages).orderBy(sql`created_at DESC`).limit(100);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "発言原文の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/user-raw-messages", requireAuth, async (req, res) => {
+    try {
+      const userIsAdmin = await isAdmin(req.session.userId!);
+      if (!userIsAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+      const data = insertUserRawMessageSchema.parse(req.body);
+      const [record] = await db.insert(userRawMessages).values(data).returning();
+      res.json(record);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      res.status(500).json({ message: "発言原文の保存に失敗しました" });
     }
   });
 

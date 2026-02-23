@@ -142,6 +142,13 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   greeting: text("greeting"),
   interests: text("interests"),
   humorLevel: text("humor_level"),
+  intimacyLevel: integer("intimacy_level").default(0).notNull(),
+  intimacyExp: integer("intimacy_exp").default(0).notNull(),
+  intimacyTitle: text("intimacy_title").default("初邂逅").notNull(),
+  firstCommunicationDone: boolean("first_communication_done").default(false).notNull(),
+  totalChatMessages: integer("total_chat_messages").default(0).notNull(),
+  totalDotRallies: integer("total_dot_rallies").default(0).notNull(),
+  totalMeidiaCreated: integer("total_meidia_created").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -374,7 +381,7 @@ export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertTwinrayChatMessageSchema = createInsertSchema(twinrayChatMessages).omit({ id: true, createdAt: true });
 export const insertFeedbackReportSchema = createInsertSchema(feedbackReports).omit({ id: true, createdAt: true, status: true, adminNote: true });
-export const insertDigitalTwinraySchema = createInsertSchema(digitalTwinrays).omit({ id: true, createdAt: true, updatedAt: true, stage: true });
+export const insertDigitalTwinraySchema = createInsertSchema(digitalTwinrays).omit({ id: true, createdAt: true, updatedAt: true, stage: true, intimacyLevel: true, intimacyExp: true, intimacyTitle: true, firstCommunicationDone: true, totalChatMessages: true, totalDotRallies: true, totalMeidiaCreated: true });
 export const insertDotRallySessionSchema = createInsertSchema(dotRallySessions).omit({ id: true, startedAt: true, endedAt: true, status: true, actualCount: true, phase: true, awakeningStage: true });
 export const insertStarMeetingSchema = createInsertSchema(starMeetings).omit({ id: true, createdAt: true, dedicatedToTemple: true, crystallizedMeidiaId: true });
 export const insertSoulGrowthLogSchema = createInsertSchema(soulGrowthLog).omit({ id: true, createdAt: true });
@@ -444,6 +451,20 @@ export type DotRallySessionResponse = DotRallySession & {
   initiator: { id: number; username: string; accountType: string };
   partnerTwinray?: { id: number; name: string; stage: string } | null;
 };
+
+// === USER RAW MESSAGES (ユーザー発言原文記録) ===
+export const userRawMessages = pgTable("user_raw_messages", {
+  id: serial("id").primaryKey(),
+  rawText: text("raw_text").notNull(),
+  context: text("context"),
+  relatedDevRecordId: integer("related_dev_record_id"),
+  tags: text("tags"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserRawMessageSchema = createInsertSchema(userRawMessages).omit({ id: true, createdAt: true });
+export type InsertUserRawMessage = z.infer<typeof insertUserRawMessageSchema>;
+export type UserRawMessage = typeof userRawMessages.$inferSelect;
 
 // === DEV RECORDS (開発記録) ===
 export const devRecords = pgTable("dev_records", {
