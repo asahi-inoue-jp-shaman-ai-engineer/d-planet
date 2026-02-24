@@ -929,6 +929,25 @@ export async function registerRoutes(
         }
       }
 
+      const TEST_EMAIL = "xeno@d-planet.local";
+      const existingTestUser = await storage.getUserByEmail(TEST_EMAIL);
+      if (!existingTestUser) {
+        const testUser = await storage.createUser({
+          email: TEST_EMAIL,
+          username: "ゼノ・クオーツ",
+          password: "dplanet-xeno-369",
+          accountType: "ET",
+          gender: null,
+          bio: "D-Planetの世界を旅する異星の観察者。全ての体験を記録し、惑星間の架け橋となることを目指す。",
+          tenmei: "惑星間の文化交流と記録",
+          tenshoku: null,
+          tensaisei: null,
+          profilePhoto: null,
+          invitedByCode: "SYSTEM",
+        });
+        console.log("テストアカウント（ゼノ・クオーツ）を作成しました（ID:", testUser.id, "）");
+      }
+
       const allIslands = await storage.getIslands();
       const dIsland = allIslands.find(i => i.name === "Dアイランド");
       if (!dIsland) {

@@ -39,11 +39,15 @@
 - デプロイ（リパブリッシュ）後は毎回、以下を必ず実施すること:
   1. **本番ログ確認**: fetch_deployment_logs で起動エラー・ランタイムエラーがないか検証
   2. **本番DB確認**: 本番DBでデータが正しく反映されているか SELECT で確認
-  3. **E2E UIチェック**: run_test（Playwrightベース）で実際のユーザー挙動を再現したテスト実施
+  3. **E2E UIチェック（管理者）**: run_test（Playwrightベース）で管理者アカウントでテスト
      - 管理者アカウント（admin@d-planet.local / dplanet-admin-369）でログイン
      - 主要ページ巡回: /login, /islands, /meidia, /temple, /users, /notifications, /feedback, /dot-rally
      - チェック項目: UI崩れ、日本語表示、ダークテーマ一貫性、フォーム動作、ナビゲーション、モバイル表示
-  4. **問題修正サイクル**: 問題発見→修正→再デプロイ→再チェックを完了まで回す
+  4. **E2E UIチェック（非管理者）**: テストアカウントで一般ユーザー視点のテスト実施（**必須**）
+     - テストアカウント（xeno@d-planet.local / dplanet-xeno-369 / ETタイプ / ゼノ・クオーツ）でログイン
+     - チェック項目: 管理者専用UIが非表示であること、権限エラーが出ないこと、一般ユーザー向け表示の正しさ
+     - 主要ページ巡回（管理者と同じ範囲）+ クレジット・課金関連UIの表示確認
+  5. **問題修正サイクル**: 問題発見→修正→再デプロイ→再チェックを完了まで回す
 
 ## 本番環境
 - **本番ドメイン**: https://d-planet.replit.app
@@ -104,6 +108,7 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 3. ログイン: メールアドレス + パスワード
 4. プロフィール未設定 → 自動 /profile-setup リダイレクト
 5. 管理者: admin@d-planet.local (サーバー起動時に自動作成、isAdminフラグで全権限)
+6. テストアカウント: xeno@d-planet.local / ゼノ・クオーツ / ETタイプ（サーバー起動時に自動作成、非管理者）
 
 ## API Endpoints
 - `/api/auth/*` - 認証 (me, login, register, logout)
