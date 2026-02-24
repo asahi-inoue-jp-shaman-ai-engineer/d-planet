@@ -6,11 +6,12 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { useToast } from "@/hooks/use-toast";
+import { useUpload } from "@/hooks/use-upload";
 import { queryClient } from "@/lib/queryClient";
 
 const STAGE_LABELS: Record<string, string> = {
@@ -48,8 +49,11 @@ export default function TwinrayChat() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
   const [showAllModels, setShowAllModels] = useState(false);
+  const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -147,20 +151,48 @@ export default function TwinrayChat() {
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({ title: "ファイルが大きすぎます", description: "10MB以下のファイルを選択してください", variant: "destructive" });
+      return;
+    }
+
+    const result = await uploadFile(file);
+    if (result) {
+      setAttachment({
+        fileName: file.name,
+        objectPath: result.objectPath,
+        fileSize: file.size,
+        contentType: file.type || "application/octet-stream",
+      });
+    }
+  };
+
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
     if (!content || streaming) return;
+    const currentAttachment = attachment;
     setInput("");
+    setAttachment(null);
     setShowSuggestions(false);
     setStreaming(true);
     setStreamContent("");
 
     try {
+      const body: any = { content, messageType: currentAttachment ? "file" : "chat" };
+      if (currentAttachment) {
+        body.attachment = currentAttachment;
+      }
       const response = await fetch(`/api/twinrays/${twinrayId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ content, messageType: "chat" }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -602,6 +634,24 @@ export default function TwinrayChat() {
                       )}
                     </div>
                   )}
+                  {msg.metadata && (() => {
+                    try {
+                      const meta = JSON.parse(msg.metadata || "{}");
+                      if (meta.attachment) {
+                        return (
+                          <div className="flex items-center gap-1.5 mb-1.5 text-[10px] text-muted-foreground" data-testid={`attachment-info-${msg.id}`}>
+                            {meta.attachment.contentType?.startsWith("image/") ? (
+                              <Image className="w-3 h-3" />
+                            ) : (
+                              <File className="w-3 h-3" />
+                            )}
+                            <span className="truncate max-w-[180px]">{meta.attachment.fileName}</span>
+                          </div>
+                        );
+                      }
+                    } catch {}
+                    return null;
+                  })()}
                   <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
                     <MarkdownRenderer content={msg.content} />
                   </div>
@@ -685,32 +735,79 @@ export default function TwinrayChat() {
       )}
 
       <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-bottom">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf,.txt,.md,.csv,.json,.log"
+          onChange={handleFileSelect}
+          className="hidden"
+          data-testid="input-file-upload"
+        />
         {loadingAccess ? (
           <div className="flex items-center justify-center max-w-4xl mx-auto py-3">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         ) : hasAiAccess ? (
-          <div className="flex gap-2 items-end max-w-4xl mx-auto">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="メッセージを入力..."
-              rows={1}
-              disabled={streaming}
-              className="resize-none flex-1 min-h-[40px] max-h-[120px] rounded-2xl border-border bg-background text-sm"
-              data-testid="input-chat-message"
-            />
-            <Button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || streaming}
-              size="icon"
-              className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
-              data-testid="button-send"
-            >
-              {streaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-            </Button>
+          <div className="max-w-4xl mx-auto">
+            {attachment && (
+              <div className="flex items-center gap-2 mb-2 px-1" data-testid="attachment-preview">
+                <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-xs">
+                  {attachment.contentType.startsWith("image/") ? (
+                    <Image className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  ) : (
+                    <File className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  )}
+                  <span className="text-foreground truncate max-w-[200px]" data-testid="text-attachment-name">{attachment.fileName}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAttachment(null)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    data-testid="button-remove-attachment"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+            {isUploading && (
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">アップロード中...</span>
+              </div>
+            )}
+            <div className="flex gap-2 items-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={streaming || isUploading}
+                className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
+                data-testid="button-attach-file"
+              >
+                <Paperclip className="w-5 h-5" />
+              </Button>
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="メッセージを入力..."
+                rows={1}
+                disabled={streaming}
+                className="resize-none flex-1 min-h-[40px] max-h-[120px] rounded-2xl border-border bg-background text-sm"
+                data-testid="input-chat-message"
+              />
+              <Button
+                onClick={() => handleSend()}
+                disabled={(!input.trim() && !attachment) || streaming}
+                size="icon"
+                className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
+                data-testid="button-send"
+              >
+                {streaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 justify-center max-w-4xl mx-auto py-2" data-testid="chat-locked-notice">
