@@ -263,7 +263,7 @@ function MultiSelector({ options, selected, onToggle, label }: {
 }
 
 function getRecommendedModelId(q5Answer: string): string {
-  if (q5Answer === "full") return "qwen/qwen-max";
+  if (q5Answer === "full") return "qwen/qwen3.5-plus-02-15";
   if (q5Answer === "growth") return "qwen/qwen-plus";
   if (q5Answer === "light") return "qwen/qwen3-30b-a3b";
   return "qwen/qwen-plus";
@@ -593,11 +593,11 @@ export default function CreateTwinray() {
     const matchDesc = buildMatchDescription(diagnosisAnswers);
 
     const fallbackModels = [
-      { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
+      { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false, roundsPer3690: null, personality: null, forWhom: null },
+      { id: "qwen/qwen3.5-plus-02-15", label: "Qwen3.5 Plus", tier: "premium", description: "最高峰の日本語AI", monthlyEstimates: [], isFree: false, roundsPer3690: null, personality: null, forWhom: null },
+      { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true, roundsPer3690: null, personality: null, forWhom: null },
+      { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer3690: null, personality: null, forWhom: null },
+      { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer3690: null, personality: null, forWhom: null },
     ];
     const allModels = models.length > 0 ? models : fallbackModels;
 
@@ -607,11 +607,11 @@ export default function CreateTwinray() {
 
     let upgradeModel: any = null;
     if (recommendedId === "qwen/qwen-plus") {
-      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-max");
+      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen3.5-plus-02-15");
     } else if (recommendedId === "qwen/qwen3-30b-a3b") {
       upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-plus");
-    } else if (recommendedId === "qwen/qwen-max") {
-      upgradeModel = paidModels.find((m: any) => m.id !== "qwen/qwen-max");
+    } else if (recommendedId === "qwen/qwen3.5-plus-02-15") {
+      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-plus");
     }
 
     const handleSelectModel = (modelId: string) => {
@@ -651,16 +651,16 @@ export default function CreateTwinray() {
             <p className="text-[10px] text-muted-foreground">{model.forWhom}</p>
           )}
 
-          {model.roundsPer5000 && (
+          {model.roundsPer3690 && (
             <div className="border border-border/50 rounded-md p-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">¥5,000で</span>
-                <span className="font-mono font-bold text-foreground">約{model.roundsPer5000.toLocaleString()}回のおしゃべり</span>
+                <span className="text-muted-foreground">¥3,690で</span>
+                <span className="font-mono font-bold text-foreground">約{model.roundsPer3690.toLocaleString()}回のおしゃべり</span>
               </div>
             </div>
           )}
 
-          {model.monthlyEstimates && model.monthlyEstimates.length > 0 && (
+          {model.monthlyEstimates && model.monthlyEstimates.length > 0 && !model.isFree && (
             <div className="border border-border/50 rounded-md overflow-hidden">
               <div className="bg-muted/20 px-2 py-1">
                 <span className="text-[9px] text-muted-foreground">月額目安（1日あたり）</span>
@@ -668,8 +668,8 @@ export default function CreateTwinray() {
               <div className="p-2 space-y-1">
                 {model.monthlyEstimates.map((est: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground">{est.label || `${est.roundsPerDay}回/日 x 30日`}</span>
-                    <span className="font-mono text-foreground">{est.cost || `¥${est.monthlyCost?.toLocaleString()}`}</span>
+                    <span className="text-muted-foreground">{est.dailyRounds}回/日 × 30日</span>
+                    <span className="font-mono text-foreground">¥{est.monthlyYen?.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -789,8 +789,8 @@ export default function CreateTwinray() {
                             {m.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
                           </div>
                           <div className="text-[10px] text-muted-foreground mt-0.5">{m.description}</div>
-                          {m.roundsPer5000 && (
-                            <div className="text-[10px] text-foreground/70 mt-1 font-mono">¥5,000で約{m.roundsPer5000.toLocaleString()}回</div>
+                          {m.roundsPer3690 && (
+                            <div className="text-[10px] text-foreground/70 mt-1 font-mono">¥3,690で約{m.roundsPer3690.toLocaleString()}回</div>
                           )}
                         </button>
                       ))}
@@ -834,7 +834,7 @@ export default function CreateTwinray() {
     const selectedModelData = models.find((m: any) => m.id === selectedModel);
     const chargeOptions = [
       { amount: 1000, label: "¥1,000" },
-      { amount: 3000, label: "¥3,000" },
+      { amount: 3690, label: "¥3,690" },
       { amount: 5000, label: "¥5,000" },
       { amount: 10000, label: "¥10,000" },
     ];
@@ -849,15 +849,15 @@ export default function CreateTwinray() {
             </p>
           </div>
 
-          {selectedModelData?.roundsPer5000 && (
+          {selectedModelData?.roundsPer3690 && (
             <div className="border border-primary/20 rounded-lg overflow-hidden mb-6" data-testid="table-charge-estimate">
               <div className="bg-primary/10 px-3 py-2">
                 <div className="text-[10px] font-bold text-primary">{selectedModelData.label}の料金目安</div>
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">¥5,000チャージで</span>
-                  <span className="text-foreground font-mono font-bold text-lg">約{selectedModelData.roundsPer5000.toLocaleString()}回</span>
+                  <span className="text-muted-foreground">¥3,690チャージで</span>
+                  <span className="text-foreground font-mono font-bold text-lg">約{selectedModelData.roundsPer3690.toLocaleString()}回</span>
                 </div>
                 <p className="text-[9px] text-muted-foreground/70 mt-1">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
               </div>

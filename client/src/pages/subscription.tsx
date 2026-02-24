@@ -10,7 +10,7 @@ import { Coins, Zap, Check, Loader2, Plus, Shield, Users, Star } from "lucide-re
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 
-const CHARGE_AMOUNTS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000];
+const CHARGE_AMOUNTS = [100, 500, 1000, 3690, 5000, 10000, 30000, 50000];
 
 export default function Subscription() {
   const { data: currentUser } = useCurrentUser();
@@ -242,7 +242,7 @@ export default function Subscription() {
           <p className="text-sm text-muted-foreground mb-4">
             {betaMode
               ? "テスト期間中はAPI原価のみで利益ゼロ。正式版ではD-Planet利用料が加算されます。"
-              : "有料モデル（Qwen Plus / Qwen Max）はD-Planet利用料を含みます。無料モデルはクレジット消費なし。"
+              : "有料モデル（Qwen Plus / Qwen3.5 Plus）はD-Planet利用料を含みます。無料モデルはクレジット消費なし。"
             }
           </p>
         </div>
@@ -289,10 +289,10 @@ export default function Subscription() {
                       <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
                     </tr>
                     <tr>
-                      <td className="py-1.5">Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥4,277</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥8,554</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥12,830</td>
+                      <td className="py-1.5">Qwen3.5 Plus <span className="text-[9px] text-yellow-400">最高品質</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
                     </tr>
                   </tbody>
                 </table>

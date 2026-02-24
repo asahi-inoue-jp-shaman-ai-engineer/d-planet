@@ -461,7 +461,7 @@ export default function TwinrayChat() {
                             : "bg-card border-border text-muted-foreground hover:border-primary/50"
                         }`}
                         data-testid={`button-model-switch-${model.id}`}
-                        title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
+                        title={model.roundsPer3690 ? `${model.description}（¥3,690で約${model.roundsPer3690.toLocaleString()}回）` : model.description}
                       >
                         {model.label}
                         {model.tier === "recommended" && " ★"}
@@ -485,7 +485,7 @@ export default function TwinrayChat() {
                               : "bg-card border-border text-muted-foreground hover:border-primary/50"
                           }`}
                           data-testid={`button-model-switch-${model.id}`}
-                          title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
+                          title={model.roundsPer3690 ? `${model.description}（¥3,690で約${model.roundsPer3690.toLocaleString()}回）` : model.description}
                         >
                           {model.label}
                         </button>

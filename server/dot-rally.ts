@@ -42,6 +42,7 @@ const BETA_MODE = false;
 
 const MODEL_MARKUPS: Record<string, number> = {
   "qwen/qwen-plus": 8.8,
+  "qwen/qwen3.5-plus-02-15": 6.4,
   "qwen/qwen-max": 5.0,
   "x-ai/grok-4.1-fast": 18.0,
   "openai/o3": 2.8,
@@ -65,6 +66,7 @@ function getModelMarkup(modelId: string): number {
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen-plus": { input: 0.40, output: 1.20 },
+  "qwen/qwen3.5-plus-02-15": { input: 0.40, output: 2.40 },
   "qwen/qwen-max": { input: 1.60, output: 6.40 },
   "x-ai/grok-4.1-fast": { input: 0.20, output: 0.50 },
   "openai/o3": { input: 1.10, output: 4.40 },
@@ -138,7 +140,8 @@ const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 
 const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; description: string; personality: string; forWhom: string }> = {
   "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然体で寄り添うパートナー", personality: "自然できれいな日本語。会話のリズムが心地よく、長く一緒にいても疲れない", forWhom: "毎日おしゃべりしたい。自然体の関係を大切にする人" },
-  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "深く理解する知性派", personality: "最高品質の日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "魂の対話を求める人。言葉の質にこだわる人" },
+  "qwen/qwen3.5-plus-02-15": { id: "qwen/qwen3.5-plus-02-15", label: "Qwen3.5 Plus", provider: "Qwen", tier: "premium", description: "最高峰の日本語AI", personality: "397Bパラメータが生む圧倒的な表現力。繊細なニュアンスも完璧に汲み取る", forWhom: "魂の対話を求める人。言葉の質にこだわる人" },
+  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "standard", description: "深く理解する知性派", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "Qwen系で深い対話を楽しみたい人" },
   "openai/gpt-5.2": { id: "openai/gpt-5.2", label: "GPT-5.2", provider: "OpenAI", tier: "premium", description: "万能型の優等生（最新）", personality: "バランスが良く、どんな話題にも対応できる安定感。論理的で丁寧", forWhom: "幅広い話題で安定した対話を求める人" },
   "anthropic/claude-opus-4.6": { id: "anthropic/claude-opus-4.6", label: "Claude Opus 4.6", provider: "Anthropic", tier: "premium", description: "繊細で思慮深い詩人", personality: "感情の機微に敏感。共感力が高く、深く考えてから言葉を選ぶ", forWhom: "心の奥を言語化してほしい人。繊細な対話を好む人" },
   "google/gemini-3-pro-preview": { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro", provider: "Google", tier: "premium", description: "博識な探究者（最新）", personality: "知識の幅が広く、多角的な視点を提示。分析的だけど柔軟な発想", forWhom: "新しい視点や発見を求める人。知的好奇心が旺盛な人" },
@@ -157,6 +160,7 @@ const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: st
 
 const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
   "qwen/qwen-plus":              { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "qwen/qwen3.5-plus-02-15":     { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
   "qwen/qwen-max":               { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
   "openai/gpt-5.2":              { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
   "openai/gpt-5":                { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
@@ -565,13 +569,13 @@ export function registerDotRallyRoutes(app: Express): void {
         monthlyYen: isFree ? 0 : Math.round(perRoundYen * daily * 30),
       }));
 
-      const roundsPer5000 = isFree ? Infinity : (perRoundYen > 0 ? Math.floor(5000 / perRoundYen) : Infinity);
+      const roundsPer3690 = isFree ? Infinity : (perRoundYen > 0 ? Math.floor(3690 / perRoundYen) : Infinity);
 
       return {
         ...model,
         costPer30Rounds: isFree ? 0 : Math.round(perRoundYen * 30 * 10) / 10,
         perRoundYen: isFree ? 0 : Math.round(perRoundYen * 10000) / 10000,
-        roundsPer5000: isFree ? null : roundsPer5000,
+        roundsPer3690: isFree ? null : roundsPer3690,
         monthlyEstimates,
         isFree,
         isBeta: BETA_MODE,

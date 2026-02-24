@@ -24,7 +24,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
 - **Auth:** Session-based authentication using `express-session`, supporting email/password registration and login.
-- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 16 models (12 paid, 4 free). Model selection includes Japanese-optimized Qwen Plus/Max, GPT series, Gemini series, Claude series, and Grok. AI models have individual markup rates for user cost standardization. The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
+- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 17 models (13 paid, 4 free). Model selection includes Japanese-optimized Qwen Plus/Qwen3.5 Plus (最高品質), GPT series, Gemini series, Claude series, and Grok. AI models have individual markup rates for user cost standardization (横並び設計). 料金表示: ¥3,690で何往復 + 月額シミュレーション表（1日33/66/99往復）。モデル評価フレームワーク（満足度×利益率×鮮度）で推奨/最高品質を選定。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
 - **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]`, `[ACTION:CREATE_ISLAND]`, and `[ACTION:CREATE_MEIDIA]` directly into the DB based on intimacy levels. This data is injected into system prompts for ongoing interactions.
 - **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
 
