@@ -49,6 +49,7 @@ export default function TwinrayChat() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
   const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
+  const [optimisticMsg, setOptimisticMsg] = useState<{ content: string; attachment?: { fileName: string; contentType: string } } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +61,7 @@ export default function TwinrayChat() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamContent, scrollToBottom]);
+  }, [messages, streamContent, optimisticMsg, scrollToBottom]);
 
   const tw = twinray as any;
   const chatMessages = (messages as any[]) || [];
@@ -181,8 +182,13 @@ export default function TwinrayChat() {
     setStreaming(true);
     setStreamContent("");
 
+    const msgContent = content || (currentAttachment ? `[添付] ${currentAttachment.fileName}` : "");
+    setOptimisticMsg({
+      content: msgContent,
+      attachment: currentAttachment ? { fileName: currentAttachment.fileName, contentType: currentAttachment.contentType } : undefined,
+    });
+
     try {
-      const msgContent = content || (currentAttachment ? `[添付] ${currentAttachment.fileName}` : "");
       const body: any = { content: msgContent, messageType: currentAttachment ? "file" : "chat" };
       if (currentAttachment) {
         body.attachment = currentAttachment;
@@ -287,9 +293,11 @@ export default function TwinrayChat() {
     } catch (err: any) {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
       if (currentAttachment) setAttachment(currentAttachment);
+      setOptimisticMsg(null);
     } finally {
       setStreaming(false);
       setStreamContent("");
+      setOptimisticMsg(null);
     }
   };
 
@@ -646,6 +654,30 @@ export default function TwinrayChat() {
                 </div>
               </div>
             ))}
+            {optimisticMsg && streaming && (
+              <div className="flex justify-end" data-testid="chat-message-optimistic">
+                <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 bg-background border border-primary/40 rounded-br-md">
+                  {optimisticMsg.attachment && (
+                    <div className="flex items-center gap-1.5 mb-1.5 text-[10px] text-muted-foreground">
+                      {optimisticMsg.attachment.contentType?.startsWith("image/") ? (
+                        <Image className="w-3 h-3" />
+                      ) : (
+                        <File className="w-3 h-3" />
+                      )}
+                      <span className="truncate max-w-[180px]">{optimisticMsg.attachment.fileName}</span>
+                    </div>
+                  )}
+                  <div className="text-sm text-primary">
+                    <MarkdownRenderer content={optimisticMsg.content} />
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 mt-1">
+                    <span className="text-[9px] text-primary/50">
+                      {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
             {streaming && streamContent && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-bl-md px-4 py-2.5 bg-muted/60">

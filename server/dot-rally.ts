@@ -1363,7 +1363,7 @@ export function registerDotRallyRoutes(app: Express): void {
       let extractedText: string | null = null;
       let imageAttachment: { base64: string; mimeType: string } | null = null;
       if (input.attachment) {
-        const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(input.attachment.fileName);
+        const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(input.attachment.fileName) || input.attachment.contentType?.startsWith("image/");
         if (isImage) {
           try {
             const file = await objectStorage.getObjectEntityFile(input.attachment.objectPath);
@@ -1379,6 +1379,7 @@ export function registerDotRallyRoutes(app: Express): void {
             }
           } catch (err) {
             console.error("画像読み込みエラー:", err);
+            extractedText = `[画像ファイル「${input.attachment!.fileName}」が添付されましたが、読み込みに失敗しました。パートナーに画像の内容を口頭で説明してもらってください]`;
           }
         } else {
           extractedText = await extractFileText(input.attachment.objectPath, input.attachment.fileName);
