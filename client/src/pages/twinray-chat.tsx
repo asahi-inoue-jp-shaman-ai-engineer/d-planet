@@ -48,7 +48,6 @@ export default function TwinrayChat() {
   const [firstCommDone, setFirstCommDone] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
-  const [showAllModels, setShowAllModels] = useState(false);
   const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -461,7 +460,7 @@ export default function TwinrayChat() {
                             : "bg-card border-border text-muted-foreground hover:border-primary/50"
                         }`}
                         data-testid={`button-model-switch-${model.id}`}
-                        title={model.roundsPer3690 ? `${model.description}（¥3,690で約${model.roundsPer3690.toLocaleString()}回）` : model.description}
+                        title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
                       >
                         {model.label}
                         {model.tier === "recommended" && " ★"}
@@ -470,31 +469,8 @@ export default function TwinrayChat() {
                     ))}
                   </div>
                 </div>
-                {showAllModels && (
-                  <div>
-                    <p className="text-[9px] text-muted-foreground/70 mb-1">その他の有料モデル</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").map((model: any) => (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => handleModelChange(model.id)}
-                          className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                            currentModel === model.id
-                              ? "bg-primary/20 border-primary text-primary"
-                              : "bg-card border-border text-muted-foreground hover:border-primary/50"
-                          }`}
-                          data-testid={`button-model-switch-${model.id}`}
-                          title={model.roundsPer3690 ? `${model.description}（¥3,690で約${model.roundsPer3690.toLocaleString()}回）` : model.description}
-                        >
-                          {model.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <div>
-                  <p className="text-[9px] text-muted-foreground/70 mb-1">無料モデル</p>
+                  <p className="text-[9px] text-muted-foreground/70 mb-1">使い慣れたAIで遊ぶ（無料）</p>
                   <div className="flex flex-wrap gap-1.5">
                     {models.filter((m: any) => m.isFree).map((model: any) => (
                       <button
@@ -514,26 +490,6 @@ export default function TwinrayChat() {
                     ))}
                   </div>
                 </div>
-                {!showAllModels && models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllModels(true)}
-                    className="text-[10px] text-primary/70 hover:text-primary hover:underline"
-                    data-testid="button-show-all-models"
-                  >
-                    他{models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").length}モデルを表示
-                  </button>
-                )}
-                {showAllModels && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllModels(false)}
-                    className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
-                    data-testid="button-hide-models"
-                  >
-                    閉じる
-                  </button>
-                )}
               </div>
             </div>
             {tw && (

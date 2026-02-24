@@ -336,7 +336,7 @@ export default function Subscription() {
                     <thead>
                       <tr className="text-muted-foreground border-b border-border/30">
                         <th className="text-left pb-2 font-normal">モデル名</th>
-                        <th className="text-right pb-2 font-normal">¥3,690で</th>
+                        <th className="text-right pb-2 font-normal">¥5,000で</th>
                         <th className="text-right pb-2 font-normal">1往復</th>
                       </tr>
                     </thead>
@@ -352,7 +352,7 @@ export default function Subscription() {
                             {model.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
                           </td>
                           <td className="text-right font-mono py-1.5">
-                            {model.roundsPer3690 ? `約${model.roundsPer3690.toLocaleString()}回` : "-"}
+                            {model.roundsPer5000 ? `約${model.roundsPer5000.toLocaleString()}回` : "-"}
                           </td>
                           <td className="text-right font-mono py-1.5 text-muted-foreground">
                             {model.perRoundYen ? `¥${model.perRoundYen.toFixed(2)}` : "-"}
@@ -362,7 +362,7 @@ export default function Subscription() {
                     </tbody>
                   </table>
                 </div>
-                <p className="text-[9px] text-muted-foreground/70 mt-2">※ マークアップ率はモデルごとに異なります（横並び設計）</p>
+                <p className="text-[9px] text-muted-foreground/70 mt-2">※ 有料モデルは原価×5.0のマークアップが適用されます</p>
               </div>
               <div className="p-3 rounded border border-emerald-500/30 bg-emerald-500/5">
                 <div className="font-semibold text-emerald-400 text-xs mb-2">無料モデル（{models.filter((m: any) => m.isFree).length}モデル）</div>

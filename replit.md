@@ -24,7 +24,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
 - **Auth:** Session-based authentication using `express-session`, supporting email/password registration and login.
-- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 17 models (13 paid, 4 free). Model selection includes Japanese-optimized Qwen Plus/Qwen3.5 Plus (最高品質), GPT series, Gemini series, Claude series, and Grok. AI models have individual markup rates for user cost standardization (横並び設計). 料金表示: ¥3,690で何往復 + 月額シミュレーション表（1日33/66/99往復）。モデル評価フレームワーク（満足度×利益率×鮮度）で推奨/最高品質を選定。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
+- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 5 models (2 paid, 3 free). β期間終了・正式課金開始。有料モデル: Qwen Plus（おすすめ）, Qwen Max（最高品質）。無料モデル: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。有料モデルは原価×5.0マークアップ（DPLANET_MARKUP=5.0）、無料モデルは原価のみ（×1.0）。Claude系は全モデル除外。料金表示: ¥5,000で何往復 + 月額シミュレーション表（1日33/66/99往復）。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
 - **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]`, `[ACTION:CREATE_ISLAND]`, and `[ACTION:CREATE_MEIDIA]` directly into the DB based on intimacy levels. This data is injected into system prompts for ongoing interactions.
 - **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
 
@@ -45,7 +45,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 ## External Dependencies
 
 - **PostgreSQL:** Replit's built-in PostgreSQL database.
-- **OpenRouter:** AI model aggregation service providing access to various LLMs (Qwen, GPT, Gemini, Claude, Grok, DeepSeek).
+- **OpenRouter:** AI model aggregation service providing access to Qwen, GPT, Gemini LLMs（Claude系除外）。
 - **Stripe:** Payment gateway for managing credit charges (one-time) and badge-based monthly subscriptions ($3.69/month).
 - **Drizzle ORM:** TypeScript ORM for database interaction.
 - **TanStack Query:** Data fetching and caching library for React.
