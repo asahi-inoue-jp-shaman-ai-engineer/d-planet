@@ -54,12 +54,12 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
   }
 
   const navLinks = [
+    { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
     { href: "/islands", icon: Map, label: "ISLANDS", mobileLabel: "ISLANDS", active: location === "/islands", testId: "link-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
+    { href: "/credits", icon: Coins, label: "CREDIT", mobileLabel: "クレジット", active: location === "/credits", testId: "link-credits" },
     ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" }] : []),
-    { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
     { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "フィードバック", active: location.startsWith("/feedback"), testId: "link-feedback" },
-    { href: "/credits", icon: Coins, label: "CR", mobileLabel: "クレジット", active: location === "/credits", testId: "link-credits" },
   ];
 
   return (
