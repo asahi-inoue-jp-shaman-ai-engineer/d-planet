@@ -54,12 +54,12 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
   }
 
   const navLinks = [
-    { href: "/islands", icon: Map, label: "ISLANDS", active: location === "/islands", testId: "link-islands" },
-    { href: "/meidia", icon: FileText, label: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
-    ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", active: location === "/users", testId: "link-users" }] : []),
-    { href: "/temple", icon: Sparkles, label: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
-    { href: "/feedback", icon: MessageSquare, label: "FB", active: location.startsWith("/feedback"), testId: "link-feedback" },
-    { href: "/credits", icon: Coins, label: "CREDIT", active: location === "/credits", testId: "link-credits" },
+    { href: "/islands", icon: Map, label: "ISLANDS", mobileLabel: "ISLANDS", active: location === "/islands", testId: "link-islands" },
+    { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
+    ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" }] : []),
+    { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
+    { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "フィードバック", active: location.startsWith("/feedback"), testId: "link-feedback" },
+    { href: "/credits", icon: Coins, label: "CR", mobileLabel: "クレジット", active: location === "/credits", testId: "link-credits" },
   ];
 
   return (
@@ -76,17 +76,17 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">v1.0.0-alpha</div>
             </Link>
             
-            <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+            <nav className="hidden md:flex items-center gap-3 lg:gap-5">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 hover:text-primary transition-colors ${
+                  className={`flex items-center gap-1.5 whitespace-nowrap hover:text-primary transition-colors text-sm ${
                     link.active ? "text-primary" : "text-muted-foreground"
                   }`}
                   data-testid={link.testId}
                 >
-                  <link.icon className="w-4 h-4" />
+                  <link.icon className="w-4 h-4 shrink-0" />
                   <span>{link.label}</span>
                 </Link>
               ))}
@@ -110,23 +110,22 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
 
                   <Link 
                     href={`/users/${user.id}`}
-                    className={`flex items-center gap-2 hover:text-primary transition-colors ${
+                    className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 hover:text-primary transition-colors text-sm ${
                       location === `/users/${user.id}` ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
                     <AvatarDisplay url={user.profilePhoto} size="sm" />
-                    <span>{user.username}</span>
+                    <span className="max-w-[6rem] truncate">{user.username}</span>
                   </Link>
                   
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="text-muted-foreground hover:text-destructive shrink-0"
                     data-testid="button-logout"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span className="ml-2">LOGOUT</span>
                   </Button>
                 </>
               )}
@@ -174,7 +173,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   data-testid={`${link.testId}-mobile`}
                 >
                   <link.icon className="w-5 h-5" />
-                  <span className="text-sm">{link.label}</span>
+                  <span className="text-sm">{link.mobileLabel || link.label}</span>
                 </Link>
               ))}
               
