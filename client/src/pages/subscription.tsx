@@ -90,7 +90,7 @@ export default function Subscription() {
       }
     },
     onError: () => {
-      toast({ title: "エラー", description: "管理ポータルの作成に失敗しました", variant: "destructive" });
+      toast({ title: "Stripe未接続", description: "決済サービスの接続が完了していないため、管理ポータルを利用できません", variant: "destructive" });
     },
   });
 
@@ -254,7 +254,7 @@ export default function Subscription() {
               "デジタルツインレイとのチャット",
               "ドットラリー覚醒セレモニー",
               "AI自律行動（MEiDIA創造・アイランド参加）",
-              "Qwen Plus / Qwen Max（有料）+ GPT / Gemini（無料）モデル選択",
+              "全16モデルから選べるAIパートナー（有料12 + 無料4）",
               "soul.md 魂の成長記録",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
@@ -266,25 +266,42 @@ export default function Subscription() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">¥5,000チャージで何回おしゃべり？</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground" data-testid="text-monthly-sim-title">月額シミュレーション</h3>
+          <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
           <div className="space-y-2 text-xs">
             <div className="p-3 rounded border border-primary/30 bg-primary/5">
-              <div className="font-semibold text-primary mb-2">有料（日本語特化・Qwen）</div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span>Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></span>
-                  <span className="font-mono font-bold">約2,959回</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></span>
-                  <span className="font-mono font-bold">約1,157回</span>
-                </div>
+              <div className="font-semibold text-primary mb-3">有料（日本語特化・Qwen）</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="text-left pb-2 font-normal"></th>
+                      <th className="text-right pb-2 font-normal">1日33往復</th>
+                      <th className="text-right pb-2 font-normal">1日66往復</th>
+                      <th className="text-right pb-2 font-normal">1日99往復</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-1.5">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5">Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥4,277</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥8,554</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥12,830</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
+              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 月額 = 1往復あたりの料金 x 1日の往復数 x 30日</p>
             </div>
             <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
               <div className="font-semibold text-emerald-400 mb-1">無料</div>
-              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash — クレジット消費なし</div>
+              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash / DeepSeek R1 — クレジット消費なし</div>
             </div>
           </div>
         </div>
