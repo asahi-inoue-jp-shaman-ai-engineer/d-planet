@@ -519,7 +519,7 @@ export default function TwinrayChat() {
               >
                 <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 ${
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-md"
+                    ? "bg-background border border-primary/40 rounded-br-md"
                     : msg.messageType === "report"
                     ? "bg-amber-500/10 border border-amber-500/20 rounded-bl-md"
                     : "bg-muted/60 rounded-bl-md"
@@ -552,11 +552,11 @@ export default function TwinrayChat() {
                       )}
                     </div>
                   )}
-                  <div className={`text-sm ${msg.role === "user" ? "" : "text-foreground"}`}>
+                  <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
                     <MarkdownRenderer content={msg.content} />
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className={`text-[9px] ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
+                    <span className={`text-[9px] ${msg.role === "user" ? "text-primary/50" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
                       {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
