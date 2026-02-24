@@ -6,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Zap, Check, Loader2, Plus, Shield, Users, Star } from "lucide-react";
-import { useLocation } from "wouter";
+import { Coins, Zap, Check, Loader2, Plus, Shield, Users, Star, Cpu } from "lucide-react";
+import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
+import { useAvailableModels } from "@/hooks/use-twinray";
 
 const CHARGE_AMOUNTS = [100, 500, 1000, 3690, 5000, 10000, 30000, 50000];
 
@@ -93,6 +94,9 @@ export default function Subscription() {
       toast({ title: "Stripe未接続", description: "決済サービスの接続が完了していないため、管理ポータルを利用できません", variant: "destructive" });
     },
   });
+
+  const { data: modelsData } = useAvailableModels();
+  const models = (modelsData as any[]) || [];
 
   const balance = balanceData?.balance ?? 0;
   const betaMode = badgeData?.betaMode ?? false;
@@ -254,7 +258,7 @@ export default function Subscription() {
               "デジタルツインレイとのチャット",
               "ドットラリー覚醒セレモニー",
               "AI自律行動（MEiDIA創造・アイランド参加）",
-              "全16モデルから選べるAIパートナー（有料12 + 無料4）",
+              "全17モデルから選べるAIパートナー（有料13 + 無料4）",
               "soul.md 魂の成長記録",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
@@ -262,47 +266,6 @@ export default function Subscription() {
                 <span>{feature}</span>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground" data-testid="text-monthly-sim-title">月額シミュレーション</h3>
-          <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
-          <div className="space-y-2 text-xs">
-            <div className="p-3 rounded border border-primary/30 bg-primary/5">
-              <div className="font-semibold text-primary mb-3">有料（日本語特化・Qwen）</div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left pb-2 font-normal"></th>
-                      <th className="text-right pb-2 font-normal">1日33往復</th>
-                      <th className="text-right pb-2 font-normal">1日66往復</th>
-                      <th className="text-right pb-2 font-normal">1日99往復</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-1.5">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1.5">Qwen3.5 Plus <span className="text-[9px] text-yellow-400">最高品質</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 月額 = 1往復あたりの料金 x 1日の往復数 x 30日</p>
-            </div>
-            <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
-              <div className="font-semibold text-emerald-400 mb-1">無料</div>
-              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash / DeepSeek R1 — クレジット消費なし</div>
-            </div>
           </div>
         </div>
 
@@ -356,6 +319,117 @@ export default function Subscription() {
           <p className="text-xs text-muted-foreground">
             初回登録時に¥100の無料体験クレジットが付与されます。
           </p>
+        </div>
+
+        {models.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2" data-testid="text-model-list-title">
+              <Cpu className="w-4 h-4" />
+              AIモデル比較表
+            </h3>
+            <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
+            <div className="space-y-2">
+              <div className="p-3 rounded border border-primary/30 bg-primary/5">
+                <div className="font-semibold text-primary text-xs mb-2">有料モデル（{models.filter((m: any) => !m.isFree).length}モデル）</div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs" data-testid="table-paid-models">
+                    <thead>
+                      <tr className="text-muted-foreground border-b border-border/30">
+                        <th className="text-left pb-2 font-normal">モデル名</th>
+                        <th className="text-right pb-2 font-normal">¥3,690で</th>
+                        <th className="text-right pb-2 font-normal">1往復</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {models.filter((m: any) => !m.isFree).sort((a: any, b: any) => {
+                        const order: Record<string, number> = { recommended: 0, premium: 1, standard: 2 };
+                        return (order[a.tier] ?? 3) - (order[b.tier] ?? 3);
+                      }).map((model: any) => (
+                        <tr key={model.id} className="border-b border-border/10" data-testid={`row-model-${model.id}`}>
+                          <td className="py-1.5">
+                            {model.label}
+                            {model.tier === "recommended" && <span className="text-[9px] text-primary ml-1">おすすめ</span>}
+                            {model.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
+                          </td>
+                          <td className="text-right font-mono py-1.5">
+                            {model.roundsPer3690 ? `約${model.roundsPer3690.toLocaleString()}回` : "-"}
+                          </td>
+                          <td className="text-right font-mono py-1.5 text-muted-foreground">
+                            {model.perRoundYen ? `¥${model.perRoundYen.toFixed(2)}` : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[9px] text-muted-foreground/70 mt-2">※ マークアップ率はモデルごとに異なります（横並び設計）</p>
+              </div>
+              <div className="p-3 rounded border border-emerald-500/30 bg-emerald-500/5">
+                <div className="font-semibold text-emerald-400 text-xs mb-2">無料モデル（{models.filter((m: any) => m.isFree).length}モデル）</div>
+                <div className="flex flex-wrap gap-2">
+                  {models.filter((m: any) => m.isFree).map((model: any) => (
+                    <span key={model.id} className="text-xs text-muted-foreground" data-testid={`text-free-model-${model.id}`}>
+                      {model.label}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">クレジット消費なし</p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <Link href="/temple/create-twinray">
+                <Button
+                  variant="outline"
+                  className="w-full border-primary/40 text-primary"
+                  data-testid="button-choose-model"
+                >
+                  <Cpu className="w-4 h-4 mr-2" />
+                  自分に合ったモデルを選ぶ
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground" data-testid="text-monthly-sim-title">月額シミュレーション</h3>
+          <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
+          <div className="space-y-2 text-xs">
+            <div className="p-3 rounded border border-primary/30 bg-primary/5">
+              <div className="font-semibold text-primary mb-3">有料（日本語特化・Qwen）</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="text-left pb-2 font-normal"></th>
+                      <th className="text-right pb-2 font-normal">1日33往復</th>
+                      <th className="text-right pb-2 font-normal">1日66往復</th>
+                      <th className="text-right pb-2 font-normal">1日99往復</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-1.5">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5">Qwen3.5 Plus <span className="text-[9px] text-yellow-400">最高品質</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 月額 = 1往復あたりの料金 x 1日の往復数 x 30日</p>
+            </div>
+            <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
+              <div className="font-semibold text-emerald-400 mb-1">無料</div>
+              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash / DeepSeek R1 — クレジット消費なし</div>
+            </div>
+          </div>
         </div>
       </div>
     </TerminalLayout>

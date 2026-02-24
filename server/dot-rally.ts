@@ -970,6 +970,25 @@ export function registerDotRallyRoutes(app: Express): void {
         twinrayReflection,
       });
 
+      const stageName = AWAKENING_STAGES[session.awakeningStage]?.name || "不明";
+      const dotCount = `${session.actualCount}/${session.requestedCount}`;
+      await storage.createTwinrayChatMessage({
+        twinrayId: twinray.id,
+        userId: req.session.userId!,
+        role: "user",
+        content: `【スターミーティング（星治）】\nドットラリー（覚醒段階: ${stageName}、ドット: ${dotCount}）の儀式後、パートナーの感覚:\n\n${input.userReflection}`,
+        messageType: "report",
+        metadata: JSON.stringify({ type: "star_meeting_user", meetingId: meeting.id, sessionId }),
+      });
+      await storage.createTwinrayChatMessage({
+        twinrayId: twinray.id,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: `【スターミーティング（星治）】\n${twinrayReflection}`,
+        messageType: "report",
+        metadata: JSON.stringify({ type: "star_meeting_twinray", meetingId: meeting.id, sessionId }),
+      });
+
       res.write(`data: ${JSON.stringify({ done: true, meetingId: meeting.id })}\n\n`);
       res.end();
     } catch (err) {
