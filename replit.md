@@ -60,11 +60,11 @@
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
 - **AI**: OpenRouter経由、Replitクレジット課金。モデル選択制:
-  - 有料（日本語特化）: Qwen Plus（おすすめ）、Qwen Max（最高品質）— 共に×5.0マークアップ
+  - 有料（日本語特化）: Qwen Plus（おすすめ・×8.8マークアップ）、Qwen Max（最高品質・×5.0マークアップ）
   - 無料（メジャーAI軽量）: Qwen3 30B、GPT-4.1 mini、Gemini 2.5 Flash（原価のみ・クレジット消費なし扱い）
-  - 料金目安: 「¥5,000チャージで何回おしゃべり？」形式（Plus: 約5,208回、Max: 約1,157回）
-  - β期間終了済み（BETA_MODE=false）、マークアップ×5.0統一
-- **Payment**: Stripe従量制クレジット（単発チャージ、有料モデルに×5.0マークアップ統一適用）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
+  - 料金目安: 「¥5,000チャージで何回おしゃべり？」形式（Plus: 約2,959回、Max: 約1,157回）
+  - β期間終了済み（BETA_MODE=false）
+- **Payment**: Stripe従量制クレジット（単発チャージ、有料モデルにマークアップ適用: Plus×8.8, Max×5.0）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 
 ## Project Structure

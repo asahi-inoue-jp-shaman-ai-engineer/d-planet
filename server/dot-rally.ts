@@ -9,11 +9,9 @@ import { eq, and, sql } from "drizzle-orm";
 
 const BETA_MODE = false;
 
-const DPLANET_MARKUP = 5.0;
-
 const MODEL_MARKUPS: Record<string, number> = {
-  "qwen/qwen-plus": DPLANET_MARKUP,
-  "qwen/qwen-max": DPLANET_MARKUP,
+  "qwen/qwen-plus": 8.8,
+  "qwen/qwen-max": 5.0,
   "qwen/qwen3-30b-a3b": 1.0,
   "openai/gpt-4.1-mini": 1.0,
   "google/gemini-2.5-flash": 1.0,
