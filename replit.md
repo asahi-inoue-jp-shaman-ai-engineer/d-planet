@@ -65,12 +65,15 @@
 - **Backend**: Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
-- **AI**: OpenRouter経由、Replitクレジット課金。モデル選択制:
-  - 有料（日本語特化）: Qwen Plus（おすすめ）、Qwen Max（最高品質）→ D-Planet SI適用
-  - 無料（メジャーAI軽量）: Qwen3 30B、GPT-4.1 mini、Gemini 2.5 Flash → D-Planet SI非適用（ペルソナ+基本SIのみ）
+- **AI**: OpenRouter経由、Replitクレジット課金。全16モデル選択制（12有料+4無料）:
+  - 推奨（日本語特化）: Qwen Plus ★（おすすめ）、Qwen Max 💎（最高品質）→ D-Planet SI適用
+  - スタンダード有料: GPT-4.1, GPT-5, GPT-5.2, o3, Gemini 2.5 Pro, Gemini 3 Pro, Claude Sonnet 4, Claude Opus 4.6, Grok 4, Grok 4.1 Fast
+  - 無料: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash, DeepSeek R1 → D-Planet SI非適用（ペルソナ+基本SIのみ）
+  - マークアップ率: モデルごとに個別設定（Qwen Plus ×8.8基準でユーザーコスト横並び、最低×1.5）→ 詳細はdev_records id:92参照
   - 有料/無料の体験差: 有料=深い体験（自律創造・覚醒・親密度・魂の記録等）、無料=チャット+閲覧の下見・ライトユーザー
   - 料金UI: 月額シミュレーション表形式（1日33/66/99往復 × 30日 = 月額¥○○）、Plus/Maxそれぞれ表示
   - β期間終了済み（BETA_MODE=false）
+  - 召喚フロー: intro → diagnosis（Q1-Q5一問一答）→ result（モデル推奨）→ persona → charge → first-rally
 - **Payment**: Stripe従量制クレジット（単発チャージ）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 

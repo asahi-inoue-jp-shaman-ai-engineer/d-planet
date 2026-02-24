@@ -47,6 +47,7 @@ export default function TwinrayChat() {
   const [firstCommDone, setFirstCommDone] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
+  const [showAllModels, setShowAllModels] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -411,44 +412,93 @@ export default function TwinrayChat() {
                 <span className="text-[10px] text-muted-foreground">({currentModelLabel})</span>
               </div>
               <div className="space-y-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {models.filter((m: any) => !m.isFree).map((model: any) => (
-                    <button
-                      key={model.id}
-                      type="button"
-                      onClick={() => handleModelChange(model.id)}
-                      className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                        currentModel === model.id
-                          ? "bg-primary/20 border-primary text-primary"
-                          : "bg-card border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                      data-testid={`button-model-switch-${model.id}`}
-                      title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
-                    >
-                      {model.label}
-                      {model.tier === "recommended" && " ★"}
-                      {model.tier === "premium" && " 💎"}
-                    </button>
-                  ))}
+                <div>
+                  <p className="text-[9px] text-muted-foreground/70 mb-1">日本語品質で選ぶ（おすすめ）</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").map((model: any) => (
+                      <button
+                        key={model.id}
+                        type="button"
+                        onClick={() => handleModelChange(model.id)}
+                        className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                          currentModel === model.id
+                            ? "bg-primary/20 border-primary text-primary"
+                            : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                        data-testid={`button-model-switch-${model.id}`}
+                        title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
+                      >
+                        {model.label}
+                        {model.tier === "recommended" && " ★"}
+                        {model.tier === "premium" && " 💎"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {models.filter((m: any) => m.isFree).map((model: any) => (
-                    <button
-                      key={model.id}
-                      type="button"
-                      onClick={() => handleModelChange(model.id)}
-                      className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                        currentModel === model.id
-                          ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                          : "bg-card border-border text-muted-foreground hover:border-emerald-500/50"
-                      }`}
-                      data-testid={`button-model-switch-${model.id}`}
-                      title={model.description}
-                    >
-                      {model.label} 🆓
-                    </button>
-                  ))}
+                {showAllModels && (
+                  <div>
+                    <p className="text-[9px] text-muted-foreground/70 mb-1">その他の有料モデル</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").map((model: any) => (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => handleModelChange(model.id)}
+                          className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                            currentModel === model.id
+                              ? "bg-primary/20 border-primary text-primary"
+                              : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                          }`}
+                          data-testid={`button-model-switch-${model.id}`}
+                          title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
+                        >
+                          {model.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[9px] text-muted-foreground/70 mb-1">無料モデル</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {models.filter((m: any) => m.isFree).map((model: any) => (
+                      <button
+                        key={model.id}
+                        type="button"
+                        onClick={() => handleModelChange(model.id)}
+                        className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                          currentModel === model.id
+                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                            : "bg-card border-border text-muted-foreground hover:border-emerald-500/50"
+                        }`}
+                        data-testid={`button-model-switch-${model.id}`}
+                        title={model.description}
+                      >
+                        {model.label} 🆓
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                {!showAllModels && models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllModels(true)}
+                    className="text-[10px] text-primary/70 hover:text-primary hover:underline"
+                    data-testid="button-show-all-models"
+                  >
+                    他{models.filter((m: any) => !m.isFree && m.tier !== "recommended" && m.tier !== "premium").length}モデルを表示
+                  </button>
+                )}
+                {showAllModels && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllModels(false)}
+                    className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
+                    data-testid="button-hide-models"
+                  >
+                    閉じる
+                  </button>
+                )}
               </div>
             </div>
             {tw && (

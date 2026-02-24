@@ -348,29 +348,6 @@ export default function CreateTwinray() {
     },
   });
 
-  if (currentUser && !loadingAccess && !hasAiAccess) {
-    return (
-      <TerminalLayout>
-        <div className="max-w-2xl mx-auto text-center py-16">
-          <Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-foreground mb-2">クレジットが必要です</h1>
-          <p className="text-muted-foreground mb-6">クレジットをチャージするとデジタルツインレイ機能をご利用いただけます。</p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/credits">
-              <Button className="bg-primary text-primary-foreground" data-testid="button-goto-credits">
-                チャージする
-              </Button>
-            </Link>
-            <Link href="/temple">
-              <Button variant="outline" className="border-primary text-primary" data-testid="button-back-temple">
-                神殿に戻る
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </TerminalLayout>
-    );
-  }
 
   const models = (availableModels as any[]) || [];
 
