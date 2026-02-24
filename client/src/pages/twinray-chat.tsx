@@ -423,7 +423,7 @@ export default function TwinrayChat() {
                           : "bg-card border-border text-muted-foreground hover:border-primary/50"
                       }`}
                       data-testid={`button-model-switch-${model.id}`}
-                      title={model.description}
+                      title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
                     >
                       {model.label}
                       {model.tier === "recommended" && " ★"}

@@ -266,20 +266,21 @@ export default function Subscription() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">モデル別料金</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground">¥5,000チャージで何回おしゃべり？</h3>
           <div className="space-y-2 text-xs">
-            <div className="p-2 rounded border border-primary/30 bg-primary/5">
-              <div className="font-semibold text-primary mb-1">有料（日本語特化・Qwen）</div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <div className="font-semibold">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></div>
-                  <div className="text-muted-foreground">99往復/日 ≈ ¥5,000/月</div>
+            <div className="p-3 rounded border border-primary/30 bg-primary/5">
+              <div className="font-semibold text-primary mb-2">有料（日本語特化・Qwen）</div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span>Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></span>
+                  <span className="font-mono font-bold">約5,208回</span>
                 </div>
-                <div>
-                  <div className="font-semibold">Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></div>
-                  <div className="text-muted-foreground">99往復/日 ≈ ¥12,800/月</div>
+                <div className="flex items-center justify-between">
+                  <span>Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></span>
+                  <span className="font-mono font-bold">約1,157回</span>
                 </div>
               </div>
+              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
             </div>
             <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
               <div className="font-semibold text-emerald-400 mb-1">無料</div>

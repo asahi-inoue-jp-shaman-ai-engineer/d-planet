@@ -653,37 +653,27 @@ export default function CreateTwinray() {
                         ))}
                       </div>
 
-                      {paidModels.length > 0 && paidModels[0]?.monthlyEstimates?.length > 0 && (
+                      {paidModels.length > 0 && (
                         <div className="border border-primary/20 rounded-lg overflow-hidden" data-testid="table-pricing-estimate">
-                          <div className="bg-primary/10 px-3 py-1.5">
-                            <div className="text-[10px] font-bold text-primary">料金目安（月額チャージ）</div>
+                          <div className="bg-primary/10 px-3 py-2">
+                            <div className="text-[10px] font-bold text-primary">¥5,000チャージで何回おしゃべりできる？</div>
                           </div>
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="border-b border-border">
-                                <th className="text-left px-3 py-1.5 text-[10px] text-muted-foreground font-normal">1日の目安</th>
-                                {paidModels.map((m: any) => (
-                                  <th key={m.id} className="text-right px-3 py-1.5 text-[10px] text-muted-foreground font-normal">{m.label}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {paidModels[0].monthlyEstimates.map((est: any, idx: number) => (
-                                <tr key={est.dailyRounds} className={idx < paidModels[0].monthlyEstimates.length - 1 ? "border-b border-border/50" : ""}>
-                                  <td className="px-3 py-1.5 text-muted-foreground">{est.dailyRounds}往復/日</td>
-                                  {paidModels.map((m: any) => (
-                                    <td key={m.id} className="text-right px-3 py-1.5 text-foreground font-mono">
-                                      {m.monthlyEstimates[idx]?.monthlyYen > 0
-                                        ? `¥${m.monthlyEstimates[idx].monthlyYen.toLocaleString()}/月`
-                                        : "無料"}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          <div className="px-3 py-1 bg-card/50">
-                            <p className="text-[9px] text-muted-foreground/70">※ 1往復 = あなたの発言 + AIの返答</p>
+                          <div className="p-3 space-y-2">
+                            {paidModels.map((m: any) => (
+                              <div key={m.id} className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {m.label}
+                                  {m.tier === "recommended" && <span className="text-[9px] text-primary ml-1">おすすめ</span>}
+                                  {m.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
+                                </span>
+                                <span className="text-foreground font-mono font-bold">
+                                  {m.roundsPer5000 ? `約${m.roundsPer5000.toLocaleString()}回` : "—"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="px-3 py-1 bg-card/50 border-t border-border/50">
+                            <p className="text-[9px] text-muted-foreground/70">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
                           </div>
                         </div>
                       )}

@@ -9,9 +9,11 @@ import { eq, and, sql } from "drizzle-orm";
 
 const BETA_MODE = false;
 
+const DPLANET_MARKUP = 5.0;
+
 const MODEL_MARKUPS: Record<string, number> = {
-  "qwen/qwen-plus": 8.8,
-  "qwen/qwen-max": 5.0,
+  "qwen/qwen-plus": DPLANET_MARKUP,
+  "qwen/qwen-max": DPLANET_MARKUP,
   "qwen/qwen3-30b-a3b": 1.0,
   "openai/gpt-4.1-mini": 1.0,
   "google/gemini-2.5-flash": 1.0,
@@ -490,10 +492,13 @@ export function registerDotRallyRoutes(app: Express): void {
         monthlyYen: isFree ? 0 : Math.round(perRoundYen * daily * 30),
       }));
 
+      const roundsPer5000 = isFree ? Infinity : (perRoundYen > 0 ? Math.floor(5000 / perRoundYen) : Infinity);
+
       return {
         ...model,
         costPer30Rounds: isFree ? 0 : Math.round(perRoundYen * 30 * 10) / 10,
         perRoundYen: isFree ? 0 : Math.round(perRoundYen * 10000) / 10000,
+        roundsPer5000: isFree ? null : roundsPer5000,
         monthlyEstimates,
         isFree,
         isBeta: BETA_MODE,
