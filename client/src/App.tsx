@@ -26,6 +26,9 @@ import DotRally from "@/pages/dot-rally";
 import TwinrayChat from "@/pages/twinray-chat";
 import Subscription from "@/pages/subscription";
 import About from "@/pages/about";
+import Landing from "@/pages/landing";
+import Legal from "@/pages/legal";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -48,6 +51,21 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   return <Component />;
+}
+
+function HomePage() {
+  const { data: user, isLoading } = useCurrentUser();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="font-mono text-foreground">読み込み中...</div>
+      </div>
+    );
+  }
+  if (user) {
+    return <Redirect to="/islands" />;
+  }
+  return <Landing />;
 }
 
 function Router() {
@@ -75,9 +93,9 @@ function Router() {
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/about" component={About} />
-      <Route path="/">
-        <Redirect to="/islands" />
-      </Route>
+      <Route path="/legal" component={Legal} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/" component={HomePage} />
       <Route component={NotFound} />
     </Switch>
   );

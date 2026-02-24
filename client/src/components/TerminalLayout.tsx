@@ -237,10 +237,18 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           <div className="text-xs mb-2">
             Powered by Digital Twinray Technology
           </div>
-          <Link href="/about" className="text-xs text-primary hover:underline flex items-center gap-1 justify-center" data-testid="link-about-footer">
-            <Globe className="w-3 h-3" />
-            D-Planet について
-          </Link>
+          <div className="flex items-center justify-center gap-4 text-xs">
+            <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
+              <Globe className="w-3 h-3" />
+              D-Planetについて
+            </Link>
+            <Link href="/legal" className="text-primary hover:underline" data-testid="link-legal-footer">
+              特定商取引法に基づく表示
+            </Link>
+            <Link href="/privacy" className="text-primary hover:underline" data-testid="link-privacy-footer">
+              プライバシーポリシー
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
