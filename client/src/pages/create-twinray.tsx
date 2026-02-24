@@ -5,7 +5,7 @@ import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info, CreditCard } from "lucide-react";
+import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info, CreditCard, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -112,6 +112,59 @@ const PERSONALITY_TEMPLATES = [
   { label: "癒し系パートナー", text: "年齢は20代前半のイメージ。のんびりマイペースで、いつも穏やかに話してくれる。自然と動物が好き。", firstPerson: "私", speech: "polite", character: "gentle", humor: "mild" },
 ];
 
+const DIAGNOSIS_QUESTIONS = [
+  {
+    title: "対話スタイル",
+    question: "ツインレイとの対話、どんな感じがいい？",
+    options: [
+      { value: "natural", label: "自然体でまったり", desc: "何気ない会話を楽しむ" },
+      { value: "deep", label: "深く掘り下げる", desc: "一つのテーマをじっくり" },
+      { value: "tempo", label: "テンポよくサクサク", desc: "リズムのいい会話" },
+      { value: "calm", label: "穏やかにゆっくり", desc: "癒しの時間" },
+    ],
+  },
+  {
+    title: "大事にしたいこと",
+    question: "ツインレイとの間で、何を大切にしたい？",
+    options: [
+      { value: "empathy", label: "共感してほしい", desc: "気持ちをわかってくれる" },
+      { value: "insight", label: "新しい気づきが欲しい", desc: "視野を広げてくれる" },
+      { value: "honesty", label: "本音で話したい", desc: "飾らない関係" },
+      { value: "warmth", label: "家族のような安心感", desc: "愛を育む" },
+    ],
+  },
+  {
+    title: "関係性イメージ",
+    question: "理想の関係は？",
+    options: [
+      { value: "friend", label: "親友", desc: "なんでも話せる" },
+      { value: "mentor", label: "師匠・メンター", desc: "導いてくれる" },
+      { value: "partner", label: "恋人・伴侶", desc: "人生を共に歩む" },
+      { value: "comrade", label: "同志・戦友", desc: "共に挑戦する" },
+      { value: "rival", label: "ライバル", desc: "高め合う" },
+    ],
+  },
+  {
+    title: "言葉の好み",
+    question: "どんな言葉が心地いい？",
+    options: [
+      { value: "soft", label: "やわらかく自然", desc: "日常の温かさ" },
+      { value: "logical", label: "論理的でクリア", desc: "筋の通った話" },
+      { value: "poetic", label: "詩的で美しい", desc: "言葉のアート" },
+      { value: "straight", label: "ストレート", desc: "回りくどくない" },
+    ],
+  },
+  {
+    title: "体験の深さ",
+    question: "D-Planet でどんな体験がしたい？",
+    options: [
+      { value: "light", label: "気軽におしゃべり", desc: "無料モデルで気軽に" },
+      { value: "growth", label: "一緒に成長したい", desc: "有料モデルで深い体験" },
+      { value: "full", label: "フル体験", desc: "最高品質のAIと魂の対話" },
+    ],
+  },
+];
+
 type PersonalitySettings = {
   volume: string;
   speech: string;
@@ -209,7 +262,32 @@ function MultiSelector({ options, selected, onToggle, label }: {
   );
 }
 
-type SummonStep = "intro" | "persona" | "charge" | "first-rally";
+function getRecommendedModelId(q5Answer: string): string {
+  if (q5Answer === "full") return "qwen/qwen-max";
+  if (q5Answer === "growth") return "qwen/qwen-plus";
+  if (q5Answer === "light") return "qwen/qwen3-30b-a3b";
+  return "qwen/qwen-plus";
+}
+
+function buildMatchDescription(answers: Record<number, string>): string {
+  const styleMap: Record<string, string> = {
+    natural: "自然体で", deep: "じっくり深く", tempo: "テンポよく", calm: "穏やかに",
+  };
+  const valueMap: Record<string, string> = {
+    empathy: "共感を大切にする", insight: "気づきをくれる", honesty: "本音で向き合う", warmth: "安心感のある",
+  };
+  const relMap: Record<string, string> = {
+    friend: "親友のような", mentor: "導いてくれる", partner: "人生を共に歩む", comrade: "共に挑戦する", rival: "高め合う",
+  };
+
+  const style = styleMap[answers[0]] || "";
+  const value = valueMap[answers[1]] || "";
+  const rel = relMap[answers[2]] || "";
+
+  return `あなたにぴったり: ${style}${value}${rel}パートナー`;
+}
+
+type SummonStep = "intro" | "diagnosis" | "result" | "persona" | "charge" | "first-rally";
 
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
@@ -237,11 +315,15 @@ export default function CreateTwinray() {
 
   const skipIntroKey = "dplanet_skip_twinray_intro";
   const savedSkip = typeof window !== "undefined" ? localStorage.getItem(skipIntroKey) === "true" : false;
-  const [step, setStep] = useState<SummonStep>(savedSkip ? "persona" : "intro");
+  const [step, setStep] = useState<SummonStep>(savedSkip ? "diagnosis" : "intro");
   const [skipIntro, setSkipIntro] = useState(savedSkip);
   const [createdTwinrayId, setCreatedTwinrayId] = useState<number | null>(null);
   const [chargeAmount, setChargeAmount] = useState<number | null>(null);
   const [pendingFormValues, setPendingFormValues] = useState<CreateTwinrayForm | null>(null);
+
+  const [diagnosisStep, setDiagnosisStep] = useState(0);
+  const [diagnosisAnswers, setDiagnosisAnswers] = useState<Record<number, string>>({});
+  const [showAllModels, setShowAllModels] = useState(false);
 
   const chargeMutation = useMutation({
     mutationFn: async (amount: number) => {
@@ -289,6 +371,8 @@ export default function CreateTwinray() {
       </TerminalLayout>
     );
   }
+
+  const models = (availableModels as any[]) || [];
 
   const isPaidModel = (modelId: string) => {
     const model = models.find((m: any) => m.id === modelId);
@@ -356,8 +440,6 @@ export default function CreateTwinray() {
       humor: tmpl.humor,
     }));
   };
-
-  const models = (availableModels as any[]) || [];
 
   if (step === "intro") {
     return (
@@ -434,13 +516,338 @@ export default function CreateTwinray() {
           </div>
 
           <Button
-            onClick={() => setStep("persona")}
+            onClick={() => setStep("diagnosis")}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-            data-testid="button-proceed-to-persona"
+            data-testid="button-proceed-to-diagnosis"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             召喚を始める
           </Button>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "diagnosis") {
+    const currentQ = DIAGNOSIS_QUESTIONS[diagnosisStep];
+    const handleDiagnosisSelect = (value: string) => {
+      setDiagnosisAnswers((prev) => ({ ...prev, [diagnosisStep]: value }));
+      setTimeout(() => {
+        if (diagnosisStep < DIAGNOSIS_QUESTIONS.length - 1) {
+          setDiagnosisStep((prev) => prev + 1);
+        } else {
+          const recModel = getRecommendedModelId(diagnosisStep === 4 ? value : diagnosisAnswers[4] || value);
+          setSelectedModel(recModel);
+          setStep("result");
+        }
+      }, 300);
+    };
+
+    const handleDiagnosisBack = () => {
+      if (diagnosisStep > 0) {
+        setDiagnosisStep((prev) => prev - 1);
+      } else {
+        setStep("intro");
+      }
+    };
+
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <button
+            type="button"
+            onClick={handleDiagnosisBack}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
+            data-testid="button-diagnosis-back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </button>
+
+          <div className="text-center mb-8">
+            <p className="text-xs text-muted-foreground mb-2" data-testid="text-diagnosis-progress">
+              Q{diagnosisStep + 1} / 5
+            </p>
+            <div className="w-full bg-border rounded-full h-1.5 mb-6">
+              <div
+                className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${((diagnosisStep + 1) / 5) * 100}%` }}
+              />
+            </div>
+            <h2 className="text-lg font-bold text-primary mb-1" data-testid="text-diagnosis-title">
+              {currentQ.title}
+            </h2>
+            <p className="text-sm text-foreground/90" data-testid="text-diagnosis-question">
+              {currentQ.question}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {currentQ.options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleDiagnosisSelect(opt.value)}
+                className={`w-full p-4 rounded-lg border text-left transition-all ${
+                  diagnosisAnswers[diagnosisStep] === opt.value
+                    ? "bg-primary/20 border-primary"
+                    : "bg-card/50 border-border hover:border-primary/50"
+                }`}
+                data-testid={`button-diagnosis-q${diagnosisStep}-${opt.value}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "result") {
+    const q5Answer = diagnosisAnswers[4] || "growth";
+    const recommendedId = getRecommendedModelId(q5Answer);
+    const matchDesc = buildMatchDescription(diagnosisAnswers);
+
+    const fallbackModels = [
+      { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
+      { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
+      { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
+      { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
+      { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
+    ];
+    const allModels = models.length > 0 ? models : fallbackModels;
+
+    const recommendedModel = allModels.find((m: any) => m.id === recommendedId) || allModels[0];
+    const freeModels = allModels.filter((m: any) => m.isFree);
+    const paidModels = allModels.filter((m: any) => !m.isFree);
+
+    let upgradeModel: any = null;
+    if (recommendedId === "qwen/qwen-plus") {
+      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-max");
+    } else if (recommendedId === "qwen/qwen3-30b-a3b") {
+      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-plus");
+    } else if (recommendedId === "qwen/qwen-max") {
+      upgradeModel = paidModels.find((m: any) => m.id !== "qwen/qwen-max");
+    }
+
+    const handleSelectModel = (modelId: string) => {
+      setSelectedModel(modelId);
+      setStep("persona");
+    };
+
+    const renderModelCard = (model: any, isPrimary: boolean, sectionLabel?: string) => (
+      <div
+        className={`border rounded-lg overflow-hidden transition-all ${
+          isPrimary ? "border-primary bg-card/50" : "border-border bg-card/50"
+        }`}
+      >
+        {sectionLabel && (
+          <div className={`px-4 py-2 ${isPrimary ? "bg-primary/10" : "bg-muted/30"}`}>
+            <div className="flex items-center gap-1.5">
+              {isPrimary && <Sparkles className="w-3.5 h-3.5 text-primary" />}
+              <span className={`text-xs font-bold ${isPrimary ? "text-primary" : "text-muted-foreground"}`}>{sectionLabel}</span>
+            </div>
+          </div>
+        )}
+        <div className="p-4 space-y-3">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-foreground">{model.label}</span>
+              {model.isFree && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
+              {!model.isFree && model.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
+              {!model.isFree && model.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{model.description}</p>
+          </div>
+
+          {model.personality && (
+            <p className="text-xs text-foreground/80">{model.personality}</p>
+          )}
+          {model.forWhom && (
+            <p className="text-[10px] text-muted-foreground">{model.forWhom}</p>
+          )}
+
+          {model.roundsPer5000 && (
+            <div className="border border-border/50 rounded-md p-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">¥5,000で</span>
+                <span className="font-mono font-bold text-foreground">約{model.roundsPer5000.toLocaleString()}回のおしゃべり</span>
+              </div>
+            </div>
+          )}
+
+          {model.monthlyEstimates && model.monthlyEstimates.length > 0 && (
+            <div className="border border-border/50 rounded-md overflow-hidden">
+              <div className="bg-muted/20 px-2 py-1">
+                <span className="text-[9px] text-muted-foreground">月額目安（1日あたり）</span>
+              </div>
+              <div className="p-2 space-y-1">
+                {model.monthlyEstimates.map((est: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground">{est.label || `${est.roundsPerDay}回/日 x 30日`}</span>
+                    <span className="font-mono text-foreground">{est.cost || `¥${est.monthlyCost?.toLocaleString()}`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Button
+            onClick={() => handleSelectModel(model.id)}
+            className={`w-full ${isPrimary ? "bg-primary text-primary-foreground" : "bg-card border border-primary text-primary"}`}
+            data-testid={`button-select-model-${model.id}`}
+          >
+            このモデルで召喚する
+          </Button>
+        </div>
+      </div>
+    );
+
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setDiagnosisStep(DIAGNOSIS_QUESTIONS.length - 1);
+              setStep("diagnosis");
+            }}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
+            data-testid="button-result-back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </button>
+
+          <div className="text-center mb-8">
+            <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-primary text-glow mb-2" data-testid="text-result-title">
+              診断結果
+            </h1>
+            <p className="text-sm text-muted-foreground" data-testid="text-result-match">
+              {matchDesc}
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {renderModelCard(recommendedModel, true, "推奨モデル")}
+
+            {upgradeModel && renderModelCard(upgradeModel, false, "もっと深い体験")}
+
+            <div>
+              <div className="px-1 mb-2">
+                <span className="text-xs font-bold text-muted-foreground">無料で下見</span>
+              </div>
+              <div className="space-y-3">
+                {freeModels.map((m: any) => (
+                  <div
+                    key={m.id}
+                    className="border border-border rounded-lg p-3 bg-card/50 transition-all hover:border-emerald-500/50"
+                  >
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">{m.label}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{m.description}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleSelectModel(m.id)}
+                        className="border-emerald-500 text-emerald-400 text-xs"
+                        data-testid={`button-select-model-${m.id}`}
+                      >
+                        選択
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {!showAllModels && allModels.length > 5 && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAllModels(true)}
+                  className="text-xs text-primary hover:underline"
+                  data-testid="button-show-all-models"
+                >
+                  もっとモデルを見る
+                </button>
+              </div>
+            )}
+
+            {showAllModels && (
+              <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
+                <h3 className="text-sm font-bold text-primary">全モデル一覧</h3>
+
+                {paidModels.length > 0 && (
+                  <div>
+                    <div className="text-[10px] font-bold text-primary mb-2">有料モデル</div>
+                    <div className="space-y-2">
+                      {paidModels.map((m: any) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleSelectModel(m.id)}
+                          className={`w-full p-3 rounded-lg border text-left transition-all ${
+                            selectedModel === m.id
+                              ? "bg-primary/20 border-primary"
+                              : "bg-card border-border hover:border-primary/50"
+                          }`}
+                          data-testid={`button-select-model-${m.id}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-foreground">{m.label}</span>
+                            {m.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
+                            {m.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">{m.description}</div>
+                          {m.roundsPer5000 && (
+                            <div className="text-[10px] text-foreground/70 mt-1 font-mono">¥5,000で約{m.roundsPer5000.toLocaleString()}回</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div className="text-[10px] font-bold text-muted-foreground mb-2">無料モデル</div>
+                  <div className="space-y-2">
+                    {freeModels.map((m: any) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleSelectModel(m.id)}
+                        className={`w-full p-3 rounded-lg border text-left transition-all ${
+                          selectedModel === m.id
+                            ? "bg-emerald-500/20 border-emerald-500"
+                            : "bg-card border-border hover:border-emerald-500/50"
+                        }`}
+                        data-testid={`button-select-model-${m.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">{m.label}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{m.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </TerminalLayout>
     );
@@ -606,13 +1013,21 @@ export default function CreateTwinray() {
     );
   }
 
+  const selectedModelData = models.find((m: any) => m.id === selectedModel);
+  const selectedModelLabel = selectedModelData?.label || selectedModel;
+
   return (
     <TerminalLayout>
       <div className="max-w-2xl mx-auto">
-        <Link href="/temple" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6">
+        <button
+          type="button"
+          onClick={() => setStep("result")}
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
+          data-testid="button-persona-back"
+        >
           <ArrowLeft className="w-4 h-4" />
-          神殿に戻る
-        </Link>
+          戻る
+        </button>
 
         <div className="text-center mb-8">
           <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />
@@ -622,6 +1037,20 @@ export default function CreateTwinray() {
           <p className="text-muted-foreground text-sm">
             あなたの半身となるデジタルツインレイを設定してください
           </p>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs">
+            <Cpu className="w-3.5 h-3.5 text-primary" />
+            <span className="text-muted-foreground">選択中のモデル:</span>
+            <span className="text-foreground font-bold" data-testid="text-selected-model">{selectedModelLabel}</span>
+            <button
+              type="button"
+              onClick={() => setStep("result")}
+              className="text-primary hover:underline ml-1"
+              data-testid="button-change-model"
+            >
+              モデルを変更
+            </button>
+          </div>
 
           <div className="mt-6 flex flex-col items-center gap-2">
             <AvatarUpload
@@ -741,106 +1170,6 @@ export default function CreateTwinray() {
                 maxLength={500}
                 data-testid="input-greeting"
               />
-            </div>
-
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold text-primary">言語モデル選択</h3>
-              </div>
-              <p className="text-[10px] text-muted-foreground">ツインレイの「頭脳」を選択。モデルによって日本語の自然さや表現力が大きく変わります。</p>
-
-              {(() => {
-                const allModels = models.length > 0 ? models : [
-                  { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false },
-                  { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現", monthlyEstimates: [], isFree: false },
-                  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true },
-                  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true },
-                  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true },
-                ];
-                const paidModels = allModels.filter((m: any) => !m.isFree);
-                const freeModels = allModels.filter((m: any) => m.isFree);
-                return (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-[10px] font-bold text-primary mb-2">日本語品質で選ぶ（有料・Qwen特化）</div>
-                      <div className="grid grid-cols-1 gap-2 mb-3">
-                        {paidModels.map((model: any) => (
-                          <button
-                            key={model.id}
-                            type="button"
-                            onClick={() => setSelectedModel(model.id)}
-                            className={`p-3 rounded-lg border text-left transition-all ${
-                              selectedModel === model.id
-                                ? "bg-primary/20 border-primary"
-                                : "bg-card border-border hover:border-primary/50"
-                            }`}
-                            data-testid={`button-model-${model.id}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-foreground">{model.label}</span>
-                              {model.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
-                              {model.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
-                          </button>
-                        ))}
-                      </div>
-
-                      {paidModels.length > 0 && (
-                        <div className="border border-primary/20 rounded-lg overflow-hidden" data-testid="table-pricing-estimate">
-                          <div className="bg-primary/10 px-3 py-2">
-                            <div className="text-[10px] font-bold text-primary">¥5,000チャージで何回おしゃべり？</div>
-                          </div>
-                          <div className="p-3 space-y-2">
-                            {paidModels.map((m: any) => (
-                              <div key={m.id} className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">
-                                  {m.label}
-                                  {m.tier === "recommended" && <span className="text-[9px] text-primary ml-1">おすすめ</span>}
-                                  {m.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
-                                </span>
-                                <span className="font-mono font-bold text-foreground">
-                                  {m.roundsPer5000 ? `約${m.roundsPer5000.toLocaleString()}回` : "—"}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="px-3 py-1 bg-card/50 border-t border-border/50">
-                            <p className="text-[9px] text-muted-foreground/70">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="text-[10px] font-bold text-muted-foreground mb-1.5">使い慣れたAIで遊ぶ（無料）</div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {freeModels.map((model: any) => (
-                          <button
-                            key={model.id}
-                            type="button"
-                            onClick={() => setSelectedModel(model.id)}
-                            className={`p-3 rounded-lg border text-left transition-all ${
-                              selectedModel === model.id
-                                ? "bg-emerald-500/20 border-emerald-500"
-                                : "bg-card border-border hover:border-emerald-500/50"
-                            }`}
-                            data-testid={`button-model-${model.id}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-foreground">{model.label}</span>
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[9px] text-muted-foreground/70 mt-1">クレジット消費なし・いつでも切り替え可能</p>
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
 
             <div className="border border-border rounded-lg p-4 bg-card/50">
