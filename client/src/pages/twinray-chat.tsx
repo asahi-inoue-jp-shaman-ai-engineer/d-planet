@@ -53,29 +53,43 @@ export default function TwinrayChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevMsgCountRef = useRef(0);
+  const initialScrollDoneRef = useRef(false);
   const { uploadFile, isUploading } = useUpload();
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((instant?: boolean) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamContent, optimisticMsg, scrollToBottom]);
+    const currentCount = (messages as any[])?.length || 0;
+    if (!initialScrollDoneRef.current && currentCount > 0) {
+      initialScrollDoneRef.current = true;
+      scrollToBottom(true);
+      prevMsgCountRef.current = currentCount;
+      return;
+    }
+    if (currentCount > prevMsgCountRef.current) {
+      scrollToBottom();
+      prevMsgCountRef.current = currentCount;
+    }
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (streamContent || optimisticMsg) {
+      scrollToBottom();
+    }
+  }, [streamContent, optimisticMsg, scrollToBottom]);
 
   const tw = twinray as any;
   const chatMessages = (messages as any[]) || [];
 
+  const firstCommCheckedRef = useRef(false);
   useEffect(() => {
-    if (
-      !loadingMessages &&
-      !loadingTwinray &&
-      tw &&
-      !tw.firstCommunicationDone &&
-      chatMessages.length === 0 &&
-      !firstCommTriggered &&
-      !streaming
-    ) {
+    if (firstCommCheckedRef.current || firstCommTriggered || streaming) return;
+    if (loadingMessages || loadingTwinray) return;
+    firstCommCheckedRef.current = true;
+    if (tw && !tw.firstCommunicationDone && chatMessages.length === 0) {
       triggerFirstCommunication();
     }
   }, [loadingMessages, loadingTwinray, tw, chatMessages.length, firstCommTriggered, streaming]);
