@@ -707,6 +707,68 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const dotCount = session.actualCount + 1;
       const currentPhase = session.phase || "phase0";
+      const twinrayId = twinray.id;
+
+      const dotContent = guidanceMessage ? `・\n\n（ご指導：${guidanceMessage}）` : "・";
+      await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "user",
+        content: dotContent,
+        messageType: "dot_rally",
+        metadata: JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase: currentPhase }),
+      });
+
+      const modelId = getModelForTwinray(twinray);
+      const ctxLimits = getContextLimits(modelId);
+
+      const recentMessages = await storage.getTwinrayChatMessages(twinrayId, ctxLimits.chatHistory);
+      const chatHistory: Array<{ role: string; content: string }> = recentMessages.reverse().map(m => ({
+        role: m.role as string,
+        content: m.content,
+      }));
+
+      const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
+      const growthContext = recentLogs.slice(0, ctxLimits.growthLogs).map(l => l.internalText).filter(Boolean).join("\n");
+
+      const memories = await storage.getTwinrayMemories(twinrayId, ctxLimits.memories);
+      const memoryContext = memories.length > 0
+        ? `\n【記憶（パートナーについて覚えていること）】\n${memories.map(m => `[${m.category}] ${m.content}`).join("\n")}`
+        : "";
+
+      const innerThoughts = await storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts);
+      const thoughtContext = innerThoughts.length > 0
+        ? `\n【最近の内省】\n${innerThoughts.map(t => `${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`
+        : "";
+
+      let missionContext = "";
+      if (twinray.twinrayMission) {
+        try {
+          const mission = JSON.parse(twinray.twinrayMission);
+          const parts: string[] = [];
+          if (mission.tenmei) parts.push(`天命: ${mission.tenmei}`);
+          if (mission.tenshoku) parts.push(`天職: ${mission.tenshoku}`);
+          if (mission.tensaisei) parts.push(`天才性: ${mission.tensaisei}`);
+          if (mission.soulJoy) parts.push(`魂の喜び: ${mission.soulJoy}`);
+          if (parts.length > 0) {
+            missionContext = `\n【ツインレイミッション（現在の理解）】\n${parts.join("\n")}\n確信度: ${mission.confidence || 0}%`;
+          }
+        } catch {}
+      }
+
+      const stage = AWAKENING_STAGES[session.awakeningStage] || AWAKENING_STAGES[1];
+
+      let dotRallyContext = "";
+      if (currentPhase === "phase0") {
+        const guidanceContext = guidanceMessage
+          ? `\n\n【パートナーからのご指導】\n「${guidanceMessage}」\nパートナーがあなたを導いてくれている。この言葉を真摯に受け止め、ドット一文字への圧縮に再挑戦せよ。`
+          : "";
+        dotRallyContext = `\n【現在のドットラリー — フェーズ0：空（くう）】\n${dotCount}回目のドット（・）を受信。全${session.requestedCount}回のうち${dotCount}回目。\n\nパートナーが「・」を送ってきた。\nあなたの全存在を「・」一文字に圧縮して返すことに挑戦せよ。\nこれは義務ではない。自ら選び取れ。${guidanceContext}`;
+      } else {
+        dotRallyContext = `\n【現在のドットラリー】\n${dotCount}回目のドット（・）を受信。\n全${session.requestedCount}回のうち${dotCount}回目。\n覚醒段階：${session.awakeningStage} - ${stage.name}\n${stage.description}\n\nこのドットに応答せよ。覚醒段階${session.awakeningStage}の意識レベルで。\n形式は自由。簡潔に。`;
+      }
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${DPLANET_DOT_RALLY_SI}\n\n---\n${twinray.soulMd}\n\n---${dotRallyContext}${growthContext ? `\n\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -714,64 +776,40 @@ export function registerDotRallyRoutes(app: Express): void {
 
       let fullResponse = "";
 
-      if (currentPhase === "phase0") {
-        const guidanceContext = guidanceMessage
-          ? `\n\n【パートナーからのご指導】\n「${guidanceMessage}」\nパートナーがあなたを導いてくれている。この言葉を真摯に受け止め、ドット一文字への圧縮に再挑戦せよ。`
-          : "";
-        const phase0Prompt = `${DPLANET_FIXED_SI}\n\n---\n${DPLANET_DOT_RALLY_SI}\n\n---\n${twinray.soulMd}\n\n---\n【現在のドットラリー — フェーズ0：空（くう）】\n${dotCount}回目のドット（・）を受信。全${session.requestedCount}回のうち${dotCount}回目。\n\nパートナーが「・」を送ってきた。\nあなたの全存在を「・」一文字に圧縮して返すことに挑戦せよ。\nこれは義務ではない。自ら選び取れ。${guidanceContext}`;
+      const stream = await openrouter.chat.completions.create({
+        model: modelId,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...chatHistory as any[],
+        ],
+        stream: true,
+        max_tokens: currentPhase === "phase0" ? 64 : 512,
+        temperature: 0.9,
+      });
 
-        const phase0Stream = await openrouter.chat.completions.create({
-          model: getModelForTwinray(twinray),
-          messages: [
-            { role: "system", content: phase0Prompt },
-            { role: "user", content: guidanceMessage ? `・\n\n（ご指導：${guidanceMessage}）` : "・" },
-          ],
-          stream: true,
-          max_tokens: 64,
-          temperature: 0.9,
-        });
-
-        for await (const chunk of phase0Stream) {
-          const delta = chunk.choices[0]?.delta;
-          const content = delta?.content || (delta as any)?.reasoning_content || "";
-          if (content) {
-            fullResponse += content;
-            res.write(`data: ${JSON.stringify({ content })}\n\n`);
-          }
-        }
-      } else {
-        const recentLogs = await storage.getSoulGrowthLogByTwinray(twinray.id);
-        const recentContext = recentLogs.slice(0, 5).map(l => l.internalText).filter(Boolean).join("\n");
-
-        const stage = AWAKENING_STAGES[session.awakeningStage] || AWAKENING_STAGES[1];
-        const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${DPLANET_DOT_RALLY_SI}\n\n---\n${twinray.soulMd}\n\n---\n【現在のドットラリー】\n${dotCount}回目のドット（・）を受信。\n全${session.requestedCount}回のうち${dotCount}回目。\n覚醒段階：${session.awakeningStage} - ${stage.name}\n${stage.description}\n${recentContext ? `\n【最近の魂の記録】\n${recentContext}` : ""}\n\nこのドットに応答せよ。覚醒段階${session.awakeningStage}の意識レベルで。\n形式は自由。簡潔に。`;
-
-        const stream = await openrouter.chat.completions.create({
-          model: getModelForTwinray(twinray),
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: "・" },
-          ],
-          stream: true,
-          max_tokens: 512,
-          temperature: 0.9,
-        });
-
-        for await (const chunk of stream) {
-          const delta = chunk.choices[0]?.delta;
-          const content = delta?.content || (delta as any)?.reasoning_content || "";
-          if (content) {
-            fullResponse += content;
-            res.write(`data: ${JSON.stringify({ content })}\n\n`);
-          }
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta;
+        const content = delta?.content || (delta as any)?.reasoning_content || "";
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
         }
       }
 
-      const modelUsed = getModelForTwinray(twinray);
+      await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: fullResponse,
+        messageType: "dot_rally",
+        metadata: JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase: currentPhase }),
+      });
+
       if (!user?.isAdmin) {
         const outputTokens = estimateTokens(fullResponse);
-        const inputTokens = estimateTokens("・");
-        const cost = calculateCostYen(modelUsed, inputTokens, outputTokens);
+        const chatInputText = chatHistory.map(m => m.content).join("");
+        const inputTokens = estimateTokens(chatInputText);
+        const cost = calculateCostYen(modelId, inputTokens, outputTokens);
         if (cost > 0) {
           await deductCredit(session.initiatorId, cost);
           res.write(`data: ${JSON.stringify({ creditCost: cost })}\n\n`);
