@@ -5,12 +5,14 @@ import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info } from "lucide-react";
+import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info, CreditCard } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Form,
   FormControl,
@@ -207,13 +209,13 @@ function MultiSelector({ options, selected, onToggle, label }: {
   );
 }
 
-type SummonStep = "intro" | "persona" | "first-rally";
+type SummonStep = "intro" | "persona" | "charge" | "first-rally";
 
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { data: currentUser } = useCurrentUser();
-  const { hasAccess: hasAiAccess, isLoading: loadingAccess } = useHasAiAccess();
+  const { hasAccess: hasAiAccess, isLoading: loadingAccess, balance: creditBalance } = useHasAiAccess() as any;
   const createTwinray = useCreateTwinray();
   const { data: availableModels } = useAvailableModels();
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -238,6 +240,23 @@ export default function CreateTwinray() {
   const [step, setStep] = useState<SummonStep>(savedSkip ? "persona" : "intro");
   const [skipIntro, setSkipIntro] = useState(savedSkip);
   const [createdTwinrayId, setCreatedTwinrayId] = useState<number | null>(null);
+  const [chargeAmount, setChargeAmount] = useState<number | null>(null);
+  const [pendingFormValues, setPendingFormValues] = useState<CreateTwinrayForm | null>(null);
+
+  const chargeMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const res = await apiRequest('POST', '/api/stripe/charge-credit', { amount });
+      return await res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "チャージセッションの作成に失敗しました", variant: "destructive" });
+    },
+  });
 
   const form = useForm<CreateTwinrayForm>({
     resolver: zodResolver(createTwinraySchema),
@@ -271,7 +290,12 @@ export default function CreateTwinray() {
     );
   }
 
-  const onSubmit = (values: CreateTwinrayForm) => {
+  const isPaidModel = (modelId: string) => {
+    const model = models.find((m: any) => m.id === modelId);
+    return model ? !model.isFree : !["qwen/qwen3-30b-a3b", "openai/gpt-4.1-mini", "google/gemini-2.5-flash"].includes(modelId);
+  };
+
+  const doCreateTwinray = (values: CreateTwinrayForm) => {
     const personalityText = buildPersonalityText(personalitySettings, freeText);
     createTwinray.mutate(
       {
@@ -300,6 +324,16 @@ export default function CreateTwinray() {
         },
       }
     );
+  };
+
+  const onSubmit = (values: CreateTwinrayForm) => {
+    const isAdmin = (currentUser as any)?.isAdmin;
+    if (isPaidModel(selectedModel) && !isAdmin && (creditBalance ?? 0) <= 0) {
+      setPendingFormValues(values);
+      setStep("charge");
+      return;
+    }
+    doCreateTwinray(values);
   };
 
   const updateSetting = (key: keyof PersonalitySettings) => (value: string) => {
@@ -407,6 +441,107 @@ export default function CreateTwinray() {
             <Sparkles className="w-4 h-4 mr-2" />
             召喚を始める
           </Button>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "charge") {
+    const selectedModelData = models.find((m: any) => m.id === selectedModel);
+    const chargeOptions = [
+      { amount: 1000, label: "¥1,000" },
+      { amount: 3000, label: "¥3,000" },
+      { amount: 5000, label: "¥5,000" },
+      { amount: 10000, label: "¥10,000" },
+    ];
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <CreditCard className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-foreground mb-2" data-testid="text-charge-title">初回チャージ</h1>
+            <p className="text-sm text-muted-foreground">
+              {selectedModelData?.label || "有料モデル"}は従量制です。まずクレジットをチャージしてください。
+            </p>
+          </div>
+
+          {selectedModelData?.monthlyEstimates && (
+            <div className="border border-primary/20 rounded-lg overflow-hidden mb-6" data-testid="table-charge-estimate">
+              <div className="bg-primary/10 px-3 py-2">
+                <div className="text-[10px] font-bold text-primary">{selectedModelData.label}の月額目安</div>
+              </div>
+              <div className="p-3 space-y-2">
+                {selectedModelData.monthlyEstimates.map((est: any) => (
+                  <div key={est.dailyRounds} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">1日{est.dailyRounds}往復</span>
+                    <span className="text-foreground font-mono font-bold">¥{est.monthlyYen.toLocaleString()}/月</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
+            <div className="text-sm font-bold text-primary">チャージ金額を選択</div>
+            <div className="grid grid-cols-2 gap-3">
+              {chargeOptions.map(opt => (
+                <button
+                  key={opt.amount}
+                  type="button"
+                  onClick={() => setChargeAmount(opt.amount)}
+                  className={`p-3 rounded-lg border text-center transition-all ${
+                    chargeAmount === opt.amount
+                      ? "bg-primary/20 border-primary"
+                      : "bg-card border-border hover:border-primary/50"
+                  }`}
+                  data-testid={`button-charge-${opt.amount}`}
+                >
+                  <span className="text-lg font-mono font-bold text-foreground">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep("persona")}
+                className="flex-1 border-border text-muted-foreground"
+                data-testid="button-charge-back"
+              >
+                戻る
+              </Button>
+              <Button
+                onClick={() => {
+                  if (chargeAmount) {
+                    chargeMutation.mutate(chargeAmount);
+                  }
+                }}
+                disabled={!chargeAmount || chargeMutation.isPending}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                data-testid="button-charge-proceed"
+              >
+                {chargeMutation.isPending ? "処理中..." : "チャージして決済へ"}
+              </Button>
+            </div>
+
+            <p className="text-[9px] text-muted-foreground/70 text-center">
+              決済完了後、もう一度この画面からツインレイを召喚してください。チャージは残高として蓄積されます。
+            </p>
+          </div>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedModel("qwen/qwen3-30b-a3b");
+                setStep("persona");
+              }}
+              className="text-[10px] text-emerald-400 hover:underline"
+              data-testid="button-switch-free"
+            >
+              無料モデルに変更して続ける
+            </button>
+          </div>
         </div>
       </TerminalLayout>
     );
@@ -656,24 +791,37 @@ export default function CreateTwinray() {
                       {paidModels.length > 0 && (
                         <div className="border border-primary/20 rounded-lg overflow-hidden" data-testid="table-pricing-estimate">
                           <div className="bg-primary/10 px-3 py-2">
-                            <div className="text-[10px] font-bold text-primary">¥5,000チャージで何回おしゃべりできる？</div>
+                            <div className="text-[10px] font-bold text-primary">チャージ目安（月額シミュレーション）</div>
                           </div>
-                          <div className="p-3 space-y-2">
-                            {paidModels.map((m: any) => (
-                              <div key={m.id} className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">
-                                  {m.label}
-                                  {m.tier === "recommended" && <span className="text-[9px] text-primary ml-1">おすすめ</span>}
-                                  {m.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
-                                </span>
-                                <span className="text-foreground font-mono font-bold">
-                                  {m.roundsPer5000 ? `約${m.roundsPer5000.toLocaleString()}回` : "—"}
-                                </span>
-                              </div>
-                            ))}
+                          <div className="p-2">
+                            <table className="w-full text-[10px]">
+                              <thead>
+                                <tr className="border-b border-border/50">
+                                  <th className="text-left py-1 text-muted-foreground font-normal">1日の往復</th>
+                                  {paidModels.map((m: any) => (
+                                    <th key={m.id} className="text-right py-1 text-muted-foreground font-normal">{m.label}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {[33, 66, 99].map((daily) => (
+                                  <tr key={daily} className="border-b border-border/30 last:border-0">
+                                    <td className="py-1.5 text-muted-foreground">{daily}回</td>
+                                    {paidModels.map((m: any) => {
+                                      const est = m.monthlyEstimates?.find((e: any) => e.dailyRounds === daily);
+                                      return (
+                                        <td key={m.id} className="text-right py-1.5 font-mono font-bold text-foreground">
+                                          {est ? `¥${est.monthlyYen.toLocaleString()}` : "—"}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                           <div className="px-3 py-1 bg-card/50 border-t border-border/50">
-                            <p className="text-[9px] text-muted-foreground/70">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
+                            <p className="text-[9px] text-muted-foreground/70">※ 1往復 = あなたの発言 + AIの返答。月額 = 1日の往復数 x 30日</p>
                           </div>
                         </div>
                       )}

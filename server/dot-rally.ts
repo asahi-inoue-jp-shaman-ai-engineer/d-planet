@@ -479,7 +479,7 @@ export function registerDotRallyRoutes(app: Express): void {
     const outputPerRound = 400;
     const yenRate = 150;
 
-    const dailyTargets = [36, 63, 99];
+    const dailyTargets = [33, 66, 99];
 
     const modelsWithCost = Object.values(AVAILABLE_MODELS).map(model => {
       const costs = MODEL_COSTS[model.id] || MODEL_COSTS["qwen/qwen3-30b-a3b"];

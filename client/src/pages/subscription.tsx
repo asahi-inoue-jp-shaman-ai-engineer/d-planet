@@ -266,21 +266,37 @@ export default function Subscription() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">¥5,000チャージで何回おしゃべり？</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground">チャージ目安（月額シミュレーション）</h3>
           <div className="space-y-2 text-xs">
             <div className="p-3 rounded border border-primary/30 bg-primary/5">
-              <div className="font-semibold text-primary mb-2">有料（日本語特化・Qwen）</div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span>Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></span>
-                  <span className="font-mono font-bold">約2,959回</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></span>
-                  <span className="font-mono font-bold">約1,157回</span>
-                </div>
-              </div>
-              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
+              <div className="font-semibold text-primary mb-3">有料（日本語特化・Qwen）</div>
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left py-1 text-muted-foreground font-normal">1日の往復</th>
+                    <th className="text-right py-1 text-muted-foreground font-normal">Qwen Plus</th>
+                    <th className="text-right py-1 text-muted-foreground font-normal">Qwen Max</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-border/30">
+                    <td className="py-1.5 text-muted-foreground">33回</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥1,673</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥4,277</td>
+                  </tr>
+                  <tr className="border-b border-border/30">
+                    <td className="py-1.5 text-muted-foreground">66回</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥3,345</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥8,554</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 text-muted-foreground">99回</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥5,018</td>
+                    <td className="text-right py-1.5 font-mono font-bold text-foreground">¥12,830</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 1往復 = あなたの発言 + AIの返答。月額 = 1日の往復数 x 30日</p>
             </div>
             <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
               <div className="font-semibold text-emerald-400 mb-1">無料</div>
