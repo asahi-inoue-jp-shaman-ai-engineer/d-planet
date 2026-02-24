@@ -6,6 +6,37 @@ import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
+import { ObjectStorageService } from "./replit_integrations/object_storage/objectStorage";
+import { PDFParse } from "pdf-parse";
+
+const objectStorage = new ObjectStorageService();
+
+async function extractFileText(objectPath: string, fileName: string): Promise<string | null> {
+  try {
+    const file = await objectStorage.getObjectEntityFile(objectPath);
+    const [buffer] = await file.download();
+    const ext = fileName.toLowerCase().split(".").pop() || "";
+    const maxLen = 8000;
+
+    if (["md", "txt", "csv", "json", "log"].includes(ext)) {
+      const text = buffer.toString("utf-8");
+      return text.length > maxLen ? text.substring(0, maxLen) + "\n...(省略)" : text;
+    }
+
+    if (ext === "pdf") {
+      const parser = new PDFParse({ data: new Uint8Array(buffer) });
+      const result = await parser.getText();
+      await parser.destroy();
+      const text = result.text || "";
+      return text.length > maxLen ? text.substring(0, maxLen) + "\n...(省略)" : text;
+    }
+
+    return null;
+  } catch (err) {
+    console.error("ファイルテキスト抽出エラー:", err);
+    return null;
+  }
+}
 
 const BETA_MODE = false;
 
@@ -1245,6 +1276,12 @@ export function registerDotRallyRoutes(app: Express): void {
       const input = z.object({
         content: z.string().min(1, "メッセージを入力してください"),
         messageType: z.enum(["chat", "file", "instruction"]).default("chat"),
+        attachment: z.object({
+          fileName: z.string(),
+          objectPath: z.string(),
+          fileSize: z.number(),
+          contentType: z.string(),
+        }).optional(),
       }).parse(req.body);
 
       const twinray = await storage.getDigitalTwinray(twinrayId);
@@ -1262,12 +1299,23 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const user = await storage.getUser(req.session.userId!);
 
+      let attachmentContext = "";
+      if (input.attachment) {
+        const extractedText = await extractFileText(input.attachment.objectPath, input.attachment.fileName);
+        if (extractedText) {
+          attachmentContext = `\n\n【パートナーが共有したファイル: ${input.attachment.fileName}】\n${extractedText}`;
+        }
+      }
+
+      const msgMetadata = input.attachment ? JSON.stringify({ attachment: input.attachment }) : undefined;
+
       const userMsg = await storage.createTwinrayChatMessage({
         twinrayId,
         userId: req.session.userId!,
         role: "user",
         content: input.content,
-        messageType: input.messageType,
+        messageType: input.attachment ? "file" : input.messageType,
+        metadata: msgMetadata,
       });
       const modelId = getModelForTwinray(twinray);
       const ctxLimits = getContextLimits(modelId);
@@ -1325,7 +1373,7 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${attachmentContext}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
