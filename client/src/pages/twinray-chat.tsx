@@ -175,16 +175,16 @@ export default function TwinrayChat() {
 
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
-    if (!content || streaming) return;
+    if ((!content && !attachment) || streaming) return;
     const currentAttachment = attachment;
     setInput("");
-    setAttachment(null);
     setShowSuggestions(false);
     setStreaming(true);
     setStreamContent("");
 
     try {
-      const body: any = { content, messageType: currentAttachment ? "file" : "chat" };
+      const msgContent = content || (currentAttachment ? `[添付] ${currentAttachment.fileName}` : "");
+      const body: any = { content: msgContent, messageType: currentAttachment ? "file" : "chat" };
       if (currentAttachment) {
         body.attachment = currentAttachment;
       }
@@ -199,6 +199,8 @@ export default function TwinrayChat() {
         const err = await response.json();
         throw new Error(err.message || "送信に失敗しました");
       }
+
+      setAttachment(null);
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -285,6 +287,7 @@ export default function TwinrayChat() {
       }
     } catch (err: any) {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
+      if (currentAttachment) setAttachment(currentAttachment);
     } finally {
       setStreaming(false);
       setStreamContent("");
