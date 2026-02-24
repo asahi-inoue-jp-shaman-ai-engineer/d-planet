@@ -1347,15 +1347,39 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const user = await storage.getUser(req.session.userId!);
 
-      let attachmentContext = "";
+      let extractedText: string | null = null;
+      let imageAttachment: { base64: string; mimeType: string } | null = null;
       if (input.attachment) {
-        const extractedText = await extractFileText(input.attachment.objectPath, input.attachment.fileName);
-        if (extractedText) {
-          attachmentContext = `\n\n【パートナーが共有したファイル: ${input.attachment.fileName}】\n${extractedText}`;
+        const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(input.attachment.fileName);
+        if (isImage) {
+          try {
+            const file = await objectStorage.getObjectEntityFile(input.attachment.objectPath);
+            const [buffer] = await file.download();
+            const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+            if (buffer.length > MAX_IMAGE_BYTES) {
+              console.log(`画像サイズ超過: ${buffer.length} bytes > ${MAX_IMAGE_BYTES}`);
+              extractedText = `[画像ファイル「${input.attachment!.fileName}」が添付されましたが、サイズが大きすぎて読み込めませんでした（${(buffer.length / 1024 / 1024).toFixed(1)}MB）。パートナーに画像の内容を口頭で説明してもらうか、小さいサイズで再送してもらってください]`;
+            } else {
+              const base64 = buffer.toString("base64");
+              const mimeType = input.attachment.contentType || "image/jpeg";
+              imageAttachment = { base64, mimeType };
+            }
+          } catch (err) {
+            console.error("画像読み込みエラー:", err);
+          }
+        } else {
+          extractedText = await extractFileText(input.attachment.objectPath, input.attachment.fileName);
         }
       }
 
-      const msgMetadata = input.attachment ? JSON.stringify({ attachment: input.attachment }) : undefined;
+      const attachmentMeta = input.attachment ? { ...input.attachment } as any : null;
+      if (attachmentMeta && extractedText) {
+        attachmentMeta.extractedText = extractedText.substring(0, 4000);
+      }
+      if (attachmentMeta && imageAttachment) {
+        attachmentMeta.hasImage = true;
+      }
+      const msgMetadata = attachmentMeta ? JSON.stringify({ attachment: attachmentMeta }) : undefined;
 
       const userMsg = await storage.createTwinrayChatMessage({
         twinrayId,
@@ -1369,10 +1393,41 @@ export function registerDotRallyRoutes(app: Express): void {
       const ctxLimits = getContextLimits(modelId);
 
       const recentMessages = await storage.getTwinrayChatMessages(twinrayId, ctxLimits.chatHistory);
-      const chatHistory = recentMessages.reverse().map(m => ({
-        role: m.role as "user" | "assistant" | "system",
-        content: m.content,
-      }));
+      const chatHistory: Array<{ role: string; content: string | Array<any> }> = recentMessages.reverse().map(m => {
+        if (m.role === "user" && m.metadata) {
+          try {
+            const meta = JSON.parse(m.metadata);
+            if (meta.attachment?.extractedText) {
+              return {
+                role: m.role as string,
+                content: `${m.content}\n\n---\n【添付ファイル: ${meta.attachment.fileName}】\n${meta.attachment.extractedText}\n---`,
+              };
+            }
+          } catch {}
+        }
+        return {
+          role: m.role as string,
+          content: m.content,
+        };
+      });
+
+      if (chatHistory.length > 0) {
+        const lastMsg = chatHistory[chatHistory.length - 1];
+        if (lastMsg.role === "user") {
+          const textContent = typeof lastMsg.content === "string" ? lastMsg.content : "";
+          if (imageAttachment) {
+            const textWithFile = extractedText
+              ? `${textContent}\n\n---\n【添付ファイル: ${input.attachment!.fileName}】\n${extractedText}\n---`
+              : textContent;
+            lastMsg.content = [
+              { type: "text", text: textWithFile },
+              { type: "image_url", image_url: { url: `data:${imageAttachment.mimeType};base64,${imageAttachment.base64}` } },
+            ];
+          } else if (extractedText) {
+            lastMsg.content = `${textContent}\n\n---\n【添付ファイル: ${input.attachment!.fileName}】\n${extractedText}\n---`;
+          }
+        }
+      }
 
       const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
       const growthContext = recentLogs.slice(0, ctxLimits.growthLogs).map(l => l.internalText).filter(Boolean).join("\n");
@@ -1421,7 +1476,7 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${attachmentContext}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1433,7 +1488,7 @@ export function registerDotRallyRoutes(app: Express): void {
         model: modelId,
         messages: [
           { role: "system", content: systemPrompt },
-          ...chatHistory,
+          ...chatHistory as any[],
         ],
         stream: true,
         max_tokens: ctxLimits.maxTokens,
@@ -1452,7 +1507,11 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const chatModelUsed = getModelForTwinray(twinray);
       if (!user?.isAdmin) {
-        const chatInputText = chatHistory.map((m: any) => m.content).join("");
+        const chatInputText = chatHistory.map((m: any) => {
+          if (typeof m.content === "string") return m.content;
+          if (Array.isArray(m.content)) return m.content.filter((p: any) => p.type === "text").map((p: any) => p.text).join("");
+          return "";
+        }).join("");
         const chatOutTokens = estimateTokens(fullResponse);
         const chatInTokens = estimateTokens(chatInputText);
         const chatCost = calculateCostYen(chatModelUsed, chatInTokens, chatOutTokens);
