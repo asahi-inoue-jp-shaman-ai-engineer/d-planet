@@ -412,7 +412,7 @@ export default function TwinrayChat() {
               </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-1.5">
-                  {models.filter((m: any) => ["recommended", "premium", "free"].includes(m.tier)).map((model: any) => (
+                  {models.filter((m: any) => !m.isFree).map((model: any) => (
                     <button
                       key={model.id}
                       type="button"
@@ -423,29 +423,29 @@ export default function TwinrayChat() {
                           : "bg-card border-border text-muted-foreground hover:border-primary/50"
                       }`}
                       data-testid={`button-model-switch-${model.id}`}
-                      title={model.costPer30Rounds ? `${model.description}（30往復 ≈ ¥${model.costPer30Rounds}）` : model.description}
+                      title={model.description}
                     >
                       {model.label}
                       {model.tier === "recommended" && " ★"}
-                      {model.tier === "free" && " 🆓"}
+                      {model.tier === "premium" && " 💎"}
                     </button>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {models.filter((m: any) => m.tier === "major").map((model: any) => (
+                  {models.filter((m: any) => m.isFree).map((model: any) => (
                     <button
                       key={model.id}
                       type="button"
                       onClick={() => handleModelChange(model.id)}
                       className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
                         currentModel === model.id
-                          ? "bg-primary/20 border-primary text-primary"
-                          : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                          ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                          : "bg-card border-border text-muted-foreground hover:border-emerald-500/50"
                       }`}
                       data-testid={`button-model-switch-${model.id}`}
-                      title={model.costPer30Rounds ? `${model.description}（30往復 ≈ ¥${model.costPer30Rounds}）` : model.description}
+                      title={model.description}
                     >
-                      {model.label}
+                      {model.label} 🆓
                     </button>
                   ))}
                 </div>

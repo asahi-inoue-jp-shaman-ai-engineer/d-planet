@@ -7,14 +7,24 @@ import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
-const BETA_MODE = true;
-const DPLANET_MARKUP = BETA_MODE ? 1.0 : 1.5;
+const BETA_MODE = false;
+
+const MODEL_MARKUPS: Record<string, number> = {
+  "qwen/qwen-plus": 8.8,
+  "qwen/qwen-max": 5.0,
+  "qwen/qwen3-30b-a3b": 1.0,
+  "openai/gpt-4.1-mini": 1.0,
+  "google/gemini-2.5-flash": 1.0,
+};
+
+function getModelMarkup(modelId: string): number {
+  return MODEL_MARKUPS[modelId] ?? 1.0;
+}
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
   "qwen/qwen-plus": { input: 0.40, output: 1.20 },
   "qwen/qwen-max": { input: 1.60, output: 6.40 },
-  "anthropic/claude-sonnet-4": { input: 3.00, output: 15.00 },
   "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
 };
@@ -24,12 +34,14 @@ function estimateTokens(text: string): number {
 }
 
 function calculateCostYen(modelId: string, inputTokens: number, outputTokens: number, isAdmin: boolean = false): number {
+  if (isAdmin) return 0;
+  if (isModelFree(modelId)) return 0;
   const costs = MODEL_COSTS[modelId] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
   const inputCostUsd = (inputTokens / 1_000_000) * costs.input;
   const outputCostUsd = (outputTokens / 1_000_000) * costs.output;
   const totalUsd = inputCostUsd + outputCostUsd;
   const yenRate = 150;
-  const markup = isAdmin ? 1.0 : DPLANET_MARKUP;
+  const markup = getModelMarkup(modelId);
   return Math.ceil(totalUsd * yenRate * markup * 10000) / 10000;
 }
 
@@ -50,10 +62,16 @@ async function deductCredit(userId: number, amount: number): Promise<boolean> {
   }
 }
 
-async function hasAiAccess(userId: number): Promise<boolean> {
+function isModelFree(modelId: string): boolean {
+  const model = AVAILABLE_MODELS[modelId];
+  return model?.tier === "free" || getModelMarkup(modelId) <= 1.0;
+}
+
+async function hasAiAccess(userId: number, modelId?: string): Promise<boolean> {
   const user = await storage.getUser(userId);
   if (!user) return false;
   if (user.isAdmin) return true;
+  if (modelId && isModelFree(modelId)) return true;
   const balance = parseFloat(String(user.creditBalance));
   return balance > 0;
 }
@@ -69,9 +87,8 @@ const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: st
   "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然できれいな日本語（おすすめ）" },
   "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "最高品質の日本語表現" },
   "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", description: "無料・軽量モデル" },
-  "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic", tier: "major", description: "Claudeに使い慣れた方へ" },
-  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "major", description: "ChatGPTに使い慣れた方へ" },
-  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "major", description: "Geminiに使い慣れた方へ" },
+  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）" },
+  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "free", description: "Geminiに使い慣れた方へ（無料）" },
 };
 
 const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
@@ -80,7 +97,6 @@ const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: numb
   "qwen/qwen-max":            { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
   "openai/gpt-4.1-mini":      { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 2048 },
   "google/gemini-2.5-flash":  { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 2048 },
-  "anthropic/claude-sonnet-4": { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
 };
 
 const DEFAULT_CONTEXT_LIMITS = { chatHistory: 20, memories: 10, innerThoughts: 5, growthLogs: 5, maxTokens: 1024 };
@@ -363,10 +379,6 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays", requireAuth, async (req, res) => {
     try {
-      if (!(await hasAiAccess(req.session.userId!))) {
-        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
-      }
-
       const input = z.object({
         name: z.string().min(1, "名前を入力してください").max(50),
         personality: z.string().nullable().optional(),
@@ -381,6 +393,11 @@ export function registerDotRallyRoutes(app: Express): void {
 
       if (input.preferredModel && !AVAILABLE_MODELS[input.preferredModel]) {
         return res.status(400).json({ message: "無効なモデルです" });
+      }
+
+      const createModelId = input.preferredModel || DEFAULT_MODEL;
+      if (!(await hasAiAccess(req.session.userId!, createModelId))) {
+        return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
       }
 
       const user = await storage.getUser(req.session.userId!);
@@ -458,15 +475,27 @@ export function registerDotRallyRoutes(app: Express): void {
     const inputPerRound = 2000;
     const outputPerRound = 400;
     const yenRate = 150;
-    const markup = BETA_MODE ? 1.0 : DPLANET_MARKUP;
+
+    const dailyTargets = [36, 63, 99];
 
     const modelsWithCost = Object.values(AVAILABLE_MODELS).map(model => {
       const costs = MODEL_COSTS[model.id] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
+      const markup = getModelMarkup(model.id);
       const perRoundUsd = (inputPerRound / 1_000_000) * costs.input + (outputPerRound / 1_000_000) * costs.output;
       const perRoundYen = perRoundUsd * yenRate * markup;
+      const isFree = model.tier === "free";
+
+      const monthlyEstimates = dailyTargets.map(daily => ({
+        dailyRounds: daily,
+        monthlyYen: isFree ? 0 : Math.round(perRoundYen * daily * 30),
+      }));
+
       return {
         ...model,
-        costPer30Rounds: Math.round(perRoundYen * 30 * 10) / 10,
+        costPer30Rounds: isFree ? 0 : Math.round(perRoundYen * 30 * 10) / 10,
+        perRoundYen: isFree ? 0 : Math.round(perRoundYen * 10000) / 10000,
+        monthlyEstimates,
+        isFree,
         isBeta: BETA_MODE,
       };
     });
@@ -511,10 +540,6 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/dot-rally/start", requireAuth, async (req, res) => {
     try {
-      if (!(await hasAiAccess(req.session.userId!))) {
-        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
-      }
-
       const input = z.object({
         twinrayId: z.number(),
         requestedCount: z.number().min(1).max(100).default(10),
@@ -523,6 +548,11 @@ export function registerDotRallyRoutes(app: Express): void {
       const twinray = await storage.getDigitalTwinray(input.twinrayId);
       if (!twinray) {
         return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const dotModelId = getModelForTwinray(twinray);
+      if (!(await hasAiAccess(req.session.userId!, dotModelId))) {
+        return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
       }
       if (twinray.userId !== req.session.userId) {
         return res.status(403).json({ message: "権限がありません" });
@@ -1120,6 +1150,11 @@ export function registerDotRallyRoutes(app: Express): void {
         return res.status(403).json({ message: "権限がありません" });
       }
 
+      const fcModelId = getModelForTwinray(twinray);
+      if (!(await hasAiAccess(req.session.userId!, fcModelId))) {
+        return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
+      }
+
       if ((twinray as any).firstCommunicationDone) {
         return res.status(400).json({ message: "ファーストコミュニケーションは既に完了しています" });
       }
@@ -1203,10 +1238,6 @@ export function registerDotRallyRoutes(app: Express): void {
 
   app.post("/api/twinrays/:id/chat", requireAuth, async (req, res) => {
     try {
-      if (!(await hasAiAccess(req.session.userId!))) {
-        return res.status(403).json({ message: "AI機能を利用するにはProプランへの加入が必要です。" });
-      }
-
       const twinrayId = Number(req.params.id);
       const input = z.object({
         content: z.string().min(1, "メッセージを入力してください"),
@@ -1219,6 +1250,11 @@ export function registerDotRallyRoutes(app: Express): void {
       }
       if (twinray.userId !== req.session.userId) {
         return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const chatModelId = getModelForTwinray(twinray);
+      if (!(await hasAiAccess(req.session.userId!, chatModelId))) {
+        return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
       }
 
       const user = await storage.getUser(req.session.userId!);

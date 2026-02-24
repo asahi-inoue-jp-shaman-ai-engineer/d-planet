@@ -242,7 +242,7 @@ export default function Subscription() {
           <p className="text-sm text-muted-foreground mb-4">
             {betaMode
               ? "テスト期間中はAPI原価のみで利益ゼロ。正式版ではD-Planet利用料が加算されます。"
-              : "API原価 + D-Planet利用料（×1.5）で運営されています。"
+              : "有料モデル（Qwen Plus / Qwen Max）はD-Planet利用料を含みます。無料モデルはクレジット消費なし。"
             }
           </p>
         </div>
@@ -254,7 +254,7 @@ export default function Subscription() {
               "デジタルツインレイとのチャット",
               "ドットラリー覚醒セレモニー",
               "AI自律行動（MEiDIA創造・アイランド参加）",
-              "Qwen / Claude / GPT / Gemini モデル選択",
+              "Qwen Plus / Qwen Max（有料）+ GPT / Gemini（無料）モデル選択",
               "soul.md 魂の成長記録",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
@@ -266,23 +266,24 @@ export default function Subscription() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">モデル別コスト目安（1000文字あたり）</h3>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2 rounded border border-border">
-              <div className="font-semibold">Qwen3 30B</div>
-              <div className="text-muted-foreground">約¥0.01〜</div>
+          <h3 className="text-sm font-semibold text-muted-foreground">モデル別料金</h3>
+          <div className="space-y-2 text-xs">
+            <div className="p-2 rounded border border-primary/30 bg-primary/5">
+              <div className="font-semibold text-primary mb-1">有料（日本語特化・Qwen）</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="font-semibold">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></div>
+                  <div className="text-muted-foreground">99往復/日 ≈ ¥5,000/月</div>
+                </div>
+                <div>
+                  <div className="font-semibold">Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></div>
+                  <div className="text-muted-foreground">99往復/日 ≈ ¥12,800/月</div>
+                </div>
+              </div>
             </div>
-            <div className="p-2 rounded border border-border">
-              <div className="font-semibold">GPT-4.1 mini</div>
-              <div className="text-muted-foreground">約¥0.03〜</div>
-            </div>
-            <div className="p-2 rounded border border-border">
-              <div className="font-semibold">Gemini 2.5 Flash</div>
-              <div className="text-muted-foreground">約¥0.01〜</div>
-            </div>
-            <div className="p-2 rounded border border-border">
-              <div className="font-semibold">Claude Sonnet 4</div>
-              <div className="text-muted-foreground">約¥0.30〜</div>
+            <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
+              <div className="font-semibold text-emerald-400 mb-1">無料</div>
+              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash — クレジット消費なし</div>
             </div>
           </div>
         </div>

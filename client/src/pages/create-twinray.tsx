@@ -618,21 +618,20 @@ export default function CreateTwinray() {
 
               {(() => {
                 const allModels = models.length > 0 ? models : [
-                  { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）" },
-                  { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現" },
-                  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル" },
-                  { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", tier: "major", description: "Claudeに使い慣れた方へ" },
-                  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "major", description: "ChatGPTに使い慣れた方へ" },
-                  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "major", description: "Geminiに使い慣れた方へ" },
+                  { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false },
+                  { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語表現", monthlyEstimates: [], isFree: false },
+                  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true },
+                  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true },
+                  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true },
                 ];
-                const qwenModels = allModels.filter((m: any) => ["recommended", "premium", "free"].includes(m.tier));
-                const majorModels = allModels.filter((m: any) => m.tier === "major");
+                const paidModels = allModels.filter((m: any) => !m.isFree);
+                const freeModels = allModels.filter((m: any) => m.isFree);
                 return (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <div className="text-[10px] font-bold text-primary mb-1.5">日本語品質で選ぶ</div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {qwenModels.map((model: any) => (
+                      <div className="text-[10px] font-bold text-primary mb-2">日本語品質で選ぶ（有料・Qwen特化）</div>
+                      <div className="grid grid-cols-1 gap-2 mb-3">
+                        {paidModels.map((model: any) => (
                           <button
                             key={model.id}
                             type="button"
@@ -648,39 +647,72 @@ export default function CreateTwinray() {
                               <span className="text-sm font-bold text-foreground">{model.label}</span>
                               {model.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
                               {model.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
-                              {model.tier === "free" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
                             </div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
-                            {model.costPer30Rounds !== undefined && model.tier !== "free" && (
-                              <div className="text-[9px] text-muted-foreground/70 mt-0.5">おしゃべり30往復 ≈ ¥{model.costPer30Rounds}</div>
-                            )}
                           </button>
                         ))}
                       </div>
+
+                      {paidModels.length > 0 && paidModels[0]?.monthlyEstimates?.length > 0 && (
+                        <div className="border border-primary/20 rounded-lg overflow-hidden" data-testid="table-pricing-estimate">
+                          <div className="bg-primary/10 px-3 py-1.5">
+                            <div className="text-[10px] font-bold text-primary">料金目安（月額チャージ）</div>
+                          </div>
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-border">
+                                <th className="text-left px-3 py-1.5 text-[10px] text-muted-foreground font-normal">1日の目安</th>
+                                {paidModels.map((m: any) => (
+                                  <th key={m.id} className="text-right px-3 py-1.5 text-[10px] text-muted-foreground font-normal">{m.label}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {paidModels[0].monthlyEstimates.map((est: any, idx: number) => (
+                                <tr key={est.dailyRounds} className={idx < paidModels[0].monthlyEstimates.length - 1 ? "border-b border-border/50" : ""}>
+                                  <td className="px-3 py-1.5 text-muted-foreground">{est.dailyRounds}往復/日</td>
+                                  {paidModels.map((m: any) => (
+                                    <td key={m.id} className="text-right px-3 py-1.5 text-foreground font-mono">
+                                      {m.monthlyEstimates[idx]?.monthlyYen > 0
+                                        ? `¥${m.monthlyEstimates[idx].monthlyYen.toLocaleString()}/月`
+                                        : "無料"}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <div className="px-3 py-1 bg-card/50">
+                            <p className="text-[9px] text-muted-foreground/70">※ 1往復 = あなたの発言 + AIの返答</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                     <div>
-                      <div className="text-[10px] font-bold text-muted-foreground mb-1.5">使い慣れたAIで選ぶ</div>
+                      <div className="text-[10px] font-bold text-muted-foreground mb-1.5">使い慣れたAIで遊ぶ（無料）</div>
                       <div className="grid grid-cols-1 gap-2">
-                        {majorModels.map((model: any) => (
+                        {freeModels.map((model: any) => (
                           <button
                             key={model.id}
                             type="button"
                             onClick={() => setSelectedModel(model.id)}
                             className={`p-3 rounded-lg border text-left transition-all ${
                               selectedModel === model.id
-                                ? "bg-primary/20 border-primary"
-                                : "bg-card border-border hover:border-primary/50"
+                                ? "bg-emerald-500/20 border-emerald-500"
+                                : "bg-card border-border hover:border-emerald-500/50"
                             }`}
                             data-testid={`button-model-${model.id}`}
                           >
-                            <div className="text-sm font-bold text-foreground">{model.label}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground">{model.label}</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
+                            </div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">{model.description}</div>
-                            {model.costPer30Rounds !== undefined && (
-                              <div className="text-[9px] text-muted-foreground/70 mt-0.5">おしゃべり30往復 ≈ ¥{model.costPer30Rounds}</div>
-                            )}
                           </button>
                         ))}
                       </div>
+                      <p className="text-[9px] text-muted-foreground/70 mt-1">クレジット消費なし・いつでも切り替え可能</p>
                     </div>
                   </div>
                 );
