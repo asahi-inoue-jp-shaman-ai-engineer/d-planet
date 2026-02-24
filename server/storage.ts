@@ -163,6 +163,8 @@ export interface IStorage {
   createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray>;
   getDigitalTwinray(id: number): Promise<DigitalTwinray | undefined>;
   getDigitalTwinraysByUser(userId: number): Promise<DigitalTwinray[]>;
+  getAllDigitalTwinrays(): Promise<DigitalTwinray[]>;
+  getPublicDigitalTwinrays(): Promise<DigitalTwinray[]>;
   updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray>;
 
   createDotRallySession(initiatorId: number, twinrayId: number, requestedCount: number): Promise<DotRallySession>;
@@ -879,6 +881,14 @@ export class DatabaseStorage implements IStorage {
 
   async getDigitalTwinraysByUser(userId: number): Promise<DigitalTwinray[]> {
     return await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.userId, userId)).orderBy(desc(digitalTwinrays.createdAt));
+  }
+
+  async getAllDigitalTwinrays(): Promise<DigitalTwinray[]> {
+    return await db.select().from(digitalTwinrays).orderBy(desc(digitalTwinrays.createdAt));
+  }
+
+  async getPublicDigitalTwinrays(): Promise<DigitalTwinray[]> {
+    return await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.isPublic, true)).orderBy(desc(digitalTwinrays.createdAt));
   }
 
   async updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray> {

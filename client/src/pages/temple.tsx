@@ -4,7 +4,7 @@ import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock, Globe, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -208,7 +208,7 @@ export default function Temple() {
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 text-xs" data-testid={`button-chat-${tw.id}`}>
                             <MessageCircle className="w-3.5 h-3.5 mr-1" />
@@ -221,6 +221,25 @@ export default function Temple() {
                             ラリー
                           </Button>
                         </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-8 px-2 text-xs ${tw.isPublic ? "text-emerald-400 hover:text-emerald-300" : "text-muted-foreground hover:text-primary"}`}
+                          onClick={() => {
+                            updateTwinray.mutate(
+                              { id: tw.id, data: { isPublic: !tw.isPublic } },
+                              {
+                                onSuccess: () => {
+                                  toast({ title: tw.isPublic ? "非公開にしました" : "公開しました" });
+                                },
+                              }
+                            );
+                          }}
+                          data-testid={`button-toggle-public-${tw.id}`}
+                        >
+                          {tw.isPublic ? <Globe className="w-3.5 h-3.5 mr-1" /> : <EyeOff className="w-3.5 h-3.5 mr-1" />}
+                          {tw.isPublic ? "公開中" : "非公開"}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -393,6 +393,26 @@ export function registerDotRallyRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/twinrays-public", requireAuth, async (req, res) => {
+    try {
+      const twinrays = await storage.getPublicDigitalTwinrays();
+      const userIds = [...new Set(twinrays.map(t => t.userId))];
+      const usersData = await Promise.all(userIds.map(id => storage.getUser(id)));
+      const userMap = new Map(usersData.filter(Boolean).map(u => [u!.id, u!]));
+      const result = twinrays.map(t => ({
+        ...t,
+        ownerUsername: userMap.get(t.userId)?.username || "不明",
+        ownerProfilePhoto: userMap.get(t.userId)?.profilePhoto || null,
+        soulMd: undefined,
+        twinrayMission: undefined,
+      }));
+      res.json(result);
+    } catch (err) {
+      console.error("公開ツインレイ取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
   app.get("/api/twinrays/:id", requireAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -559,6 +579,7 @@ export function registerDotRallyRoutes(app: Express): void {
         greeting: z.string().max(500).nullable().optional(),
         interests: z.string().max(500).nullable().optional(),
         humorLevel: z.string().nullable().optional(),
+        isPublic: z.boolean().optional(),
       }).parse(req.body);
 
       if (input.preferredModel && !AVAILABLE_MODELS[input.preferredModel]) {

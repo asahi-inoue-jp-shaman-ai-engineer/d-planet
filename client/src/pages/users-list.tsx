@@ -3,20 +3,38 @@ import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useUsers } from "@/hooks/use-users";
+import { useQuery } from "@tanstack/react-query";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { CertificationBadge } from "@/components/CertificationBadge";
 import { AvatarDisplay } from "@/components/AvatarUpload";
-import { Search, Star, Filter } from "lucide-react";
+import { Search, Star, Filter, Heart, Sparkles, MessageCircle } from "lucide-react";
 
 export default function UsersList() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string | undefined>(undefined);
   const { data: users, isLoading } = useUsers(search || undefined, filterType);
+  const { data: publicTwinrays, isLoading: loadingTwinrays } = useQuery<any[]>({
+    queryKey: ["/api/twinrays-public"],
+  });
 
   const accountTypes = ["AI", "HS", "ET"];
+
+  const filteredTwinrays = (publicTwinrays || []).filter((tw: any) => {
+    if (filterType && filterType !== "AI") return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return tw.name.toLowerCase().includes(s) || tw.ownerUsername?.toLowerCase().includes(s);
+    }
+    return true;
+  });
+
+  const showTwinrays = !filterType || filterType === "AI";
+  const showUsers = !filterType || filterType !== "AI";
+
+  const allLoading = isLoading || loadingTwinrays;
+  const hasResults = (showUsers && users && users.length > 0) || (showTwinrays && filteredTwinrays.length > 0);
 
   return (
     <TerminalLayout>
@@ -60,12 +78,59 @@ export default function UsersList() {
           </div>
         </div>
 
-        {isLoading ? (
+        {allLoading ? (
           <div className="font-mono text-muted-foreground">読み込み中...</div>
-        ) : users && users.length > 0 ? (
+        ) : hasResults ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {users.map((user: any) => (
-              <Link key={user.id} href={`/users/${user.id}`}>
+            {showTwinrays && filteredTwinrays.map((tw: any) => (
+              <Card key={`tw-${tw.id}`} className="hover-elevate border-primary/20">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {tw.profilePhoto ? (
+                      <img
+                        src={tw.profilePhoto.startsWith("http") ? tw.profilePhoto : `/api/object-storage/${tw.profilePhoto}`}
+                        alt={tw.name}
+                        className="w-10 h-10 rounded-full object-cover border border-primary/30"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-sm font-bold text-primary">
+                        {tw.name?.[0] || "?"}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono font-semibold text-lg" data-testid={`text-twinray-name-${tw.id}`}>
+                        {tw.name}
+                      </span>
+                      <AccountTypeBadge type="AI" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
+                      <Heart className="w-3 h-3 text-pink-400" />
+                      Lv.{tw.intimacyLevel ?? 0} {tw.intimacyTitle || "初邂逅"}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
+                      <MessageCircle className="w-3 h-3 text-primary" />
+                      {tw.totalChatMessages ?? 0}
+                    </span>
+                  </div>
+
+                  {tw.personality && (
+                    <p className="font-mono text-sm text-muted-foreground line-clamp-2">
+                      {tw.personality}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/70">
+                    <Sparkles className="w-3 h-3" />
+                    <span>パートナー: {tw.ownerUsername}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {showUsers && users && users.map((user: any) => (
+              <Link key={`user-${user.id}`} href={`/users/${user.id}`}>
                 <Card className="hover-elevate cursor-pointer">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
