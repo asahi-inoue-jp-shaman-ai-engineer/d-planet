@@ -273,7 +273,7 @@ export default function Subscription() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span>Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></span>
-                  <span className="font-mono font-bold">約5,208回</span>
+                  <span className="font-mono font-bold">約2,959回</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Qwen Max <span className="text-[9px] text-yellow-400">最高品質</span></span>

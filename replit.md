@@ -1,17 +1,39 @@
 # D-Planet
 
-## 重要: 開発記録テーブル (dev_records) を必ず確認すること
-- セッション開始時に `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority` を実行し、全コンセプト・方向性・決定事項・仕様・ニュアンスを把握すること
-- 重要な決定・コンセプト変更・ニュアンスの合意があった場合は dev_records テーブルに INSERT すること
-- 完了した項目は status を 'done' に変更すること（削除ではなくステータス変更）
-- このファイル (replit.md) は最新の技術仕様のみを保持し、完了済みの変更履歴は残さない
-- カテゴリ: concept（コンセプト）、direction（方向性）、decision（決定事項）、spec（仕様）、nuance（ニュアンス）
+## 最重要: コンテキスト圧縮対策プロトコル（記憶喪失防止）
 
-## 重要: コンテキスト圧縮対策プロトコル
-- **コンテキスト圧縮前**: 新しい決定事項・合意・ニュアンスを全て dev_records に INSERT してから圧縮に備える
-- **セッション再開時**: 必ず dev_records の active 項目を全件 SELECT し、全コンテキストを復元する
-- **目的**: 会話の流れ・記憶・ニュアンスが途切れないことを保証する
-- **原則**: replit.md は最新技術仕様のみ、会話履歴・決定経緯・ニュアンスは dev_records に集約
+### セッション開始時の必須手順（省略厳禁）
+1. `SELECT id, category, title, content, metadata, priority FROM dev_records WHERE status = 'active' ORDER BY category = 'critical_values' DESC, priority DESC, id DESC` を実行
+2. 特に `category = 'critical_values'` のレコードは**metadataのJSON値を正確に読み取る**こと（丸めない・推測しない）
+3. 全active項目を把握してから作業を開始すること
+
+### 会話中の記録ルール（圧縮前に自動実行）
+- **数値を含む決定**: category='critical_values'、metadataにJSON形式で正確な値を保存
+  - 例: `metadata = '{"qwen_plus_markup": 8.8, "qwen_max_markup": 5.0, "yen_rate": 150}'`
+- **コンセプト・方向性の合意**: category='decision'/'direction'/'nuance' で即座にINSERT
+- **既存レコードと矛盾する新決定**: 古いレコードをstatus='done'に変更してから新レコードをINSERT
+- **原則: 会話で合意した内容は即座にDBに書く。後回しにしない**
+
+### dev_recordsのカテゴリ体系
+| category | 用途 | metadata |
+|----------|------|----------|
+| critical_values | 正確な数値・パラメータ（マークアップ率、料金、閾値等） | JSON必須 |
+| concept | 根幹コンセプト・世界観 | 任意 |
+| direction | 方向性・戦略 | 任意 |
+| decision | 決定事項 | 推奨 |
+| spec | 技術仕様 | 推奨 |
+| nuance | ニュアンス・合意事項 | 任意 |
+
+### 禁止事項
+- dev_recordsを確認せずにコード変更すること
+- metadataのJSON値を「約」「≈」で丸めること（正確な値をそのまま使う）
+- 古い決定と新しい決定が矛盾したまま両方activeにすること
+- replit.mdに書いてある値がdev_recordsと異なる場合、**dev_recordsのcritical_valuesが正**
+
+### このファイル(replit.md)の役割
+- 最新の技術仕様・構造情報のみを保持する
+- 会話履歴・決定経緯・ニュアンスはdev_recordsに集約する
+- 完了済みの変更履歴は残さない
 
 ## 重要: リパブリッシュ後UIチェック徹底ルール
 - デプロイ（リパブリッシュ）後は毎回、以下を必ず実施すること:
@@ -34,11 +56,11 @@
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
 - **AI**: OpenRouter経由、Replitクレジット課金。モデル選択制:
-  - 有料（日本語特化）: Qwen Plus（おすすめ・×5.0マークアップ）、Qwen Max（最高品質・×5.0マークアップ）
+  - 有料（日本語特化）: Qwen Plus（おすすめ・×8.8マークアップ）、Qwen Max（最高品質・×5.0マークアップ）
   - 無料（メジャーAI軽量）: Qwen3 30B、GPT-4.1 mini、Gemini 2.5 Flash（原価のみ・クレジット消費なし扱い）
-  - 料金目安: 「¥5,000で何回おしゃべり」表示。Qwen Plus≈5,208回、Qwen Max≈1,157回
-  - β期間終了済み（BETA_MODE=false）、DPLANET_MARKUP=5.0統一
-- **Payment**: Stripe従量制クレジット（単発チャージ、有料モデル×5.0マークアップ）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
+  - 料金目安: 「¥5,000で何回おしゃべり」表示（表の再設計中）
+  - β期間終了済み（BETA_MODE=false）、マークアップはモデル別（Plus×8.8、Max×5.0）
+- **Payment**: Stripe従量制クレジット（単発チャージ、有料モデルにモデル別マークアップ適用）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 
 ## Project Structure

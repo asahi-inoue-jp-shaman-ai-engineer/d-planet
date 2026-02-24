@@ -504,6 +504,7 @@ export const devRecords = pgTable("dev_records", {
   category: text("category").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  metadata: text("metadata"),
   status: text("status").default("active").notNull(),
   priority: integer("priority").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
