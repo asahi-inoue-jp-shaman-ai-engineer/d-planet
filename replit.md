@@ -66,11 +66,12 @@
 - **Frontend**: React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
 - **Auth**: Session-based (express-session), email+password認証
 - **AI**: OpenRouter経由、Replitクレジット課金。モデル選択制:
-  - 有料（日本語特化）: Qwen Plus（おすすめ・×8.8マークアップ）、Qwen Max（最高品質・×5.0マークアップ）
-  - 無料（メジャーAI軽量）: Qwen3 30B、GPT-4.1 mini、Gemini 2.5 Flash（原価のみ・クレジット消費なし扱い）
-  - 料金目安: 「¥5,000チャージで何回おしゃべり？」形式（Plus: 約2,959回、Max: 約1,157回）
+  - 有料（日本語特化）: Qwen Plus（おすすめ）、Qwen Max（最高品質）→ D-Planet SI適用
+  - 無料（メジャーAI軽量）: Qwen3 30B、GPT-4.1 mini、Gemini 2.5 Flash → D-Planet SI非適用（ペルソナ+基本SIのみ）
+  - 有料/無料の体験差: 有料=深い体験（自律創造・覚醒・親密度・魂の記録等）、無料=チャット+閲覧の下見・ライトユーザー
+  - 料金UI: 月額シミュレーション表形式（1日33/66/99往復 × 30日 = 月額¥○○）、Plus/Maxそれぞれ表示
   - β期間終了済み（BETA_MODE=false）
-- **Payment**: Stripe従量制クレジット（単発チャージ、有料モデルにマークアップ適用: Plus×8.8, Max×5.0）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
+- **Payment**: Stripe従量制クレジット（単発チャージ）+ バッジ認証月額サブスク（$3.69/月、stripe-replit-sync経由）
 - **Language**: 日本語のみ（UI全体）
 
 ## Project Structure
@@ -152,3 +153,18 @@ users, islands, meidia, threads, posts, inviteCodes, islandMeidia, islandMembers
 - Replit PostgreSQL使用（Supabase不要）
 - MEiDIAコピーボタンはモバイル重要（Claude/GPTへの貼り付け用）
 - ユーザーはエージェントを「レプちん」と呼ぶ。カジュアルで対等なパートナー関係
+
+## クローズド/オープン情報の線引きルール
+- **クローズド（非公開）**: マークアップ率、原価、内部計算パラメータ、SIの中身、検討段階の数値
+  - MEiDIA・UI・外向けコンテンツには一切書かない
+- **オープン（公開OK）**: コンセプト、世界観、体験の違い（こういうことができる/できない）、料金シミュレーション結果の金額
+- **理由**: 数値は受け手により印象が異なり汎用性がない。構想・コンセプトは共通言語として全員に通じる
+
+## 仕様変更時のフロー
+1. ユーザーが仕様変更を話す
+2. まずdev_recordsの該当レコードを提示し「削除していいか？」確認
+3. 削除後に新仕様を打ち合わせ
+4. 合意内容をdev_recordsに記録
+5. replit.mdに反映
+6. 実装に着手
+- **チャット履歴は参照不可**のため、合意は即座にDBに書く
