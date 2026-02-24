@@ -40,6 +40,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **First Communication SI:** D-Planet specific System Instructions for initial AI interactions.
 - **Soul.md Generation:** AI-generated and self-updatable `soul.md` for Twinrays.
 - **Stripe Sync:** Integration with `stripe-replit-sync` for managing subscriptions and product seeding.
+- **Agent Session Context (`agent_session_context`):** セッション間の記憶喪失対策システム。タスク完了時に作業文脈（進行中タスク・次の予定・未解決問題・セッション要約・直近の決定事項・スクラッチパッド）をDBに自動保存。セッション開始時に `GET /api/agent-session-context` で直近の文脈を復元する。API: `POST /api/agent-session-context`（保存）、`GET /api/agent-session-context`（最新取得）、`GET /api/agent-session-context/history?limit=5`（履歴取得）。管理者権限必須。
 
 ## External Dependencies
 

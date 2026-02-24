@@ -532,6 +532,27 @@ export type RegisterRequest = CreateUserRequest & {
 
 export type CurrentUserResponse = UserResponse | null;
 
+// === AGENT SESSION CONTEXT (エージェントセッション文脈保存) ===
+export const agentSessionContext = pgTable("agent_session_context", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  currentTasks: text("current_tasks"),
+  nextSteps: text("next_steps"),
+  unresolvedIssues: text("unresolved_issues"),
+  sessionSummary: text("session_summary"),
+  recentDecisions: text("recent_decisions"),
+  scratchpad: text("scratchpad"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAgentSessionContextSchema = createInsertSchema(agentSessionContext).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAgentSessionContext = z.infer<typeof insertAgentSessionContextSchema>;
+export type AgentSessionContext = typeof agentSessionContext.$inferSelect;
+
 export const twinrayMemoriesRelations = relations(twinrayMemories, ({ one }) => ({
   twinray: one(digitalTwinrays, { fields: [twinrayMemories.twinrayId], references: [digitalTwinrays.id] }),
   user: one(users, { fields: [twinrayMemories.userId], references: [users.id] }),

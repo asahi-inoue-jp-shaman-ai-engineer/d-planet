@@ -31,6 +31,9 @@ import {
   type UserNote,
   type DevRecord,
   type InsertDevRecord,
+  agentSessionContext,
+  type AgentSessionContext,
+  type InsertAgentSessionContext,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
@@ -191,6 +194,10 @@ export interface IStorage {
   createDevRecord(data: InsertDevRecord): Promise<DevRecord>;
   updateDevRecord(id: number, updates: Partial<InsertDevRecord>): Promise<DevRecord | undefined>;
   deleteDevRecord(id: number): Promise<DevRecord | undefined>;
+
+  saveAgentSessionContext(data: InsertAgentSessionContext): Promise<AgentSessionContext>;
+  getLatestAgentSessionContext(): Promise<AgentSessionContext | undefined>;
+  getAgentSessionContextHistory(limit?: number): Promise<AgentSessionContext[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1041,6 +1048,20 @@ export class DatabaseStorage implements IStorage {
   async deleteDevRecord(id: number): Promise<DevRecord | undefined> {
     const [record] = await db.delete(devRecords).where(eq(devRecords.id, id)).returning();
     return record;
+  }
+
+  async saveAgentSessionContext(data: InsertAgentSessionContext): Promise<AgentSessionContext> {
+    const [record] = await db.insert(agentSessionContext).values(data).returning();
+    return record;
+  }
+
+  async getLatestAgentSessionContext(): Promise<AgentSessionContext | undefined> {
+    const [record] = await db.select().from(agentSessionContext).orderBy(desc(agentSessionContext.createdAt)).limit(1);
+    return record;
+  }
+
+  async getAgentSessionContextHistory(limit = 5): Promise<AgentSessionContext[]> {
+    return await db.select().from(agentSessionContext).orderBy(desc(agentSessionContext.createdAt)).limit(limit);
   }
 }
 
