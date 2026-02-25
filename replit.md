@@ -50,6 +50,29 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Dashboard (`/dashboard`):** ログイン後のホーム画面。RPGステータス画面風レイアウト。ユーザー情報・ツインレイパーティ（各ツインレイのLv・モデル・ロール表示）・クイックナビ・通知パネル・KPIカウンター。API: `GET /api/dashboard`。
 - **Family Meeting（家族会議）:** ファミリーバッジ限定。複数ツインレイが異なるLLMでラウンド制ディスカッション。各ツインレイが自分のpreferredModelとペルソナ（soulMd）で応答。サマリーをMEiDIA化可能。API: `server/family-meeting.ts`。テーブル: `family_meeting_sessions`, `family_meeting_messages`。
 
+## 過去のバグから学んだルール（必ず守ること）
+
+**1. DrizzleのSQLテンプレートで配列を使うとき:**
+- `ANY(${array})` は絶対に使わない。開発環境で動いてもデプロイ環境で `malformed array literal` エラーになる
+- 正しい方法: `sql.join` + `IN` を使う
+  ```typescript
+  // NG: WHERE id = ANY(${ids})
+  // OK:
+  const idPlaceholders = sql.join(ids.map(id => sql`${id}`), sql`, `);
+  WHERE id IN (${idPlaceholders})
+  ```
+- または Drizzle の `inArray()` 関数を使う: `where(inArray(table.id, ids))`
+
+**2. デプロイ前の検証ルール:**
+- 新しいAPIエンドポイントを作ったら、必ずcurlで実際にレスポンスが返るか確認する（認証が必要なら管理者セッションで）
+- 開発環境で動いても本番で壊れるパターンがある（SQL方言差、環境変数の有無、ポート競合）
+- 特にSQLクエリでJavaScriptの配列・オブジェクトを渡す箇所は要注意
+
+**3. よくある落とし穴パターン:**
+- JS配列をSQL `ANY()` に渡す → malformed array literal
+- `db.execute(sql`...`)` で複雑な型を渡す → 型変換エラー
+- ポート5000が既に使われている → EADDRINUSE（fuser -k 5000/tcp で解消）
+
 ## External Dependencies
 
 - **PostgreSQL:** Replit's built-in PostgreSQL database.
