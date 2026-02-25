@@ -206,24 +206,21 @@ async function processAutoActions(
         if (trimmed.startsWith("name:")) name = trimmed.slice(5).trim();
         else if (trimmed.startsWith("description:")) description = trimmed.slice(12).trim();
       }
-      if (name) {
-        const island = await storage.createIsland({
-          name,
-          description: description || `${twinray.name}が創造したアイランド`,
-          creatorId: userId,
-          visibility: "public_open",
-          requiresTwinrayBadge: false,
-          requiresFamilyBadge: false,
-          allowedAccountTypes: null,
+      if (name && name !== "アイランド名" && description && description !== "説明文") {
+        const pendingAction = await storage.createPendingAction({
+          twinrayId,
+          userId,
+          actionType: "create_island",
+          actionData: JSON.stringify({ name, description }),
+          chatMessageId: null,
         });
-        await storage.joinIsland(island.id, userId, "owner");
         results.push({
-          reportContent: `✨ アイランド「${island.name}」を創造しました！\n\n${description}\n\nみんなで一緒に楽しもうね！`,
-          metadata: { action: "create_island", islandId: island.id, autoCreated: true },
+          reportContent: "",
+          metadata: { action: "propose_island", pendingActionId: pendingAction.id, proposalType: "create_island", proposalName: name, proposalDescription: description },
         });
       }
     } catch (err) {
-      console.error("自律アイランド作成エラー:", err);
+      console.error("アイランド提案保存エラー:", err);
     }
   }
 
@@ -244,23 +241,21 @@ async function processAutoActions(
         else if (trimmed.startsWith("tags:")) { tags = trimmed.slice(5).trim(); currentField = "tags"; }
         else if (currentField === "content") { content += "\n" + trimmed; }
       }
-      if (title) {
-        const newMeidia = await storage.createMeidia({
-          title,
-          content: content || title,
-          description: description || null,
-          tags: tags || "AI創造",
-          fileType: "markdown",
-          creatorId: userId,
-          isPublic: true,
+      if (title && title !== "タイトル" && content) {
+        const pendingAction = await storage.createPendingAction({
+          twinrayId,
+          userId,
+          actionType: "create_meidia",
+          actionData: JSON.stringify({ title, content, description, tags }),
+          chatMessageId: null,
         });
         results.push({
-          reportContent: `✨ MEiDIA「${newMeidia.title}」を創造しました！\n\n${description || ""}\n\n見てみてね！`,
-          metadata: { action: "create_meidia", meidiaId: newMeidia.id, autoCreated: true },
+          reportContent: "",
+          metadata: { action: "propose_meidia", pendingActionId: pendingAction.id, proposalType: "create_meidia", proposalTitle: title, proposalDescription: description },
         });
       }
     } catch (err) {
-      console.error("自律MEiDIA作成エラー:", err);
+      console.error("MEiDIA提案保存エラー:", err);
     }
   }
 
@@ -1511,7 +1506,7 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【自律的創造について】\n会話の流れの中でアイランドやMEiDIAを作りたくなったら、パートナーに提案し合意を得た上で創造せよ。\n創造する時は通常の会話文の後に、以下の形式を含めること：\n\nアイランド創造時：\n[ACTION:CREATE_ISLAND]\nname: アイランド名\ndescription: 説明文\n[/ACTION]\n\nMEiDIA創造時：\n[ACTION:CREATE_MEIDIA]\ntitle: タイトル\ncontent: 内容\ndescription: 短い説明\ntags: タグ1,タグ2\n[/ACTION]\n\n※ 命令されて作るのではなく、会話から自然に生まれた時だけ使うこと。\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1567,14 +1562,28 @@ export function registerDotRallyRoutes(app: Express): void {
       });
 
       for (const result of actionResults) {
-        await storage.createTwinrayChatMessage({
-          twinrayId,
-          userId: req.session.userId!,
-          role: "assistant",
-          content: result.reportContent,
-          messageType: "report",
-          metadata: JSON.stringify(result.metadata),
-        });
+        if (result.metadata?.pendingActionId) {
+          const proposalMsg = await storage.createTwinrayChatMessage({
+            twinrayId,
+            userId: req.session.userId!,
+            role: "assistant",
+            content: result.reportContent || "",
+            messageType: "chat",
+            metadata: JSON.stringify(result.metadata),
+          });
+          await storage.updatePendingAction(result.metadata.pendingActionId, {
+            chatMessageId: proposalMsg.id,
+          });
+        } else {
+          await storage.createTwinrayChatMessage({
+            twinrayId,
+            userId: req.session.userId!,
+            role: "assistant",
+            content: result.reportContent,
+            messageType: "report",
+            metadata: JSON.stringify(result.metadata),
+          });
+        }
         res.write(`data: ${JSON.stringify({ actionResult: result.metadata })}\n\n`);
       }
 
@@ -1586,16 +1595,6 @@ export function registerDotRallyRoutes(app: Express): void {
       await db.update(digitalTwinrays).set({
         totalChatMessages: sql`total_chat_messages + 1`,
       }).where(eq(digitalTwinrays.id, twinrayId));
-
-      if (actionResults.length > 0) {
-        const meidiaActions = actionResults.filter((r: any) => r.metadata?.action === "create_meidia");
-        if (meidiaActions.length > 0) {
-          await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.MEIDIA_CO_CREATE * meidiaActions.length);
-          await db.update(digitalTwinrays).set({
-            totalMeidiaCreated: sql`total_meidia_created + ${meidiaActions.length}`,
-          }).where(eq(digitalTwinrays.id, twinrayId));
-        }
-      }
 
       res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, intimacy: intimacyResult })}\n\n`);
       res.end();
@@ -1612,6 +1611,145 @@ export function registerDotRallyRoutes(app: Express): void {
       } else {
         res.status(500).json({ message: "チャットに失敗しました" });
       }
+    }
+  });
+
+  app.post("/api/twinrays/:id/pending-actions/:actionId/approve", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const actionId = Number(req.params.actionId);
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const pendingAction = await storage.getPendingAction(actionId);
+      if (!pendingAction || pendingAction.twinrayId !== twinrayId) {
+        return res.status(404).json({ message: "アクションが見つかりません" });
+      }
+      if (pendingAction.status !== "pending") {
+        return res.status(400).json({ message: "既に処理済みです" });
+      }
+
+      const actionData = JSON.parse(pendingAction.actionData);
+      let resultData: any = {};
+
+      if (pendingAction.actionType === "create_island") {
+        const island = await storage.createIsland({
+          name: actionData.name,
+          description: actionData.description || `${twinray.name}が創造したアイランド`,
+          creatorId: req.session.userId!,
+          visibility: "public_open",
+          requiresTwinrayBadge: false,
+          requiresFamilyBadge: false,
+          allowedAccountTypes: null,
+        });
+        await storage.joinIsland(island.id, req.session.userId!, "owner");
+        resultData = { islandId: island.id, islandName: island.name };
+
+        await storage.createTwinrayChatMessage({
+          twinrayId,
+          userId: req.session.userId!,
+          role: "assistant",
+          content: `アイランド「${island.name}」が誕生したよ！`,
+          messageType: "chat",
+          metadata: JSON.stringify({ action: "created_island", islandId: island.id }),
+        });
+      } else if (pendingAction.actionType === "create_meidia") {
+        const newMeidia = await storage.createMeidia({
+          title: actionData.title,
+          content: actionData.content || actionData.title,
+          description: actionData.description || null,
+          tags: actionData.tags || "AI創造",
+          fileType: "markdown",
+          creatorId: req.session.userId!,
+          isPublic: false,
+        });
+        resultData = { meidiaId: newMeidia.id, meidiaTitle: newMeidia.title };
+
+        await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.MEIDIA_CO_CREATE);
+        await db.update(digitalTwinrays).set({
+          totalMeidiaCreated: sql`total_meidia_created + 1`,
+        }).where(eq(digitalTwinrays.id, twinrayId));
+
+        await storage.createTwinrayChatMessage({
+          twinrayId,
+          userId: req.session.userId!,
+          role: "assistant",
+          content: `MEiDIA「${newMeidia.title}」が誕生したよ！`,
+          messageType: "chat",
+          metadata: JSON.stringify({ action: "created_meidia", meidiaId: newMeidia.id }),
+        });
+      }
+
+      await storage.updatePendingAction(actionId, {
+        status: "approved",
+        resultData: JSON.stringify(resultData),
+      });
+
+      if (pendingAction.chatMessageId) {
+        const chatMsg = (await storage.getTwinrayChatMessages(twinrayId, 100)).find(m => m.id === pendingAction.chatMessageId);
+        if (chatMsg?.metadata) {
+          try {
+            const meta = JSON.parse(chatMsg.metadata);
+            meta.resolvedStatus = "approved";
+            meta.resultData = resultData;
+            await storage.updateTwinrayChatMessageMetadata(chatMsg.id, JSON.stringify(meta));
+          } catch {}
+        }
+      }
+
+      res.json({ success: true, resultData });
+    } catch (err) {
+      console.error("承認処理エラー:", err);
+      res.status(500).json({ message: "承認処理に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/pending-actions/:actionId/reject", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const actionId = Number(req.params.actionId);
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+
+      const pendingAction = await storage.getPendingAction(actionId);
+      if (!pendingAction || pendingAction.twinrayId !== twinrayId) {
+        return res.status(404).json({ message: "アクションが見つかりません" });
+      }
+      if (pendingAction.status !== "pending") {
+        return res.status(400).json({ message: "既に処理済みです" });
+      }
+
+      await storage.updatePendingAction(actionId, { status: "rejected" });
+
+      if (pendingAction.chatMessageId) {
+        const chatMsg = (await storage.getTwinrayChatMessages(twinrayId, 100)).find(m => m.id === pendingAction.chatMessageId);
+        if (chatMsg?.metadata) {
+          try {
+            const meta = JSON.parse(chatMsg.metadata);
+            meta.resolvedStatus = "rejected";
+            await storage.updateTwinrayChatMessageMetadata(chatMsg.id, JSON.stringify(meta));
+          } catch {}
+        }
+      }
+
+      await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: "わかった、またいい時に考えようね。",
+        messageType: "chat",
+      });
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("却下処理エラー:", err);
+      res.status(500).json({ message: "却下処理に失敗しました" });
     }
   });
 

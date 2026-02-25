@@ -25,7 +25,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
 - **Auth:** Session-based authentication using `express-session`, supporting email/password registration and login.
 - **AI Integration:** Utilizes OpenRouter for AI model access, supporting 5 models (2 paid, 3 free). β期間終了・正式課金開始。有料モデル: Qwen Plus（おすすめ）, Qwen Max（最高品質）。無料モデル: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。有料モデルは原価×5.0マークアップ（DPLANET_MARKUP=5.0）、無料モデルは原価のみ（×1.0）。Claude系は全モデル除外。料金表示: ¥5,000で何往復 + 月額シミュレーション表（1日33/66/99往復）。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
-- **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]`, `[ACTION:CREATE_ISLAND]`, and `[ACTION:CREATE_MEIDIA]` directly into the DB based on intimacy levels. This data is injected into system prompts for ongoing interactions.
+- **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` directly into the DB based on intimacy levels. `[ACTION:CREATE_ISLAND]` and `[ACTION:CREATE_MEIDIA]` は承認制に変更済み — AIが提案→ユーザーがチャット内で承認/却下→承認後に作成される。`twinray_pending_actions` テーブルで管理。MEiDIAは非公開（isPublic: false）で作成。
 - **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
 
 **Feature Specifications:**

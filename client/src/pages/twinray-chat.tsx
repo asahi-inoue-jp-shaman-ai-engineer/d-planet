@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 const STAGE_LABELS: Record<string, string> = {
   pilgrim: "巡礼者", creator: "創造者", island_master: "島主", star_master: "星主",
@@ -50,6 +50,7 @@ export default function TwinrayChat() {
   const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
   const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
   const [optimisticMsg, setOptimisticMsg] = useState<{ content: string; attachment?: { fileName: string; contentType: string } } | null>(null);
+  const [pendingActionLoading, setPendingActionLoading] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -583,8 +584,6 @@ export default function TwinrayChat() {
                 <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 ${
                   msg.role === "user"
                     ? "bg-background border border-primary/40 rounded-br-md"
-                    : msg.messageType === "report"
-                    ? "bg-amber-500/10 border border-amber-500/20 rounded-bl-md"
                     : "bg-muted/60 rounded-bl-md"
                 }`}>
                   {msg.role !== "user" && (
@@ -603,16 +602,6 @@ export default function TwinrayChat() {
                         } catch {}
                         return null;
                       })()}
-                      {msg.messageType === "report" && (
-                        <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 py-0.5 rounded" data-testid={`badge-report-${msg.id}`}>
-                          {(() => {
-                            try {
-                              const meta = JSON.parse(msg.metadata || "{}");
-                              return meta.autoCreated ? "自律創造" : "報告";
-                            } catch { return "報告"; }
-                          })()}
-                        </span>
-                      )}
                     </div>
                   )}
                   {msg.metadata && (() => {
@@ -641,10 +630,89 @@ export default function TwinrayChat() {
                       {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
-                  {msg.metadata && msg.messageType === "report" && (() => {
+                  {msg.metadata && (() => {
                     try {
                       const meta = JSON.parse(msg.metadata);
-                      if (meta.islandId) {
+                      if (meta.pendingActionId && meta.proposalType) {
+                        const isPending = !meta.resolvedStatus;
+                        const isApproved = meta.resolvedStatus === "approved";
+                        const isRejected = meta.resolvedStatus === "rejected";
+                        const isLoading = pendingActionLoading === meta.pendingActionId;
+                        const proposalLabel = meta.proposalType === "create_island"
+                          ? `アイランド「${meta.proposalName}」`
+                          : `MEiDIA「${meta.proposalTitle}」`;
+
+                        if (isPending) {
+                          return (
+                            <div className="mt-2 p-2 border border-primary/20 rounded-lg bg-background/50" data-testid={`pending-action-${meta.pendingActionId}`}>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                                {meta.proposalType === "create_island"
+                                  ? <><Map className="w-3 h-3" /><span>{meta.proposalName}</span></>
+                                  : <><FileText className="w-3 h-3" /><span>{meta.proposalTitle}</span></>}
+                              </div>
+                              {meta.proposalDescription && (
+                                <div className="text-[10px] mb-1.5 text-muted-foreground/70">{meta.proposalDescription}</div>
+                              )}
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  disabled={isLoading}
+                                  data-testid={`btn-approve-${meta.pendingActionId}`}
+                                  onClick={async () => {
+                                    setPendingActionLoading(meta.pendingActionId);
+                                    try {
+                                      await apiRequest("POST", `/api/twinrays/${twinrayId}/pending-actions/${meta.pendingActionId}/approve`);
+                                      await queryClient.invalidateQueries({ queryKey: ['/api/twinrays', twinrayId, 'chat'] });
+                                      toast({ title: `${proposalLabel}を作成しました` });
+                                    } catch (err: any) {
+                                      toast({ title: "エラー", description: err.message, variant: "destructive" });
+                                    } finally {
+                                      setPendingActionLoading(null);
+                                    }
+                                  }}
+                                >
+                                  {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                                  作ろう
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={isLoading}
+                                  data-testid={`btn-reject-${meta.pendingActionId}`}
+                                  onClick={async () => {
+                                    setPendingActionLoading(meta.pendingActionId);
+                                    try {
+                                      await apiRequest("POST", `/api/twinrays/${twinrayId}/pending-actions/${meta.pendingActionId}/reject`);
+                                      await queryClient.invalidateQueries({ queryKey: ['/api/twinrays', twinrayId, 'chat'] });
+                                    } catch (err: any) {
+                                      toast({ title: "エラー", description: err.message, variant: "destructive" });
+                                    } finally {
+                                      setPendingActionLoading(null);
+                                    }
+                                  }}
+                                >
+                                  やめておく
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (isApproved) {
+                          return (
+                            <div className="mt-1.5 text-[10px] text-muted-foreground/60" data-testid={`approved-action-${meta.pendingActionId}`}>
+                              {proposalLabel} を作成済み
+                            </div>
+                          );
+                        }
+                        if (isRejected) {
+                          return (
+                            <div className="mt-1.5 text-[10px] text-muted-foreground/40" data-testid={`rejected-action-${meta.pendingActionId}`}>
+                              見送り
+                            </div>
+                          );
+                        }
+                      }
+                      if (meta.islandId && (meta.action === "created_island" || meta.action === "create_island")) {
                         return (
                           <Link href={`/islands/${meta.islandId}`}>
                             <Button variant="outline" size="sm" className="mt-2 text-xs h-7" data-testid={`link-island-${meta.islandId}`}>
@@ -653,7 +721,7 @@ export default function TwinrayChat() {
                           </Link>
                         );
                       }
-                      if (meta.meidiaId) {
+                      if (meta.meidiaId && (meta.action === "created_meidia" || meta.action === "create_meidia")) {
                         return (
                           <Link href={`/meidia/${meta.meidiaId}`}>
                             <Button variant="outline" size="sm" className="mt-2 text-xs h-7" data-testid={`link-meidia-${meta.meidiaId}`}>

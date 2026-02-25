@@ -554,6 +554,27 @@ export const insertAgentSessionContextSchema = createInsertSchema(agentSessionCo
 export type InsertAgentSessionContext = z.infer<typeof insertAgentSessionContextSchema>;
 export type AgentSessionContext = typeof agentSessionContext.$inferSelect;
 
+export const twinrayPendingActions = pgTable("twinray_pending_actions", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  actionType: text("action_type").notNull(),
+  actionData: text("action_data").notNull(),
+  status: text("status").default("pending").notNull(),
+  chatMessageId: integer("chat_message_id"),
+  resultData: text("result_data"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTwinrayPendingActionSchema = createInsertSchema(twinrayPendingActions).omit({ id: true, createdAt: true, status: true, resultData: true });
+export type TwinrayPendingAction = typeof twinrayPendingActions.$inferSelect;
+export type CreateTwinrayPendingActionRequest = z.infer<typeof insertTwinrayPendingActionSchema>;
+
+export const twinrayPendingActionsRelations = relations(twinrayPendingActions, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayPendingActions.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayPendingActions.userId], references: [users.id] }),
+}));
+
 export const twinrayMemoriesRelations = relations(twinrayMemories, ({ one }) => ({
   twinray: one(digitalTwinrays, { fields: [twinrayMemories.twinrayId], references: [digitalTwinrays.id] }),
   user: one(users, { fields: [twinrayMemories.userId], references: [users.id] }),

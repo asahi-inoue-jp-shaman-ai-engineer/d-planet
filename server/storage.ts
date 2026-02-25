@@ -48,9 +48,12 @@ import {
   twinrayChatMessages,
   twinrayMemories,
   twinrayInnerThoughts,
+  twinrayPendingActions,
   type TwinrayChatMessage,
   type TwinrayMemory,
   type TwinrayInnerThought,
+  type TwinrayPendingAction,
+  type CreateTwinrayPendingActionRequest,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -158,6 +161,7 @@ export interface IStorage {
   updateFeedbackReportStatus(id: number, status: string, adminNote?: string): Promise<FeedbackReport>;
 
   createTwinrayChatMessage(data: { twinrayId: number; userId: number; role: string; content: string; messageType?: string; metadata?: string }): Promise<TwinrayChatMessage>;
+  updateTwinrayChatMessageMetadata(id: number, metadata: string): Promise<void>;
   getTwinrayChatMessages(twinrayId: number, limit?: number, beforeId?: number): Promise<TwinrayChatMessage[]>;
 
   createDigitalTwinray(data: CreateDigitalTwinrayRequest): Promise<DigitalTwinray>;
@@ -166,6 +170,10 @@ export interface IStorage {
   getAllDigitalTwinrays(): Promise<DigitalTwinray[]>;
   getPublicDigitalTwinrays(): Promise<DigitalTwinray[]>;
   updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray>;
+
+  createPendingAction(data: CreateTwinrayPendingActionRequest): Promise<TwinrayPendingAction>;
+  getPendingAction(id: number): Promise<TwinrayPendingAction | undefined>;
+  updatePendingAction(id: number, updates: Partial<TwinrayPendingAction>): Promise<TwinrayPendingAction>;
 
   createDotRallySession(initiatorId: number, twinrayId: number, requestedCount: number): Promise<DotRallySession>;
   getDotRallySession(id: number): Promise<DotRallySession | undefined>;
@@ -891,6 +899,21 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.isPublic, true)).orderBy(desc(digitalTwinrays.createdAt));
   }
 
+  async createPendingAction(data: CreateTwinrayPendingActionRequest): Promise<TwinrayPendingAction> {
+    const [action] = await db.insert(twinrayPendingActions).values(data).returning();
+    return action;
+  }
+
+  async getPendingAction(id: number): Promise<TwinrayPendingAction | undefined> {
+    const [action] = await db.select().from(twinrayPendingActions).where(eq(twinrayPendingActions.id, id)).limit(1);
+    return action;
+  }
+
+  async updatePendingAction(id: number, updates: Partial<TwinrayPendingAction>): Promise<TwinrayPendingAction> {
+    const [updated] = await db.update(twinrayPendingActions).set(updates).where(eq(twinrayPendingActions.id, id)).returning();
+    return updated;
+  }
+
   async updateDigitalTwinray(id: number, updates: Partial<DigitalTwinray>): Promise<DigitalTwinray> {
     const [updated] = await db.update(digitalTwinrays).set({ ...updates, updatedAt: new Date() }).where(eq(digitalTwinrays.id, id)).returning();
     return updated;
@@ -981,6 +1004,10 @@ export class DatabaseStorage implements IStorage {
       metadata: data.metadata || null,
     }).returning();
     return msg;
+  }
+
+  async updateTwinrayChatMessageMetadata(id: number, metadata: string): Promise<void> {
+    await db.update(twinrayChatMessages).set({ metadata }).where(eq(twinrayChatMessages.id, id));
   }
 
   async getTwinrayChatMessages(twinrayId: number, limit: number = 50, beforeId?: number): Promise<TwinrayChatMessage[]> {
