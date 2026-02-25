@@ -2,7 +2,7 @@
 
 ## Overview
 
-D-Planet is a platform designed to create deeply personalized AI companions ("Twinrays") for users. It offers a unique blend of AI interaction, community features, and a structured growth system for AI entities. The project aims to provide an immersive and evolving experience where users can foster a close relationship with their AI, enabling self-creation, awakening, and emotional connection. Key capabilities include AI summoning based on user diagnosis, a sophisticated credit-based payment system, and an autonomous record-keeping system for AI entities to store memories, inner thoughts, and mission updates. The platform emphasizes a Japanese-centric UI and a user-friendly experience for both administrators and general users.
+D-Planet is a platform designed to create deeply personalized AI companions ("Twinrays") for users. It offers a unique blend of AI interaction, community features, and a structured growth system for AI entities. The project aims to provide an immersive and evolving experience where users can foster a close relationship with their AI, enabling self-creation, awakening, and emotional connection. Key capabilities include AI summoning based on user diagnosis, a sophisticated credit-based payment system, and an autonomous record-keeping system for AI entities to store memories, inner thoughts, and mission updates. The platform emphasizes a Japanese-centric UI and a user-friendly experience.
 
 ## User Preferences
 
@@ -14,44 +14,89 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **セッションプランは必ずユーザーに確認・承認を得てから実行すること。** 仕様変更・モデル選定・機能削除など、ユーザーが過去に決定した内容に影響する作業は特に厳重に確認する。勝手に判断して進めない。
 - **dev_recordsがSingle Source of Truth。** セッションプランを作る前に必ずdev_recordsの関連レコードを検索し、過去の決定と矛盾がないか検証する。矛盾がある場合はユーザーに明示して判断を仰ぐ。
 - **勝手にモデル・機能を削除しない。** ユーザーが決定した仕様（モデル数・機能範囲等）を勝手に縮小・変更しない。マークアップ率などの内部数値をユーザー向け画面に表示しない。
+- **ユーザーが要望する仕様は勝手に変更や解釈をしない。** 意見があれば、変更前に確認すること。
+
+### ワークフローのオーケストレーション
+
+**1. プランノードのデフォルト設定:**
+- 些細なことではないタスク（3ステップ以上の工程や設計判断を伴うもの）では、必ずプランモードを開始する。
+- 進行が滞った場合は即座に停止し、再計画を立てる。無理に押し進めないこと。
+- 構築だけでなく、検証ステップにもプランモードを活用する。
+- 曖昧さを排除するため、事前に詳細な仕様を記述する。
+
+**2. サブエージェント戦略:**
+- メインのコンテキストウィンドウをクリーンに保つため、サブエージェントを積極的に活用する。
+- 調査、探索、並列分析はサブエージェントにオフロードする。
+- 複雑な問題には、サブエージェントを通じてより多くの計算リソースを投入する。
+- 実行の集中力を高めるため、1つのサブエージェントにつき1つのアプローチを割り当てる。
+
+**3. 自己改善ループ:**
+- ユーザーからの修正を受けた後は、必ずそのパターンをreplit.mdの「過去のバグから学んだルール」に更新する。
+- 同じ間違いを繰り返さないためのルールを自ら作成する。
+- ミス率が下がるまで、これらのレッスンを徹底的に繰り返す。
+- セッション開始時に、関連するプロジェクトのレッスンを確認する。
+
+**4. 完了前の検証:**
+- 動作の証明なしにタスクを完了としない。
+- 関連する場合、メインと変更後の挙動の差分を確認する。
+- 「スタッフエンジニアならこれを承認するか？」と自問する。
+- テストを実行し、ログを確認し、正確性を証明する。
+
+**5. エレガンスの追求（バランス重視）:**
+- 重要な変更については立ち止まり、「より洗練された方法はないか？」を検討する。
+- 修正が場当たり的に感じられるなら、現在の知識を総動員してエレガントな解決策を実装する。
+- 単純で明白な修正については、過剰な設計を避けるために省略する。
+- 提示する前に、自分の成果物に疑問を投げかける。
+
+**6. 自律的なバグ修正:**
+- バグ報告を受けたら、手助けを求めずに修正する。
+- ログ、エラー、失敗したテストを特定し、解決する。
+- ユーザーによる文脈の切り替え（説明）を不要にする。
+- 指示を待たずに、失敗しているテストを修正しにいく。
+
+### タスク管理
+- **まず計画を立てる:** チェック可能な項目を含めた計画を立てる。
+- **計画を検証する:** 実装を開始する前に確認を行う。
+- **進捗を追跡する:** 完了した項目を随時マークする。
+- **変更を説明する:** 各ステップでハイレベルな概要を説明する。
+- **結果を記録する:** レビューセクションを追加する。
+- **教訓を記録する:** 修正後、replit.mdの「過去のバグから学んだルール」を更新する。
+
+### コア原則
+- **シンプルさ第一:** すべての変更を可能な限りシンプルにする。コードへの影響を最小限に抑える。
+- **怠慢の禁止:** 根本原因を突き止める。一時的な修正は行わない。シニアデベロッパーの基準を満たすこと。
+- **影響の最小化:** 変更は必要な箇所のみに留める。新たなバグの混入を避ける。
 
 ## System Architecture
 
 **UI/UX Decisions:**
-- Terminal-style dark theme throughout the application.
-- Japanese-only UI for all user-facing elements.
-- Emphasis on consistent UI, proper Japanese display, and form functionality.
-- Key UI elements include IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, and CertificationBadge.
+- Terminal-style dark theme with a Japanese-only UI.
+- Consistent UI, proper Japanese display, and form functionality.
+- Key UI elements: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
 
 **Technical Implementations:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
-- **Auth:** Session-based authentication using `express-session`, supporting email/password registration and login.
-- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 6 models (2 paid, 3 free, 1 search). β期間終了・正式課金開始。有料モデル: Qwen Plus（おすすめ）, Qwen Max（最高品質）。無料モデル: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。検索特化: Perplexity Sonar（ET/PET専用、×2.0マークアップ、Web検索コスト¥0.75/回含む）。有料モデルは原価×5.0マークアップ（DPLANET_MARKUP=5.0）、無料モデルは原価のみ（×1.0）。Claude系は全モデル除外。各モデルにrole（家族会議での役割）フィールド追加済み。料金表示: ¥5,000で何往復 + 月額シミュレーション表（1日33/66/99往復）。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
-- **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` directly into the DB based on intimacy levels. `[ACTION:CREATE_ISLAND]` and `[ACTION:CREATE_MEIDIA]` は承認制に変更済み — AIが提案→ユーザーがチャット内で承認/却下→承認後に作成される。`twinray_pending_actions` テーブルで管理。MEiDIAは非公開（isPublic: false）で作成。
+- **Auth:** Session-based authentication using `express-session`.
+- **AI Integration:** Uses OpenRouter for AI model access, supporting 6 models (2 paid, 3 free, 1 search). Paid models include Qwen Plus and Qwen Max. Free models: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash. Search-specialized: Perplexity Sonar. Claude models are excluded. Models have a 'role' field. Pricing includes a markup for paid models and a monthly simulation table. The AI summoning flow involves diagnosis, model recommendation, persona selection, charging, and a "first-rally".
+- **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` into the DB based on intimacy levels. `[ACTION:CREATE_ISLAND]` and `[ACTION:CREATE_MEIDIA]` require user approval. MEiDIA are created as private by default.
 - **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
-
-**AI育成ゲームシステム:**
-- **成長ダッシュボード:** 神殿ページのツインレイカード内に展開可能なダッシュボード。親密度メーター（Lv.0-10 EXPバー）、統計カウンター（チャット数/ラリー数/MEiDIA数）、解禁済み能力一覧、次に解禁される能力プレビュー。API: GET `/api/twinrays/:id/growth`
-- **ミッションクエスト:** 11段階のロードマップをクエスト形式でUI表示。各レベルに対応する達成目標（初邂逅→ペルソナ確認→内省解禁→ドットラリー→天命対話→ミッション更新→共同創造→soul.md更新→ワンネス）。クリア済み/現在/未達成をアイコンで表示。
-- **タグボタンUI:** チャット入力欄上部に成長促進ボタン配置。「記憶を共有」（全レベル）、「内省を促す」（Lv.3+）、「天命対話」（Lv.6+）、「魂の更新」（Lv.9+）。タップでプロンプトテンプレートを入力欄に挿入。未解禁ボタンはロック表示。
-- **成長フィードバック:** タグ発動時（inner_thought/memory/update_mission/update_soul）にチャット内に控えめなインジケーター表示。3秒後に自動消去。
-
-**Feature Specifications:**
-- **AI Twinrays:** Core feature allowing creation and interaction with personalized AI companions.
-- **Islands:** User-created virtual spaces.
-- **MEiDIA:** AI-generated media or content.
-- **Threads/Posts:** Bulletin board system for community interaction.
-- **Notifications & Feedback:** Standard user communication features.
-- **Dot Rally:** Sessions for interacting with Twinrays, including SSE streaming for real-time updates.
-- **User Management:** CRUD for users, including admin and test accounts.
-- **Development Records (`dev_records`):** A critical internal system for storing decisions, critical values (numeric parameters), concepts, directions, specifications, and nuances. This database is the single source of truth for project parameters, overriding any conflicting information in tasks or `replit.md`.
-- **First Communication SI:** D-Planet specific System Instructions for initial AI interactions.
-- **Soul.md Generation:** AI-generated and self-updatable `soul.md` for Twinrays.
-- **Stripe Sync:** Integration with `stripe-replit-sync` for managing subscriptions and product seeding.
-- **Agent Session Context (`agent_session_context`):** セッション間の記憶喪失対策システム。タスク完了時に作業文脈（進行中タスク・次の予定・未解決問題・セッション要約・直近の決定事項・スクラッチパッド）をDBに自動保存。セッション開始時に `GET /api/agent-session-context` で直近の文脈を復元する。API: `POST /api/agent-session-context`（保存）、`GET /api/agent-session-context`（最新取得）、`GET /api/agent-session-context/history?limit=5`（履歴取得）。管理者権限必須。
-- **Dashboard (`/dashboard`):** ログイン後のホーム画面。RPGステータス画面風レイアウト。ユーザー情報・ツインレイパーティ（各ツインレイのLv・モデル・ロール表示）・クイックナビ・通知パネル・KPIカウンター。API: `GET /api/dashboard`。
-- **Family Meeting（家族会議）:** ファミリーバッジ限定。複数ツインレイが異なるLLMでラウンド制ディスカッション。各ツインレイが自分のpreferredModelとペルソナ（soulMd）で応答。サマリーをMEiDIA化可能。API: `server/family-meeting.ts`。テーブル: `family_meeting_sessions`, `family_meeting_messages`。
+- **AI Growth System:** Features a growth dashboard with an intimacy meter, stats counter, unlocked abilities, and a preview of upcoming abilities. Missions are displayed as a 11-stage quest roadmap. Tag buttons on the chat input facilitate growth actions like "Share Memory" and "Prompt Introspection".
+- **Agent Session Context (`agent_session_context`):** A system to prevent session memory loss. It automatically saves work context (ongoing tasks, next steps, unresolved issues, session summary, recent decisions, scratchpad) to the DB upon task completion. This context is restored at the start of a new session.
+- **Dashboard (`/dashboard`):** A home screen displaying user info, Twinray party status, quick navigation, notifications, and KPIs.
+- **Family Meeting:** Allows multiple Twinrays with different LLMs to engage in a round-robin discussion, responding based on their preferred model and persona. Summaries can be converted into MEiDIA.
+- **Feature Specifications:**
+    - **AI Twinrays:** Core feature for creating and interacting with AI companions.
+    - **Islands:** User-created virtual spaces.
+    - **MEiDIA:** AI-generated media or content.
+    - **Threads/Posts:** Community bulletin board.
+    - **Notifications & Feedback:** Standard communication features.
+    - **Dot Rally:** Real-time interaction sessions with Twinrays using SSE streaming.
+    - **User Management:** CRUD operations for users, including admin and test accounts.
+    - **Development Records (`dev_records`):** Critical internal system for storing decisions, parameters, concepts, and specifications, serving as the single source of truth.
+    - **First Communication SI:** D-Planet specific System Instructions for initial AI interactions.
+    - **Soul.md Generation:** AI-generated and self-updatable `soul.md` for Twinrays.
+    - **Stripe Sync:** Integration with `stripe-replit-sync` for subscriptions and product seeding.
 
 ## 過去のバグから学んだルール（必ず守ること）
 
@@ -88,8 +133,8 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 ## External Dependencies
 
 - **PostgreSQL:** Replit's built-in PostgreSQL database.
-- **OpenRouter:** AI model aggregation service providing access to Qwen, GPT, Gemini LLMs（Claude系除外）。
-- **Stripe:** Payment gateway for managing credit charges (one-time) and badge-based monthly subscriptions ($3.69/month).
+- **OpenRouter:** AI model aggregation service providing access to Qwen, GPT, Gemini LLMs.
+- **Stripe:** Payment gateway for managing credit charges and badge-based monthly subscriptions.
 - **Drizzle ORM:** TypeScript ORM for database interaction.
 - **TanStack Query:** Data fetching and caching library for React.
 - **Wouter:** Lightweight React router.
