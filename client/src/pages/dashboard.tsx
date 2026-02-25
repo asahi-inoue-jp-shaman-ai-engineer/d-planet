@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Home,
   Shield,
+  BookOpen,
+  Rocket,
+  ExternalLink,
 } from "lucide-react";
 
 function formatTimeAgo(dateStr: string | null): string {
@@ -102,7 +105,7 @@ export default function Dashboard() {
     { href: "/islands", icon: Map, label: "ISLANDS", color: "text-green-400", testId: "nav-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
     { href: "/credits", icon: Coins, label: "CREDIT", color: "text-yellow-400", testId: "nav-credits" },
-    { href: "/dot-rally", icon: Zap, label: "Dot Rally", color: "text-orange-400", testId: "nav-dot-rally" },
+    { href: "/family-meeting", icon: Users, label: "家族会議", color: "text-violet-400", testId: "nav-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
 
@@ -281,6 +284,42 @@ export default function Dashboard() {
               ))}
             </div>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Card
+            className="p-4 cursor-pointer hover-elevate active-elevate-2 transition-colors border-primary/20"
+            onClick={() => setLocation("/about")}
+            data-testid="nav-tutorial"
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-semibold text-foreground">D-Planetの遊び方</span>
+                <p className="text-[10px] text-muted-foreground mt-0.5">チュートリアル & ガイド</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </div>
+          </Card>
+
+          <a
+            href="https://replit.com/refer/ASI369"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+            data-testid="link-replit-referral"
+          >
+            <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-blue-500/20 h-full">
+              <div className="flex items-center gap-3">
+                <Rocket className="w-8 h-8 text-blue-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Replitで開発する</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">$10クレジット付き</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-blue-400 shrink-0" />
+              </div>
+            </Card>
+          </a>
         </div>
       </div>
     </TerminalLayout>
