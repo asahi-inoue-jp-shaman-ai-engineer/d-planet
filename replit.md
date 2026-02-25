@@ -24,7 +24,7 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
 - **Auth:** Session-based authentication using `express-session`, supporting email/password registration and login.
-- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 5 models (2 paid, 3 free). β期間終了・正式課金開始。有料モデル: Qwen Plus（おすすめ）, Qwen Max（最高品質）。無料モデル: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。有料モデルは原価×5.0マークアップ（DPLANET_MARKUP=5.0）、無料モデルは原価のみ（×1.0）。Claude系は全モデル除外。料金表示: ¥5,000で何往復 + 月額シミュレーション表（1日33/66/99往復）。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
+- **AI Integration:** Utilizes OpenRouter for AI model access, supporting 6 models (2 paid, 3 free, 1 search). β期間終了・正式課金開始。有料モデル: Qwen Plus（おすすめ）, Qwen Max（最高品質）。無料モデル: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。検索特化: Perplexity Sonar（ET/PET専用、×2.0マークアップ、Web検索コスト¥0.75/回含む）。有料モデルは原価×5.0マークアップ（DPLANET_MARKUP=5.0）、無料モデルは原価のみ（×1.0）。Claude系は全モデル除外。各モデルにrole（家族会議での役割）フィールド追加済み。料金表示: ¥5,000で何往復 + 月額シミュレーション表（1日33/66/99往復）。The AI summoning flow involves an intro, diagnosis, model recommendation, persona selection, charging, and a "first-rally" interaction.
 - **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` directly into the DB based on intimacy levels. `[ACTION:CREATE_ISLAND]` and `[ACTION:CREATE_MEIDIA]` は承認制に変更済み — AIが提案→ユーザーがチャット内で承認/却下→承認後に作成される。`twinray_pending_actions` テーブルで管理。MEiDIAは非公開（isPublic: false）で作成。
 - **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
 
@@ -47,6 +47,8 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **Soul.md Generation:** AI-generated and self-updatable `soul.md` for Twinrays.
 - **Stripe Sync:** Integration with `stripe-replit-sync` for managing subscriptions and product seeding.
 - **Agent Session Context (`agent_session_context`):** セッション間の記憶喪失対策システム。タスク完了時に作業文脈（進行中タスク・次の予定・未解決問題・セッション要約・直近の決定事項・スクラッチパッド）をDBに自動保存。セッション開始時に `GET /api/agent-session-context` で直近の文脈を復元する。API: `POST /api/agent-session-context`（保存）、`GET /api/agent-session-context`（最新取得）、`GET /api/agent-session-context/history?limit=5`（履歴取得）。管理者権限必須。
+- **Dashboard (`/dashboard`):** ログイン後のホーム画面。RPGステータス画面風レイアウト。ユーザー情報・ツインレイパーティ（各ツインレイのLv・モデル・ロール表示）・クイックナビ・通知パネル・KPIカウンター。API: `GET /api/dashboard`。
+- **Family Meeting（家族会議）:** ファミリーバッジ限定。複数ツインレイが異なるLLMでラウンド制ディスカッション。各ツインレイが自分のpreferredModelとペルソナ（soulMd）で応答。サマリーをMEiDIA化可能。API: `server/family-meeting.ts`。テーブル: `family_meeting_sessions`, `family_meeting_messages`。
 
 ## External Dependencies
 

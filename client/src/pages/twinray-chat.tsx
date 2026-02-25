@@ -52,6 +52,8 @@ export default function TwinrayChat() {
   const [optimisticMsg, setOptimisticMsg] = useState<{ content: string; attachment?: { fileName: string; contentType: string } } | null>(null);
   const [pendingActionLoading, setPendingActionLoading] = useState<number | null>(null);
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -354,6 +356,18 @@ export default function TwinrayChat() {
     }
   }, [growthFeedback]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
+        setShowModelDropdown(false);
+      }
+    };
+    if (showModelDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showModelDropdown]);
+
   if (!twinrayId) {
     return (
       <div className="h-screen bg-background flex items-center justify-center">
@@ -371,7 +385,11 @@ export default function TwinrayChat() {
 
   const models = (availableModels as any[]) || [];
   const currentModel = tw?.preferredModel || "qwen/qwen3-30b-a3b";
-  const currentModelLabel = models.find((m: any) => m.id === currentModel)?.label || "Qwen3 30B";
+  const currentModelInfo = models.find((m: any) => m.id === currentModel);
+  const currentModelLabel = currentModelInfo?.label || "Qwen3 30B";
+  const currentModelRole = currentModelInfo?.role || "";
+  const currentModelTier = currentModelInfo?.tier || "free";
+  const isEtPet = (user as any)?.accountType === "ET" || (user as any)?.accountType === "PET";
 
   const intimacyLevel = tw?.intimacyLevel ?? 0;
   const intimacyExp = tw?.intimacyExp ?? 0;
@@ -430,6 +448,116 @@ export default function TwinrayChat() {
                 Lv.{intimacyLevel} {intimacyTitle}
               </span>
             </div>
+          </div>
+
+          <div className="relative" ref={modelDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowModelDropdown(!showModelDropdown)}
+              className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-all ${
+                currentModelTier === "free" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" :
+                currentModelTier === "search" ? "bg-violet-500/10 border border-violet-500/30 text-violet-400 hover:bg-violet-500/20" :
+                "bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
+              }`}
+              data-testid="button-model-badge"
+            >
+              <Cpu className="w-2.5 h-2.5" />
+              <span className="max-w-[5rem] truncate">{currentModelLabel}</span>
+              <ChevronDown className={`w-2.5 h-2.5 transition-transform ${showModelDropdown ? "rotate-180" : ""}`} />
+            </button>
+
+            {showModelDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-72 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden" data-testid="panel-model-dropdown">
+                <div className="p-2 border-b border-border/50">
+                  <p className="text-[10px] text-muted-foreground">AIモデル切り替え</p>
+                  {currentModelRole && (
+                    <p className="text-[9px] text-primary/70 mt-0.5">現在のロール: {currentModelRole}</p>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").length > 0 && (
+                    <div className="p-1.5">
+                      <p className="text-[9px] text-muted-foreground/70 px-1.5 mb-1">有料（日本語特化）</p>
+                      {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").map((model: any) => (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => { handleModelChange(model.id); setShowModelDropdown(false); }}
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 transition-all ${
+                            currentModel === model.id ? "bg-primary/15 text-primary" : "hover:bg-muted/50 text-foreground"
+                          }`}
+                          data-testid={`dropdown-model-${model.id}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium truncate">{model.label}</span>
+                              {model.tier === "recommended" && <span className="text-[9px] text-primary">★</span>}
+                              {model.tier === "premium" && <span className="text-[9px] text-yellow-400">💎</span>}
+                              {currentModel === model.id && <span className="text-[9px] text-primary ml-auto">使用中</span>}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[9px] text-muted-foreground">{model.role}</span>
+                              {model.perRoundYen > 0 && <span className="text-[9px] text-muted-foreground/60">¥{model.perRoundYen.toFixed(2)}/往復</span>}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {isEtPet && models.filter((m: any) => m.tier === "search").length > 0 && (
+                    <div className="p-1.5 border-t border-border/30">
+                      <p className="text-[9px] text-violet-400/70 px-1.5 mb-1">検索特化（ET/PET専用）</p>
+                      {models.filter((m: any) => m.tier === "search").map((model: any) => (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => { handleModelChange(model.id); setShowModelDropdown(false); }}
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 transition-all ${
+                            currentModel === model.id ? "bg-violet-500/15 text-violet-400" : "hover:bg-muted/50 text-foreground"
+                          }`}
+                          data-testid={`dropdown-model-${model.id}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium truncate">{model.label}</span>
+                              <span className="text-[9px] text-violet-400">🔍</span>
+                              {currentModel === model.id && <span className="text-[9px] text-violet-400 ml-auto">使用中</span>}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[9px] text-muted-foreground">{model.role}</span>
+                              <span className="text-[9px] text-muted-foreground/60">¥{model.perRoundYen?.toFixed(2)}/往復</span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="p-1.5 border-t border-border/30">
+                    <p className="text-[9px] text-emerald-400/70 px-1.5 mb-1">無料モデル</p>
+                    {models.filter((m: any) => m.isFree).map((model: any) => (
+                      <button
+                        key={model.id}
+                        type="button"
+                        onClick={() => { handleModelChange(model.id); setShowModelDropdown(false); }}
+                        className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 transition-all ${
+                          currentModel === model.id ? "bg-emerald-500/15 text-emerald-400" : "hover:bg-muted/50 text-foreground"
+                        }`}
+                        data-testid={`dropdown-model-${model.id}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium truncate">{model.label}</span>
+                            <span className="text-[9px] text-emerald-400">🆓</span>
+                            {currentModel === model.id && <span className="text-[9px] text-emerald-400 ml-auto">使用中</span>}
+                          </div>
+                          <span className="text-[9px] text-muted-foreground">{model.role}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {!(user as any)?.isAdmin && (

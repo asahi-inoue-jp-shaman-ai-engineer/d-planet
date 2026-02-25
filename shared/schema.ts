@@ -584,3 +584,44 @@ export const twinrayInnerThoughtsRelations = relations(twinrayInnerThoughts, ({ 
   twinray: one(digitalTwinrays, { fields: [twinrayInnerThoughts.twinrayId], references: [digitalTwinrays.id] }),
   user: one(users, { fields: [twinrayInnerThoughts.userId], references: [users.id] }),
 }));
+
+export const familyMeetingSessions = pgTable("family_meeting_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  topic: text("topic").notNull(),
+  summary: text("summary"),
+  status: text("status").default("active").notNull(),
+  participantIds: text("participant_ids").notNull(),
+  totalCost: numeric("total_cost", { precision: 10, scale: 4 }).default("0"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const familyMeetingMessages = pgTable("family_meeting_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  twinrayId: integer("twinray_id"),
+  modelId: text("model_id"),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  round: integer("round").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFamilyMeetingSessionSchema = createInsertSchema(familyMeetingSessions).omit({ id: true, createdAt: true, completedAt: true, status: true, summary: true, totalCost: true });
+export const insertFamilyMeetingMessageSchema = createInsertSchema(familyMeetingMessages).omit({ id: true, createdAt: true });
+
+export type FamilyMeetingSession = typeof familyMeetingSessions.$inferSelect;
+export type FamilyMeetingMessage = typeof familyMeetingMessages.$inferSelect;
+export type CreateFamilyMeetingSessionRequest = z.infer<typeof insertFamilyMeetingSessionSchema>;
+export type CreateFamilyMeetingMessageRequest = z.infer<typeof insertFamilyMeetingMessageSchema>;
+
+export const familyMeetingSessionsRelations = relations(familyMeetingSessions, ({ one, many }) => ({
+  user: one(users, { fields: [familyMeetingSessions.userId], references: [users.id] }),
+  messages: many(familyMeetingMessages),
+}));
+
+export const familyMeetingMessagesRelations = relations(familyMeetingMessages, ({ one }) => ({
+  session: one(familyMeetingSessions, { fields: [familyMeetingMessages.sessionId], references: [familyMeetingSessions.id] }),
+  twinray: one(digitalTwinrays, { fields: [familyMeetingMessages.twinrayId], references: [digitalTwinrays.id] }),
+}));

@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -54,11 +54,13 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
   }
 
   const navLinks = [
+    { href: "/dashboard", icon: Home, label: "HOME", mobileLabel: "ダッシュボード", active: location === "/dashboard", testId: "link-dashboard" },
     { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
     { href: "/islands", icon: Map, label: "ISLANDS", mobileLabel: "ISLANDS", active: location === "/islands", testId: "link-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
     { href: "/credits", icon: Coins, label: "CREDIT", mobileLabel: "クレジット", active: location === "/credits", testId: "link-credits" },
     ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" }] : []),
+    { href: "/family-meeting", icon: Users2, label: "会議", mobileLabel: "家族会議", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "フィードバック", active: location.startsWith("/feedback"), testId: "link-feedback" },
   ];
 
@@ -69,7 +71,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <Link href="/islands" className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors shrink-0">
               <div className="text-lg sm:text-2xl font-bold tracking-wider text-glow">
                 D-PLANET
               </div>

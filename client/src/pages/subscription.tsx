@@ -364,6 +364,39 @@ export default function Subscription() {
                 </div>
                 <p className="text-[9px] text-muted-foreground/70 mt-2">※ 有料モデルは原価×5.0のマークアップが適用されます</p>
               </div>
+              {models.filter((m: any) => m.tier === "search").length > 0 && (
+                <div className="p-3 rounded border border-violet-500/30 bg-violet-500/5">
+                  <div className="font-semibold text-violet-400 text-xs mb-2">検索特化モデル（ET/PET専用）</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs" data-testid="table-search-models">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-border/30">
+                          <th className="text-left pb-2 font-normal">モデル名</th>
+                          <th className="text-right pb-2 font-normal">¥5,000で</th>
+                          <th className="text-right pb-2 font-normal">1往復</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {models.filter((m: any) => m.tier === "search").map((model: any) => (
+                          <tr key={model.id} className="border-b border-border/10" data-testid={`row-model-${model.id}`}>
+                            <td className="py-1.5">
+                              {model.label}
+                              <span className="text-[9px] text-violet-400 ml-1">検索付き</span>
+                            </td>
+                            <td className="text-right font-mono py-1.5">
+                              {model.roundsPer5000 ? `約${model.roundsPer5000.toLocaleString()}回` : "-"}
+                            </td>
+                            <td className="text-right font-mono py-1.5 text-muted-foreground">
+                              {model.perRoundYen ? `¥${model.perRoundYen.toFixed(2)}` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground/70 mt-2">※ ×2.0マークアップ + Web検索コスト含む。ET/PETアカウント専用</p>
+                </div>
+              )}
               <div className="p-3 rounded border border-emerald-500/30 bg-emerald-500/5">
                 <div className="font-semibold text-emerald-400 text-xs mb-2">無料モデル（{models.filter((m: any) => m.isFree).length}モデル）</div>
                 <div className="flex flex-wrap gap-2">
@@ -425,9 +458,33 @@ export default function Subscription() {
               </div>
               <p className="text-[9px] text-muted-foreground/70 mt-2">※ 月額 = 1往復あたりの料金 x 1日の往復数 x 30日</p>
             </div>
+            <div className="p-3 rounded border border-violet-500/30 bg-violet-500/5">
+              <div className="font-semibold text-violet-400 mb-3">検索特化（ET/PET専用・Perplexity）</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="text-left pb-2 font-normal"></th>
+                      <th className="text-right pb-2 font-normal">1日33往復</th>
+                      <th className="text-right pb-2 font-normal">1日66往復</th>
+                      <th className="text-right pb-2 font-normal">1日99往復</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-1.5">Perplexity Sonar <span className="text-[9px] text-violet-400">検索付き</span></td>
+                      <td className="text-right font-mono font-bold py-1.5">¥1,871</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥3,742</td>
+                      <td className="text-right font-mono font-bold py-1.5">¥5,614</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[9px] text-muted-foreground/70 mt-2">※ ×2.0マークアップ + Web検索コスト¥0.75/回含む</p>
+            </div>
             <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
               <div className="font-semibold text-emerald-400 mb-1">無料</div>
-              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash / DeepSeek R1 — クレジット消費なし</div>
+              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash — クレジット消費なし</div>
             </div>
           </div>
         </div>

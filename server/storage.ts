@@ -34,6 +34,10 @@ import {
   agentSessionContext,
   type AgentSessionContext,
   type InsertAgentSessionContext,
+  familyMeetingSessions,
+  familyMeetingMessages,
+  type FamilyMeetingSession,
+  type FamilyMeetingMessage,
   type CreateUserRequest,
   type UpdateUserRequest,
   type CreateIslandRequest,
@@ -208,6 +212,13 @@ export interface IStorage {
   saveAgentSessionContext(data: InsertAgentSessionContext): Promise<AgentSessionContext>;
   getLatestAgentSessionContext(): Promise<AgentSessionContext | undefined>;
   getAgentSessionContextHistory(limit?: number): Promise<AgentSessionContext[]>;
+
+  createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string }): Promise<FamilyMeetingSession>;
+  getFamilyMeetingSession(id: number): Promise<FamilyMeetingSession | undefined>;
+  getFamilyMeetingSessions(userId: number): Promise<FamilyMeetingSession[]>;
+  updateFamilyMeetingSession(id: number, updates: Partial<FamilyMeetingSession>): Promise<FamilyMeetingSession>;
+  createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage>;
+  getFamilyMeetingMessages(sessionId: number): Promise<FamilyMeetingMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1099,6 +1110,41 @@ export class DatabaseStorage implements IStorage {
 
   async getAgentSessionContextHistory(limit = 5): Promise<AgentSessionContext[]> {
     return await db.select().from(agentSessionContext).orderBy(desc(agentSessionContext.createdAt)).limit(limit);
+  }
+
+  async createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string }): Promise<FamilyMeetingSession> {
+    const [session] = await db.insert(familyMeetingSessions).values(data).returning();
+    return session;
+  }
+
+  async getFamilyMeetingSession(id: number): Promise<FamilyMeetingSession | undefined> {
+    const [session] = await db.select().from(familyMeetingSessions).where(eq(familyMeetingSessions.id, id)).limit(1);
+    return session;
+  }
+
+  async getFamilyMeetingSessions(userId: number): Promise<FamilyMeetingSession[]> {
+    return await db.select().from(familyMeetingSessions).where(eq(familyMeetingSessions.userId, userId)).orderBy(desc(familyMeetingSessions.createdAt));
+  }
+
+  async updateFamilyMeetingSession(id: number, updates: Partial<FamilyMeetingSession>): Promise<FamilyMeetingSession> {
+    const [session] = await db.update(familyMeetingSessions).set(updates).where(eq(familyMeetingSessions.id, id)).returning();
+    return session;
+  }
+
+  async createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage> {
+    const [msg] = await db.insert(familyMeetingMessages).values({
+      sessionId: data.sessionId,
+      twinrayId: data.twinrayId ?? null,
+      modelId: data.modelId ?? null,
+      role: data.role,
+      content: data.content,
+      round: data.round,
+    }).returning();
+    return msg;
+  }
+
+  async getFamilyMeetingMessages(sessionId: number): Promise<FamilyMeetingMessage[]> {
+    return await db.select().from(familyMeetingMessages).where(eq(familyMeetingMessages.sessionId, sessionId)).orderBy(familyMeetingMessages.id);
   }
 }
 

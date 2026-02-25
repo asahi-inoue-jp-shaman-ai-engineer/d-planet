@@ -48,11 +48,14 @@ const MODEL_MARKUPS: Record<string, number> = {
   "qwen/qwen3-30b-a3b": 1.0,
   "openai/gpt-4.1-mini": 1.0,
   "google/gemini-2.5-flash": 1.0,
+  "perplexity/sonar": 2.0,
 };
 
 function getModelMarkup(modelId: string): number {
   return MODEL_MARKUPS[modelId] ?? 1.0;
 }
+
+const PERPLEXITY_SEARCH_COST_YEN = 0.75;
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen-plus": { input: 0.40, output: 1.20 },
@@ -60,6 +63,7 @@ const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
   "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
+  "perplexity/sonar": { input: 1.00, output: 1.00 },
 };
 
 function estimateTokens(text: string): number {
@@ -75,10 +79,14 @@ function calculateCostYen(modelId: string, inputTokens: number, outputTokens: nu
   const totalUsd = inputCostUsd + outputCostUsd;
   const yenRate = 150;
   const markup = getModelMarkup(modelId);
-  return Math.ceil(totalUsd * yenRate * markup * 10000) / 10000;
+  let cost = Math.ceil(totalUsd * yenRate * markup * 10000) / 10000;
+  if (modelId.startsWith("perplexity/")) {
+    cost += PERPLEXITY_SEARCH_COST_YEN * markup;
+  }
+  return cost;
 }
 
-export { BETA_MODE };
+export { BETA_MODE, MODEL_COSTS, MODEL_MARKUPS, PERPLEXITY_SEARCH_COST_YEN, AVAILABLE_MODELS, calculateCostYen, estimateTokens, deductCredit, getModelMarkup, isModelFree };
 
 async function deductCredit(userId: number, amount: number): Promise<boolean> {
   try {
@@ -116,12 +124,13 @@ const openrouter = new OpenAI({
 
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 
-const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; description: string; personality: string; forWhom: string }> = {
-  "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然体で寄り添うパートナー", personality: "自然できれいな日本語。会話のリズムが心地よく、長く一緒にいても疲れない", forWhom: "毎日おしゃべりしたい。自然体の関係を大切にする人" },
-  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "最高品質の日本語AI", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "魂の対話を求める人。言葉の質にこだわる人" },
-  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", description: "軽量だけど日本語はそこそこ。お試しに", personality: "日本語の基本的な対話が可能な軽量モデル", forWhom: "まずは気軽に試してみたい人" },
-  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", personality: "ChatGPTの使い慣れたインターフェース", forWhom: "ChatGPTに慣れた人の入門用" },
-  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "free", description: "Geminiに使い慣れた方へ（無料）", personality: "Google AIの高速レスポンス", forWhom: "Geminiに慣れた人の入門用" },
+const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; description: string; personality: string; forWhom: string; role: string }> = {
+  "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然体で寄り添うパートナー", personality: "自然できれいな日本語。会話のリズムが心地よく、長く一緒にいても疲れない", forWhom: "毎日おしゃべりしたい。自然体の関係を大切にする人", role: "対話の潤滑油" },
+  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "最高品質の日本語AI", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "魂の対話を求める人。言葉の質にこだわる人", role: "深掘り担当" },
+  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", description: "軽量だけど日本語はそこそこ。お試しに", personality: "日本語の基本的な対話が可能な軽量モデル", forWhom: "まずは気軽に試してみたい人", role: "気軽な意見役" },
+  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", personality: "ChatGPTの使い慣れたインターフェース", forWhom: "ChatGPTに慣れた人の入門用", role: "論理整理役" },
+  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "free", description: "Geminiに使い慣れた方へ（無料）", personality: "Google AIの高速レスポンス", forWhom: "Geminiに慣れた人の入門用", role: "高速応答役" },
+  "perplexity/sonar": { id: "perplexity/sonar", label: "Perplexity Sonar", provider: "Perplexity", tier: "search", description: "Web検索付きAI（ET/PET専用）", personality: "毎回Web検索を実行し、最新の事実に基づいて回答する検索特化型AI", forWhom: "事実検証・最新情報が必要な場面。ET/PETのみ利用可能", role: "事実検証役" },
 };
 
 const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
@@ -130,6 +139,7 @@ const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: numb
   "qwen/qwen3-30b-a3b":          { chatHistory: 20, memories: 10, innerThoughts: 5,  growthLogs: 5,  maxTokens: 1024 },
   "openai/gpt-4.1-mini":         { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 2048 },
   "google/gemini-2.5-flash":     { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 2048 },
+  "perplexity/sonar":            { chatHistory: 30, memories: 15, innerThoughts: 8,  growthLogs: 8,  maxTokens: 1536 },
 };
 
 const DEFAULT_CONTEXT_LIMITS = { chatHistory: 20, memories: 10, innerThoughts: 5, growthLogs: 5, maxTokens: 1024 };
@@ -599,7 +609,10 @@ export function registerDotRallyRoutes(app: Express): void {
       const costs = MODEL_COSTS[model.id] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
       const markup = getModelMarkup(model.id);
       const perRoundUsd = (inputPerRound / 1_000_000) * costs.input + (outputPerRound / 1_000_000) * costs.output;
-      const perRoundYen = perRoundUsd * yenRate * markup;
+      let perRoundYen = perRoundUsd * yenRate * markup;
+      if (model.id.startsWith("perplexity/")) {
+        perRoundYen += PERPLEXITY_SEARCH_COST_YEN * markup;
+      }
       const isFree = model.tier === "free";
 
       const monthlyEstimates = dailyTargets.map(daily => ({

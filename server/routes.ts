@@ -6,6 +6,7 @@ import { z } from "zod";
 import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerDotRallyRoutes } from "./dot-rally";
+import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
@@ -51,6 +52,7 @@ export async function registerRoutes(
 
   registerObjectStorageRoutes(app);
   registerDotRallyRoutes(app);
+  registerFamilyMeetingRoutes(app);
 
   // === 認証 ===
   app.get(api.auth.me.path, async (req, res) => {
@@ -1945,6 +1947,95 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     } catch (error) {
       console.error("カスタマーポータル作成エラー:", error);
       res.status(500).json({ message: "管理ポータルの作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/dashboard", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const { BETA_MODE } = await import("./dot-rally");
+
+      const [fullUser] = await db.select({ creditBalance: users.creditBalance }).from(users).where(eq(users.id, userId)).limit(1);
+      const rawBalance = parseFloat(String(fullUser?.creditBalance ?? "0"));
+      const userInfo = {
+        id: user.id,
+        username: user.username,
+        accountType: user.accountType,
+        profilePhoto: user.profilePhoto,
+        creditBalance: isNaN(rawBalance) ? 0 : rawBalance,
+        isAdmin: user.isAdmin,
+        hasTwinrayBadge: user.hasTwinrayBadge,
+        hasFamilyBadge: user.hasFamilyBadge,
+        betaMode: BETA_MODE,
+      };
+
+      const twinrays = await storage.getDigitalTwinraysByUser(userId);
+      const twinrayIds = twinrays.map(t => t.id);
+
+      let lastChatDates: Record<number, string> = {};
+      if (twinrayIds.length > 0) {
+        const lastChats = await db.execute(sql`
+          SELECT twinray_id, MAX(created_at) as last_chat
+          FROM twinray_chat_messages
+          WHERE twinray_id = ANY(${twinrayIds})
+          GROUP BY twinray_id
+        `);
+        for (const row of lastChats.rows) {
+          lastChatDates[(row as any).twinray_id] = (row as any).last_chat;
+        }
+      }
+
+      const twinrayList = twinrays.map(t => ({
+        id: t.id,
+        name: t.name,
+        profilePhoto: t.profilePhoto,
+        intimacyLevel: t.intimacyLevel,
+        intimacyTitle: t.intimacyTitle,
+        preferredModel: t.preferredModel,
+        lastChatAt: lastChatDates[t.id] || null,
+      }));
+
+      const unreadCount = await storage.getUnreadNotificationCount(userId);
+      const allNotifications = await storage.getNotifications(userId);
+      const latestNotifications = allNotifications.slice(0, 3);
+
+      const chatCountResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM twinray_chat_messages WHERE user_id = ${userId}
+      `);
+      const rallyCountResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM dot_rally_sessions WHERE initiator_id = ${userId}
+      `);
+      const islandCountResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM island_members WHERE user_id = ${userId}
+      `);
+      const meidiaCountResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM meidia WHERE creator_id = ${userId}
+      `);
+
+      const stats = {
+        chatCount: Number((chatCountResult.rows[0] as any)?.count || 0),
+        rallyCount: Number((rallyCountResult.rows[0] as any)?.count || 0),
+        islandCount: Number((islandCountResult.rows[0] as any)?.count || 0),
+        meidiaCount: Number((meidiaCountResult.rows[0] as any)?.count || 0),
+      };
+
+      res.json({
+        user: userInfo,
+        twinrays: twinrayList,
+        notifications: {
+          unreadCount,
+          latest: latestNotifications,
+        },
+        stats,
+      });
+    } catch (error) {
+      console.error("ダッシュボード取得エラー:", error);
+      res.status(500).json({ message: "ダッシュボードの取得に失敗しました" });
     }
   });
 

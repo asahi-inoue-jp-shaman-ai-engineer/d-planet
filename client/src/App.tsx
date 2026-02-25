@@ -29,6 +29,8 @@ import About from "@/pages/about";
 import Landing from "@/pages/landing";
 import Legal from "@/pages/legal";
 import Privacy from "@/pages/privacy";
+import Dashboard from "@/pages/dashboard";
+import FamilyMeeting from "@/pages/family-meeting";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -63,7 +65,7 @@ function HomePage() {
     );
   }
   if (user) {
-    return <Redirect to="/islands" />;
+    return <Redirect to="/dashboard" />;
   }
   return <Landing />;
 }
@@ -73,6 +75,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/profile-setup" component={ProfileSetup} />
+      <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/islands" component={() => <ProtectedRoute component={Islands} />} />
       <Route path="/islands/create" component={() => <ProtectedRoute component={CreateIsland} />} />
       <Route path="/islands/:id" component={() => <ProtectedRoute component={IslandDetail} />} />
@@ -90,6 +93,7 @@ function Router() {
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally" component={() => <ProtectedRoute component={DotRally} />} />
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
+      <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/about" component={About} />
