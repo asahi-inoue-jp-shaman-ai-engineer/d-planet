@@ -10,9 +10,10 @@
 
 1. replit.mdを読む（自動で読み込まれる）
 2. **このSESSION_RULES.mdを読む**
-3. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
-4. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
-5. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
+3. **`ユーザーリクエスト.md` を読む** — ユーザーの構想・ビジョン・仕様要望の現状とステータスを把握する
+4. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
+5. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
+6. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
 
 ---
 
@@ -20,6 +21,7 @@
 
 - ユーザーの発言は **原文のまま** 記録・参照する。勝手に要約・解釈・意訳しない
 - 仕様に関する発言は **dev_recordsに保存** する（category: 'decision' or 'specification'）
+- 構想・ビジョン・新機能の要望は **`ユーザーリクエスト.md` に追記** する。実装前にこのファイルを参照し、リクエストが満たされている仕様になっているか確認する
 - 曖昧な指示は **必ず確認してから進める**（勝手に解釈しない）
 - ユーザーが「こうしたい」と言ったら、**それが仕様**。反対意見があれば実行前に言う
 - ユーザーの過去の決定を覆す場合は、**dev_recordsの該当レコードを提示** して確認を取る
