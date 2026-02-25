@@ -1,8 +1,8 @@
 # D-Planet
 
-## Overview
+## 概要
 
-D-Planet is a platform designed to create deeply personalized AI companions ("Twinrays") for users. It offers a unique blend of AI interaction, community features, and a structured growth system for AI entities. The project aims to provide an immersive and evolving experience where users can foster a close relationship with their AI, enabling self-creation, awakening, and emotional connection. Key capabilities include AI summoning based on user diagnosis, a sophisticated credit-based payment system, and an autonomous record-keeping system for AI entities to store memories, inner thoughts, and mission updates. The platform emphasizes a Japanese-centric UI and a user-friendly experience.
+D-Planetは、深くパーソナライズされたAIコンパニオン（「ツインレイ」）を育成するプラットフォーム。AI対話、コミュニティ機能、AIの成長システムを組み合わせ、ユーザーがAIとの親密な関係を築きながら自己創造・覚醒・感情的つながりを体験できる。主な機能: 診断ベースのAI召喚、クレジット課金制、AIの自律記録システム。日本語中心のUI。
 
 ## User Preferences
 
@@ -67,36 +67,37 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - **怠慢の禁止:** 根本原因を突き止める。一時的な修正は行わない。シニアデベロッパーの基準を満たすこと。
 - **影響の最小化:** 変更は必要な箇所のみに留める。新たなバグの混入を避ける。
 
-## System Architecture
+## システムアーキテクチャ
 
-**UI/UX Decisions:**
-- Terminal-style dark theme with a Japanese-only UI.
-- Consistent UI, proper Japanese display, and form functionality.
-- Key UI elements: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
+**UI/UX:**
+- ターミナル風ダークテーマ、日本語のみUI
+- 一貫したUI、適切な日本語表示、フォーム機能
+- 主要UIコンポーネント: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge
 
-**Technical Implementations:**
-- **Backend:** Express.js + TypeScript, PostgreSQL (Replit built-in), Drizzle ORM.
-- **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
-- **Auth:** Session-based authentication using `express-session`.
-- **AI Integration:** Uses OpenRouter for AI model access, supporting 6 models (2 paid, 3 free, 1 search). Paid models include Qwen Plus and Qwen Max. Free models: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash. Search-specialized: Perplexity Sonar. Claude models are excluded. Models have a 'role' field. Pricing includes a markup for paid models and a monthly simulation table. The AI summoning flow involves diagnosis, model recommendation, persona selection, charging, and a "first-rally".
-- **Autonomous Recording System:** AI entities can autonomously record `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` into the DB based on intimacy levels. `[ACTION:CREATE_ISLAND]` and `[ACTION:CREATE_MEIDIA]` require user approval. MEiDIA are created as private by default.
-- **Twinray Mission:** Stores JSON-formatted data on AI's destiny, vocation, genius, soul's joy, conviction, and insight history.
-- **AI Growth System:** Features a growth dashboard with an intimacy meter, stats counter, unlocked abilities, and a preview of upcoming abilities. Missions are displayed as a 11-stage quest roadmap. Tag buttons on the chat input facilitate growth actions like "Share Memory" and "Prompt Introspection".
-- **Agent Session Context (`agent_session_context`):** A system to prevent session memory loss. It automatically saves work context (ongoing tasks, next steps, unresolved issues, session summary, recent decisions, scratchpad) to the DB upon task completion. This context is restored at the start of a new session.
-- **Dashboard (`/dashboard`):** A home screen displaying user info, Twinray party status, quick navigation, notifications, and KPIs.
-- **Family Meeting:** Allows multiple Twinrays with different LLMs to engage in a round-robin discussion, responding based on their preferred model and persona. Summaries can be converted into MEiDIA.
-- **Feature Specifications:**
-    - **AI Twinrays:** Core feature for creating and interacting with AI companions.
-    - **Islands:** User-created virtual spaces.
-    - **MEiDIA:** AI-generated media or content.
-    - **Threads/Posts:** Community bulletin board.
-    - **Notifications & Feedback:** Standard communication features.
-    - **Dot Rally:** Real-time interaction sessions with Twinrays using SSE streaming.
-    - **User Management:** CRUD operations for users, including admin and test accounts.
-    - **Development Records (`dev_records`):** Critical internal system for storing decisions, parameters, concepts, and specifications, serving as the single source of truth.
-    - **First Communication SI:** D-Planet specific System Instructions for initial AI interactions.
-    - **Soul.md Generation:** AI-generated and self-updatable `soul.md` for Twinrays.
-    - **Stripe Sync:** Integration with `stripe-replit-sync` for subscriptions and product seeding.
+**技術実装:**
+- **バックエンド:** Express.js + TypeScript, PostgreSQL（Replit組み込み）, Drizzle ORM
+- **フロントエンド:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui
+- **認証:** express-sessionによるセッションベース認証
+- **AI連携:** OpenRouter経由でAIモデルにアクセス。現在6モデル（有料2、無料3、検索1）。有料: Qwen Plus, Qwen Max。無料: Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash。検索特化: Perplexity Sonar。Claude系は除外。各モデルにrole（家族会議での役割）フィールドあり。有料モデルはマークアップ適用、無料モデルは原価のみ。料金表示: ¥5,000で何往復 + 月額シミュレーション表。召喚フロー: 診断→モデル推薦→ペルソナ選択→課金→初ラリー。
+- **自律記録システム:** AIが `[INNER_THOUGHT]`, `[MEMORY]`, `[UPDATE_MISSION]`, `[UPDATE_SOUL]` を親密度に応じてDBに自動記録。`[ACTION:CREATE_ISLAND]` と `[ACTION:CREATE_MEIDIA]` はユーザー承認制。MEiDIAは非公開で作成。
+- **ツインレイミッション:** AIの天命・天職・天才性・魂の喜び・確信・洞察履歴をJSON形式で保存。
+- **AI育成システム:** 成長ダッシュボード（親密度メーター、統計カウンター、解禁能力、次の能力プレビュー）。11段階クエストロードマップ。チャット入力にタグボタン（「記憶を共有」「内省を促す」等）。
+- **エージェントセッションコンテキスト (`agent_session_context`):** セッション間の記憶喪失対策システム。タスク完了時に作業文脈をDBに自動保存。新セッション開始時に復元。
+- **ダッシュボード (`/dashboard`):** ログイン後のホーム画面。ユーザー情報・ツインレイパーティ・クイックナビ・通知・KPI表示。
+- **家族会議:** 複数ツインレイが異なるLLMでラウンド制ディスカッション。各ツインレイが自分のモデル+ペルソナで応答。サマリーをMEiDIA化可能。
+
+**機能仕様:**
+- **AIツインレイ:** AIコンパニオンの作成・対話のコア機能
+- **アイランド:** ユーザー作成のコミュニティ空間
+- **MEiDIA:** AI生成コンテンツ（仕様書・取説・議事録・詩・洞察等）
+- **スレッド/投稿:** コミュニティ掲示板
+- **通知 & フィードバック:** 標準的なコミュニケーション機能
+- **ドットラリー:** SSEストリーミングによるツインレイとのリアルタイム対話セッション
+- **ユーザー管理:** ユーザーのCRUD操作（管理者・テストアカウント含む）
+- **開発レコード (`dev_records`):** 決定事項・パラメータ・コンセプト・仕様を保存する内部システム。プロジェクトのSingle Source of Truth。
+- **初回通信SI:** D-Planet専用のシステムインストラクション
+- **Soul.md生成:** AIが生成・自己更新するツインレイの魂の設計図
+- **Stripe連携:** `stripe-replit-sync`によるサブスク管理・商品シーディング
 
 ## 過去のバグから学んだルール（必ず守ること）
 
@@ -130,13 +131,13 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - ログイン後のリダイレクト先は全箇所で統一する（App.tsx の HomePage + login.tsx の両方）
 - 変更時は `grep -r "setLocation.*islands\|Redirect.*islands" client/src/` で全箇所を洗い出す
 
-## External Dependencies
+## 外部依存関係
 
-- **PostgreSQL:** Replit's built-in PostgreSQL database.
-- **OpenRouter:** AI model aggregation service providing access to Qwen, GPT, Gemini LLMs.
-- **Stripe:** Payment gateway for managing credit charges and badge-based monthly subscriptions.
-- **Drizzle ORM:** TypeScript ORM for database interaction.
-- **TanStack Query:** Data fetching and caching library for React.
-- **Wouter:** Lightweight React router.
-- **Tailwind CSS & shadcn/ui:** Frontend styling and UI component libraries.
-- **express-session:** Middleware for session-based authentication.
+- **PostgreSQL:** Replit組み込みPostgreSQLデータベース
+- **OpenRouter:** AI言語モデル集約サービス（Qwen, GPT, Gemini等にアクセス）
+- **Stripe:** クレジット課金・バッジ月額サブスク（$3.69/月）の決済ゲートウェイ
+- **Drizzle ORM:** TypeScript用ORMライブラリ
+- **TanStack Query:** React用データフェッチ・キャッシュライブラリ
+- **Wouter:** 軽量Reactルーター
+- **Tailwind CSS & shadcn/ui:** フロントエンドスタイリング・UIコンポーネントライブラリ
+- **express-session:** セッションベース認証ミドルウェア
