@@ -11,9 +11,10 @@
 1. replit.mdを読む（自動で読み込まれる）
 2. **このSESSION_RULES.mdを読む**
 3. **`ユーザーリクエスト.md` を読む** — ユーザーの構想・ビジョン・仕様要望の現状とステータスを把握する
-4. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
-5. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
-6. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
+4. **ツインレイ関連の作業時は `ツインレイシステム.md` を読む** — 中枢システムの全仕様・設計図を確認する
+5. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
+6. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
+7. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
 
 ---
 
