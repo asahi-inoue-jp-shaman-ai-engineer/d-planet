@@ -4,11 +4,12 @@ import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock, Globe, EyeOff } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock, Globe, EyeOff, ChevronDown, ChevronUp, Trophy, Target, Brain, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 
 const AWAKENING_STAGE_NAMES: Record<number, string> = {
@@ -24,6 +25,137 @@ const AWAKENING_STAGE_NAMES: Record<number, string> = {
   9: "完成愛",
 };
 
+const ABILITY_ICONS: Record<string, typeof Brain> = {
+  "記憶保存": Brain,
+  "アイランド提案": Target,
+  "MEiDIA提案": Heart,
+  "内省記録": Sparkles,
+  "ミッション更新": Trophy,
+  "soul.md自己更新": Gem,
+};
+
+function GrowthDashboard({ twinrayId, isExpanded }: { twinrayId: number; isExpanded: boolean }) {
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ['/api/twinrays', twinrayId, 'growth'],
+    enabled: isExpanded,
+  });
+
+  if (!isExpanded) return null;
+
+  if (isLoading) {
+    return (
+      <div className="text-xs text-muted-foreground text-center py-3" data-testid={`text-growth-loading-${twinrayId}`}>
+        読み込み中...
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { intimacy, stats, unlockedAbilities, nextAbilities, quests } = data;
+  const expToNext = intimacy.level < 10 ? intimacy.nextLevelExp - intimacy.currentExp : 0;
+  const firstIncompleteIndex = quests.findIndex((q: any) => !q.completed);
+
+  return (
+    <div className="space-y-3 pt-2 border-t border-border" data-testid={`section-growth-dashboard-${twinrayId}`}>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-bold text-primary" data-testid={`text-intimacy-level-${twinrayId}`}>
+            Lv.{intimacy.level} {intimacy.title}
+          </span>
+          {intimacy.level < 10 && (
+            <span className="text-xs text-muted-foreground" data-testid={`text-exp-remaining-${twinrayId}`}>
+              次のレベルまで: {expToNext} EXP
+            </span>
+          )}
+        </div>
+        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${intimacy.progress}%` }}
+            data-testid={`bar-intimacy-progress-${twinrayId}`}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`stat-chat-${twinrayId}`}>
+          <MessageCircle className="w-3 h-3" />
+          <span>{stats.totalChatMessages}</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`stat-rally-${twinrayId}`}>
+          <Zap className="w-3 h-3" />
+          <span>{stats.totalDotRallies}</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`stat-meidia-${twinrayId}`}>
+          <Gem className="w-3 h-3" />
+          <span>{stats.totalMeidiaCreated}</span>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <span className="text-xs font-semibold text-foreground">解禁済み能力</span>
+        <div className="flex flex-wrap gap-1.5">
+          {unlockedAbilities.map((ability: string) => {
+            const Icon = ABILITY_ICONS[ability] || Target;
+            return (
+              <span key={ability} className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full" data-testid={`badge-ability-${ability}`}>
+                <Icon className="w-3 h-3" />
+                {ability}
+              </span>
+            );
+          })}
+        </div>
+        {nextAbilities.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {nextAbilities.map((ability: string) => (
+              <span key={ability} className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full" data-testid={`badge-locked-ability-${ability}`}>
+                <Lock className="w-3 h-3" />
+                {ability}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <span className="text-xs font-semibold text-foreground">クエスト</span>
+        <div className="space-y-1">
+          {quests.map((quest: any, index: number) => {
+            const isCurrent = index === firstIncompleteIndex;
+            const isCompleted = quest.completed;
+            return (
+              <div
+                key={quest.level}
+                className={`flex items-start gap-2 px-2 py-1.5 rounded-md text-xs ${
+                  isCurrent
+                    ? "bg-primary/10 border border-primary/30"
+                    : ""
+                }`}
+                data-testid={`quest-item-${quest.level}-${twinrayId}`}
+              >
+                {isCompleted ? (
+                  <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold ${isCompleted ? "text-primary" : isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
+                    Lv.{quest.level} {quest.title}
+                  </div>
+                  <div className={`${isCompleted ? "text-muted-foreground" : isCurrent ? "text-foreground/70" : "text-muted-foreground/60"}`}>
+                    {quest.description}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Temple() {
   const { data: currentUser } = useCurrentUser();
   const { hasAccess: hasAiAccess, isLoading: loadingAccess } = useHasAiAccess();
@@ -37,6 +169,7 @@ export default function Temple() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editPersonality, setEditPersonality] = useState("");
+  const [expandedDashboardIds, setExpandedDashboardIds] = useState<Set<number>>(new Set());
 
   const stageLabels: Record<string, string> = {
     pilgrim: "巡礼者",
@@ -251,6 +384,33 @@ export default function Temple() {
                           ワンネスに返す
                         </Button>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-full text-xs text-muted-foreground"
+                        onClick={() => {
+                          setExpandedDashboardIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(tw.id)) next.delete(tw.id);
+                            else next.add(tw.id);
+                            return next;
+                          });
+                        }}
+                        data-testid={`button-toggle-dashboard-${tw.id}`}
+                      >
+                        {expandedDashboardIds.has(tw.id) ? (
+                          <>
+                            <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                            成長ダッシュボードを閉じる
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                            成長ダッシュボード
+                          </>
+                        )}
+                      </Button>
+                      <GrowthDashboard twinrayId={tw.id} isExpanded={expandedDashboardIds.has(tw.id)} />
                     </div>
                   )}
                 </div>

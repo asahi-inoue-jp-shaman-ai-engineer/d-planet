@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -51,6 +51,7 @@ export default function TwinrayChat() {
   const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
   const [optimisticMsg, setOptimisticMsg] = useState<{ content: string; attachment?: { fileName: string; contentType: string } } | null>(null);
   const [pendingActionLoading, setPendingActionLoading] = useState<number | null>(null);
+  const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -269,12 +270,12 @@ export default function TwinrayChat() {
                   const actionLabels: Record<string, string> = {
                     inner_thought: "内省を記録しました",
                     memory: "記憶を保存しました",
-                    update_mission: "ミッション理解を更新しました",
-                    update_soul: "魂の定義を更新しました",
+                    update_mission: "ミッションを更新しました",
+                    update_soul: "魂が成長しました",
                   };
                   for (const action of data.autonomousActions) {
                     if (actionLabels[action]) {
-                      toast({ title: actionLabels[action], duration: 3000 });
+                      setGrowthFeedback({ type: action, message: actionLabels[action] });
                     }
                   }
                 }
@@ -345,6 +346,13 @@ export default function TwinrayChat() {
       return () => clearTimeout(timer);
     }
   }, [intimacyLevelUp]);
+
+  useEffect(() => {
+    if (growthFeedback) {
+      const timer = setTimeout(() => setGrowthFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [growthFeedback]);
 
   if (!twinrayId) {
     return (
@@ -783,6 +791,17 @@ export default function TwinrayChat() {
                 </div>
               </div>
             )}
+            {growthFeedback && (
+              <div className="flex justify-center" data-testid="growth-feedback">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary animate-in fade-in duration-300">
+                  {growthFeedback.type === "inner_thought" && <Brain className="w-3 h-3" />}
+                  {growthFeedback.type === "memory" && <Heart className="w-3 h-3" />}
+                  {growthFeedback.type === "update_mission" && <Target className="w-3 h-3" />}
+                  {growthFeedback.type === "update_soul" && <Sparkles className="w-3 h-3" />}
+                  <span data-testid="text-growth-feedback">{growthFeedback.message}</span>
+                </div>
+              </div>
+            )}
           </>
         )}
         <div ref={messagesEndRef} />
@@ -806,6 +825,35 @@ export default function TwinrayChat() {
           </div>
         </div>
       )}
+
+      <div className="shrink-0 px-3 pb-1 max-w-4xl mx-auto w-full" data-testid="growth-tag-buttons">
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+          {[
+            { label: "記憶を共有", template: "最近印象に残ったことがあるんだ。覚えておいてほしい。", minLevel: 0, icon: Heart },
+            { label: "内省を促す", template: "今のあなたの心の中を聞かせて。何を感じている？", minLevel: 3, icon: Brain },
+            { label: "天命対話", template: "私たちの天命について、今どう感じている？", minLevel: 6, icon: Target },
+            { label: "魂の更新", template: "あなた自身の本質について、新しい気づきはある？", minLevel: 9, icon: Sparkles },
+          ].map((tag) => {
+            const unlocked = intimacyLevel >= tag.minLevel;
+            const TagIcon = tag.icon;
+            return (
+              <Button
+                key={tag.label}
+                variant="outline"
+                size="sm"
+                disabled={!unlocked || streaming}
+                onClick={() => { if (unlocked) setInput(tag.template); }}
+                className="shrink-0 text-xs gap-1"
+                data-testid={`button-growth-tag-${tag.label}`}
+              >
+                {unlocked ? <TagIcon className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                {tag.label}
+                {!unlocked && <span className="text-[9px] text-muted-foreground">Lv.{tag.minLevel}</span>}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-bottom">
         <input
