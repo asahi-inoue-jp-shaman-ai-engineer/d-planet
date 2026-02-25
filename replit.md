@@ -11,6 +11,9 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - Replit PostgreSQL使用（Supabase不要）
 - ターミナル風ダークテーマ
 - MEiDIAコピーボタンはモバイル重要（Claude/GPTへの貼り付け用）
+- **セッションプランは必ずユーザーに確認・承認を得てから実行すること。** 仕様変更・モデル選定・機能削除など、ユーザーが過去に決定した内容に影響する作業は特に厳重に確認する。勝手に判断して進めない。
+- **dev_recordsがSingle Source of Truth。** セッションプランを作る前に必ずdev_recordsの関連レコードを検索し、過去の決定と矛盾がないか検証する。矛盾がある場合はユーザーに明示して判断を仰ぐ。
+- **勝手にモデル・機能を削除しない。** ユーザーが決定した仕様（モデル数・機能範囲等）を勝手に縮小・変更しない。マークアップ率などの内部数値をユーザー向け画面に表示しない。
 
 ## System Architecture
 
