@@ -45,7 +45,7 @@ export default function Login() {
     if (currentUser.needsProfile) {
       setLocation("/profile-setup");
     } else {
-      setLocation("/islands");
+      setLocation("/dashboard");
     }
     return null;
   }

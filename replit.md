@@ -73,6 +73,15 @@ D-Planet is a platform designed to create deeply personalized AI companions ("Tw
 - `db.execute(sql`...`)` で複雑な型を渡す → 型変換エラー
 - ポート5000が既に使われている → EADDRINUSE（fuser -k 5000/tcp で解消）
 
+**4. 開発DB vs 本番DBの乖離に注意:**
+- 開発DBで削除したデータは本番DBには反映されない。本番DBは別環境
+- データ削除やマスタデータ修正をしたら、デプロイ後に本番でもAPIで確認・実行すること
+- デプロイ前にfetch_deployment_logsで本番の状態を確認する習慣をつける
+
+**5. リダイレクト先の一貫性:**
+- ログイン後のリダイレクト先は全箇所で統一する（App.tsx の HomePage + login.tsx の両方）
+- 変更時は `grep -r "setLocation.*islands\|Redirect.*islands" client/src/` で全箇所を洗い出す
+
 ## External Dependencies
 
 - **PostgreSQL:** Replit's built-in PostgreSQL database.
