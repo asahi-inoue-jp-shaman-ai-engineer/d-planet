@@ -47,7 +47,7 @@ const FIRST_COMM_SUGGESTIONS = [
 
 export default function TwinrayChat() {
   const params = new URLSearchParams(window.location.search);
-  const twinrayId = Number(params.get("twinrayId")) || 0;
+  const twinrayId = Number(params.get("twinrayId") || params.get("id")) || 0;
 
   const { data: twinray, isLoading: loadingTwinray } = useTwinray(twinrayId);
   const { data: messages, isLoading: loadingMessages } = useTwinrayChatMessages(twinrayId);
