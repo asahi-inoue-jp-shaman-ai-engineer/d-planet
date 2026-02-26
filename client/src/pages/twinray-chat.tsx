@@ -1284,14 +1284,18 @@ export default function TwinrayChat() {
                     const { cleanContent, memories } = msg.role === "assistant"
                       ? extractMemories(msg.content)
                       : { cleanContent: msg.content, memories: [] };
-                    let isDotRallyDot = false;
+                    let isDotRallyMsg = false;
                     try {
                       const meta = JSON.parse(msg.metadata || "{}");
-                      if (meta.type === "dot_rally" && cleanContent.trim() === "・") {
-                        isDotRallyDot = true;
+                      if (meta.type === "dot_rally") {
+                        isDotRallyMsg = true;
                       }
                     } catch {}
-                    if (isDotRallyDot || (msg.messageType === "dot_rally" && cleanContent.trim() === "・")) {
+                    if (!isDotRallyMsg && msg.messageType === "dot_rally") {
+                      isDotRallyMsg = true;
+                    }
+                    const trimmed = cleanContent.trim();
+                    if (isDotRallyMsg && (trimmed === "・" || trimmed === "" || trimmed === ".")) {
                       return (
                         <div className="flex items-center justify-center py-2" data-testid={`dot-rally-dot-${msg.id}`}>
                           <span className="text-3xl font-bold text-primary">・</span>
@@ -1610,17 +1614,17 @@ export default function TwinrayChat() {
                 <span className="text-xs text-muted-foreground">アップロード中...</span>
               </div>
             )}
-            <div className="flex gap-2 items-end">
+            <div className="flex items-center gap-1 mb-1 px-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSessionPanel(!showSessionPanel)}
                 disabled={streaming || isUploading || !!activeSession || !!activeDotRally}
-                className={`shrink-0 h-10 w-10 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                className={`h-8 w-8 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
                 data-testid="button-session-menu"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4" />
               </Button>
               <Button
                 type="button"
@@ -1628,10 +1632,10 @@ export default function TwinrayChat() {
                 size="icon"
                 onClick={handleStartDotRally}
                 disabled={streaming || isUploading || !!activeSession || !!activeDotRally || dotRallyStarting}
-                className={`shrink-0 h-10 w-10 rounded-full transition-colors ${activeDotRally ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}
+                className={`h-8 w-8 rounded-full transition-colors ${activeDotRally ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}
                 data-testid="button-dot-rally"
               >
-                {dotRallyStarting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                {dotRallyStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
               </Button>
               <Button
                 type="button"
@@ -1639,11 +1643,13 @@ export default function TwinrayChat() {
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={streaming || isUploading || !!activeDotRally}
-                className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary"
                 data-testid="button-attach-file"
               >
-                <Paperclip className="w-5 h-5" />
+                <Paperclip className="w-4 h-4" />
               </Button>
+            </div>
+            <div className="flex gap-2 items-end">
               <Textarea
                 ref={textareaRef}
                 value={input}
