@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Play, RefreshCw, ChevronDown, ChevronUp, Clock, FileText, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Play, RefreshCw, ChevronDown, ChevronUp, Clock, FileText, AlertCircle, CheckCircle2, Loader2, Download } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
 
@@ -102,6 +102,20 @@ export default function ModelBenchmark() {
       }
     }
   }, [statusQuery.data?.status, pollingRunId, selectedRunId]);
+
+  const resumeMutation = useMutation({
+    mutationFn: async (runId: string) => {
+      const res = await apiRequest("POST", `/api/admin/benchmarks/${runId}/resume`);
+      return res.json();
+    },
+    onSuccess: (data: { runId: string; resumed: number }) => {
+      if (data.resumed > 0) {
+        setPollingRunId(data.runId);
+        setSelectedRunId(data.runId);
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/benchmarks"] });
+    },
+  });
 
   const startMutation = useMutation({
     mutationFn: async () => {
@@ -265,10 +279,35 @@ export default function ModelBenchmark() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-green-400 text-lg">結果詳細</CardTitle>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-green-400">✓ {completedResults.length}</span>
-                  {errorResults.length > 0 && <span className="text-red-400">✗ {errorResults.length}</span>}
-                  {pendingResults.length > 0 && <span className="text-yellow-400">⏳ {pendingResults.length}</span>}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-green-400">✓ {completedResults.length}</span>
+                    {errorResults.length > 0 && <span className="text-red-400">✗ {errorResults.length}</span>}
+                    {pendingResults.length > 0 && <span className="text-yellow-400">⏳ {pendingResults.length}</span>}
+                  </div>
+                  {pendingResults.length > 0 && !pollingRunId && (
+                    <button
+                      onClick={() => selectedRunId && resumeMutation.mutate(selectedRunId)}
+                      disabled={resumeMutation.isPending}
+                      className="flex items-center gap-1 text-xs text-yellow-400 hover:text-yellow-300 border border-yellow-700/30 rounded px-2 py-1"
+                      data-testid="button-resume-benchmark"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      再開
+                    </button>
+                  )}
+                  {completedResults.length > 0 && (
+                    <a
+                      href={`/api/admin/benchmarks/${selectedRunId}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-green-400 hover:text-green-300 border border-green-700/30 rounded px-2 py-1"
+                      data-testid="button-download-pdf"
+                    >
+                      <Download className="w-3 h-3" />
+                      PDF
+                    </a>
+                  )}
                 </div>
               </div>
             </CardHeader>

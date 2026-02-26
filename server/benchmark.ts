@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import OpenAI from "openai";
+import path from "path";
+import fs from "fs";
 import { db } from "./db";
 import { modelBenchmarks, users } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -103,6 +105,138 @@ export function registerBenchmarkRoutes(app: Express) {
     } catch (err) {
       console.error("ベンチマーク開始エラー:", err);
       res.status(500).json({ message: "ベンチマーク開始に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/benchmarks/:runId/resume", requireAdmin, async (req, res) => {
+    try {
+      const pendingModels = await db.select().from(modelBenchmarks)
+        .where(and(
+          eq(modelBenchmarks.runId, req.params.runId),
+          eq(modelBenchmarks.status, "pending")
+        ));
+
+      if (pendingModels.length === 0) {
+        return res.json({ message: "未完了のモデルはありません", resumed: 0 });
+      }
+
+      const sessionType = pendingModels[0].sessionType;
+      if (!(sessionType in SESSION_TYPES)) {
+        return res.status(400).json({ message: "無効なセッション種別です" });
+      }
+
+      const st = SESSION_TYPES[sessionType as SessionTypeId];
+      const modelIds = pendingModels.map(m => m.modelId);
+      const prompt = pendingModels[0].prompt;
+      const runId = req.params.runId;
+
+      const allResults = await db.select().from(modelBenchmarks)
+        .where(eq(modelBenchmarks.runId, runId));
+      const alreadyDone = allResults.filter(r => r.status !== 'pending').length;
+
+      activeRuns.set(runId, { status: 'running', completed: alreadyDone, total: allResults.length });
+      res.json({ runId, resumed: modelIds.length, totalModels: allResults.length });
+
+      runBenchmark(runId, sessionType, prompt, modelIds, st).catch(err => {
+        console.error("ベンチマーク再開エラー:", err);
+      });
+    } catch (err) {
+      console.error("ベンチマーク再開エラー:", err);
+      res.status(500).json({ message: "再開に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/benchmarks/:runId/pdf", requireAdmin, async (req, res) => {
+    try {
+      const PDFDocument = (await import("pdfkit")).default;
+      const results = await db.select().from(modelBenchmarks)
+        .where(eq(modelBenchmarks.runId, req.params.runId))
+        .orderBy(modelBenchmarks.id);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "ベンチマーク結果が見つかりません" });
+      }
+
+      const completed = results.filter(r => r.status === "completed");
+      const sessionLabel = results[0].sessionType === "destiny_analysis" ? "天命解析セッション" : results[0].sessionType;
+
+      const doc = new PDFDocument({
+        size: "A4",
+        margin: 50,
+        info: {
+          Title: `D-Planet モデルベンチマーク — ${sessionLabel}`,
+          Author: "D-Planet",
+        },
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="benchmark_${req.params.runId}.pdf"`);
+      doc.pipe(res);
+
+      const fontPath = path.join(process.cwd(), "server", "fonts", "NotoSansJP-VF.ttf");
+      const hasFont = fs.existsSync(fontPath);
+      
+      if (hasFont) {
+        doc.registerFont("NotoSansJP", fontPath);
+        doc.font("NotoSansJP");
+      }
+
+      doc.fontSize(20).text("D-Planet モデルベンチマーク", { align: "center" });
+      doc.moveDown(0.5);
+      doc.fontSize(14).text(sessionLabel, { align: "center" });
+      doc.moveDown(0.3);
+      doc.fontSize(10).text(`Run ID: ${req.params.runId}`, { align: "center" });
+      doc.fontSize(10).text(`対象モデル: ${results.length} / 成功: ${completed.length}`, { align: "center" });
+      doc.moveDown(0.3);
+      
+      doc.fontSize(9).text(`プロンプト: ${results[0].prompt}`, { align: "left" });
+      doc.moveDown(1);
+
+      const tierOrder = ["flagship", "highperf", "reasoning", "lightweight", "free"];
+      const sortedResults = [...completed].sort((a, b) => {
+        const ai = tierOrder.indexOf(a.modelTier);
+        const bi = tierOrder.indexOf(b.modelTier);
+        return ai - bi;
+      });
+
+      for (let i = 0; i < sortedResults.length; i++) {
+        const r = sortedResults[i];
+
+        if (doc.y > 650) {
+          doc.addPage();
+        }
+
+        doc.fontSize(13).text(`${i + 1}. ${r.modelLabel}`, { underline: true });
+        doc.moveDown(0.2);
+        doc.fontSize(8).fillColor("#666666").text(
+          `Tier: ${r.modelTier} | ${r.totalChars?.toLocaleString()} chars | ${((r.responseTimeMs || 0) / 1000).toFixed(1)}s`
+        );
+        doc.fillColor("#000000");
+        doc.moveDown(0.3);
+
+        if (r.greeting) {
+          doc.fontSize(9).text("【挨拶】");
+          doc.fontSize(8.5).text(r.greeting, { lineGap: 2 });
+          doc.moveDown(0.3);
+        }
+
+        if (r.analysis) {
+          doc.fontSize(9).text("【解析】");
+          doc.fontSize(8.5).text(r.analysis, { lineGap: 2 });
+        }
+
+        doc.moveDown(1);
+
+        if (i < sortedResults.length - 1) {
+          doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#cccccc").stroke();
+          doc.moveDown(0.5);
+        }
+      }
+
+      doc.end();
+    } catch (err) {
+      console.error("PDF生成エラー:", err);
+      res.status(500).json({ message: "PDF生成に失敗しました" });
     }
   });
 
