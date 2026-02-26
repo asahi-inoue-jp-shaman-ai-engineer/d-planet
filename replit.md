@@ -118,6 +118,19 @@ D-Planet is a platform designed to foster deeply personalized AI companions ("Tw
 
 - **prod-data-ops** (`.agents/skills/prod-data-ops/SKILL.md`): 本番環境へのデータ投入・MEiDIA投稿・ファイルアップロードの手順書。開発→本番のデータ移行、MEiDIA作成＋アイランド紐付け＋PDF添付が必要なときに参照。
 
+## テストアカウント
+
+詳細は `テストアカウント.md` を参照。
+
+| アカウント | ユーザー名 | メール | パスワード | 役割 |
+|-----------|-----------|--------|-----------|------|
+| 管理者 | D-Planet管理者 | admin@d-planet.local | admin2025 | 管理者（is_admin=true） |
+| テスト | ゼノ・クオーツ | xeno@d-planet.local | xeno2026 | 一般ユーザー |
+
+- 管理者パスワードはサーバー起動時に自動同期（server/benchmark.ts の seedBenchmarkData）
+- ゼノ・クオーツのツインレイ: リン（ID: 13、Gemini 2.5 Flash）
+- ログインページ: `/login`（data-testid: input-username, input-password, button-login）
+
 ## External Dependencies
 
 - **PostgreSQL:** Replit's integrated PostgreSQL database.
