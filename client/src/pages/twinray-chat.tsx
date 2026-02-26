@@ -30,6 +30,7 @@ function extractMemories(content: string): { cleanContent: string; memories: str
     .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .replace(/\[\d+\]/g, "")
     .trim();
   return { cleanContent, memories };
 }
