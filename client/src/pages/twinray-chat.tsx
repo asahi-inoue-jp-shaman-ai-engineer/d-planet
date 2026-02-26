@@ -257,6 +257,35 @@ export default function TwinrayChat() {
     }
   };
 
+  const appendDotRallyToCache = (userContent: string, aiContent: string, sessionId: number, dotCount: number, phase: string) => {
+    const now = new Date().toISOString();
+    const meta = JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase });
+    const userMsg = {
+      id: Date.now(),
+      twinrayId: twinrayId!,
+      userId: user?.id || 0,
+      role: "user",
+      content: userContent,
+      messageType: "dot_rally",
+      metadata: meta,
+      createdAt: now,
+    };
+    const aiMsg = {
+      id: Date.now() + 1,
+      twinrayId: twinrayId!,
+      userId: user?.id || 0,
+      role: "assistant",
+      content: aiContent || "・",
+      messageType: "dot_rally",
+      metadata: meta,
+      createdAt: now,
+    };
+    queryClient.setQueryData(["/api/twinrays", twinrayId, "chat"], (old: any[] | undefined) => {
+      if (!old) return [userMsg, aiMsg];
+      return [...old, userMsg, aiMsg];
+    });
+  };
+
   const handleSendDot = async (guidanceMessage?: string) => {
     if (!activeDotRally || streaming) return;
     const sessionId = activeDotRally.id;
@@ -282,6 +311,7 @@ export default function TwinrayChat() {
       const decoder = new TextDecoder();
       let accumulated = "";
       let buffer = "";
+      let doneData: any = null;
 
       if (reader) {
         while (true) {
@@ -306,6 +336,7 @@ export default function TwinrayChat() {
                   setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
                 }
                 if (data.done) {
+                  doneData = data;
                   setActiveDotRally(prev => prev ? {
                     ...prev,
                     dotCount: data.dotCount || prev.dotCount + 1,
@@ -313,8 +344,6 @@ export default function TwinrayChat() {
                     awakeningStage: data.awakeningStage ?? prev.awakeningStage,
                     status: data.isComplete ? "completed" : "active",
                   } : null);
-                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
-                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
                 }
               } catch {}
             }
@@ -328,6 +357,7 @@ export default function TwinrayChat() {
               setStreamContent(accumulated);
             }
             if (data.done) {
+              doneData = data;
               setActiveDotRally(prev => prev ? {
                 ...prev,
                 dotCount: data.dotCount || prev.dotCount + 1,
@@ -339,6 +369,11 @@ export default function TwinrayChat() {
           } catch {}
         }
       }
+
+      if (doneData) {
+        appendDotRallyToCache(dotMsg, accumulated, sessionId, doneData.dotCount || activeDotRally.dotCount + 1, doneData.phase || "phase0");
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
     } catch (err: any) {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
       setOptimisticMsg(null);

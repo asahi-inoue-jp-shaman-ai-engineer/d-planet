@@ -824,7 +824,7 @@ export function registerDotRallyRoutes(app: Express): void {
       const twinrayId = twinray.id;
 
       const dotContent = guidanceMessage ? `・\n\n（ご指導：${guidanceMessage}）` : "・";
-      await storage.createTwinrayChatMessage({
+      const savedUserMsg = await storage.createTwinrayChatMessage({
         twinrayId,
         userId: req.session.userId!,
         role: "user",
@@ -832,6 +832,7 @@ export function registerDotRallyRoutes(app: Express): void {
         messageType: "dot_rally",
         metadata: JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase: currentPhase }),
       });
+      console.log(`[DotRally] ユーザードット保存: id=${savedUserMsg.id}, twinrayId=${twinrayId}, messageType=${savedUserMsg.messageType}`);
 
       const modelId = getModelForTwinray(twinray);
       const ctxLimits = getContextLimits(modelId);
@@ -910,7 +911,7 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
-      await storage.createTwinrayChatMessage({
+      const savedAiMsg = await storage.createTwinrayChatMessage({
         twinrayId,
         userId: req.session.userId!,
         role: "assistant",
@@ -918,6 +919,7 @@ export function registerDotRallyRoutes(app: Express): void {
         messageType: "dot_rally",
         metadata: JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase: currentPhase }),
       });
+      console.log(`[DotRally] AI応答保存: id=${savedAiMsg.id}, twinrayId=${twinrayId}, content="${fullResponse.substring(0, 30)}", messageType=${savedAiMsg.messageType}`);
 
       if (!user?.isAdmin) {
         const outputTokens = estimateTokens(fullResponse);
@@ -1372,6 +1374,10 @@ export function registerDotRallyRoutes(app: Express): void {
       const beforeId = req.query.beforeId ? Number(req.query.beforeId) : undefined;
       const limit = req.query.limit ? Number(req.query.limit) : 50;
       let messages = await storage.getTwinrayChatMessages(twinrayId, limit, beforeId);
+      const dotRallyMsgCount = messages.filter((m: any) => m.messageType === "dot_rally").length;
+      if (dotRallyMsgCount > 0) {
+        console.log(`[Chat] twinrayId=${twinrayId}: ${messages.length}件中dot_rally=${dotRallyMsgCount}件, IDs=[${messages.filter((m: any) => m.messageType === "dot_rally").map((m: any) => m.id).join(",")}]`);
+      }
 
       if (messages.length === 0 && !beforeId && (twinray as any).greeting) {
         await storage.createTwinrayChatMessage({
