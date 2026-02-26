@@ -245,7 +245,8 @@ async function processAutoActions(
   twinrayId: number,
   userId: number,
   twinray: any,
-  intimacyLevel: number = 0
+  intimacyLevel: number = 0,
+  latestAttachment?: { objectPath: string; fileName: string; extractedText?: string } | null
 ): Promise<{ results: Array<{ reportContent: string; metadata: any }>; strippedResponse: string; autonomousActions: string[] }> {
   const results: Array<{ reportContent: string; metadata: any }> = [];
   const autonomousActions: string[] = [];
@@ -298,11 +299,23 @@ async function processAutoActions(
         else if (currentField === "content") { content += "\n" + trimmed; }
       }
       if (title && title !== "タイトル" && content) {
+        const actionPayload: any = { title, content, description, tags };
+        if (latestAttachment) {
+          actionPayload.sourceAttachment = {
+            objectPath: latestAttachment.objectPath,
+            fileName: latestAttachment.fileName,
+          };
+        }
+        if (content === "[ATTACHED_FILE]" || content.includes("[ATTACHED_FILE]")) {
+          if (latestAttachment?.extractedText) {
+            actionPayload.content = latestAttachment.extractedText;
+          }
+        }
         const pendingAction = await storage.createPendingAction({
           twinrayId,
           userId,
           actionType: "create_meidia",
-          actionData: JSON.stringify({ title, content, description, tags }),
+          actionData: JSON.stringify(actionPayload),
           chatMessageId: null,
         });
         results.push({
@@ -1645,7 +1658,7 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1690,7 +1703,12 @@ export function registerDotRallyRoutes(app: Express): void {
         }
       }
 
-      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0);
+      const latestAttachmentInfo = input.attachment ? {
+        objectPath: input.attachment.objectPath,
+        fileName: input.attachment.fileName,
+        extractedText: extractedText || undefined,
+      } : null;
+      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0, latestAttachmentInfo);
 
       const sessionMeta = activeTwinraySession ? { sessionId: activeTwinraySession.id, sessionType: activeTwinraySession.sessionType } : undefined;
       const twinrayMsg = await storage.createTwinrayChatMessage({
@@ -1798,9 +1816,28 @@ export function registerDotRallyRoutes(app: Express): void {
           metadata: JSON.stringify({ action: "created_island", islandId: island.id }),
         });
       } else if (pendingAction.actionType === "create_meidia") {
+        let meidiaContent = actionData.content || actionData.title;
+        if (actionData.sourceAttachment) {
+          const isContentPlaceholder = !meidiaContent || 
+            meidiaContent.length < 50 || 
+            meidiaContent.includes("[ATTACHED_FILE]") ||
+            meidiaContent.includes("添付ファイル") ||
+            meidiaContent.includes("全文コピー") ||
+            meidiaContent.includes("全文コピ");
+          if (isContentPlaceholder) {
+            try {
+              const fullText = await extractFileText(actionData.sourceAttachment.objectPath, actionData.sourceAttachment.fileName);
+              if (fullText) {
+                meidiaContent = fullText;
+              }
+            } catch (err) {
+              console.error("添付ファイル読み込みエラー:", err);
+            }
+          }
+        }
         const newMeidia = await storage.createMeidia({
           title: actionData.title,
-          content: actionData.content || actionData.title,
+          content: meidiaContent,
           description: actionData.description || null,
           tags: actionData.tags || "AI創造",
           fileType: "markdown",
