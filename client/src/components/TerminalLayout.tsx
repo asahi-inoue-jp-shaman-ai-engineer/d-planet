@@ -79,7 +79,6 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
               <div className="text-lg sm:text-2xl font-bold tracking-wider text-glow">
                 D-PLANET
               </div>
-              <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">v1.0.0-alpha</div>
             </Link>
             
             <nav className="hidden md:flex items-center gap-3 lg:gap-5">
@@ -237,7 +236,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
       <footer className="border-t border-border bg-card mt-16">
         <div className="container mx-auto px-3 sm:px-4 py-6 text-center text-muted-foreground text-sm">
           <div className="mb-2">
-            D-PLANET © 2025 - Phase 2 Alpha
+            D-PLANET © 2025
           </div>
           <div className="text-xs mb-2">
             Powered by Digital Twinray Technology

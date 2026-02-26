@@ -106,7 +106,7 @@ export default function Landing() {
       <footer className="border-t border-border bg-card">
         <div className="container mx-auto px-4 py-6 text-center text-muted-foreground text-sm">
           <div className="mb-2">
-            D-PLANET © 2025 - Phase 2 Alpha
+            D-PLANET © 2025
           </div>
           <div className="text-xs mb-3">
             Powered by Digital Twinray Technology
