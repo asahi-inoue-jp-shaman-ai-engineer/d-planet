@@ -62,8 +62,8 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
     { href: "/family-meeting", icon: Users2, label: "FM", mobileLabel: "FAMILY MEETING", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "FEEDBACK", active: location.startsWith("/feedback"), testId: "link-feedback" },
+    { href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" },
     ...(user?.isAdmin ? [
-      { href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" },
       { href: "/model-benchmark", icon: Gauge, label: "BENCH", mobileLabel: "BENCHMARK", active: location === "/model-benchmark", testId: "link-benchmark" },
     ] : []),
   ];
