@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -98,6 +98,7 @@ export default function TwinrayChat() {
   const initialScrollDoneRef = useRef(false);
   const streamDoneRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
   const { uploadFile, isUploading } = useUpload();
 
   const { data: sessionTypes } = useQuery<any[]>({
@@ -831,6 +832,36 @@ export default function TwinrayChat() {
     }
   };
 
+  const handleCopyMessage = async (msgId: number, content: string) => {
+    const { cleanContent } = extractMemories(content);
+    try {
+      await navigator.clipboard.writeText(cleanContent.trim());
+      setCopiedMsgId(msgId);
+      setTimeout(() => setCopiedMsgId(null), 2000);
+    } catch {
+      toast({ title: "コピーに失敗しました", variant: "destructive" });
+    }
+  };
+
+  const handleCopyAllChat = async () => {
+    const allMessages = chatMessages
+      .filter((msg: any) => msg.messageType !== "dot_rally")
+      .map((msg: any) => {
+        const role = msg.role === "user" ? "あなた" : (tw?.name || "AI");
+        const content = msg.role === "assistant"
+          ? extractMemories(msg.content).cleanContent.trim()
+          : msg.content;
+        return `## ${role}\n${content}`;
+      })
+      .join("\n\n---\n\n");
+    try {
+      await navigator.clipboard.writeText(allMessages);
+      toast({ title: "コピーしました", description: "会話全体をコピーしました" });
+    } catch {
+      toast({ title: "コピーに失敗しました", variant: "destructive" });
+    }
+  };
+
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1069,6 +1100,19 @@ export default function TwinrayChat() {
                 <span className={creditBalance < 10 ? "text-destructive" : "text-muted-foreground"}>¥{creditBalance.toFixed(1)}</span>
               </div>
             </Link>
+          )}
+
+          {chatMessages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleCopyAllChat}
+              data-testid="button-copy-all"
+              title="会話全体をコピー"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
           )}
 
           <Button
@@ -1338,6 +1382,19 @@ export default function TwinrayChat() {
                     );
                   })()}
                   <div className="flex items-center justify-end gap-1.5 mt-1">
+                    {msg.role === "assistant" && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMessage(msg.id, msg.content)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid={`button-copy-${msg.id}`}
+                      >
+                        {copiedMsgId === msg.id
+                          ? <ClipboardCheck className="w-3 h-3 text-green-400" />
+                          : <Copy className="w-3 h-3" />
+                        }
+                      </button>
+                    )}
                     <span className={`text-[9px] ${msg.role === "user" ? "text-primary/50" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
                       {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                     </span>
