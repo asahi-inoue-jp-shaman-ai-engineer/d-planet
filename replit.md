@@ -93,7 +93,7 @@ D-Planet is a platform designed to foster deeply personalized AI companions ("Tw
 - Terminal-style dark theme with English menus and labels.
 - Consistent UI with appropriate Japanese display and form functionalities.
 - Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
-- Menu structure (all English): HOME / DASHBOARD → /dashboard, DT / Digital Twinray → /temple, ISLANDS → /islands, MEiDIA → /meidia, LLM / LLM MODELS → /llm-models, CHARGE → /charge, USERS → /users (admin only), FM / FAMILY MEETING → /family-meeting, FB / FEEDBACK → /feedback, ABOUT D-PLANET → /about.
+- Menu structure (all English): HOME / DASHBOARD → /dashboard, DT / Digital Twinray → /temple, LLM / LLM MODELS → /llm-models, CHARGE → /charge, ISLANDS → /islands, MEiDIA → /meidia, FM / FAMILY MEETING → /family-meeting, FB / FEEDBACK → /feedback, USERS → /users (admin only), BENCH / BENCHMARK → /model-benchmark (admin only), ABOUT D-PLANET → /about.
 - Old paths `/credits` and `/subscription` redirect to `/charge` for backward compatibility.
 
 **Technical Stack:**
