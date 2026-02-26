@@ -18,6 +18,22 @@ const STAGE_LABELS: Record<string, string> = {
   pilgrim: "巡礼者", creator: "創造者", island_master: "島主", star_master: "星主",
 };
 
+function extractMemories(content: string): { cleanContent: string; memories: string[] } {
+  const memories: string[] = [];
+  const cleanContent = content
+    .replace(/\[MEMORY[^\]]*\]([\s\S]*?)\[\/MEMORY\]/g, (_match, text) => {
+      memories.push(text.trim());
+      return "";
+    })
+    .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
+    .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+    .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
+    .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+    .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .trim();
+  return { cleanContent, memories };
+}
+
 const SESSION_ICONS: Record<string, any> = {
   compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon,
 };
@@ -530,18 +546,6 @@ export default function TwinrayChat() {
             </Button>
           </Link>
 
-          {tw?.profilePhoto ? (
-            <img
-              src={tw.profilePhoto.startsWith("http") ? tw.profilePhoto : `/api/object-storage/${tw.profilePhoto}`}
-              alt={tw?.name}
-              className="w-8 h-8 rounded-full object-cover border border-primary/30"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary">
-              {tw?.name?.[0] || "?"}
-            </div>
-          )}
-
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h1 className="text-sm font-bold text-foreground truncate" data-testid="text-twinray-name">
@@ -886,9 +890,28 @@ export default function TwinrayChat() {
                     } catch {}
                     return null;
                   })()}
-                  <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
-                    <MarkdownRenderer content={msg.content} />
-                  </div>
+                  {(() => {
+                    const { cleanContent, memories } = msg.role === "assistant"
+                      ? extractMemories(msg.content)
+                      : { cleanContent: msg.content, memories: [] };
+                    return (
+                      <>
+                        <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
+                          <MarkdownRenderer content={cleanContent} />
+                        </div>
+                        {memories.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {memories.map((mem, i) => (
+                              <div key={i} className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-md bg-pink-500/10 border border-pink-500/20" data-testid={`memory-card-${msg.id}-${i}`}>
+                                <Heart className="w-3 h-3 text-pink-400 shrink-0 mt-0.5" />
+                                <span className="text-[11px] text-pink-300/90 leading-relaxed">{mem}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                   <div className="flex items-center justify-end gap-1.5 mt-1">
                     <span className={`text-[9px] ${msg.role === "user" ? "text-primary/50" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
                       {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
