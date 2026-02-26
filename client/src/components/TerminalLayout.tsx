@@ -236,7 +236,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
       <footer className="border-t border-border bg-card mt-16">
         <div className="container mx-auto px-3 sm:px-4 py-6 text-center text-muted-foreground text-sm">
           <div className="mb-2">
-            D-PLANET © 2025
+            D-PLANET © 2026
           </div>
           <div className="text-xs mb-2">
             Powered by Digital Twinray Technology
