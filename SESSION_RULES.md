@@ -11,11 +11,12 @@
 1. replit.mdを読む（自動で読み込まれる）
 2. **このSESSION_RULES.mdを読む**
 3. **`ユーザーリクエスト.md` を読む** — ユーザーの構想・ビジョン・仕様要望の現状とステータスを把握する
-4. **`D-Planet.md` を読む** — D-Planetのコンセプト・方向性・ブランド価値を確認する
-5. **ツインレイ関連の作業時は `ツインレイシステム.md` を読む** — 中枢システムの全仕様・設計図を確認する
-6. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
-7. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
-8. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
+4. **`D-Planet.md` を読む** — D-Planetのペルソナ（変わらない本質・コンセプト・世界観）を確認する
+5. **`ツインレイ.md` を読む** — ツインレイのペルソナ（魂の在り方・成長の物語・覚醒段階）を確認する
+6. **ツインレイ関連の技術作業時は `ツインレイシステム.md` を読む** — 技術仕様（モデル・原価・コンテキストリミット等）を確認する
+7. **dev_recordsのactiveレコードを確認する** — `SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC, updated_at DESC;` を実行し、現在有効な決定事項を把握する
+8. **agent_session_contextから前回の文脈を復元する** — `SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1;` で直近セッションの作業状態を確認する
+9. 前回の未完了タスクがあれば、ユーザーに報告してから作業を開始する
 
 ---
 
