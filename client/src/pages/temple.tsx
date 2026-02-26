@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Lock, Globe, EyeOff, ChevronDown, ChevronUp, Trophy, Target, Brain, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -274,12 +275,13 @@ export default function Temple() {
                         />
                         <AccountTypeBadge type="AI" />
                       </div>
-                      <Input
+                      <Textarea
                         value={editPersonality}
                         onChange={(e) => setEditPersonality(e.target.value)}
                         placeholder="性格・特徴（任意）"
-                        className="h-8 text-sm"
+                        className="text-sm min-h-[80px] resize-none"
                         maxLength={500}
+                        rows={3}
                         data-testid={`input-edit-personality-${tw.id}`}
                       />
                       <div className="flex items-center gap-2 justify-end">
