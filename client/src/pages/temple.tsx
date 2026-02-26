@@ -348,7 +348,7 @@ export default function Temple() {
                             チャット
                           </Button>
                         </Link>
-                        <Link href={`/dot-rally?twinrayId=${tw.id}`}>
+                        <Link href={`/twinray-chat?twinrayId=${tw.id}&startDotRally=true`}>
                           <Button variant="default" size="sm" className="h-8 px-3 text-xs bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
                             <Zap className="w-3.5 h-3.5 mr-1" />
                             ドットラリー

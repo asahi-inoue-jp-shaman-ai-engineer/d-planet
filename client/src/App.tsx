@@ -94,7 +94,13 @@ function Router() {
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
-      <Route path="/dot-rally" component={() => <ProtectedRoute component={DotRally} />} />
+      <Route path="/dot-rally">
+        {() => {
+          const p = new URLSearchParams(window.location.search);
+          const tid = p.get("twinrayId") || "";
+          return <Redirect to={`/twinray-chat?twinrayId=${tid}&startDotRally=true`} />;
+        }}
+      </Route>
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
