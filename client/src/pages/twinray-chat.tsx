@@ -320,6 +320,7 @@ export default function TwinrayChat() {
     if ((!content && !attachment) || streaming) return;
     const currentAttachment = attachment;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setShowSuggestions(false);
     setStreaming(true);
     setStreamContent("");
@@ -1241,12 +1242,17 @@ export default function TwinrayChat() {
               <Textarea
                 ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  const ta = e.target;
+                  ta.style.height = 'auto';
+                  ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="メッセージを入力..."
                 rows={1}
                 disabled={streaming}
-                className="resize-none flex-1 min-h-[40px] max-h-[120px] rounded-2xl border-border bg-background text-sm"
+                className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"
                 data-testid="input-chat-message"
               />
               <Button
