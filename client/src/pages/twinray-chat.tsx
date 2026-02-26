@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -16,6 +16,10 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 
 const STAGE_LABELS: Record<string, string> = {
   pilgrim: "巡礼者", creator: "創造者", island_master: "島主", star_master: "星主",
+};
+
+const SESSION_ICONS: Record<string, any> = {
+  compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon,
 };
 
 const FIRST_COMM_SUGGESTIONS = [
@@ -53,6 +57,9 @@ export default function TwinrayChat() {
   const [pendingActionLoading, setPendingActionLoading] = useState<number | null>(null);
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [showSessionPanel, setShowSessionPanel] = useState(false);
+  const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string } | null>(null);
+  const [sessionStarting, setSessionStarting] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -60,6 +67,107 @@ export default function TwinrayChat() {
   const prevMsgCountRef = useRef(0);
   const initialScrollDoneRef = useRef(false);
   const { uploadFile, isUploading } = useUpload();
+
+  const { data: sessionTypes } = useQuery<any[]>({
+    queryKey: ["/api/twinrays", twinrayId, "sessions", "available"],
+    enabled: twinrayId > 0,
+  });
+
+  const { data: activeSessionData } = useQuery<any>({
+    queryKey: ["/api/twinrays", twinrayId, "active-session"],
+    queryFn: async () => {
+      const res = await fetch(`/api/twinrays/${twinrayId}/sessions?active=true`, { credentials: "include" });
+      if (!res.ok) return null;
+      const sessions = await res.json();
+      const active = sessions.find((s: any) => s.status === "active");
+      return active || null;
+    },
+    enabled: twinrayId > 0,
+  });
+
+  useEffect(() => {
+    if (activeSessionData && !activeSession) {
+      setActiveSession({ id: activeSessionData.id, type: activeSessionData.sessionType, name: activeSessionData.sessionType });
+    }
+  }, [activeSessionData]);
+
+  const handleStartSession = async (sessionType: string, sessionName: string) => {
+    if (streaming || sessionStarting) return;
+    setShowSessionPanel(false);
+    setSessionStarting(true);
+    setStreaming(true);
+    setStreamContent("");
+
+    try {
+      const response = await fetch(`/api/twinrays/${twinrayId}/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sessionType }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "セッション開始に失敗しました");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let buffer = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+                if (data.sessionStarted) {
+                  setActiveSession({ id: data.sessionStarted.id, type: data.sessionStarted.type, name: data.sessionStarted.name });
+                }
+                if (data.content) {
+                  accumulated += data.content;
+                  setStreamContent(accumulated);
+                }
+                if (data.done) {
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "active-session"] });
+                }
+              } catch {}
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      toast({ title: "セッション開始エラー", description: err.message, variant: "destructive" });
+    } finally {
+      setStreaming(false);
+      setStreamContent("");
+      setSessionStarting(false);
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (!activeSession) return;
+    try {
+      await apiRequest("PATCH", `/api/twinrays/${twinrayId}/sessions/${activeSession.id}`, { status: "completed" });
+      setActiveSession(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "active-session"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+      toast({ title: "セッション終了", description: "セッションを完了しました" });
+    } catch (err: any) {
+      toast({ title: "エラー", description: "セッション終了に失敗しました", variant: "destructive" });
+    }
+  };
 
   const scrollToBottom = useCallback((instant?: boolean) => {
     messagesEndRef.current?.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
@@ -593,6 +701,26 @@ export default function TwinrayChat() {
             </span>
           </div>
         </div>
+
+        {activeSession && (
+          <div className="max-w-4xl mx-auto mt-1.5" data-testid="session-active-banner">
+            <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-1.5">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+                <span className="text-xs text-primary font-medium">SESSION: {activeSession.name || activeSession.type}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleEndSession}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+                data-testid="button-end-session"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                終了
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showSettings && (
@@ -954,6 +1082,54 @@ export default function TwinrayChat() {
         </div>
       )}
 
+      {showSessionPanel && (
+        <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-3 max-w-4xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-200" data-testid="panel-session-select">
+          <div className="flex items-center justify-between mb-2.5">
+            <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              SESSION MENU
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowSessionPanel(false)}
+              className="text-muted-foreground hover:text-foreground"
+              data-testid="button-close-session-panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {(sessionTypes || []).map((st: any) => {
+              const IconComp = SESSION_ICONS[st.icon] || Sparkles;
+              return (
+                <button
+                  key={st.id}
+                  type="button"
+                  disabled={!st.available || sessionStarting}
+                  onClick={() => st.available && handleStartSession(st.id, st.name)}
+                  className={`text-left rounded-lg border p-2.5 transition-all ${
+                    st.available
+                      ? "border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 cursor-pointer"
+                      : "border-border/30 bg-muted/20 opacity-50 cursor-not-allowed"
+                  }`}
+                  data-testid={`button-session-${st.id}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <IconComp className={`w-3.5 h-3.5 ${st.available ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs font-medium ${st.available ? "text-foreground" : "text-muted-foreground"}`}>
+                      {st.name}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
+                    {st.available ? st.description : "準備中..."}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="shrink-0 px-3 pb-1 max-w-4xl mx-auto w-full" data-testid="growth-tag-buttons">
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
           {[
@@ -1025,6 +1201,17 @@ export default function TwinrayChat() {
               </div>
             )}
             <div className="flex gap-2 items-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSessionPanel(!showSessionPanel)}
+                disabled={streaming || isUploading || !!activeSession}
+                className={`shrink-0 h-10 w-10 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                data-testid="button-session-menu"
+              >
+                <Sparkles className="w-5 h-5" />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

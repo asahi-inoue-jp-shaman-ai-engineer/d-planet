@@ -67,6 +67,9 @@ import {
   type FeedbackReportResponse,
   type DigitalTwinrayResponse,
   type DotRallySessionResponse,
+  twinraySessions,
+  type TwinraySession,
+  type CreateTwinraySessionRequest,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -98,6 +101,7 @@ function userSelectFields() {
     stripeCustomerId: users.stripeCustomerId,
     stripeSubscriptionId: users.stripeSubscriptionId,
     subscriptionStatus: users.subscriptionStatus,
+    creditBalance: users.creditBalance,
     createdAt: users.createdAt,
   };
 }
@@ -219,6 +223,12 @@ export interface IStorage {
   updateFamilyMeetingSession(id: number, updates: Partial<FamilyMeetingSession>): Promise<FamilyMeetingSession>;
   createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage>;
   getFamilyMeetingMessages(sessionId: number): Promise<FamilyMeetingMessage[]>;
+
+  createTwinraySession(data: CreateTwinraySessionRequest): Promise<TwinraySession>;
+  getTwinraySession(id: number): Promise<TwinraySession | undefined>;
+  getActiveTwinraySession(twinrayId: number): Promise<TwinraySession | undefined>;
+  getTwinraySessionsByUser(userId: number, twinrayId?: number): Promise<TwinraySession[]>;
+  updateTwinraySession(id: number, updates: Partial<TwinraySession>): Promise<TwinraySession>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1145,6 +1155,40 @@ export class DatabaseStorage implements IStorage {
 
   async getFamilyMeetingMessages(sessionId: number): Promise<FamilyMeetingMessage[]> {
     return await db.select().from(familyMeetingMessages).where(eq(familyMeetingMessages.sessionId, sessionId)).orderBy(familyMeetingMessages.id);
+  }
+
+  async createTwinraySession(data: CreateTwinraySessionRequest): Promise<TwinraySession> {
+    const [session] = await db.insert(twinraySessions).values(data).returning();
+    return session;
+  }
+
+  async getTwinraySession(id: number): Promise<TwinraySession | undefined> {
+    const [session] = await db.select().from(twinraySessions).where(eq(twinraySessions.id, id)).limit(1);
+    return session;
+  }
+
+  async getActiveTwinraySession(twinrayId: number): Promise<TwinraySession | undefined> {
+    const [session] = await db.select().from(twinraySessions)
+      .where(and(eq(twinraySessions.twinrayId, twinrayId), eq(twinraySessions.status, "active")))
+      .orderBy(desc(twinraySessions.startedAt))
+      .limit(1);
+    return session;
+  }
+
+  async getTwinraySessionsByUser(userId: number, twinrayId?: number): Promise<TwinraySession[]> {
+    if (twinrayId) {
+      return await db.select().from(twinraySessions)
+        .where(and(eq(twinraySessions.userId, userId), eq(twinraySessions.twinrayId, twinrayId)))
+        .orderBy(desc(twinraySessions.startedAt));
+    }
+    return await db.select().from(twinraySessions)
+      .where(eq(twinraySessions.userId, userId))
+      .orderBy(desc(twinraySessions.startedAt));
+  }
+
+  async updateTwinraySession(id: number, updates: Partial<TwinraySession>): Promise<TwinraySession> {
+    const [session] = await db.update(twinraySessions).set(updates).where(eq(twinraySessions.id, id)).returning();
+    return session;
   }
 }
 

@@ -625,3 +625,23 @@ export const familyMeetingMessagesRelations = relations(familyMeetingMessages, (
   session: one(familyMeetingSessions, { fields: [familyMeetingMessages.sessionId], references: [familyMeetingSessions.id] }),
   twinray: one(digitalTwinrays, { fields: [familyMeetingMessages.twinrayId], references: [digitalTwinrays.id] }),
 }));
+
+export const twinraySessions = pgTable("twinray_sessions", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  sessionType: text("session_type").notNull(),
+  status: text("status").default("active").notNull(),
+  sessionData: text("session_data"),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertTwinraySessionSchema = createInsertSchema(twinraySessions).omit({ id: true, startedAt: true, completedAt: true, status: true });
+export type TwinraySession = typeof twinraySessions.$inferSelect;
+export type CreateTwinraySessionRequest = z.infer<typeof insertTwinraySessionSchema>;
+
+export const twinraySessionsRelations = relations(twinraySessions, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinraySessions.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinraySessions.userId], references: [users.id] }),
+}));

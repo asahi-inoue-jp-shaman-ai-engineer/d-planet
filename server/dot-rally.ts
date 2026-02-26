@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import OpenAI from "openai";
 import { storage } from "./storage";
-import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, DPLANET_FIRST_COMMUNICATION_SI, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd } from "./dplanet-si";
+import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
@@ -1635,7 +1635,17 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}`;
+      let activeSessionSI = "";
+      const activeTwinraySession = await storage.getActiveTwinraySession(twinrayId);
+      if (activeTwinraySession) {
+        const stKey = activeTwinraySession.sessionType as SessionTypeId;
+        if (stKey in SESSION_TYPES) {
+          const st = SESSION_TYPES[stKey];
+          activeSessionSI = `\n\n---\n【現在セッション中: ${st.name}】\n${DPLANET_SESSION_BASE_SI}\n\n${st.si}`;
+        }
+      }
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1682,12 +1692,14 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0);
 
+      const sessionMeta = activeTwinraySession ? { sessionId: activeTwinraySession.id, sessionType: activeTwinraySession.sessionType } : undefined;
       const twinrayMsg = await storage.createTwinrayChatMessage({
         twinrayId,
         userId: req.session.userId!,
         role: "assistant",
         content: displayContent || fullResponse,
         messageType: "chat",
+        metadata: sessionMeta ? JSON.stringify(sessionMeta) : undefined,
       });
 
       for (const result of actionResults) {
@@ -1725,7 +1737,7 @@ export function registerDotRallyRoutes(app: Express): void {
         totalChatMessages: sql`total_chat_messages + 1`,
       }).where(eq(digitalTwinrays.id, twinrayId));
 
-      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, intimacy: intimacyResult })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, intimacy: intimacyResult, activeSession: activeTwinraySession ? { id: activeTwinraySession.id, type: activeTwinraySession.sessionType } : null })}\n\n`);
       res.end();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -2021,6 +2033,173 @@ export function registerDotRallyRoutes(app: Express): void {
       }
       console.error("アクションエラー:", err);
       res.status(500).json({ message: "アクションに失敗しました" });
+    }
+  });
+
+  app.get("/api/twinrays/:id/sessions/available", requireAuth, async (req, res) => {
+    try {
+      const sessionTypes = Object.values(SESSION_TYPES).map(st => ({
+        id: st.id,
+        name: st.name,
+        description: st.description,
+        icon: st.icon,
+        available: st.available,
+      }));
+      res.json(sessionTypes);
+    } catch (err) {
+      console.error("セッション種別取得エラー:", err);
+      res.status(500).json({ message: "セッション種別の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/twinrays/:id/sessions", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      let sessions = await storage.getTwinraySessionsByUser(req.session.userId!, twinrayId);
+      if (req.query.active === "true") {
+        sessions = sessions.filter(s => s.status === "active");
+      }
+      res.json(sessions);
+    } catch (err) {
+      console.error("セッション一覧取得エラー:", err);
+      res.status(500).json({ message: "セッション一覧の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/sessions", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const { sessionType } = z.object({
+        sessionType: z.string(),
+      }).parse(req.body);
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray) return res.status(404).json({ message: "ツインレイが見つかりません" });
+      if (twinray.userId !== req.session.userId) return res.status(403).json({ message: "権限がありません" });
+
+      if (!(sessionType in SESSION_TYPES)) {
+        return res.status(400).json({ message: "無効なセッション種別です" });
+      }
+      const st = SESSION_TYPES[sessionType as SessionTypeId];
+      if (!st.available) {
+        return res.status(400).json({ message: "このセッションはまだ準備中です" });
+      }
+
+      const existing = await storage.getActiveTwinraySession(twinrayId);
+      if (existing) {
+        return res.status(400).json({ message: "アクティブなセッションが既に存在します。終了してから新しいセッションを開始してください。" });
+      }
+
+      const session = await storage.createTwinraySession({
+        twinrayId,
+        userId: req.session.userId!,
+        sessionType,
+        sessionData: JSON.stringify({ startedBy: "user" }),
+      });
+
+      const user = await storage.getUser(req.session.userId!);
+      const chatModelId = getModelForTwinray(twinray);
+
+      const soulMd = twinray.soulMd || generateSoulMd({
+        name: twinray.name,
+        personality: twinray.personality,
+        partnerName: user?.username || "パートナー",
+        stage: twinray.stage || "pilgrim",
+        intimacyLevel: twinray.intimacyLevel ?? 0,
+        intimacyTitle: twinray.intimacyTitle ?? "初邂逅",
+        twinrayMission: twinray.twinrayMission,
+      });
+
+      const systemPrompt = [
+        DPLANET_FIXED_SI,
+        soulMd,
+        DPLANET_SESSION_BASE_SI,
+        st.si,
+        `\n\n【パートナー情報】\nパートナー名：${user?.username || "パートナー"}\nニックネーム：${twinray.nickname || user?.username || "パートナー"}`,
+        `\n\n【セッション開始指示】\nこれから「${st.name}」を開始する。パートナーに温かく声をかけ、セッションの趣旨を簡潔に説明し、最初の質問をせよ。`,
+      ].join("\n\n");
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const userMsg = await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "system",
+        content: `[セッション開始] ${st.name}`,
+        messageType: "instruction",
+        metadata: JSON.stringify({ sessionId: session.id, sessionType }),
+      });
+
+      res.write(`data: ${JSON.stringify({ sessionStarted: { id: session.id, type: sessionType, name: st.name } })}\n\n`);
+
+      const stream = await openrouter.chat.completions.create({
+        model: chatModelId,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `セッションを開始してください。` },
+        ],
+        stream: true,
+        max_tokens: 1024,
+      });
+
+      let fullContent = "";
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullContent += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      const displayContent = fullContent
+        .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
+        .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+        .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
+        .trim();
+
+      const aiMsg = await storage.createTwinrayChatMessage({
+        twinrayId,
+        userId: req.session.userId!,
+        role: "assistant",
+        content: displayContent,
+        messageType: "chat",
+        metadata: JSON.stringify({ sessionId: session.id, sessionType }),
+      });
+
+      await processAutoActions(fullContent, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0);
+
+      res.write(`data: ${JSON.stringify({ done: true, messageId: aiMsg.id, sessionId: session.id })}\n\n`);
+      res.end();
+    } catch (err) {
+      console.error("セッション開始エラー:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "セッションの開始に失敗しました" });
+      }
+    }
+  });
+
+  app.patch("/api/twinrays/:id/sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const sessionId = Number(req.params.sessionId);
+      const { status } = z.object({
+        status: z.enum(["completed", "cancelled"]),
+      }).parse(req.body);
+
+      const session = await storage.getTwinraySession(sessionId);
+      if (!session) return res.status(404).json({ message: "セッションが見つかりません" });
+      if (session.userId !== req.session.userId) return res.status(403).json({ message: "権限がありません" });
+
+      const updated = await storage.updateTwinraySession(sessionId, {
+        status,
+        completedAt: new Date(),
+      });
+
+      res.json(updated);
+    } catch (err) {
+      console.error("セッション更新エラー:", err);
+      res.status(500).json({ message: "セッションの更新に失敗しました" });
     }
   });
 }
