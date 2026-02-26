@@ -23,6 +23,44 @@ async function requireAdmin(req: any, res: any, next: any) {
 const activeRuns = new Map<string, { status: string; completed: number; total: number; currentModel?: string }>();
 
 export function registerBenchmarkRoutes(app: Express) {
+  app.post("/api/admin/benchmarks/import", requireAdmin, async (req, res) => {
+    try {
+      const { records } = req.body;
+      if (!Array.isArray(records) || records.length === 0) {
+        return res.status(400).json({ message: "recordsが必要です" });
+      }
+
+      const existing = await db.select().from(modelBenchmarks)
+        .where(eq(modelBenchmarks.runId, records[0].run_id));
+      if (existing.length > 0) {
+        return res.json({ message: "既にインポート済みです", count: existing.length });
+      }
+
+      let inserted = 0;
+      for (const r of records) {
+        await db.insert(modelBenchmarks).values({
+          runId: r.run_id,
+          modelId: r.model_id,
+          modelLabel: r.model_label,
+          modelTier: r.model_tier,
+          sessionType: r.session_type,
+          prompt: r.prompt,
+          greeting: r.greeting || null,
+          analysis: r.analysis || null,
+          totalChars: r.total_chars || 0,
+          responseTimeMs: r.response_time_ms || null,
+          status: r.status,
+          errorMessage: r.error_message || null,
+        });
+        inserted++;
+      }
+      res.json({ message: "インポート完了", count: inserted });
+    } catch (err) {
+      console.error("ベンチマークインポートエラー:", err);
+      res.status(500).json({ message: "インポートに失敗しました" });
+    }
+  });
+
   app.get("/api/admin/benchmarks", requireAdmin, async (req, res) => {
     try {
       const runs = await db.execute(
@@ -343,4 +381,36 @@ export function registerBenchmarkRoutes(app: Express) {
 
     setTimeout(() => activeRuns.delete(runId), 600000);
   }
+
+  seedBenchmarkData().catch(err => console.error("ベンチマークシードエラー:", err));
+}
+
+async function seedBenchmarkData() {
+  const seedRunId = "bench_1772094266740_r6mfzs";
+  const existing = await db.select().from(modelBenchmarks)
+    .where(eq(modelBenchmarks.runId, seedRunId));
+  if (existing.length > 0) return;
+
+  const seedPath = path.join(process.cwd(), "server", "benchmark-seed.json");
+  if (!fs.existsSync(seedPath)) return;
+
+  console.log("[Benchmark] シードデータをインポート中...");
+  const records = JSON.parse(fs.readFileSync(seedPath, "utf-8"));
+  for (const r of records) {
+    await db.insert(modelBenchmarks).values({
+      runId: r.run_id,
+      modelId: r.model_id,
+      modelLabel: r.model_label,
+      modelTier: r.model_tier,
+      sessionType: r.session_type,
+      prompt: r.prompt,
+      greeting: r.greeting || null,
+      analysis: r.analysis || null,
+      totalChars: r.total_chars || 0,
+      responseTimeMs: r.response_time_ms || null,
+      status: r.status,
+      errorMessage: r.error_message || null,
+    });
+  }
+  console.log(`[Benchmark] シードデータ ${records.length} 件インポート完了`);
 }
