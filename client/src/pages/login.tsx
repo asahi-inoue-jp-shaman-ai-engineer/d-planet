@@ -75,7 +75,7 @@ export default function Login() {
         localStorage.removeItem(SAVED_PASS_KEY);
         localStorage.removeItem(REMEMBER_KEY);
       }
-      window.location.href = isRegister ? "/profile-setup" : "/islands";
+      window.location.href = isRegister ? "/profile-setup" : "/dashboard";
     } catch (error: any) {
       let message = "処理に失敗しました";
       try {
