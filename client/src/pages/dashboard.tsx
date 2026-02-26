@@ -103,10 +103,10 @@ export default function Dashboard() {
 
   const quickNavItems = [
     { href: "/temple", icon: Sparkles, label: "Digital Twinray", color: "text-purple-400", testId: "nav-temple" },
-    { href: "/islands", icon: Map, label: "ISLANDS", color: "text-green-400", testId: "nav-islands" },
-    { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
     { href: "/llm-models", icon: Cpu, label: "LLM MODELS", color: "text-cyan-400", testId: "nav-llm-models" },
     { href: "/charge", icon: Coins, label: "CHARGE", color: "text-yellow-400", testId: "nav-charge" },
+    { href: "/islands", icon: Map, label: "ISLANDS", color: "text-green-400", testId: "nav-islands" },
+    { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
     { href: "/family-meeting", icon: Users, label: "FAMILY MEETING", color: "text-violet-400", testId: "nav-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
