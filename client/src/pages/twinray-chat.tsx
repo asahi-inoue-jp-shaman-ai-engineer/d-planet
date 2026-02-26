@@ -737,50 +737,40 @@ export default function TwinrayChat() {
                 <span className="text-[10px] text-muted-foreground">({currentModelLabel})</span>
               </div>
               <div className="space-y-2">
-                <div>
-                  <p className="text-[9px] text-muted-foreground/70 mb-1">日本語品質で選ぶ（おすすめ）</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").map((model: any) => (
-                      <button
-                        key={model.id}
-                        type="button"
-                        onClick={() => handleModelChange(model.id)}
-                        className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                          currentModel === model.id
-                            ? "bg-primary/20 border-primary text-primary"
-                            : "bg-card border-border text-muted-foreground hover:border-primary/50"
-                        }`}
-                        data-testid={`button-model-switch-${model.id}`}
-                        title={model.roundsPer5000 ? `${model.description}（¥5,000で約${model.roundsPer5000.toLocaleString()}回）` : model.description}
-                      >
-                        {model.label}
-                        {model.tier === "recommended" && " ★"}
-                        {model.tier === "premium" && " 💎"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground/70 mb-1">使い慣れたAIで遊ぶ（無料）</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {models.filter((m: any) => m.isFree).map((model: any) => (
-                      <button
-                        key={model.id}
-                        type="button"
-                        onClick={() => handleModelChange(model.id)}
-                        className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                          currentModel === model.id
-                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                            : "bg-card border-border text-muted-foreground hover:border-emerald-500/50"
-                        }`}
-                        data-testid={`button-model-switch-${model.id}`}
-                        title={model.description}
-                      >
-                        {model.label} 🆓
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {[
+                  { tier: "free", label: "無料", colorActive: "bg-green-500/20 border-green-500 text-green-400", colorHover: "hover:border-green-500/50" },
+                  { tier: "lightweight", label: "軽量型", colorActive: "bg-emerald-500/20 border-emerald-500 text-emerald-400", colorHover: "hover:border-emerald-500/50" },
+                  { tier: "reasoning", label: "推論特化", colorActive: "bg-orange-500/20 border-orange-500 text-orange-400", colorHover: "hover:border-orange-500/50" },
+                  { tier: "highperf", label: "高性能", colorActive: "bg-blue-500/20 border-blue-500 text-blue-400", colorHover: "hover:border-blue-500/50" },
+                  { tier: "flagship", label: "最上位", colorActive: "bg-amber-500/20 border-amber-500 text-amber-400", colorHover: "hover:border-amber-500/50" },
+                  { tier: "search", label: "検索特化", colorActive: "bg-violet-500/20 border-violet-500 text-violet-400", colorHover: "hover:border-violet-500/50" },
+                ].map(({ tier, label, colorActive, colorHover }) => {
+                  const tierModels = models.filter((m: any) => m.qualityTier === tier);
+                  if (tierModels.length === 0) return null;
+                  return (
+                    <div key={tier}>
+                      <p className="text-[9px] text-muted-foreground/70 mb-1">{label}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tierModels.map((model: any) => (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => handleModelChange(model.id)}
+                            className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                              currentModel === model.id
+                                ? colorActive
+                                : `bg-card border-border text-muted-foreground ${colorHover}`
+                            }`}
+                            data-testid={`button-model-switch-${model.id}`}
+                            title={model.description}
+                          >
+                            {model.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             {tw && (
