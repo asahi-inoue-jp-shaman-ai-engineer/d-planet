@@ -1249,6 +1249,20 @@ export default function TwinrayChat() {
                     const { cleanContent, memories } = msg.role === "assistant"
                       ? extractMemories(msg.content)
                       : { cleanContent: msg.content, memories: [] };
+                    let isDotRallyDot = false;
+                    try {
+                      const meta = JSON.parse(msg.metadata || "{}");
+                      if (meta.type === "dot_rally" && cleanContent.trim() === "・") {
+                        isDotRallyDot = true;
+                      }
+                    } catch {}
+                    if (isDotRallyDot || (msg.messageType === "dot_rally" && cleanContent.trim() === "・")) {
+                      return (
+                        <div className="flex items-center justify-center py-2" data-testid={`dot-rally-dot-${msg.id}`}>
+                          <span className="text-3xl font-bold text-primary">・</span>
+                        </div>
+                      );
+                    }
                     return (
                       <>
                         <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
@@ -1391,9 +1405,15 @@ export default function TwinrayChat() {
                       <span className="truncate max-w-[180px]">{optimisticMsg.attachment.fileName}</span>
                     </div>
                   )}
-                  <div className="text-sm text-primary">
-                    <MarkdownRenderer content={optimisticMsg.content} />
-                  </div>
+                  {activeDotRally && optimisticMsg.content.trim() === "・" ? (
+                    <div className="flex items-center justify-center py-2">
+                      <span className="text-3xl font-bold text-primary">・</span>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-primary">
+                      <MarkdownRenderer content={optimisticMsg.content} />
+                    </div>
+                  )}
                   <div className="flex items-center justify-end gap-1.5 mt-1">
                     <span className="text-[9px] text-primary/50">
                       {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
@@ -1409,9 +1429,15 @@ export default function TwinrayChat() {
                     <span className="text-[11px] font-bold text-foreground/80">{tw?.name || "AI"}</span>
                     <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   </div>
-                  <div className="text-sm text-foreground">
-                    <MarkdownRenderer content={streamContent} />
-                  </div>
+                  {activeDotRally && streamContent.trim() === "・" ? (
+                    <div className="flex items-center justify-center py-2">
+                      <span className="text-3xl font-bold text-primary">・</span>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-foreground">
+                      <MarkdownRenderer content={streamContent} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
