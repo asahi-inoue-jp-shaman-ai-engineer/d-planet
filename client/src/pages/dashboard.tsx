@@ -22,6 +22,7 @@ import {
   BookOpen,
   Rocket,
   ExternalLink,
+  Cpu,
 } from "lucide-react";
 
 function formatTimeAgo(dateStr: string | null): string {
@@ -104,8 +105,9 @@ export default function Dashboard() {
     { href: "/temple", icon: Sparkles, label: "Digital Twinray", color: "text-purple-400", testId: "nav-temple" },
     { href: "/islands", icon: Map, label: "ISLANDS", color: "text-green-400", testId: "nav-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
-    { href: "/credits", icon: Coins, label: "CREDIT", color: "text-yellow-400", testId: "nav-credits" },
-    { href: "/family-meeting", icon: Users, label: "家族会議", color: "text-violet-400", testId: "nav-family-meeting" },
+    { href: "/llm-models", icon: Cpu, label: "LLM MODELS", color: "text-cyan-400", testId: "nav-llm-models" },
+    { href: "/charge", icon: Coins, label: "CHARGE", color: "text-yellow-400", testId: "nav-charge" },
+    { href: "/family-meeting", icon: Users, label: "FAMILY MEETING", color: "text-violet-400", testId: "nav-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
 

@@ -25,6 +25,8 @@ import CreateTwinray from "@/pages/create-twinray";
 import DotRally from "@/pages/dot-rally";
 import TwinrayChat from "@/pages/twinray-chat";
 import Subscription from "@/pages/subscription";
+import LlmModels from "@/pages/llm-models";
+import Charge from "@/pages/charge";
 import About from "@/pages/about";
 import Landing from "@/pages/landing";
 import Legal from "@/pages/legal";
@@ -94,6 +96,8 @@ function Router() {
       <Route path="/dot-rally" component={() => <ProtectedRoute component={DotRally} />} />
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
+      <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
+      <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/about" component={About} />

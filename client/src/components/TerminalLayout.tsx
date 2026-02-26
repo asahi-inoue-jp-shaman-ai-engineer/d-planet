@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -54,14 +54,15 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
   }
 
   const navLinks = [
-    { href: "/dashboard", icon: Home, label: "HOME", mobileLabel: "ダッシュボード", active: location === "/dashboard", testId: "link-dashboard" },
+    { href: "/dashboard", icon: Home, label: "HOME", mobileLabel: "DASHBOARD", active: location === "/dashboard", testId: "link-dashboard" },
     { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
     { href: "/islands", icon: Map, label: "ISLANDS", mobileLabel: "ISLANDS", active: location === "/islands", testId: "link-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
-    { href: "/credits", icon: Coins, label: "CREDIT", mobileLabel: "クレジット", active: location === "/credits", testId: "link-credits" },
+    { href: "/llm-models", icon: Cpu, label: "LLM", mobileLabel: "LLM MODELS", active: location === "/llm-models", testId: "link-llm-models" },
+    { href: "/charge", icon: Coins, label: "CHARGE", mobileLabel: "CHARGE", active: location === "/charge", testId: "link-charge" },
     ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" }] : []),
-    { href: "/family-meeting", icon: Users2, label: "会議", mobileLabel: "家族会議", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
-    { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "フィードバック", active: location.startsWith("/feedback"), testId: "link-feedback" },
+    { href: "/family-meeting", icon: Users2, label: "FM", mobileLabel: "FAMILY MEETING", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
+    { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "FEEDBACK", active: location.startsWith("/feedback"), testId: "link-feedback" },
   ];
 
   return (
@@ -218,7 +219,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   data-testid="link-about-mobile"
                 >
                   <Info className="w-5 h-5" />
-                  <span className="text-sm">D-Planetについて</span>
+                  <span className="text-sm">ABOUT D-PLANET</span>
                 </Link>
               </div>
             </nav>
@@ -241,7 +242,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           <div className="flex items-center justify-center gap-4 text-xs">
             <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
               <Globe className="w-3 h-3" />
-              D-Planetについて
+              ABOUT D-PLANET
             </Link>
             <Link href="/legal" className="text-primary hover:underline" data-testid="link-legal-footer">
               特定商取引法に基づく表示
