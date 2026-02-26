@@ -39,6 +39,10 @@ export default function Legal() {
                   <td className="py-3 text-foreground" data-testid="text-address">沖縄県南城市</td>
                 </tr>
                 <tr>
+                  <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-phone">電話番号</th>
+                  <td className="py-3 text-foreground" data-testid="text-phone">請求があった場合には速やかに開示いたします</td>
+                </tr>
+                <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-contact">連絡先</th>
                   <td className="py-3 text-foreground" data-testid="text-contact">
                     <a href="mailto:yaoyorozu369@gmail.com" className="text-primary hover:underline">
@@ -62,6 +66,13 @@ export default function Legal() {
                       <li>従量制クレジット: 都度チャージ制（最低チャージ額はサービスページに記載）</li>
                       <li>バッジ認証サブスクリプション: 月額 $3.69（税込）</li>
                     </ul>
+                  </td>
+                </tr>
+                <tr>
+                  <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-additional-fees">追加手数料</th>
+                  <td className="py-3 text-foreground" data-testid="text-additional-fees">
+                    <p>表示価格以外の追加手数料は発生いたしません。</p>
+                    <p className="mt-1 text-muted-foreground text-xs">送料: デジタルサービスの特性上、送料は発生いたしません。</p>
                   </td>
                 </tr>
                 <tr>
