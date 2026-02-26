@@ -13,7 +13,7 @@ const TIER_CONFIG: Record<string, { label: string; catchphrase: string; colorCla
   search: { label: "検索特化", catchphrase: "ET/PETのみ実装可能", colorClass: "text-violet-400", borderClass: "border-violet-500/30", bgClass: "bg-violet-500/5" },
 };
 
-const TIER_ORDER = ["flagship", "highperf", "reasoning", "lightweight", "free", "search"];
+const TIER_ORDER = ["free", "lightweight", "reasoning", "highperf", "flagship", "search"];
 
 export default function LlmModels() {
   const { data: modelsData } = useAvailableModels();
