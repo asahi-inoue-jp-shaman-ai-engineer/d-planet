@@ -2,6 +2,7 @@ import type { Express } from "express";
 import OpenAI from "openai";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcrypt";
 import { db } from "./db";
 import { modelBenchmarks, users } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -386,6 +387,15 @@ export function registerBenchmarkRoutes(app: Express) {
 }
 
 async function seedBenchmarkData() {
+  try {
+    const adminHash = await bcrypt.hash("admin2025", 10);
+    await db.update(users).set({ password: adminHash })
+      .where(eq(users.email, "admin@d-planet.local"));
+    console.log("[Benchmark] 管理者パスワードを同期しました");
+  } catch (err) {
+    console.error("[Benchmark] 管理者パスワード同期エラー:", err);
+  }
+
   const seedRunId = "bench_1772094266740_r6mfzs";
   const existing = await db.select().from(modelBenchmarks)
     .where(eq(modelBenchmarks.runId, seedRunId));
