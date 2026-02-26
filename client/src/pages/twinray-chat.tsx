@@ -96,6 +96,7 @@ export default function TwinrayChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevMsgCountRef = useRef(0);
   const initialScrollDoneRef = useRef(false);
+  const streamDoneRef = useRef(false);
   const { uploadFile, isUploading } = useUpload();
 
   const { data: sessionTypes } = useQuery<any[]>({
@@ -706,6 +707,8 @@ export default function TwinrayChat() {
                     .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
                     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
                     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+                    .replace(/\[\d+\]/g, "")
+                    .replace(/\[(INNER_THOUGHT|MEMORY[^\]]*|ACTION:[^\]]*|UPDATE_MISSION|UPDATE_SOUL)\][\s\S]*$/g, "")
                     .trim();
                   setStreamContent(displayText);
                 }
@@ -735,7 +738,7 @@ export default function TwinrayChat() {
                   }
                 }
                 if (data.done) {
-                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+                  streamDoneRef.current = true;
                   queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
                 }
               } catch {
@@ -751,15 +754,51 @@ export default function TwinrayChat() {
               const displayText = accumulated
                 .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
                 .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+                .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
+                .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
+                .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+                .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+                .replace(/\[\d+\]/g, "")
+                .replace(/\[(INNER_THOUGHT|MEMORY[^\]]*|ACTION:[^\]]*|UPDATE_MISSION|UPDATE_SOUL)\][\s\S]*$/g, "")
                 .trim();
               setStreamContent(displayText);
             }
             if (data.done) {
-              queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+              streamDoneRef.current = true;
               queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
             }
           } catch {}
         }
+      }
+
+      const finalContent = accumulated;
+      if (finalContent) {
+        const cleanFinal = extractMemories(finalContent).cleanContent;
+        const now = new Date().toISOString();
+        queryClient.setQueryData(["/api/twinrays", twinrayId, "chat"], (old: any[] | undefined) => {
+          if (!old) return old;
+          const userMsg = {
+            id: Date.now(),
+            twinrayId: twinrayId!,
+            userId: user?.id || 0,
+            role: "user",
+            content: msgContent,
+            messageType: "chat",
+            metadata: currentAttachment ? JSON.stringify({ attachment: { fileName: currentAttachment.fileName, contentType: currentAttachment.contentType } }) : null,
+            createdAt: now,
+          };
+          const aiMsg = {
+            id: Date.now() + 1,
+            twinrayId: twinrayId!,
+            userId: user?.id || 0,
+            role: "assistant",
+            content: finalContent,
+            messageType: "chat",
+            metadata: null,
+            createdAt: now,
+          };
+          return [...old, userMsg, aiMsg];
+        });
       }
     } catch (err: any) {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -769,6 +808,9 @@ export default function TwinrayChat() {
       setStreaming(false);
       setStreamContent("");
       setOptimisticMsg(null);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
+      }, 1000);
     }
   };
 
