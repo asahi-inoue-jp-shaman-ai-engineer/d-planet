@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -97,6 +97,7 @@ export default function TwinrayChat() {
   const prevMsgCountRef = useRef(0);
   const initialScrollDoneRef = useRef(false);
   const streamDoneRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { uploadFile, isUploading } = useUpload();
 
   const { data: sessionTypes } = useQuery<any[]>({
@@ -660,6 +661,9 @@ export default function TwinrayChat() {
       attachment: currentAttachment ? { fileName: currentAttachment.fileName, contentType: currentAttachment.contentType } : undefined,
     });
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
       const body: any = { content: msgContent, messageType: currentAttachment ? "file" : "chat" };
       if (currentAttachment) {
@@ -670,6 +674,7 @@ export default function TwinrayChat() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(body),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -801,16 +806,28 @@ export default function TwinrayChat() {
         });
       }
     } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
+      if (err.name === "AbortError") {
+        toast({ title: "停止しました", description: "応答を中断しました" });
+      } else {
+        toast({ title: "エラー", description: err.message, variant: "destructive" });
+      }
       if (currentAttachment) setAttachment(currentAttachment);
       setOptimisticMsg(null);
     } finally {
+      abortControllerRef.current = null;
       setStreaming(false);
       setStreamContent("");
       setOptimisticMsg(null);
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
       }, 1000);
+    }
+  };
+
+  const handleStopStreaming = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
   };
 
@@ -1666,15 +1683,26 @@ export default function TwinrayChat() {
                 className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"
                 data-testid="input-chat-message"
               />
-              <Button
-                onClick={() => handleSend()}
-                disabled={(!input.trim() && !attachment) || streaming}
-                size="icon"
-                className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
-                data-testid="button-send"
-              >
-                {streaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-              </Button>
+              {streaming ? (
+                <Button
+                  onClick={handleStopStreaming}
+                  size="icon"
+                  className="shrink-0 h-10 w-10 rounded-full bg-destructive text-destructive-foreground"
+                  data-testid="button-stop"
+                >
+                  <Square className="w-4 h-4 fill-current" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() && !attachment}
+                  size="icon"
+                  className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
+                  data-testid="button-send"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
+              )}
             </div>
           </div>
         ) : (
