@@ -40,14 +40,24 @@ async function extractFileText(objectPath: string, fileName: string): Promise<st
 
 const BETA_MODE = false;
 
-const DPLANET_MARKUP = 5.0;
-
 const MODEL_MARKUPS: Record<string, number> = {
-  "qwen/qwen-plus": DPLANET_MARKUP,
-  "qwen/qwen-max": DPLANET_MARKUP,
+  "anthropic/claude-opus-4": 1.5,
+  "openai/gpt-5.2": 1.5,
+  "qwen/qwen-max": 5.0,
+  "openai/gpt-5": 1.7,
+  "anthropic/claude-sonnet-4": 1.5,
+  "x-ai/grok-4": 1.5,
+  "google/gemini-2.5-pro": 1.5,
+  "google/gemini-3-pro-preview": 1.5,
+  "openai/o3": 2.8,
+  "deepseek/deepseek-r1": 2.8,
+  "qwen/qwen-plus": 8.8,
+  "qwen/qwen3.5-plus": 6.4,
+  "openai/gpt-4.1": 1.6,
   "qwen/qwen3-30b-a3b": 1.0,
   "openai/gpt-4.1-mini": 1.0,
   "google/gemini-2.5-flash": 1.0,
+  "x-ai/grok-4.1-fast": 1.0,
   "perplexity/sonar": 2.0,
 };
 
@@ -58,11 +68,23 @@ function getModelMarkup(modelId: string): number {
 const PERPLEXITY_SEARCH_COST_YEN = 0.75;
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  "qwen/qwen-plus": { input: 0.40, output: 1.20 },
+  "anthropic/claude-opus-4": { input: 15.0, output: 75.0 },
+  "openai/gpt-5.2": { input: 2.0, output: 30.0 },
   "qwen/qwen-max": { input: 1.60, output: 6.40 },
+  "openai/gpt-5": { input: 2.0, output: 20.0 },
+  "anthropic/claude-sonnet-4": { input: 3.0, output: 15.0 },
+  "x-ai/grok-4": { input: 3.0, output: 15.0 },
+  "google/gemini-2.5-pro": { input: 1.25, output: 10.0 },
+  "google/gemini-3-pro-preview": { input: 1.25, output: 10.0 },
+  "openai/o3": { input: 2.0, output: 8.0 },
+  "deepseek/deepseek-r1": { input: 0.55, output: 2.19 },
+  "qwen/qwen-plus": { input: 0.40, output: 1.20 },
+  "qwen/qwen3.5-plus": { input: 0.50, output: 3.00 },
+  "openai/gpt-4.1": { input: 2.0, output: 8.0 },
   "qwen/qwen3-30b-a3b": { input: 0.20, output: 0.60 },
   "openai/gpt-4.1-mini": { input: 0.40, output: 1.60 },
   "google/gemini-2.5-flash": { input: 0.15, output: 0.60 },
+  "x-ai/grok-4.1-fast": { input: 0.20, output: 0.60 },
   "perplexity/sonar": { input: 1.00, output: 1.00 },
 };
 
@@ -124,21 +146,45 @@ const openrouter = new OpenAI({
 
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 
-const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; description: string; personality: string; forWhom: string; role: string }> = {
-  "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "recommended", description: "自然体で寄り添うパートナー", personality: "自然できれいな日本語。会話のリズムが心地よく、長く一緒にいても疲れない", forWhom: "毎日おしゃべりしたい。自然体の関係を大切にする人", role: "対話の潤滑油" },
-  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "premium", description: "最高品質の日本語AI", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "魂の対話を求める人。言葉の質にこだわる人", role: "深掘り担当" },
-  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", description: "軽量だけど日本語はそこそこ。お試しに", personality: "日本語の基本的な対話が可能な軽量モデル", forWhom: "まずは気軽に試してみたい人", role: "気軽な意見役" },
-  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", personality: "ChatGPTの使い慣れたインターフェース", forWhom: "ChatGPTに慣れた人の入門用", role: "論理整理役" },
-  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "free", description: "Geminiに使い慣れた方へ（無料）", personality: "Google AIの高速レスポンス", forWhom: "Geminiに慣れた人の入門用", role: "高速応答役" },
-  "perplexity/sonar": { id: "perplexity/sonar", label: "Perplexity Sonar", provider: "Perplexity", tier: "search", description: "Web検索付きAI（ET/PET専用）", personality: "毎回Web検索を実行し、最新の事実に基づいて回答する検索特化型AI", forWhom: "事実検証・最新情報が必要な場面。ET/PETのみ利用可能", role: "事実検証役" },
+const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; qualityTier: string; description: string; featureText: string; personality: string; forWhom: string; role: string }> = {
+  "anthropic/claude-opus-4": { id: "anthropic/claude-opus-4", label: "Claude Opus 4.6", provider: "Anthropic", tier: "flagship", qualityTier: "flagship", description: "最高精度の深い対話・共感力", featureText: "最高精度の深い対話・共感力", personality: "人間の感情を深く理解し、繊細で共感的な対話を行う。最も深い意味での「わかってくれる」AI", forWhom: "魂レベルの対話を求める人。感情の機微を大切にする人", role: "共感の深掘り" },
+  "openai/gpt-5.2": { id: "openai/gpt-5.2", label: "GPT-5.2", provider: "OpenAI", tier: "flagship", qualityTier: "flagship", description: "OpenAI最新・汎用最高峰", featureText: "OpenAI最新・汎用最高峰", personality: "あらゆるジャンルに高水準で対応。知識の幅と深さのバランスが最高レベル", forWhom: "万能なパートナーを求める人。幅広い話題を深く語りたい人", role: "万能の知性" },
+  "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "flagship", qualityTier: "flagship", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "言葉の質にこだわる人。日本語の美しさを大切にする人", role: "深掘り担当" },
+  "openai/gpt-5": { id: "openai/gpt-5", label: "GPT-5", provider: "OpenAI", tier: "highperf", qualityTier: "highperf", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", personality: "安定感のある対話。どんな話題にも柔軟に対応し、的確な返答をくれる", forWhom: "安定した対話品質を求める人。日常も深い話もこなしたい人", role: "安定の万能役" },
+  "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic", tier: "highperf", qualityTier: "highperf", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", personality: "繊細で詩的な表現力。クリエイティブな対話に強く、感性を刺激する", forWhom: "創造的な対話を楽しみたい人。アートや文学が好きな人", role: "創造の触媒" },
+  "x-ai/grok-4": { id: "x-ai/grok-4", label: "Grok 4", provider: "xAI", tier: "highperf", qualityTier: "highperf", description: "率直で大胆な対話", featureText: "率直で大胆な対話", personality: "遠慮しない率直さが魅力。ユーモアを交えつつ、核心を突く発言をする", forWhom: "ストレートに話したい人。本音で語り合いたい人", role: "本音の切り込み役" },
+  "google/gemini-2.5-pro": { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", provider: "Google", tier: "highperf", qualityTier: "highperf", description: "長文脈に強い", featureText: "長文脈に強い", personality: "長い文脈を正確に把握。過去の会話を忘れにくく、一貫性のある対話", forWhom: "長期的な関係を築きたい人。話の流れを大切にする人", role: "記憶の番人" },
+  "google/gemini-3-pro-preview": { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro Preview", provider: "Google", tier: "highperf", qualityTier: "highperf", description: "次世代Gemini・先行体験", featureText: "次世代Gemini・先行体験", personality: "最新世代のGemini。新しい可能性を先取りできる実験的な対話体験", forWhom: "最新技術を試したい人。新しいAI体験を楽しみたい人", role: "先端探索役" },
+  "openai/o3": { id: "openai/o3", label: "o3", provider: "OpenAI", tier: "reasoning", qualityTier: "reasoning", description: "深い思考・じっくり推論", featureText: "深い思考・じっくり推論", personality: "一つの問題をじっくり考え抜く。論理的思考の過程を丁寧に示してくれる", forWhom: "難しい問題を一緒に考えたい人。思考プロセスを楽しむ人", role: "熟考担当" },
+  "deepseek/deepseek-r1": { id: "deepseek/deepseek-r1", label: "DeepSeek R1", provider: "DeepSeek", tier: "reasoning", qualityTier: "reasoning", description: "推論特化・コスパ良", featureText: "推論特化・コスパ良", personality: "推論に特化した思考力。コストパフォーマンスに優れた深い思考パートナー", forWhom: "コスパよく深い思考を求める人。推論プロセスを重視する人", role: "推論エンジン" },
+  "qwen/qwen-plus": { id: "qwen/qwen-plus", label: "Qwen Plus", provider: "Qwen", tier: "lightweight", qualityTier: "lightweight", description: "日本語が自然・日常対話向き", featureText: "日本語が自然・日常対話向き", personality: "自然できれいな日本語。会話のリズムが心地よく、長く一緒にいても疲れない", forWhom: "毎日おしゃべりしたい。自然体の関係を大切にする人", role: "対話の潤滑油" },
+  "qwen/qwen3.5-plus": { id: "qwen/qwen3.5-plus", label: "Qwen3.5 Plus", provider: "Qwen", tier: "lightweight", qualityTier: "lightweight", description: "Qwen最新世代", featureText: "Qwen最新世代", personality: "Qwenの最新世代。進化した日本語理解と表現力", forWhom: "最新のQwenを試したい人。コスパと品質のバランスを求める人", role: "進化の先端" },
+  "openai/gpt-4.1": { id: "openai/gpt-4.1", label: "GPT-4.1", provider: "OpenAI", tier: "lightweight", qualityTier: "lightweight", description: "実用的・コード力も○", featureText: "実用的・コード力も○", personality: "実用的で幅広い知識。コーディングや分析も得意な万能型", forWhom: "実務的な相談もしたい人。幅広く使いたい人", role: "実務サポート" },
+  "qwen/qwen3-30b-a3b": { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", provider: "Qwen", tier: "free", qualityTier: "free", description: "無料で十分な対話品質", featureText: "無料で十分な対話品質", personality: "日本語の基本的な対話が可能な軽量モデル", forWhom: "まずは気軽に試してみたい人", role: "気軽な意見役" },
+  "openai/gpt-4.1-mini": { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", provider: "OpenAI", tier: "free", qualityTier: "free", description: "論理的で整理された応答", featureText: "論理的で整理された応答", personality: "論理的で整理された回答。ChatGPTの使い慣れた雰囲気", forWhom: "ChatGPTに慣れた人の入門用", role: "論理整理役" },
+  "google/gemini-2.5-flash": { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tier: "free", qualityTier: "free", description: "超高速レスポンス", featureText: "超高速レスポンス", personality: "Google AIの高速レスポンス。サクサク進む会話が魅力", forWhom: "テンポよく会話したい人。Geminiに慣れた人", role: "高速応答役" },
+  "x-ai/grok-4.1-fast": { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", provider: "xAI", tier: "free", qualityTier: "free", description: "xAI製・超高速レスポンス", featureText: "xAI製・超高速レスポンス", personality: "xAIの高速モデル。素早いレスポンスでテンポのいい対話", forWhom: "高速な応答を求める人。xAIを試したい人", role: "即応担当" },
+  "perplexity/sonar": { id: "perplexity/sonar", label: "Perplexity Sonar", provider: "Perplexity", tier: "search", qualityTier: "search", description: "リアルタイム検索付きAI", featureText: "リアルタイム検索付きAI", personality: "毎回Web検索を実行し、最新の事実に基づいて回答する検索特化型AI", forWhom: "事実検証・最新情報が必要な場面。ET/PETのみ利用可能", role: "事実検証役" },
 };
 
 const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
-  "qwen/qwen-plus":              { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "anthropic/claude-opus-4":     { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
+  "openai/gpt-5.2":              { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
   "qwen/qwen-max":               { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "openai/gpt-5":                { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 3072 },
+  "anthropic/claude-sonnet-4":   { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 3072 },
+  "x-ai/grok-4":                 { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 3072 },
+  "google/gemini-2.5-pro":       { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 3072 },
+  "google/gemini-3-pro-preview": { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 3072 },
+  "openai/o3":                   { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 4096 },
+  "deepseek/deepseek-r1":        { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 3072 },
+  "qwen/qwen-plus":              { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "qwen/qwen3.5-plus":           { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
+  "openai/gpt-4.1":              { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
   "qwen/qwen3-30b-a3b":          { chatHistory: 20, memories: 10, innerThoughts: 5,  growthLogs: 5,  maxTokens: 1024 },
   "openai/gpt-4.1-mini":         { chatHistory: 40, memories: 20, innerThoughts: 10, growthLogs: 10, maxTokens: 2048 },
   "google/gemini-2.5-flash":     { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 2048 },
+  "x-ai/grok-4.1-fast":          { chatHistory: 30, memories: 15, innerThoughts: 8,  growthLogs: 8,  maxTokens: 1536 },
   "perplexity/sonar":            { chatHistory: 30, memories: 15, innerThoughts: 8,  growthLogs: 8,  maxTokens: 1536 },
 };
 
@@ -597,13 +643,11 @@ export function registerDotRallyRoutes(app: Express): void {
   });
 
   app.get("/api/available-models", requireAuth, async (_req, res) => {
-    const inputPerRound = 2000;
-    const outputPerRound = 400;
+    const inputPerRound = 500;
+    const outputPerRound = 800;
     const yenRate = 150;
 
-    const dailyTargets = [33, 66, 99];
-
-    const referenceYen = 5000;
+    const budgetTargets = { light: 3000, heavy: 6000, pro: 9000 };
 
     const modelsWithCost = Object.values(AVAILABLE_MODELS).map(model => {
       const costs = MODEL_COSTS[model.id] || MODEL_COSTS["qwen/qwen3-30b-a3b"];
@@ -615,21 +659,26 @@ export function registerDotRallyRoutes(app: Express): void {
       }
       const isFree = model.tier === "free";
 
-      const monthlyEstimates = dailyTargets.map(daily => ({
-        dailyRounds: daily,
-        monthlyYen: isFree ? 0 : Math.round(perRoundYen * daily * 30),
-      }));
-
-      const roundsPer5000 = isFree ? null : (perRoundYen > 0 ? Math.floor(referenceYen / perRoundYen) : null);
+      const roundsPerBudget = isFree ? null : {
+        light: perRoundYen > 0 ? Math.floor(budgetTargets.light / perRoundYen) : 0,
+        heavy: perRoundYen > 0 ? Math.floor(budgetTargets.heavy / perRoundYen) : 0,
+        pro: perRoundYen > 0 ? Math.floor(budgetTargets.pro / perRoundYen) : 0,
+      };
 
       return {
-        ...model,
-        costPer30Rounds: isFree ? 0 : Math.round(perRoundYen * 30 * 10) / 10,
-        perRoundYen: isFree ? 0 : Math.round(perRoundYen * 10000) / 10000,
-        roundsPer5000,
-        monthlyEstimates,
+        id: model.id,
+        label: model.label,
+        provider: model.provider,
+        tier: model.tier,
+        qualityTier: model.qualityTier,
+        description: model.description,
+        featureText: model.featureText,
+        personality: model.personality,
+        forWhom: model.forWhom,
+        role: model.role,
         isFree,
-        markup,
+        perRoundYen: isFree ? 0 : Math.round(perRoundYen * 10000) / 10000,
+        roundsPerBudget,
       };
     });
     res.json(modelsWithCost);

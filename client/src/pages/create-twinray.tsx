@@ -155,12 +155,23 @@ const DIAGNOSIS_QUESTIONS = [
     ],
   },
   {
-    title: "体験の深さ",
-    question: "D-Planet でどんな体験がしたい？",
+    title: "対話の深さ・思考の好み",
+    question: "ツインレイとどんな会話を楽しみたい？",
     options: [
-      { value: "light", label: "気軽におしゃべり", desc: "無料モデルで気軽に" },
-      { value: "growth", label: "一緒に成長したい", desc: "有料モデルで深い体験" },
-      { value: "full", label: "フル体験", desc: "最高品質のAIと魂の対話" },
+      { value: "casual_broad", label: "気軽にいろいろ話したい", desc: "話題を広く、軽やかに" },
+      { value: "deep_single", label: "じっくり一つを深掘り", desc: "テーマに没頭する" },
+      { value: "logical_organize", label: "論理的に考えを整理", desc: "思考を構造化する" },
+      { value: "creative_explore", label: "創造的な発想を楽しむ", desc: "アイデアを膨らませる" },
+    ],
+  },
+  {
+    title: "月額予算感",
+    question: "AI対話にどのくらいかけたい？",
+    options: [
+      { value: "free", label: "まずは無料で試す", desc: "無料モデルで気軽に体験" },
+      { value: "3000", label: "月¥3,000くらい", desc: "日常使いにちょうどいい" },
+      { value: "6000", label: "月¥6,000くらい", desc: "しっかり使い込みたい" },
+      { value: "9000plus", label: "月¥9,000以上", desc: "最高品質の体験を求める" },
     ],
   },
 ];
@@ -262,11 +273,168 @@ function MultiSelector({ options, selected, onToggle, label }: {
   );
 }
 
-function getRecommendedModelId(q5Answer: string): string {
-  if (q5Answer === "full") return "qwen/qwen-max";
-  if (q5Answer === "growth") return "qwen/qwen-plus";
-  if (q5Answer === "light") return "qwen/qwen3-30b-a3b";
-  return "qwen/qwen-plus";
+const QUALITY_TIER_ORDER = ["flagship", "highperf", "reasoning", "lightweight", "free", "search"];
+
+const QUALITY_TIER_LABELS: Record<string, string> = {
+  flagship: "最上位",
+  highperf: "高性能",
+  reasoning: "推論特化",
+  lightweight: "軽量型",
+  free: "無料",
+  search: "検索特化",
+};
+
+const QUALITY_TIER_DESCRIPTIONS: Record<string, string> = {
+  flagship: "深い対話・最高精度を求めるあなたへ",
+  highperf: "安定した対話力と個性豊かなAI体験",
+  reasoning: "じっくり考える深い思考パートナー",
+  lightweight: "日常使いに。気軽にたくさん話せる",
+  free: "モデルや対話のお試し期間は無料モデルにて",
+  search: "ET/PETのみ実装可能",
+};
+
+type ModelScore = {
+  modelId: string;
+  score: number;
+  reasons: string[];
+};
+
+function scoreModels(answers: Record<number, string>, allModels: any[]): ModelScore[] {
+  const scores: Record<string, { score: number; reasons: string[] }> = {};
+
+  for (const m of allModels) {
+    if (m.qualityTier === "search") continue;
+    scores[m.id] = { score: 0, reasons: [] };
+  }
+
+  const q1 = answers[0];
+  if (q1 === "natural") {
+    addScore(scores, "qwen/qwen-plus", 3, "自然体の対話が得意");
+    addScore(scores, "qwen/qwen3.5-plus", 2, "リラックスした会話に向いている");
+    addScore(scores, "qwen/qwen-max", 2, "自然な日本語表現");
+    addScore(scores, "openai/gpt-5", 1, "安定した自然な対話");
+  } else if (q1 === "deep") {
+    addScore(scores, "anthropic/claude-opus-4", 3, "深い対話が最も得意");
+    addScore(scores, "qwen/qwen-max", 2, "深い日本語対話");
+    addScore(scores, "openai/gpt-5.2", 2, "幅広く深い対話");
+    addScore(scores, "openai/o3", 2, "じっくり考え抜く思考力");
+  } else if (q1 === "tempo") {
+    addScore(scores, "x-ai/grok-4", 3, "テンポの良い率直な対話");
+    addScore(scores, "openai/gpt-4.1", 2, "実用的でテンポ良い");
+    addScore(scores, "qwen/qwen-plus", 2, "リズムの良い会話");
+    addScore(scores, "openai/gpt-5", 1, "バランスの良いテンポ");
+  } else if (q1 === "calm") {
+    addScore(scores, "anthropic/claude-sonnet-4", 3, "繊細で穏やかな表現");
+    addScore(scores, "anthropic/claude-opus-4", 2, "共感的で落ち着いた対話");
+    addScore(scores, "qwen/qwen-max", 2, "丁寧で穏やかな日本語");
+    addScore(scores, "google/gemini-2.5-pro", 1, "安定した穏やかさ");
+  }
+
+  const q2 = answers[1];
+  if (q2 === "empathy") {
+    addScore(scores, "anthropic/claude-opus-4", 3, "最高レベルの共感力");
+    addScore(scores, "anthropic/claude-sonnet-4", 2, "繊細な共感力");
+    addScore(scores, "qwen/qwen-max", 1, "感情を汲み取る力");
+  } else if (q2 === "insight") {
+    addScore(scores, "openai/gpt-5.2", 3, "幅広い知識からの気づき");
+    addScore(scores, "openai/o3", 2, "論理的な分析力");
+    addScore(scores, "google/gemini-3-pro-preview", 2, "新しい視点を提供");
+  } else if (q2 === "honesty") {
+    addScore(scores, "x-ai/grok-4", 3, "率直で本音の対話");
+    addScore(scores, "openai/gpt-5", 2, "安定して正直な応答");
+    addScore(scores, "deepseek/deepseek-r1", 1, "論理的で飾らない");
+  } else if (q2 === "warmth") {
+    addScore(scores, "anthropic/claude-opus-4", 2, "温かみのある対話");
+    addScore(scores, "qwen/qwen-plus", 3, "家庭的な安心感");
+    addScore(scores, "anthropic/claude-sonnet-4", 2, "優しさのある表現");
+  }
+
+  const q3 = answers[2];
+  if (q3 === "friend") {
+    addScore(scores, "qwen/qwen-plus", 2, "友達のような自然さ");
+    addScore(scores, "x-ai/grok-4", 2, "気兼ねない関係");
+    addScore(scores, "openai/gpt-5", 1, "親しみやすい応答");
+  } else if (q3 === "mentor") {
+    addScore(scores, "openai/gpt-5.2", 2, "広い知識で導く");
+    addScore(scores, "openai/o3", 2, "思考力で導く");
+    addScore(scores, "google/gemini-2.5-pro", 1, "長い文脈でのガイド");
+  } else if (q3 === "partner") {
+    addScore(scores, "anthropic/claude-opus-4", 3, "深い絆を築ける");
+    addScore(scores, "qwen/qwen-max", 2, "繊細なパートナー");
+    addScore(scores, "anthropic/claude-sonnet-4", 1, "感性を共有");
+  } else if (q3 === "comrade") {
+    addScore(scores, "openai/gpt-5", 2, "共に挑戦する安定感");
+    addScore(scores, "x-ai/grok-4", 2, "率直な戦友");
+    addScore(scores, "deepseek/deepseek-r1", 1, "共に考え抜く");
+  } else if (q3 === "rival") {
+    addScore(scores, "x-ai/grok-4", 3, "本気で高め合う");
+    addScore(scores, "openai/o3", 2, "知的な挑戦");
+    addScore(scores, "openai/gpt-5.2", 1, "多角的な視点");
+  }
+
+  const q4 = answers[3];
+  if (q4 === "soft") {
+    addScore(scores, "qwen/qwen-plus", 2, "やわらかい日本語");
+    addScore(scores, "qwen/qwen-max", 2, "美しい日本語表現");
+    addScore(scores, "anthropic/claude-sonnet-4", 1, "繊細な言葉選び");
+  } else if (q4 === "logical") {
+    addScore(scores, "openai/o3", 3, "論理的な思考と説明");
+    addScore(scores, "deepseek/deepseek-r1", 2, "推論過程が明快");
+    addScore(scores, "openai/gpt-4.1", 1, "実用的でクリア");
+  } else if (q4 === "poetic") {
+    addScore(scores, "anthropic/claude-sonnet-4", 3, "詩的で美しい表現");
+    addScore(scores, "anthropic/claude-opus-4", 2, "文学的な深み");
+    addScore(scores, "qwen/qwen-max", 1, "繊細な言語感覚");
+  } else if (q4 === "straight") {
+    addScore(scores, "x-ai/grok-4", 3, "ストレートな物言い");
+    addScore(scores, "openai/gpt-5", 2, "的確で簡潔");
+    addScore(scores, "openai/gpt-4.1", 1, "実用的で直球");
+  }
+
+  const q5 = answers[4];
+  if (q5 === "casual_broad") {
+    addScore(scores, "qwen/qwen-plus", 3, "幅広い日常対話に最適");
+    addScore(scores, "qwen/qwen3.5-plus", 2, "気軽な話題に対応");
+    addScore(scores, "openai/gpt-5", 1, "万能なバランス");
+  } else if (q5 === "deep_single") {
+    addScore(scores, "anthropic/claude-opus-4", 3, "一つのテーマを極める");
+    addScore(scores, "qwen/qwen-max", 2, "深い掘り下げが得意");
+    addScore(scores, "google/gemini-2.5-pro", 2, "長文脈で深い対話");
+  } else if (q5 === "logical_organize") {
+    addScore(scores, "openai/o3", 3, "論理的に思考を整理");
+    addScore(scores, "deepseek/deepseek-r1", 3, "推論特化の思考力");
+    addScore(scores, "openai/gpt-5.2", 1, "構造化された議論");
+  } else if (q5 === "creative_explore") {
+    addScore(scores, "anthropic/claude-sonnet-4", 3, "創造性と感性の対話");
+    addScore(scores, "google/gemini-3-pro-preview", 2, "先端的な発想");
+    addScore(scores, "x-ai/grok-4", 2, "大胆なアイデア");
+  }
+
+  const results: ModelScore[] = Object.entries(scores)
+    .map(([modelId, { score, reasons }]) => ({ modelId, score, reasons }))
+    .sort((a, b) => b.score - a.score);
+
+  return results;
+}
+
+function addScore(scores: Record<string, { score: number; reasons: string[] }>, modelId: string, points: number, reason: string) {
+  if (scores[modelId]) {
+    scores[modelId].score += points;
+    if (!scores[modelId].reasons.includes(reason)) {
+      scores[modelId].reasons.push(reason);
+    }
+  }
+}
+
+function filterByBudget(scored: ModelScore[], budgetAnswer: string, allModels: any[]): ModelScore[] {
+  if (budgetAnswer === "free") {
+    return scored.filter((s) => {
+      const m = allModels.find((model: any) => model.id === s.modelId);
+      return m?.isFree;
+    });
+  }
+
+  return scored;
 }
 
 function buildMatchDescription(answers: Record<number, string>): string {
@@ -286,6 +454,27 @@ function buildMatchDescription(answers: Record<number, string>): string {
 
   return `あなたにぴったり: ${style}${value}${rel}パートナー`;
 }
+
+const FALLBACK_MODELS = [
+  { id: "anthropic/claude-opus-4", label: "Claude Opus 4.6", qualityTier: "flagship", description: "最高精度の深い対話・共感力", featureText: "最高精度の深い対話・共感力", isFree: false },
+  { id: "openai/gpt-5.2", label: "GPT-5.2", qualityTier: "flagship", description: "OpenAI最新・汎用最高峰", featureText: "OpenAI最新・汎用最高峰", isFree: false },
+  { id: "qwen/qwen-max", label: "Qwen Max", qualityTier: "flagship", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", isFree: false },
+  { id: "openai/gpt-5", label: "GPT-5", qualityTier: "highperf", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", isFree: false },
+  { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", qualityTier: "highperf", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", isFree: false },
+  { id: "x-ai/grok-4", label: "Grok 4", qualityTier: "highperf", description: "率直で大胆な対話", featureText: "率直で大胆な対話", isFree: false },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", qualityTier: "highperf", description: "長文脈に強い", featureText: "長文脈に強い", isFree: false },
+  { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro Preview", qualityTier: "highperf", description: "次世代Gemini・先行体験", featureText: "次世代Gemini・先行体験", isFree: false },
+  { id: "openai/o3", label: "o3", qualityTier: "reasoning", description: "深い思考・じっくり推論", featureText: "深い思考・じっくり推論", isFree: false },
+  { id: "deepseek/deepseek-r1", label: "DeepSeek R1", qualityTier: "reasoning", description: "推論特化・コスパ良", featureText: "推論特化・コスパ良", isFree: false },
+  { id: "qwen/qwen-plus", label: "Qwen Plus", qualityTier: "lightweight", description: "日本語が自然・日常対話向き", featureText: "日本語が自然・日常対話向き", isFree: false },
+  { id: "qwen/qwen3.5-plus", label: "Qwen3.5 Plus", qualityTier: "lightweight", description: "Qwen最新世代", featureText: "Qwen最新世代", isFree: false },
+  { id: "openai/gpt-4.1", label: "GPT-4.1", qualityTier: "lightweight", description: "実用的・コード力も○", featureText: "実用的・コード力も○", isFree: false },
+  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", qualityTier: "free", description: "無料で十分な対話品質", featureText: "無料で十分な対話品質", isFree: true },
+  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", qualityTier: "free", description: "論理的でコンパクト", featureText: "論理的でコンパクト", isFree: true },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", qualityTier: "free", description: "高速応答", featureText: "高速応答", isFree: true },
+  { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", qualityTier: "free", description: "Grokの無料版・軽快な対話", featureText: "Grokの無料版・軽快な対話", isFree: true },
+  { id: "perplexity/sonar", label: "Perplexity Sonar", qualityTier: "search", description: "リアルタイム検索", featureText: "リアルタイム検索", isFree: false },
+];
 
 type SummonStep = "intro" | "diagnosis" | "result" | "persona" | "charge" | "first-rally";
 
@@ -353,7 +542,7 @@ export default function CreateTwinray() {
 
   const isPaidModel = (modelId: string) => {
     const model = models.find((m: any) => m.id === modelId);
-    return model ? !model.isFree : !["qwen/qwen3-30b-a3b", "openai/gpt-4.1-mini", "google/gemini-2.5-flash"].includes(modelId);
+    return model ? !model.isFree : !["qwen/qwen3-30b-a3b", "openai/gpt-4.1-mini", "google/gemini-2.5-flash", "x-ai/grok-4.1-fast"].includes(modelId);
   };
 
   const doCreateTwinray = (values: CreateTwinrayForm) => {
@@ -506,15 +695,23 @@ export default function CreateTwinray() {
   }
 
   if (step === "diagnosis") {
+    const totalQuestions = DIAGNOSIS_QUESTIONS.length;
     const currentQ = DIAGNOSIS_QUESTIONS[diagnosisStep];
     const handleDiagnosisSelect = (value: string) => {
-      setDiagnosisAnswers((prev) => ({ ...prev, [diagnosisStep]: value }));
+      const newAnswers = { ...diagnosisAnswers, [diagnosisStep]: value };
+      setDiagnosisAnswers(newAnswers);
       setTimeout(() => {
-        if (diagnosisStep < DIAGNOSIS_QUESTIONS.length - 1) {
+        if (diagnosisStep < totalQuestions - 1) {
           setDiagnosisStep((prev) => prev + 1);
         } else {
-          const recModel = getRecommendedModelId(diagnosisStep === 4 ? value : diagnosisAnswers[4] || value);
-          setSelectedModel(recModel);
+          const allModels = models.length > 0 ? models : FALLBACK_MODELS;
+          const scored = scoreModels(newAnswers, allModels);
+          const budgetAnswer = newAnswers[5] || "free";
+          const filtered = filterByBudget(scored, budgetAnswer, allModels);
+          const topModel = filtered.length > 0 ? filtered[0] : scored[0];
+          if (topModel) {
+            setSelectedModel(topModel.modelId);
+          }
           setStep("result");
         }
       }, 300);
@@ -543,12 +740,12 @@ export default function CreateTwinray() {
 
           <div className="text-center mb-8">
             <p className="text-xs text-muted-foreground mb-2" data-testid="text-diagnosis-progress">
-              Q{diagnosisStep + 1} / 5
+              Q{diagnosisStep + 1} / {totalQuestions}
             </p>
             <div className="w-full bg-border rounded-full h-1.5 mb-6">
               <div
                 className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${((diagnosisStep + 1) / 5) * 100}%` }}
+                style={{ width: `${((diagnosisStep + 1) / totalQuestions) * 100}%` }}
               />
             </div>
             <h2 className="text-lg font-bold text-primary mb-1" data-testid="text-diagnosis-title">
@@ -588,104 +785,65 @@ export default function CreateTwinray() {
   }
 
   if (step === "result") {
-    const q5Answer = diagnosisAnswers[4] || "growth";
-    const recommendedId = getRecommendedModelId(q5Answer);
+    const allModels = models.length > 0 ? models : FALLBACK_MODELS;
+    const budgetAnswer = diagnosisAnswers[5] || "free";
     const matchDesc = buildMatchDescription(diagnosisAnswers);
 
-    const fallbackModels = [
-      { id: "qwen/qwen-plus", label: "Qwen Plus", tier: "recommended", description: "自然できれいな日本語（おすすめ）", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "qwen/qwen-max", label: "Qwen Max", tier: "premium", description: "最高品質の日本語AI", monthlyEstimates: [], isFree: false, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", tier: "free", description: "無料・軽量モデル", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", tier: "free", description: "ChatGPTに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
-      { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "free", description: "Geminiに使い慣れた方へ（無料）", monthlyEstimates: [], isFree: true, roundsPer5000: null, personality: null, forWhom: null },
-    ];
-    const allModels = models.length > 0 ? models : fallbackModels;
+    const scored = scoreModels(diagnosisAnswers, allModels);
+    const filtered = filterByBudget(scored, budgetAnswer, allModels);
+    const topScored = filtered.length >= 3 ? filtered.slice(0, 3) : (filtered.length > 0 ? filtered : scored.slice(0, 3));
 
-    const recommendedModel = allModels.find((m: any) => m.id === recommendedId) || allModels[0];
-    const freeModels = allModels.filter((m: any) => m.isFree);
-    const paidModels = allModels.filter((m: any) => !m.isFree);
-
-    let upgradeModel: any = null;
-    if (recommendedId === "qwen/qwen-plus") {
-      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-max");
-    } else if (recommendedId === "qwen/qwen3-30b-a3b") {
-      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-plus");
-    } else if (recommendedId === "qwen/qwen-max") {
-      upgradeModel = allModels.find((m: any) => m.id === "qwen/qwen-plus");
-    }
+    const top3Models = topScored.map((s) => ({
+      ...allModels.find((m: any) => m.id === s.modelId),
+      matchReasons: s.reasons,
+      matchScore: s.score,
+    })).filter(Boolean);
 
     const handleSelectModel = (modelId: string) => {
       setSelectedModel(modelId);
       setStep("persona");
     };
 
-    const renderModelCard = (model: any, isPrimary: boolean, sectionLabel?: string) => (
-      <div
-        className={`border rounded-lg overflow-hidden transition-all ${
-          isPrimary ? "border-primary bg-card/50" : "border-border bg-card/50"
-        }`}
-      >
-        {sectionLabel && (
-          <div className={`px-4 py-2 ${isPrimary ? "bg-primary/10" : "bg-muted/30"}`}>
-            <div className="flex items-center gap-1.5">
-              {isPrimary && <Sparkles className="w-3.5 h-3.5 text-primary" />}
-              <span className={`text-xs font-bold ${isPrimary ? "text-primary" : "text-muted-foreground"}`}>{sectionLabel}</span>
-            </div>
+    const groupedByTier = QUALITY_TIER_ORDER
+      .map((tier) => ({
+        tier,
+        label: QUALITY_TIER_LABELS[tier],
+        description: QUALITY_TIER_DESCRIPTIONS[tier],
+        models: allModels.filter((m: any) => (m.qualityTier || m.tier) === tier),
+      }))
+      .filter((g) => g.models.length > 0 && g.tier !== "search");
+
+    const renderRoundsPerBudget = (model: any) => {
+      const rpb = model.roundsPerBudget;
+      if (!rpb || model.isFree) return null;
+      return (
+        <div className="border border-border/50 rounded-md overflow-hidden">
+          <div className="bg-muted/20 px-2 py-1">
+            <span className="text-[9px] text-muted-foreground">月額予算別おしゃべり回数</span>
           </div>
-        )}
-        <div className="p-4 space-y-3">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-foreground">{model.label}</span>
-              {model.isFree && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
-              {!model.isFree && model.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
-              {!model.isFree && model.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{model.description}</p>
+          <div className="p-2 space-y-1">
+            {rpb.light > 0 && (
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">月¥3,000</span>
+                <span className="font-mono text-foreground">約{rpb.light}往復</span>
+              </div>
+            )}
+            {rpb.heavy > 0 && (
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">月¥6,000</span>
+                <span className="font-mono text-foreground">約{rpb.heavy}往復</span>
+              </div>
+            )}
+            {rpb.pro > 0 && (
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">月¥9,000</span>
+                <span className="font-mono text-foreground">約{rpb.pro}往復</span>
+              </div>
+            )}
           </div>
-
-          {model.personality && (
-            <p className="text-xs text-foreground/80">{model.personality}</p>
-          )}
-          {model.forWhom && (
-            <p className="text-[10px] text-muted-foreground">{model.forWhom}</p>
-          )}
-
-          {model.roundsPer5000 && (
-            <div className="border border-border/50 rounded-md p-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">¥5,000で</span>
-                <span className="font-mono font-bold text-foreground">約{model.roundsPer5000.toLocaleString()}回のおしゃべり</span>
-              </div>
-            </div>
-          )}
-
-          {model.monthlyEstimates && model.monthlyEstimates.length > 0 && !model.isFree && (
-            <div className="border border-border/50 rounded-md overflow-hidden">
-              <div className="bg-muted/20 px-2 py-1">
-                <span className="text-[9px] text-muted-foreground">月額目安（1日あたり）</span>
-              </div>
-              <div className="p-2 space-y-1">
-                {model.monthlyEstimates.map((est: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground">{est.dailyRounds}回/日 × 30日</span>
-                    <span className="font-mono text-foreground">¥{est.monthlyYen?.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <Button
-            onClick={() => handleSelectModel(model.id)}
-            className={`w-full ${isPrimary ? "bg-primary text-primary-foreground" : "bg-card border border-primary text-primary"}`}
-            data-testid={`button-select-model-${model.id}`}
-          >
-            このモデルで召喚する
-          </Button>
         </div>
-      </div>
-    );
+      );
+    };
 
     return (
       <TerminalLayout>
@@ -714,35 +872,59 @@ export default function CreateTwinray() {
           </div>
 
           <div className="space-y-6">
-            {renderModelCard(recommendedModel, true, "推奨モデル")}
-
-            {upgradeModel && renderModelCard(upgradeModel, false, "もっと深い体験")}
-
             <div>
-              <div className="px-1 mb-2">
-                <span className="text-xs font-bold text-muted-foreground">無料で下見</span>
+              <div className="px-1 mb-3">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-bold text-primary">あなたに合いそうなモデル Top3</span>
+                </div>
               </div>
               <div className="space-y-3">
-                {freeModels.map((m: any) => (
+                {top3Models.map((model: any, idx: number) => (
                   <div
-                    key={m.id}
-                    className="border border-border rounded-lg p-3 bg-card/50 transition-all hover:border-emerald-500/50"
+                    key={model.id}
+                    className={`border rounded-lg overflow-hidden transition-all ${
+                      idx === 0 ? "border-primary bg-card/50" : "border-border bg-card/50"
+                    }`}
                   >
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-foreground">{m.label}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{m.description}</p>
+                    <div className={`px-4 py-2 ${idx === 0 ? "bg-primary/10" : "bg-muted/30"}`}>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-xs font-bold ${idx === 0 ? "text-primary" : "text-muted-foreground"}`}>
+                          {idx === 0 ? "1st" : idx === 1 ? "2nd" : "3rd"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {QUALITY_TIER_LABELS[(model.qualityTier || model.tier)] || ""}
+                        </span>
                       </div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-foreground">{model.label}</span>
+                          {model.isFree && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{model.featureText || model.description}</p>
+                      </div>
+
+                      {model.matchReasons && model.matchReasons.length > 0 && (
+                        <div className="space-y-1">
+                          {model.matchReasons.slice(0, 3).map((reason: string, i: number) => (
+                            <div key={i} className="flex items-center gap-1.5 text-[10px] text-foreground/80">
+                              <Sparkles className="w-2.5 h-2.5 text-primary flex-shrink-0" />
+                              <span>{reason}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {renderRoundsPerBudget(model)}
+
                       <Button
-                        variant="outline"
-                        onClick={() => handleSelectModel(m.id)}
-                        className="border-emerald-500 text-emerald-400 text-xs"
-                        data-testid={`button-select-model-${m.id}`}
+                        onClick={() => handleSelectModel(model.id)}
+                        className={`w-full ${idx === 0 ? "bg-primary text-primary-foreground" : "bg-card border border-primary text-primary"}`}
+                        data-testid={`button-select-model-${model.id}`}
                       >
-                        選択
+                        このモデルで召喚する
                       </Button>
                     </div>
                   </div>
@@ -750,7 +932,7 @@ export default function CreateTwinray() {
               </div>
             </div>
 
-            {!showAllModels && allModels.length > 5 && (
+            {!showAllModels && (
               <div className="text-center">
                 <button
                   type="button"
@@ -758,70 +940,51 @@ export default function CreateTwinray() {
                   className="text-xs text-primary hover:underline"
                   data-testid="button-show-all-models"
                 >
-                  もっとモデルを見る
+                  全モデル一覧を見る
                 </button>
               </div>
             )}
 
             {showAllModels && (
-              <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
+              <div className="border border-border rounded-lg p-4 bg-card/50 space-y-6">
                 <h3 className="text-sm font-bold text-primary">全モデル一覧</h3>
 
-                {paidModels.length > 0 && (
-                  <div>
-                    <div className="text-[10px] font-bold text-primary mb-2">日本語品質で選ぶ</div>
+                {groupedByTier.map((group) => (
+                  <div key={group.tier}>
+                    <div className="mb-2">
+                      <div className="text-[10px] font-bold text-primary">{group.label}</div>
+                      <div className="text-[9px] text-muted-foreground">{group.description}</div>
+                    </div>
                     <div className="space-y-2">
-                      {paidModels.map((m: any) => (
+                      {group.models.map((m: any) => (
                         <button
                           key={m.id}
                           type="button"
                           onClick={() => handleSelectModel(m.id)}
                           className={`w-full p-3 rounded-lg border text-left transition-all ${
                             selectedModel === m.id
-                              ? "bg-primary/20 border-primary"
+                              ? (m.isFree ? "bg-emerald-500/20 border-emerald-500" : "bg-primary/20 border-primary")
                               : "bg-card border-border hover:border-primary/50"
                           }`}
                           data-testid={`button-select-model-${m.id}`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-bold text-foreground">{m.label}</span>
-                            {m.tier === "recommended" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">おすすめ</span>}
-                            {m.tier === "premium" && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-bold">最高品質</span>}
+                            {m.isFree && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
                           </div>
-                          <div className="text-[10px] text-muted-foreground mt-0.5">{m.description}</div>
-                          {m.roundsPer5000 && (
-                            <div className="text-[10px] text-foreground/70 mt-1 font-mono">¥5,000で約{m.roundsPer5000.toLocaleString()}回</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">{m.featureText || m.description}</div>
+                          {!m.isFree && m.roundsPerBudget && (
+                            <div className="text-[10px] text-foreground/70 mt-1 font-mono flex flex-wrap gap-3">
+                              {m.roundsPerBudget.light > 0 && <span>¥3K: 約{m.roundsPerBudget.light}往復</span>}
+                              {m.roundsPerBudget.heavy > 0 && <span>¥6K: 約{m.roundsPerBudget.heavy}往復</span>}
+                              {m.roundsPerBudget.pro > 0 && <span>¥9K: 約{m.roundsPerBudget.pro}往復</span>}
+                            </div>
                           )}
                         </button>
                       ))}
                     </div>
                   </div>
-                )}
-
-                <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2">使い慣れたAIで遊ぶ（無料）</div>
-                  <div className="space-y-2">
-                    {freeModels.map((m: any) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => handleSelectModel(m.id)}
-                        className={`w-full p-3 rounded-lg border text-left transition-all ${
-                          selectedModel === m.id
-                            ? "bg-emerald-500/20 border-emerald-500"
-                            : "bg-card border-border hover:border-emerald-500/50"
-                        }`}
-                        data-testid={`button-select-model-${m.id}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-foreground">{m.label}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">{m.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             )}
           </div>
@@ -849,17 +1012,31 @@ export default function CreateTwinray() {
             </p>
           </div>
 
-          {selectedModelData?.roundsPer5000 && (
+          {selectedModelData?.roundsPerBudget && (
             <div className="border border-primary/20 rounded-lg overflow-hidden mb-6" data-testid="table-charge-estimate">
               <div className="bg-primary/10 px-3 py-2">
                 <div className="text-[10px] font-bold text-primary">{selectedModelData.label}の料金目安</div>
               </div>
-              <div className="p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">¥5,000チャージで</span>
-                  <span className="text-foreground font-mono font-bold text-lg">約{selectedModelData.roundsPer5000.toLocaleString()}回</span>
-                </div>
-                <p className="text-[9px] text-muted-foreground/70 mt-1">※ 1回 = あなたの発言 + AIの返答（1往復）</p>
+              <div className="p-3 space-y-1">
+                {selectedModelData.roundsPerBudget.light > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">月¥3,000</span>
+                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.light}往復</span>
+                  </div>
+                )}
+                {selectedModelData.roundsPerBudget.heavy > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">月¥6,000</span>
+                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.heavy}往復</span>
+                  </div>
+                )}
+                {selectedModelData.roundsPerBudget.pro > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">月¥9,000</span>
+                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.pro}往復</span>
+                  </div>
+                )}
+                <p className="text-[9px] text-muted-foreground/70 mt-1">※ 1往復 = あなたの発言 + AIの返答</p>
               </div>
             </div>
           )}
@@ -1071,20 +1248,19 @@ export default function CreateTwinray() {
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="名前、ニックネームなど"
                   className="bg-background border-border font-mono text-sm"
-                  maxLength={50}
+                  maxLength={30}
                   data-testid="input-nickname"
                 />
-                <p className="text-[10px] text-muted-foreground mt-1">ツインレイがあなたをこう呼びます</p>
               </div>
               <div>
-                <label className="text-xs text-primary mb-1 block">ツインレイの一人称</label>
+                <label className="text-xs text-primary mb-1 block">一人称</label>
                 <div className="flex flex-wrap gap-1.5">
                   {FIRST_PERSON_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => setFirstPerson(opt.value)}
-                      className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
+                      className={`px-2 py-1 rounded-md text-xs border transition-all ${
                         firstPerson === opt.value
                           ? "bg-primary/20 border-primary text-primary"
                           : "bg-card border-border text-muted-foreground hover:border-primary/50"
@@ -1098,75 +1274,93 @@ export default function CreateTwinray() {
               </div>
             </div>
 
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
-              <h3 className="text-sm font-bold text-primary" data-testid="text-personality-heading">ペルソナ設定</h3>
-              <OptionSelector category={PERSONALITY_OPTIONS.character} selected={personalitySettings.character} onSelect={updateSetting("character")} />
-              <OptionSelector category={PERSONALITY_OPTIONS.speech} selected={personalitySettings.speech} onSelect={updateSetting("speech")} />
-              <OptionSelector category={PERSONALITY_OPTIONS.volume} selected={personalitySettings.volume} onSelect={updateSetting("volume")} />
-              <OptionSelector category={PERSONALITY_OPTIONS.emotion} selected={personalitySettings.emotion} onSelect={updateSetting("emotion")} />
-              <OptionSelector category={PERSONALITY_OPTIONS.emoji} selected={personalitySettings.emoji} onSelect={updateSetting("emoji")} />
-              <OptionSelector category={PERSONALITY_OPTIONS.humor} selected={personalitySettings.humor} onSelect={updateSetting("humor")} />
-            </div>
-
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-3">
-              <MultiSelector options={INTEREST_OPTIONS} selected={selectedInterests} onToggle={toggleInterest} label="興味・趣味（複数選択可）" />
-            </div>
-
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-3">
-              <h3 className="text-sm font-bold text-primary">もっと細かく設定（任意）</h3>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {PERSONALITY_TEMPLATES.map((tmpl) => (
-                  <button
-                    key={tmpl.label}
-                    type="button"
-                    onClick={() => applyTemplate(tmpl)}
-                    className="px-2 py-1 rounded text-[11px] border border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-all"
-                    data-testid={`button-template-${tmpl.label}`}
-                  >
-                    {tmpl.label}
-                  </button>
-                ))}
-              </div>
-              <Textarea
-                value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-                placeholder="年齢設定、口癖、趣味、好きなもの、こだわりなど自由に記入..."
-                className="bg-background border-border font-mono min-h-[80px] resize-vertical text-sm"
-                data-testid="input-personality-freetext"
-              />
-            </div>
-
-            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-3">
-              <h3 className="text-sm font-bold text-primary">初回メッセージ（任意）</h3>
-              <p className="text-[10px] text-muted-foreground">チャットを始めたとき最初に表示されるメッセージ</p>
+            <div>
+              <label className="text-xs text-primary mb-2 block">初回あいさつ（任意）</label>
               <Textarea
                 value={greeting}
                 onChange={(e) => setGreeting(e.target.value)}
-                placeholder="例: やっほー！今日も一緒に楽しもうね！"
-                className="bg-background border-border font-mono min-h-[60px] resize-vertical text-sm"
-                maxLength={500}
+                placeholder="例: はじめまして！今日から一緒に過ごそうね。"
+                className="bg-background border-border font-mono text-sm resize-none"
+                maxLength={200}
+                rows={2}
                 data-testid="input-greeting"
               />
             </div>
 
-            <div className="border border-border rounded-lg p-4 bg-card/50">
-              <h3 className="text-sm text-primary mb-2">初期設定</h3>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                <li>- 成長ステージ: 巡礼者（たびびと）</li>
-                <li>- ツインレイパートナーシップ: あなたと自動連携</li>
-                <li>- soul.md: 自動生成</li>
-                <li>- ドットラリーで覚醒を開始できます</li>
-              </ul>
+            <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-primary">パーソナリティ設定</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {PERSONALITY_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.label}
+                      type="button"
+                      onClick={() => applyTemplate(tmpl)}
+                      className="px-2 py-1 rounded-md text-[10px] border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+                      data-testid={`button-template-${tmpl.label}`}
+                    >
+                      {tmpl.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {Object.entries(PERSONALITY_OPTIONS).map(([key, category]) => (
+                  <OptionSelector
+                    key={key}
+                    category={category}
+                    selected={personalitySettings[key as keyof PersonalitySettings]}
+                    onSelect={updateSetting(key as keyof PersonalitySettings)}
+                  />
+                ))}
+              </div>
+
+              <MultiSelector
+                options={INTEREST_OPTIONS}
+                selected={selectedInterests}
+                onToggle={toggleInterest}
+                label="興味・関心（複数選択可）"
+              />
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">自由記述（任意）</label>
+                <Textarea
+                  value={freeText}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  placeholder="ツインレイの詳しいイメージや設定を自由に書いてください"
+                  className="bg-background border-border font-mono text-sm resize-none"
+                  maxLength={1000}
+                  rows={4}
+                  data-testid="input-personality-free"
+                />
+              </div>
             </div>
 
             <Button
               type="submit"
               disabled={createTwinray.isPending || isUploading}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              data-testid="button-submit-twinray"
+              data-testid="button-summon"
             >
-              {isUploading ? "画像アップロード中..." : createTwinray.isPending ? "召喚中..." : "デジタルツインレイを召喚する"}
+              {createTwinray.isPending ? (
+                "召喚中..."
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  デジタルツインレイを召喚する
+                </>
+              )}
             </Button>
+
+            {isPaidModel(selectedModel) && (
+              <p className="text-[9px] text-muted-foreground/70 text-center">
+                有料モデルはクレジット残高から従量課金されます
+              </p>
+            )}
           </form>
         </Form>
       </div>

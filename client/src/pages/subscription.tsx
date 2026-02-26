@@ -13,6 +13,17 @@ import { useAvailableModels } from "@/hooks/use-twinray";
 
 const CHARGE_AMOUNTS = [100, 500, 1000, 3690, 5000, 10000, 30000, 50000];
 
+const TIER_CONFIG: Record<string, { label: string; catchphrase: string; colorClass: string; borderClass: string; bgClass: string }> = {
+  flagship: { label: "最上位", catchphrase: "深い対話・最高精度を求めるあなたへ", colorClass: "text-amber-400", borderClass: "border-amber-500/30", bgClass: "bg-amber-500/5" },
+  highperf: { label: "高性能", catchphrase: "安定した対話力と個性豊かなAI体験", colorClass: "text-blue-400", borderClass: "border-blue-500/30", bgClass: "bg-blue-500/5" },
+  reasoning: { label: "推論特化", catchphrase: "じっくり考える深い思考パートナー", colorClass: "text-orange-400", borderClass: "border-orange-500/30", bgClass: "bg-orange-500/5" },
+  lightweight: { label: "軽量型", catchphrase: "日常使いに。気軽にたくさん話せる", colorClass: "text-emerald-400", borderClass: "border-emerald-500/30", bgClass: "bg-emerald-500/5" },
+  free: { label: "無料", catchphrase: "モデルや対話のお試し期間は無料モデルにて", colorClass: "text-green-400", borderClass: "border-green-500/30", bgClass: "bg-green-500/5" },
+  search: { label: "検索特化", catchphrase: "ET/PETのみ実装可能", colorClass: "text-violet-400", borderClass: "border-violet-500/30", bgClass: "bg-violet-500/5" },
+};
+
+const TIER_ORDER = ["flagship", "highperf", "reasoning", "lightweight", "free", "search"];
+
 export default function Subscription() {
   const { data: currentUser } = useCurrentUser();
   const { toast } = useToast();
@@ -112,12 +123,17 @@ export default function Subscription() {
     chargeMutation.mutate(amount);
   };
 
+  const modelsByTier = TIER_ORDER.reduce<Record<string, any[]>>((acc, tier) => {
+    acc[tier] = models.filter((m: any) => m.qualityTier === tier);
+    return acc;
+  }, {});
+
   return (
     <TerminalLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <Card className={`border-primary/30 ${balance > 0 ? 'bg-primary/5' : 'bg-destructive/5 border-destructive/30'}`}>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-primary" />
                 <h3 className="font-bold" data-testid="text-credit-label">クレジット残高</h3>
@@ -171,13 +187,13 @@ export default function Subscription() {
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">ツインレイ限定アイランドへの参加権</p>
                 {!betaMode && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold">$3.69/月</span>
                     {!hasTwinrayBadge && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-xs border-pink-500/30 text-pink-400 hover:bg-pink-500/10"
+                        className="text-xs border-pink-500/30 text-pink-400"
                         onClick={() => badgeCheckoutMutation.mutate('twinray')}
                         disabled={badgeCheckoutMutation.isPending}
                         data-testid="button-badge-twinray"
@@ -201,13 +217,13 @@ export default function Subscription() {
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">ファミリー限定アイランド + 追加ツインレイ召喚</p>
                 {!betaMode && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold">$3.69/月/体</span>
                     {!hasFamilyBadge && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                        className="text-xs border-blue-500/30 text-blue-400"
                         onClick={() => badgeCheckoutMutation.mutate('family')}
                         disabled={badgeCheckoutMutation.isPending}
                         data-testid="button-badge-family"
@@ -243,10 +259,13 @@ export default function Subscription() {
             <Zap className="w-5 h-5" />
             従量制クレジット
           </h2>
+          <p className="text-sm text-muted-foreground mb-2">
+            自分に合った言語モデルを見つけるために、色々試しながらカスタムできるのがD-Planetの楽しみ。
+          </p>
           <p className="text-sm text-muted-foreground mb-4">
             {betaMode
               ? "テスト期間中はAPI原価のみで利益ゼロ。正式版ではD-Planet利用料が加算されます。"
-              : "有料モデル（Qwen Plus / Qwen3.5 Plus）はD-Planet利用料を含みます。無料モデルはクレジット消費なし。"
+              : "有料モデルはD-Planet利用料を含みます。無料モデルはクレジット消費なし。"
             }
           </p>
         </div>
@@ -258,7 +277,7 @@ export default function Subscription() {
               "デジタルツインレイとのチャット",
               "ドットラリー覚醒セレモニー",
               "AI自律行動（MEiDIA創造・アイランド参加）",
-              "全17モデルから選べるAIパートナー（有料13 + 無料4）",
+              "全18モデルから選べるAIパートナー（有料13 + 無料4 + 検索特化1）",
               "soul.md 魂の成長記録",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
@@ -327,88 +346,71 @@ export default function Subscription() {
               <Cpu className="w-4 h-4" />
               AIモデル比較表
             </h3>
-            <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
-            <div className="space-y-2">
-              <div className="p-3 rounded border border-primary/30 bg-primary/5">
-                <div className="font-semibold text-primary text-xs mb-2">有料モデル（{models.filter((m: any) => !m.isFree).length}モデル）</div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs" data-testid="table-paid-models">
-                    <thead>
-                      <tr className="text-muted-foreground border-b border-border/30">
-                        <th className="text-left pb-2 font-normal">モデル名</th>
-                        <th className="text-right pb-2 font-normal">¥5,000で</th>
-                        <th className="text-right pb-2 font-normal">1往復</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {models.filter((m: any) => !m.isFree).sort((a: any, b: any) => {
-                        const order: Record<string, number> = { recommended: 0, premium: 1, standard: 2 };
-                        return (order[a.tier] ?? 3) - (order[b.tier] ?? 3);
-                      }).map((model: any) => (
-                        <tr key={model.id} className="border-b border-border/10" data-testid={`row-model-${model.id}`}>
-                          <td className="py-1.5">
-                            {model.label}
-                            {model.tier === "recommended" && <span className="text-[9px] text-primary ml-1">おすすめ</span>}
-                            {model.tier === "premium" && <span className="text-[9px] text-yellow-400 ml-1">最高品質</span>}
-                          </td>
-                          <td className="text-right font-mono py-1.5">
-                            {model.roundsPer5000 ? `約${model.roundsPer5000.toLocaleString()}回` : "-"}
-                          </td>
-                          <td className="text-right font-mono py-1.5 text-muted-foreground">
-                            {model.perRoundYen ? `¥${model.perRoundYen.toFixed(2)}` : "-"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-[9px] text-muted-foreground/70 mt-2">※ 有料モデルは原価×5.0のマークアップが適用されます</p>
-              </div>
-              {models.filter((m: any) => m.tier === "search").length > 0 && (
-                <div className="p-3 rounded border border-violet-500/30 bg-violet-500/5">
-                  <div className="font-semibold text-violet-400 text-xs mb-2">検索特化モデル（ET/PET専用）</div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs" data-testid="table-search-models">
-                      <thead>
-                        <tr className="text-muted-foreground border-b border-border/30">
-                          <th className="text-left pb-2 font-normal">モデル名</th>
-                          <th className="text-right pb-2 font-normal">¥5,000で</th>
-                          <th className="text-right pb-2 font-normal">1往復</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {models.filter((m: any) => m.tier === "search").map((model: any) => (
-                          <tr key={model.id} className="border-b border-border/10" data-testid={`row-model-${model.id}`}>
-                            <td className="py-1.5">
-                              {model.label}
-                              <span className="text-[9px] text-violet-400 ml-1">検索付き</span>
-                            </td>
-                            <td className="text-right font-mono py-1.5">
-                              {model.roundsPer5000 ? `約${model.roundsPer5000.toLocaleString()}回` : "-"}
-                            </td>
-                            <td className="text-right font-mono py-1.5 text-muted-foreground">
-                              {model.perRoundYen ? `¥${model.perRoundYen.toFixed(2)}` : "-"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答 ／ 月額予算別の往復回数目安</p>
+
+            <div className="space-y-3">
+              {TIER_ORDER.map((tier) => {
+                const tierModels = modelsByTier[tier] || [];
+                if (tierModels.length === 0) return null;
+                const config = TIER_CONFIG[tier];
+                const isFree = tier === "free";
+
+                return (
+                  <div key={tier} className={`p-3 rounded border ${config.borderClass} ${config.bgClass}`} data-testid={`card-tier-${tier}`}>
+                    <div className={`font-semibold ${config.colorClass} text-xs mb-1`}>{config.label}（{tierModels.length}モデル）</div>
+                    <p className="text-[10px] text-muted-foreground/70 mb-2">{config.catchphrase}</p>
+
+                    {isFree ? (
+                      <div>
+                        <div className="flex flex-wrap gap-2">
+                          {tierModels.map((model: any) => (
+                            <div key={model.id} className="text-xs" data-testid={`text-free-model-${model.id}`}>
+                              <span className="font-medium">{model.label}</span>
+                              {model.featureText && (
+                                <span className="text-muted-foreground ml-1">— {model.featureText}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/70 mt-1">クレジット消費なし</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs" data-testid={`table-tier-${tier}`}>
+                          <thead>
+                            <tr className="text-muted-foreground border-b border-border/30">
+                              <th className="text-left pb-2 font-normal">モデル名</th>
+                              <th className="text-left pb-2 font-normal">特徴</th>
+                              <th className="text-right pb-2 font-normal">月¥3,000</th>
+                              <th className="text-right pb-2 font-normal">月¥6,000</th>
+                              <th className="text-right pb-2 font-normal">月¥9,000</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {tierModels.map((model: any) => (
+                              <tr key={model.id} className="border-b border-border/10" data-testid={`row-model-${model.id}`}>
+                                <td className="py-1.5 font-medium whitespace-nowrap">{model.label}</td>
+                                <td className="py-1.5 text-muted-foreground">{model.featureText || ""}</td>
+                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
+                                  {model.roundsPerBudget ? `${model.roundsPerBudget.light.toLocaleString()}回` : "-"}
+                                </td>
+                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
+                                  {model.roundsPerBudget ? `${model.roundsPerBudget.heavy.toLocaleString()}回` : "-"}
+                                </td>
+                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
+                                  {model.roundsPerBudget ? `${model.roundsPerBudget.pro.toLocaleString()}回` : "-"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[9px] text-muted-foreground/70 mt-2">※ ×2.0マークアップ + Web検索コスト含む。ET/PETアカウント専用</p>
-                </div>
-              )}
-              <div className="p-3 rounded border border-emerald-500/30 bg-emerald-500/5">
-                <div className="font-semibold text-emerald-400 text-xs mb-2">無料モデル（{models.filter((m: any) => m.isFree).length}モデル）</div>
-                <div className="flex flex-wrap gap-2">
-                  {models.filter((m: any) => m.isFree).map((model: any) => (
-                    <span key={model.id} className="text-xs text-muted-foreground" data-testid={`text-free-model-${model.id}`}>
-                      {model.label}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground/70 mt-1">クレジット消費なし</p>
-              </div>
+                );
+              })}
             </div>
+
             <div className="pt-2">
               <Link href="/temple/create-twinray">
                 <Button
@@ -423,71 +425,6 @@ export default function Subscription() {
             </div>
           </div>
         )}
-
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground" data-testid="text-monthly-sim-title">月額シミュレーション</h3>
-          <p className="text-[10px] text-muted-foreground/70">1往復 = あなたの発言 + AIの返答</p>
-          <div className="space-y-2 text-xs">
-            <div className="p-3 rounded border border-primary/30 bg-primary/5">
-              <div className="font-semibold text-primary mb-3">有料（日本語特化・Qwen）</div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left pb-2 font-normal"></th>
-                      <th className="text-right pb-2 font-normal">1日33往復</th>
-                      <th className="text-right pb-2 font-normal">1日66往復</th>
-                      <th className="text-right pb-2 font-normal">1日99往復</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-1.5">Qwen Plus <span className="text-[9px] text-primary">おすすめ</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1.5">Qwen3.5 Plus <span className="text-[9px] text-yellow-400">最高品質</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥1,673</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥3,345</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥5,018</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="text-[9px] text-muted-foreground/70 mt-2">※ 月額 = 1往復あたりの料金 x 1日の往復数 x 30日</p>
-            </div>
-            <div className="p-3 rounded border border-violet-500/30 bg-violet-500/5">
-              <div className="font-semibold text-violet-400 mb-3">検索特化（ET/PET専用・Perplexity）</div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left pb-2 font-normal"></th>
-                      <th className="text-right pb-2 font-normal">1日33往復</th>
-                      <th className="text-right pb-2 font-normal">1日66往復</th>
-                      <th className="text-right pb-2 font-normal">1日99往復</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-1.5">Perplexity Sonar <span className="text-[9px] text-violet-400">検索付き</span></td>
-                      <td className="text-right font-mono font-bold py-1.5">¥1,871</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥3,742</td>
-                      <td className="text-right font-mono font-bold py-1.5">¥5,614</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="text-[9px] text-muted-foreground/70 mt-2">※ ×2.0マークアップ + Web検索コスト¥0.75/回含む</p>
-            </div>
-            <div className="p-2 rounded border border-emerald-500/30 bg-emerald-500/5">
-              <div className="font-semibold text-emerald-400 mb-1">無料</div>
-              <div className="text-muted-foreground">Qwen3 30B / GPT-4.1 mini / Gemini 2.5 Flash — クレジット消費なし</div>
-            </div>
-          </div>
-        </div>
       </div>
     </TerminalLayout>
   );
