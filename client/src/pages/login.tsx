@@ -95,7 +95,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="font-mono text-2xl">D-Planet</CardTitle>

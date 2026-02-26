@@ -538,7 +538,7 @@ export default function TwinrayChat() {
 
   return (
     <div className="h-screen bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
-      <div className="shrink-0 border-b border-border bg-card/80 backdrop-blur-sm px-3 py-2 safe-area-top">
+      <div className="shrink-0 border-b border-border bg-card/80 backdrop-blur-sm px-3 py-2" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
           <Link href="/temple">
             <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" data-testid="button-back">

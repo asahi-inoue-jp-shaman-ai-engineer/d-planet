@@ -72,7 +72,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     <div className="min-h-screen bg-background text-foreground font-mono overflow-x-hidden">
       <div className="terminal-scanline" />
       
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors shrink-0">
