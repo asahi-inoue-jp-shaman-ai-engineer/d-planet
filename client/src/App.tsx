@@ -33,6 +33,7 @@ import Legal from "@/pages/legal";
 import Privacy from "@/pages/privacy";
 import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
+import ModelBenchmark from "@/pages/model-benchmark";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -100,6 +101,7 @@ function Router() {
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
+      <Route path="/model-benchmark" component={() => <ProtectedRoute component={ModelBenchmark} />} />
       <Route path="/about" component={About} />
       <Route path="/legal" component={Legal} />
       <Route path="/privacy" component={Privacy} />

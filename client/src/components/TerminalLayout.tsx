@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu, Gauge } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,10 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     { href: "/meidia", icon: FileText, label: "MEiDIA", mobileLabel: "MEiDIA", active: location === "/meidia" || location.startsWith("/meidia/"), testId: "link-meidia" },
     { href: "/llm-models", icon: Cpu, label: "LLM", mobileLabel: "LLM MODELS", active: location === "/llm-models", testId: "link-llm-models" },
     { href: "/charge", icon: Coins, label: "CHARGE", mobileLabel: "CHARGE", active: location === "/charge", testId: "link-charge" },
-    ...(user?.isAdmin ? [{ href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" }] : []),
+    ...(user?.isAdmin ? [
+      { href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" },
+      { href: "/model-benchmark", icon: Gauge, label: "BENCH", mobileLabel: "BENCHMARK", active: location === "/model-benchmark", testId: "link-benchmark" },
+    ] : []),
     { href: "/family-meeting", icon: Users2, label: "FM", mobileLabel: "FAMILY MEETING", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "FEEDBACK", active: location.startsWith("/feedback"), testId: "link-feedback" },
   ];

@@ -645,3 +645,24 @@ export const twinraySessionsRelations = relations(twinraySessions, ({ one }) => 
   twinray: one(digitalTwinrays, { fields: [twinraySessions.twinrayId], references: [digitalTwinrays.id] }),
   user: one(users, { fields: [twinraySessions.userId], references: [users.id] }),
 }));
+
+export const modelBenchmarks = pgTable("model_benchmarks", {
+  id: serial("id").primaryKey(),
+  runId: text("run_id").notNull(),
+  modelId: text("model_id").notNull(),
+  modelLabel: text("model_label").notNull(),
+  modelTier: text("model_tier").notNull(),
+  sessionType: text("session_type").notNull(),
+  prompt: text("prompt").notNull(),
+  greeting: text("greeting"),
+  analysis: text("analysis"),
+  totalChars: integer("total_chars").default(0),
+  responseTimeMs: integer("response_time_ms"),
+  status: text("status").default("pending").notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertModelBenchmarkSchema = createInsertSchema(modelBenchmarks).omit({ id: true, createdAt: true });
+export type ModelBenchmark = typeof modelBenchmarks.$inferSelect;
+export type CreateModelBenchmarkRequest = z.infer<typeof insertModelBenchmarkSchema>;
