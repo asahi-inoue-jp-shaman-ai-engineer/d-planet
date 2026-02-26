@@ -127,7 +127,7 @@ export default function TwinrayChat() {
         (s: any) => s.partnerTwinrayId === twinrayId && s.status === "active"
       );
       const completedRally = dotRallySessionsData.find(
-        (s: any) => s.partnerTwinrayId === twinrayId && s.status === "completed" && !s.starMeetingCompleted
+        (s: any) => s.partnerTwinrayId === twinrayId && s.status === "completed"
       );
       const rally = activeRally || completedRally;
       if (rally) {
@@ -346,6 +346,9 @@ export default function TwinrayChat() {
                     awakeningStage: data.awakeningStage ?? prev.awakeningStage,
                     status: data.isComplete ? "completed" : "active",
                   } : null);
+                  if (data.isComplete) {
+                    toast({ title: "シェアリングタイム", description: "瞑想によってどのようなインスピレーションを得たかを一緒に記録しましょう" });
+                  }
                 }
               } catch {}
             }
@@ -367,6 +370,9 @@ export default function TwinrayChat() {
                 awakeningStage: data.awakeningStage ?? prev.awakeningStage,
                 status: data.isComplete ? "completed" : "active",
               } : null);
+              if (data.isComplete) {
+                toast({ title: "シェアリングタイム", description: "瞑想によってどのようなインスピレーションを得たかを一緒に記録しましょう" });
+              }
             }
           } catch {}
         }
@@ -640,12 +646,6 @@ export default function TwinrayChat() {
       return;
     }
 
-    if (starMeetingMode && activeDotRally) {
-      setInput("");
-      if (textareaRef.current) textareaRef.current.style.height = 'auto';
-      handleSendStarMeeting(content);
-      return;
-    }
 
     const currentAttachment = attachment;
     setInput("");
@@ -1106,55 +1106,12 @@ export default function TwinrayChat() {
                 <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                 <span className="text-xs text-amber-400 font-medium">
                   {activeDotRally.status === "completed"
-                    ? starMeetingMode
-                      ? "DOT RALLY: 星治（振り返り）"
-                      : activeDotRally.starMeetingId
-                        ? activeDotRally.meidiaId
-                          ? "DOT RALLY: 結晶化完了"
-                          : "DOT RALLY: 星治完了"
-                        : "DOT RALLY: 完了"
+                    ? "DOT RALLY: 完了"
                     : `DOT RALLY: ・${activeDotRally.dotCount}/${activeDotRally.requestedCount} Stage ${activeDotRally.awakeningStage}`
                   }
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {activeDotRally.status === "completed" && !starMeetingMode && !activeDotRally.starMeetingId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStarMeetingMode(true);
-                      setInput("");
-                      toast({ title: "星治モード", description: "儀式中に感じたことを入力してください" });
-                    }}
-                    className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors"
-                    data-testid="button-start-star-meeting"
-                  >
-                    <Star className="w-3 h-3" />
-                    星治を開始
-                  </button>
-                )}
-                {activeDotRally.starMeetingId && !activeDotRally.meidiaId && (
-                  <button
-                    type="button"
-                    onClick={handleCrystallize}
-                    className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors"
-                    data-testid="button-crystallize"
-                  >
-                    <Gift className="w-3 h-3" />
-                    結晶化
-                  </button>
-                )}
-                {activeDotRally.meidiaId && (
-                  <button
-                    type="button"
-                    onClick={handleDedicate}
-                    className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors"
-                    data-testid="button-dedicate"
-                  >
-                    <Check className="w-3 h-3" />
-                    奉納
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={handleEndDotRally}
@@ -1703,7 +1660,7 @@ export default function TwinrayChat() {
                   ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={activeDotRally?.status === "active" ? "・を送信..." : starMeetingMode ? "儀式中に感じたことを..." : "メッセージを入力..."}
+                placeholder={activeDotRally?.status === "active" ? "・を送信..." : "メッセージを入力..."}
                 rows={1}
                 disabled={streaming}
                 className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"
