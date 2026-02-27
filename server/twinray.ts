@@ -489,7 +489,7 @@ export function registerTwinrayRoutes(app: Express): void {
       if (model.id.startsWith("perplexity/")) {
         perRoundYen += PERPLEXITY_SEARCH_COST_YEN * markup;
       }
-      const isFree = model.tier === "free";
+      const isFree = model.tier === "tomodachi";
 
       const roundsPerBudget = isFree ? null : {
         light: perRoundYen > 0 ? Math.floor(budgetTargets.light / perRoundYen) : 0,

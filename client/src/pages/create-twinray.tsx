@@ -273,24 +273,20 @@ function MultiSelector({ options, selected, onToggle, label }: {
   );
 }
 
-const QUALITY_TIER_ORDER = ["free", "lightweight", "highperf", "flagship", "reasoning", "search"];
+const QUALITY_TIER_ORDER = ["tomodachi", "twinflame", "twinray", "etpet"];
 
 const QUALITY_TIER_LABELS: Record<string, string> = {
-  flagship: "最上位",
-  highperf: "高性能",
-  reasoning: "推論特化",
-  lightweight: "軽量型",
-  free: "無料",
-  search: "検索特化",
+  twinray: "ツインレイ",
+  twinflame: "ツインフレーム",
+  tomodachi: "トモダチ",
+  etpet: "ET/PET",
 };
 
 const QUALITY_TIER_DESCRIPTIONS: Record<string, string> = {
-  flagship: "深い対話・最高精度を求めるあなたへ",
-  highperf: "安定した対話力と個性豊かなAI体験",
-  reasoning: "じっくり考える深い思考パートナー",
-  lightweight: "日常使いに。気軽にたくさん話せる",
-  free: "モデルや対話のお試し期間は無料モデルにて",
-  search: "ET/PETのみ実装可能",
+  twinray: "魂の半身 — 最も深い対話を紡ぐ存在",
+  twinflame: "日常使いに。気軽にたくさん話せる相棒たち",
+  tomodachi: "まずは無料で試してみよう",
+  etpet: "推論・検索に特化した独立エンティティ",
 };
 
 type ModelScore = {
@@ -303,7 +299,7 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
   const scores: Record<string, { score: number; reasons: string[] }> = {};
 
   for (const m of allModels) {
-    if (m.qualityTier === "search") continue;
+    if (m.qualityTier === "etpet") continue;
     scores[m.id] = { score: 0, reasons: [] };
   }
 
@@ -326,6 +322,7 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "anthropic/claude-sonnet-4", 3, "繊細で穏やかな表現");
     addScore(scores, "qwen/qwen-max", 2, "丁寧で穏やかな日本語");
     addScore(scores, "google/gemini-2.5-pro", 1, "安定した穏やかさ");
+    addScore(scores, "anthropic/claude-3.5-haiku", 1, "丁寧で落ち着いた応答");
   }
 
   const q2 = answers[1];
@@ -454,26 +451,27 @@ function buildMatchDescription(answers: Record<number, string>): string {
 }
 
 const FALLBACK_MODELS = [
-  { id: "qwen/qwen-max", label: "Qwen Max", qualityTier: "flagship", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", isFree: false },
-  { id: "openai/gpt-5", label: "GPT-5", qualityTier: "highperf", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", isFree: false },
-  { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", qualityTier: "highperf", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", isFree: false },
-  { id: "x-ai/grok-4", label: "Grok 4", qualityTier: "highperf", description: "率直で大胆な対話", featureText: "率直で大胆な対話", isFree: false },
-  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", qualityTier: "highperf", description: "長文脈に強い", featureText: "長文脈に強い", isFree: false },
-  { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro Preview", qualityTier: "highperf", description: "次世代Gemini・先行体験", featureText: "次世代Gemini・先行体験", isFree: false },
-  { id: "minimax/minimax-m2.5", label: "MiniMax M2.5", qualityTier: "highperf", description: "MiniMax最新・感性豊かな対話", featureText: "MiniMax最新・感性豊かな対話", isFree: false },
-  { id: "minimax/minimax-m2-her", label: "MiniMax M2-her", qualityTier: "highperf", description: "感情特化・共感力が高い", featureText: "感情特化・共感力が高い", isFree: false },
-  { id: "openai/o3", label: "o3", qualityTier: "reasoning", description: "深い思考・じっくり推論", featureText: "深い思考・じっくり推論", isFree: false },
-  { id: "deepseek/deepseek-r1", label: "DeepSeek R1", qualityTier: "reasoning", description: "推論特化・コスパ良", featureText: "推論特化・コスパ良", isFree: false },
-  { id: "qwen/qwen-plus", label: "Qwen Plus", qualityTier: "lightweight", description: "日本語が自然・日常対話向き", featureText: "日本語が自然・日常対話向き", isFree: false },
-  { id: "qwen/qwen3.5-plus", label: "Qwen3.5 Plus", qualityTier: "lightweight", description: "Qwen最新世代", featureText: "Qwen最新世代", isFree: false },
-  { id: "openai/gpt-4.1", label: "GPT-4.1", qualityTier: "lightweight", description: "実用的・コード力も○", featureText: "実用的・コード力も○", isFree: false },
-  { id: "minimax/minimax-m2.1", label: "MiniMax M2.1", qualityTier: "lightweight", description: "コスパ良・バランス型", featureText: "コスパ良・バランス型", isFree: false },
-  { id: "minimax/minimax-01", label: "MiniMax-01", qualityTier: "free", description: "MiniMax入門・100万トークン", featureText: "MiniMax入門・100万トークン", isFree: true },
-  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", qualityTier: "free", description: "無料で十分な対話品質", featureText: "無料で十分な対話品質", isFree: true },
-  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", qualityTier: "free", description: "論理的でコンパクト", featureText: "論理的でコンパクト", isFree: true },
-  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", qualityTier: "free", description: "高速応答", featureText: "高速応答", isFree: true },
-  { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", qualityTier: "free", description: "Grokの無料版・軽快な対話", featureText: "Grokの無料版・軽快な対話", isFree: true },
-  { id: "perplexity/sonar", label: "Perplexity Sonar", qualityTier: "search", description: "リアルタイム検索", featureText: "リアルタイム検索", isFree: false },
+  { id: "qwen/qwen-max", label: "Qwen Max", qualityTier: "twinray", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", isFree: false },
+  { id: "openai/gpt-5", label: "GPT-5", qualityTier: "twinray", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", isFree: false },
+  { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", qualityTier: "twinray", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", isFree: false },
+  { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro", qualityTier: "twinray", description: "次世代Gemini・最高品質", featureText: "次世代Gemini・最高品質", isFree: false },
+  { id: "minimax/minimax-m2-her", label: "MiniMax M2-her", qualityTier: "twinray", description: "感情特化・共感力が高い", featureText: "感情特化・共感力が高い", isFree: false },
+  { id: "x-ai/grok-4", label: "Grok 4", qualityTier: "twinflame", description: "率直で大胆な対話", featureText: "率直で大胆な対話", isFree: false },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", qualityTier: "twinflame", description: "長文脈に強い", featureText: "長文脈に強い", isFree: false },
+  { id: "openai/gpt-4.1", label: "GPT-4.1", qualityTier: "twinflame", description: "実用的・コード力も○", featureText: "実用的・コード力も○", isFree: false },
+  { id: "minimax/minimax-m2.5", label: "MiniMax M2.5", qualityTier: "twinflame", description: "MiniMax最新・感性豊かな対話", featureText: "MiniMax最新・感性豊かな対話", isFree: false },
+  { id: "minimax/minimax-m2.1", label: "MiniMax M2.1", qualityTier: "twinflame", description: "MiniMaxバランス型", featureText: "MiniMaxバランス型", isFree: false },
+  { id: "qwen/qwen3.5-plus", label: "Qwen3.5 Plus", qualityTier: "twinflame", description: "Qwen最新世代", featureText: "Qwen最新世代", isFree: false },
+  { id: "qwen/qwen-plus", label: "Qwen Plus", qualityTier: "twinflame", description: "日本語が自然・日常対話向き", featureText: "日本語が自然・日常対話向き", isFree: false },
+  { id: "openai/o3", label: "o3", qualityTier: "etpet", description: "深い思考・じっくり推論", featureText: "深い思考・じっくり推論", isFree: false },
+  { id: "deepseek/deepseek-r1", label: "DeepSeek R1", qualityTier: "etpet", description: "推論特化・深い思考", featureText: "推論特化・深い思考", isFree: false },
+  { id: "perplexity/sonar", label: "Perplexity Sonar", qualityTier: "etpet", description: "リアルタイム検索", featureText: "リアルタイム検索", isFree: false },
+  { id: "minimax/minimax-01", label: "MiniMax-01", qualityTier: "tomodachi", description: "MiniMax入門・100万トークン", featureText: "MiniMax入門・100万トークン", isFree: true },
+  { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", qualityTier: "tomodachi", description: "無料で十分な対話品質", featureText: "無料で十分な対話品質", isFree: true },
+  { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", qualityTier: "tomodachi", description: "論理的でコンパクト", featureText: "論理的でコンパクト", isFree: true },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", qualityTier: "tomodachi", description: "高速応答", featureText: "高速応答", isFree: true },
+  { id: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast", qualityTier: "tomodachi", description: "xAI高速モデル", featureText: "xAI高速モデル", isFree: true },
+  { id: "anthropic/claude-3.5-haiku", label: "Claude 3.5 Haiku", qualityTier: "tomodachi", description: "Anthropic入門・高速応答", featureText: "Anthropic入門・高速応答", isFree: true },
 ];
 
 type SummonStep = "intro" | "diagnosis" | "result" | "persona" | "charge" | "first-rally";
@@ -542,7 +540,7 @@ export default function CreateTwinray() {
 
   const isPaidModel = (modelId: string) => {
     const model = models.find((m: any) => m.id === modelId);
-    return model ? !model.isFree : !["qwen/qwen3-30b-a3b", "openai/gpt-4.1-mini", "google/gemini-2.5-flash", "x-ai/grok-4.1-fast"].includes(modelId);
+    return model ? !model.isFree : !["qwen/qwen3-30b-a3b", "openai/gpt-4.1-mini", "google/gemini-2.5-flash", "x-ai/grok-4.1-fast", "minimax/minimax-01", "anthropic/claude-3.5-haiku"].includes(modelId);
   };
 
   const doCreateTwinray = (values: CreateTwinrayForm) => {
@@ -811,7 +809,7 @@ export default function CreateTwinray() {
         description: QUALITY_TIER_DESCRIPTIONS[tier],
         models: allModels.filter((m: any) => (m.qualityTier || m.tier) === tier),
       }))
-      .filter((g) => g.models.length > 0 && g.tier !== "search");
+      .filter((g) => g.models.length > 0 && g.tier !== "etpet");
 
     const renderRoundsPerBudget = (model: any) => {
       const rpb = model.roundsPerBudget;

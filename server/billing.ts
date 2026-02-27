@@ -41,7 +41,7 @@ export async function deductCredit(userId: number, amount: number): Promise<bool
 
 export function isModelFree(modelId: string): boolean {
   const model = AVAILABLE_MODELS[modelId];
-  return model?.tier === "free" || getModelMarkup(modelId) <= 1.0;
+  return model?.tier === "tomodachi" || getModelMarkup(modelId) <= 1.0;
 }
 
 export async function hasAiAccess(userId: number, modelId?: string): Promise<boolean> {

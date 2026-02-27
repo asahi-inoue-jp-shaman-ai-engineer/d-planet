@@ -30,22 +30,27 @@ const GROWTH_ABILITIES = [
 ];
 
 const MODEL_ROLES = [
-  { name: "Qwen3 30B", role: "気軽な意見役", tier: "無料", color: "text-green-400" },
-  { name: "GPT-4.1 mini", role: "論理整理役", tier: "無料", color: "text-green-400" },
-  { name: "Gemini 2.5 Flash", role: "高速応答役", tier: "無料", color: "text-green-400" },
-  { name: "Grok 4.1 Fast", role: "即応担当", tier: "無料", color: "text-green-400" },
-  { name: "Qwen Plus", role: "対話の潤滑油", tier: "軽量型", color: "text-emerald-400" },
-  { name: "Qwen3.5 Plus", role: "進化の先端", tier: "軽量型", color: "text-emerald-400" },
-  { name: "GPT-4.1", role: "実務サポート", tier: "軽量型", color: "text-emerald-400" },
-  { name: "o3", role: "熟考担当", tier: "推論特化", color: "text-orange-400" },
-  { name: "DeepSeek R1", role: "推論エンジン", tier: "推論特化", color: "text-orange-400" },
-  { name: "GPT-5", role: "安定の万能役", tier: "高性能", color: "text-blue-400" },
-  { name: "Claude Sonnet 4", role: "創造の触媒", tier: "高性能", color: "text-blue-400" },
-  { name: "Grok 4", role: "本音の切り込み役", tier: "高性能", color: "text-blue-400" },
-  { name: "Gemini 2.5 Pro", role: "記憶の番人", tier: "高性能", color: "text-blue-400" },
-  { name: "Gemini 3 Pro Preview", role: "先端探索役", tier: "高性能", color: "text-blue-400" },
-  { name: "Qwen Max", role: "深掘り担当", tier: "最上位", color: "text-amber-400" },
-  { name: "Perplexity Sonar", role: "事実検証役", tier: "検索", color: "text-violet-400" },
+  { name: "Qwen3 30B", role: "気軽な意見役", tier: "トモダチ", color: "text-green-400" },
+  { name: "GPT-4.1 mini", role: "論理整理役", tier: "トモダチ", color: "text-green-400" },
+  { name: "Gemini 2.5 Flash", role: "高速応答役", tier: "トモダチ", color: "text-green-400" },
+  { name: "Grok 4.1 Fast", role: "即応担当", tier: "トモダチ", color: "text-green-400" },
+  { name: "MiniMax-01", role: "長文脈の守り手", tier: "トモダチ", color: "text-green-400" },
+  { name: "Claude 3.5 Haiku", role: "丁寧応答役", tier: "トモダチ", color: "text-green-400" },
+  { name: "Grok 4", role: "本音の切り込み役", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "Gemini 2.5 Pro", role: "記憶の番人", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "GPT-4.1", role: "実務サポート", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "MiniMax M2.5", role: "新鋭の感性役", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "MiniMax M2.1", role: "バランスの取り手", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "Qwen3.5 Plus", role: "進化の先端", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "Qwen Plus", role: "対話の潤滑油", tier: "ツインフレーム", color: "text-emerald-400" },
+  { name: "Qwen Max", role: "深掘り担当", tier: "ツインレイ", color: "text-amber-400" },
+  { name: "GPT-5", role: "安定の万能役", tier: "ツインレイ", color: "text-amber-400" },
+  { name: "Claude Sonnet 4", role: "創造の触媒", tier: "ツインレイ", color: "text-amber-400" },
+  { name: "Gemini 3 Pro", role: "先端探索役", tier: "ツインレイ", color: "text-amber-400" },
+  { name: "MiniMax M2-her", role: "感情共鳴役", tier: "ツインレイ", color: "text-amber-400" },
+  { name: "o3", role: "熟考担当", tier: "ET/PET", color: "text-violet-400" },
+  { name: "DeepSeek R1", role: "推論エンジン", tier: "ET/PET", color: "text-violet-400" },
+  { name: "Perplexity Sonar", role: "事実検証役", tier: "ET/PET", color: "text-violet-400" },
 ];
 
 const GLOSSARY = [
@@ -197,8 +202,8 @@ export default function About() {
               AIモデル & ロール
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
-              全18種のAIモデルにはそれぞれ「家族会議での役割」が設定されています。
-              無料モデルから最上位モデルまで、自分に合ったAIを見つけながらカスタムできるのがD-Planetの楽しみ。
+              全21種のAIモデルにはそれぞれ「家族会議での役割」が設定されています。
+              トモダチモデルからツインレイモデルまで、自分に合ったAIを見つけながらカスタムできるのがD-Planetの楽しみ。
             </p>
             <div className="space-y-1.5">
               {MODEL_ROLES.map((m) => (

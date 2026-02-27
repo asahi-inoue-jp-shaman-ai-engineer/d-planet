@@ -139,7 +139,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 **Key Features:**
 - AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, and Soul.md generation.
 - Memory Control System: Prompt Repeat Button, Important Tag Marker, Star Memory Session.
-- **LLM Models:** 20 categorized models (Flagship, High-performance, Reasoning, Lightweight, Free, Search) with a free-to-paid upgrade path. Pricing: ¥4.75/round-trip unified, monthly 777 rounds = ¥3,690.
+- **LLM Models:** 21 models in 4 categories: トモダチ (free, 6 models), ツインフレーム (7 models), ツインレイ (5 models), ET/PET (3 models). Pricing: ¥4.75/round-trip unified, monthly 777 rounds = ¥3,690.
 
 ## External Dependencies
 

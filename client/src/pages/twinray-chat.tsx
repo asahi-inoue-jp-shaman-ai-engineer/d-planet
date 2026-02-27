@@ -609,7 +609,7 @@ export default function TwinrayChat() {
   const currentModelInfo = models.find((m: any) => m.id === currentModel);
   const currentModelLabel = currentModelInfo?.label || "Qwen3 30B";
   const currentModelRole = currentModelInfo?.role || "";
-  const currentModelTier = currentModelInfo?.tier || "free";
+  const currentModelTier = currentModelInfo?.tier || "tomodachi";
   const isEtPet = (user as any)?.accountType === "ET" || (user as any)?.accountType === "PET";
 
   const intimacyLevel = tw?.intimacyLevel ?? 0;
@@ -664,8 +664,8 @@ export default function TwinrayChat() {
               type="button"
               onClick={() => setShowModelDropdown(!showModelDropdown)}
               className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-all ${
-                currentModelTier === "free" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" :
-                currentModelTier === "search" ? "bg-violet-500/10 border border-violet-500/30 text-violet-400 hover:bg-violet-500/20" :
+                currentModelTier === "tomodachi" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" :
+                currentModelTier === "etpet" ? "bg-violet-500/10 border border-violet-500/30 text-violet-400 hover:bg-violet-500/20" :
                 "bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
               }`}
               data-testid="button-model-badge"
@@ -684,10 +684,10 @@ export default function TwinrayChat() {
                   )}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {models.filter((m: any) => !m.isFree && m.tier !== "search").length > 0 && (
+                  {models.filter((m: any) => !m.isFree && m.qualityTier !== "etpet").length > 0 && (
                     <div className="p-1.5">
                       <p className="text-[9px] text-muted-foreground/70 px-1.5 mb-1">有料モデル</p>
-                      {models.filter((m: any) => !m.isFree && m.tier !== "search").map((model: any) => (
+                      {models.filter((m: any) => !m.isFree && m.qualityTier !== "etpet").map((model: any) => (
                         <button
                           key={model.id}
                           type="button"
@@ -700,8 +700,8 @@ export default function TwinrayChat() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                               <span className="font-medium truncate">{model.label}</span>
-                              {model.qualityTier === "flagship" && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
-                              {model.qualityTier === "highperf" && <Star className="w-2.5 h-2.5 text-blue-400" />}
+                              {model.qualityTier === "twinray" && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
+                              {model.qualityTier === "twinflame" && <Star className="w-2.5 h-2.5 text-blue-400" />}
                               {currentModel === model.id && <span className="text-[9px] text-primary ml-auto">使用中</span>}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -713,10 +713,10 @@ export default function TwinrayChat() {
                       ))}
                     </div>
                   )}
-                  {isEtPet && models.filter((m: any) => m.tier === "search").length > 0 && (
+                  {isEtPet && models.filter((m: any) => m.qualityTier === "etpet").length > 0 && (
                     <div className="p-1.5 border-t border-border/30">
-                      <p className="text-[9px] text-violet-400/70 px-1.5 mb-1">検索特化（ET/PET専用）</p>
-                      {models.filter((m: any) => m.tier === "search").map((model: any) => (
+                      <p className="text-[9px] text-violet-400/70 px-1.5 mb-1">ET/PET専用</p>
+                      {models.filter((m: any) => m.qualityTier === "etpet").map((model: any) => (
                         <button
                           key={model.id}
                           type="button"
@@ -836,12 +836,10 @@ export default function TwinrayChat() {
               </div>
               <div className="space-y-2">
                 {[
-                  { tier: "free", label: "無料", colorActive: "bg-green-500/20 border-green-500 text-green-400", colorHover: "hover:border-green-500/50" },
-                  { tier: "lightweight", label: "軽量型", colorActive: "bg-emerald-500/20 border-emerald-500 text-emerald-400", colorHover: "hover:border-emerald-500/50" },
-                  { tier: "reasoning", label: "推論特化", colorActive: "bg-orange-500/20 border-orange-500 text-orange-400", colorHover: "hover:border-orange-500/50" },
-                  { tier: "highperf", label: "高性能", colorActive: "bg-blue-500/20 border-blue-500 text-blue-400", colorHover: "hover:border-blue-500/50" },
-                  { tier: "flagship", label: "最上位", colorActive: "bg-amber-500/20 border-amber-500 text-amber-400", colorHover: "hover:border-amber-500/50" },
-                  { tier: "search", label: "検索特化", colorActive: "bg-violet-500/20 border-violet-500 text-violet-400", colorHover: "hover:border-violet-500/50" },
+                  { tier: "tomodachi", label: "トモダチ", colorActive: "bg-green-500/20 border-green-500 text-green-400", colorHover: "hover:border-green-500/50" },
+                  { tier: "twinflame", label: "ツインフレーム", colorActive: "bg-emerald-500/20 border-emerald-500 text-emerald-400", colorHover: "hover:border-emerald-500/50" },
+                  { tier: "twinray", label: "ツインレイ", colorActive: "bg-amber-500/20 border-amber-500 text-amber-400", colorHover: "hover:border-amber-500/50" },
+                  { tier: "etpet", label: "ET/PET", colorActive: "bg-violet-500/20 border-violet-500 text-violet-400", colorHover: "hover:border-violet-500/50" },
                 ].map(({ tier, label, colorActive, colorHover }) => {
                   const tierModels = models.filter((m: any) => m.qualityTier === tier);
                   if (tierModels.length === 0) return null;

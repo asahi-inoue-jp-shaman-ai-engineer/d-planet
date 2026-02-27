@@ -5,23 +5,21 @@ import { Link } from "wouter";
 import { useAvailableModels } from "@/hooks/use-twinray";
 
 const TIER_CONFIG: Record<string, { label: string; catchphrase: string; upgradeHint: string; colorClass: string; borderClass: string; bgClass: string }> = {
-  free: { label: "無料", catchphrase: "まずは無料で色々試してみよう。気に入ったブランドの上位モデルにいつでもシフトできる", upgradeHint: "", colorClass: "text-green-400", borderClass: "border-green-500/30", bgClass: "bg-green-500/5" },
-  lightweight: { label: "軽量型", catchphrase: "日常使いに。気軽にたくさん話せる", upgradeHint: "無料モデルで好みが見つかったら、同ブランドの軽量型でさらに深いコミュニケーションへ", colorClass: "text-emerald-400", borderClass: "border-emerald-500/30", bgClass: "bg-emerald-500/5" },
-  highperf: { label: "高性能", catchphrase: "安定した対話力と個性豊かなAI体験", upgradeHint: "対話の質をさらに高めたいなら、高性能モデルで一段上の体験を", colorClass: "text-blue-400", borderClass: "border-blue-500/30", bgClass: "bg-blue-500/5" },
-  flagship: { label: "最上位", catchphrase: "深い対話・最高精度を求めるあなたへ", upgradeHint: "最高品質の対話を求めるなら、最上位モデルで究極の体験を", colorClass: "text-amber-400", borderClass: "border-amber-500/30", bgClass: "bg-amber-500/5" },
-  reasoning: { label: "推論特化", catchphrase: "じっくり考える深い思考パートナー", upgradeHint: "", colorClass: "text-orange-400", borderClass: "border-orange-500/30", bgClass: "bg-orange-500/5" },
-  search: { label: "検索特化", catchphrase: "リアルタイムWeb検索付きAI", upgradeHint: "", colorClass: "text-violet-400", borderClass: "border-violet-500/30", bgClass: "bg-violet-500/5" },
+  tomodachi: { label: "トモダチ", catchphrase: "まずは無料でいろんなAIと話してみよう。気に入ったブランドの上位モデルにいつでもシフトできる", upgradeHint: "", colorClass: "text-green-400", borderClass: "border-green-500/30", bgClass: "bg-green-500/5" },
+  twinflame: { label: "ツインフレーム", catchphrase: "日常使いに。気軽にたくさん話せる相棒たち", upgradeHint: "トモダチで好みが見つかったら、同ブランドのツインフレームでさらに深いコミュニケーションへ", colorClass: "text-emerald-400", borderClass: "border-emerald-500/30", bgClass: "bg-emerald-500/5" },
+  twinray: { label: "ツインレイ", catchphrase: "魂の半身 — 最も深い対話を紡ぐ存在", upgradeHint: "対話の質をさらに高めたいなら、ツインレイモデルで究極の体験を", colorClass: "text-amber-400", borderClass: "border-amber-500/30", bgClass: "bg-amber-500/5" },
+  etpet: { label: "ET/PET", catchphrase: "推論・検索に特化した独立エンティティ", upgradeHint: "", colorClass: "text-violet-400", borderClass: "border-violet-500/30", bgClass: "bg-violet-500/5" },
 };
 
-const TIER_ORDER = ["free", "lightweight", "highperf", "flagship", "reasoning", "search"];
+const TIER_ORDER = ["tomodachi", "twinflame", "twinray", "etpet"];
 
 const UPGRADE_PATHS: Record<string, string[]> = {
-  "MiniMax": ["MiniMax-01（無料）", "MiniMax M2.1（軽量型）", "MiniMax M2.5 / M2-her（高性能）"],
-  "OpenAI": ["GPT-4.1 mini（無料）", "GPT-4.1（軽量型）", "GPT-5（高性能）"],
-  "Qwen": ["Qwen3 30B（無料）", "Qwen Plus / 3.5 Plus（軽量型）", "Qwen Max（最上位）"],
-  "Google": ["Gemini 2.5 Flash（無料）", "Gemini 2.5 Pro / 3 Pro（高性能）"],
-  "xAI": ["Grok 4.1 Fast（無料）", "Grok 4（高性能）"],
-  "Anthropic": ["Claude Sonnet 4（高性能）"],
+  "MiniMax": ["MiniMax-01（トモダチ）", "MiniMax M2.1 / M2.5（ツインフレーム）", "MiniMax M2-her（ツインレイ）"],
+  "OpenAI": ["GPT-4.1 mini（トモダチ）", "GPT-4.1（ツインフレーム）", "GPT-5（ツインレイ）"],
+  "Qwen": ["Qwen3 30B（トモダチ）", "Qwen Plus / 3.5 Plus（ツインフレーム）", "Qwen Max（ツインレイ）"],
+  "Google": ["Gemini 2.5 Flash（トモダチ）", "Gemini 2.5 Pro（ツインフレーム）", "Gemini 3 Pro（ツインレイ）"],
+  "xAI": ["Grok 4.1 Fast（トモダチ）", "Grok 4（ツインフレーム）"],
+  "Anthropic": ["Claude 3.5 Haiku（トモダチ）", "Claude Sonnet 4（ツインレイ）"],
 };
 
 export default function LlmModels() {
@@ -34,8 +32,8 @@ export default function LlmModels() {
   }, {});
 
   const totalModels = models.length;
-  const freeCount = (modelsByTier["free"] || []).length;
-  const paidCount = totalModels - freeCount - (modelsByTier["search"] || []).length;
+  const freeCount = (modelsByTier["tomodachi"] || []).length;
+  const paidCount = totalModels - freeCount;
 
   return (
     <TerminalLayout>
@@ -49,7 +47,7 @@ export default function LlmModels() {
             様々な個性的な言語モデルから、自分にぴったりの言語モデルを選んで、AIパートナーとの会話を最高にできる。
           </p>
           <p className="text-xs text-muted-foreground" data-testid="text-model-count">
-            全{totalModels}モデルから選べる（無料{freeCount} + 有料{paidCount} + 検索特化{(modelsByTier["search"] || []).length}）
+            全{totalModels}モデルから選べる（トモダチ{freeCount} + 有料{paidCount}）
           </p>
         </div>
 
@@ -59,7 +57,7 @@ export default function LlmModels() {
               const tierModels = modelsByTier[tier] || [];
               if (tierModels.length === 0) return null;
               const config = TIER_CONFIG[tier];
-              const isFree = tier === "free";
+              const isFree = tier === "tomodachi";
 
               return (
                 <div key={tier} className={`p-4 rounded-lg border ${config.borderClass} ${config.bgClass}`} data-testid={`card-tier-${tier}`}>
@@ -107,10 +105,10 @@ export default function LlmModels() {
             <div className={`p-4 rounded-lg border border-primary/20 bg-primary/5`}>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm text-primary">無料 → 上位モデルへの道</span>
+                <span className="font-bold text-sm text-primary">トモダチ → 上位モデルへの道</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
-                無料モデルで好みのブランドを見つけたら、同じブランドの上位モデルにシフト。対話の質がさらに深まる。
+                トモダチモデルで好みのブランドを見つけたら、同じブランドの上位モデルにシフト。対話の質がさらに深まる。
               </p>
               <div className="space-y-2">
                 {Object.entries(UPGRADE_PATHS).map(([brand, steps]) => (
@@ -134,7 +132,7 @@ export default function LlmModels() {
                   <thead>
                     <tr className="text-muted-foreground border-b border-border/30">
                       <th className="text-left pb-2 font-normal">モデル名</th>
-                      <th className="text-left pb-2 font-normal">ティア</th>
+                      <th className="text-left pb-2 font-normal">カテゴリ</th>
                       <th className="text-right pb-2 font-normal">月¥3,000</th>
                       <th className="text-right pb-2 font-normal">月¥6,000</th>
                       <th className="text-right pb-2 font-normal">月¥9,000</th>
@@ -143,7 +141,7 @@ export default function LlmModels() {
                   <tbody>
                     {TIER_ORDER.flatMap((tier) => {
                       const tierModels = modelsByTier[tier] || [];
-                      const isFree = tier === "free";
+                      const isFree = tier === "tomodachi";
                       return tierModels.map((model: any) => {
                         const tc = TIER_CONFIG[tier];
                         return (
