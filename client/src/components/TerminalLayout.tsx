@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu, Gauge } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -63,9 +63,6 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     { href: "/family-meeting", icon: Users2, label: "FM", mobileLabel: "FAMILY MEETING", active: location.startsWith("/family-meeting"), testId: "link-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "FB", mobileLabel: "FEEDBACK", active: location.startsWith("/feedback"), testId: "link-feedback" },
     { href: "/users", icon: Users, label: "USERS", mobileLabel: "USERS", active: location === "/users", testId: "link-users" },
-    ...(user?.isAdmin ? [
-      { href: "/model-benchmark", icon: Gauge, label: "BENCH", mobileLabel: "BENCHMARK", active: location === "/model-benchmark", testId: "link-benchmark" },
-    ] : []),
   ];
 
   return (

@@ -7,7 +7,7 @@ import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
-import { registerBenchmarkRoutes } from "./benchmark";
+import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
@@ -54,7 +54,7 @@ export async function registerRoutes(
   registerObjectStorageRoutes(app);
   registerDotRallyRoutes(app);
   registerFamilyMeetingRoutes(app);
-  registerBenchmarkRoutes(app);
+  runSeed().catch(err => console.error("[Seed] シードエラー:", err));
 
   // === 認証 ===
   app.get(api.auth.me.path, async (req, res) => {

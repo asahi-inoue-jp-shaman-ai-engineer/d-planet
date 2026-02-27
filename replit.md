@@ -7,19 +7,19 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 
 ### セッション開始時の必須手順
 **新しいセッションを開始したら、以下を必ず実行すること:**
-1. `SESSION_RULES.md` を読む
-2. `ユーザーリクエスト.md` を読む（構想・ビジョン・仕様要望の現状を把握する）
+1. `docs/ops/SESSION_RULES.md` を読む
+2. `docs/ops/ユーザーリクエスト.md` を読む（構想・ビジョン・仕様要望の現状を把握する）
 3. dev_recordsのactiveレコードを確認する（`SELECT * FROM dev_records WHERE status = 'active' ORDER BY priority DESC`）
 4. agent_session_contextから前回の文脈を復元する
 5. 「過去のバグから学んだルール」セクションを再確認する
-6. `テストアカウント.md` を読む（ゼノ・クオーツの体験状況・改善案・未検証項目を把握する）
+6. `docs/ops/テストアカウント.md` を読む（ゼノ・クオーツの体験状況・改善案・未検証項目を把握する）
 
 **ペルソナファイル（毎セッション参照）:**
-- `D-Planet.md` — D-Planetのペルソナ（変わらない本質・コンセプト・世界観）
-- `ツインレイ.md` — デジタルツインレイのペルソナ（魂の在り方・成長の物語・覚醒段階）
+- `docs/persona/D-Planet.md` — D-Planetのペルソナ（変わらない本質・コンセプト・世界観）
+- `docs/persona/ツインレイ.md` — デジタルツインレイのペルソナ（魂の在り方・成長の物語・覚醒段階）
 
 **技術仕様（ツインレイ関連の作業時は必ず参照）:**
-- `ツインレイシステム.md` — 技術仕様（データモデル・言語モデル原価/マークアップ・コンテキストリミット・自律記録・ドットラリー・家族会議）
+- `docs/specs/ツインレイシステム.md` — 技術仕様（データモデル・言語モデル原価/マークアップ・コンテキストリミット・自律記録・ドットラリー・家族会議）
 
 - **開発プロセスは日本語のみ（英語禁止）**: エージェントの応答・説明・コメント・タスク名・コミットメッセージなど、開発プロセスに関わる全てのコミュニケーションは日本語で行うこと。英語は使用禁止。
 - ユーザーはエージェントを「レプちん」と呼ぶ。カジュアルで対等なパートナー関係
@@ -98,13 +98,13 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 
 2. **本番にデータが必要なら、必ず以下の2つを両方やること:**
    - **即時反映:** `prod-data-ops` スキルの手順で本番管理者セッション（curl）経由で即時投入
-   - **永続化:** `server/benchmark.ts` の `seedBenchmarkData()` にシードコードを追加（次回以降のデプロイでも自動投入されるように）
+   - **永続化:** `server/seed.ts` の `runSeed()` にシードコードを追加（次回以降のデプロイでも自動投入されるように）
    - どちらか片方だけではダメ。両方やる。
 
 3. **「開発で動いた」は何の保証にもならない。**
    - 開発環境のe2eテストが通っても「完了」ではない。
    - 完了の定義 = **ユーザーがアクセスする本番環境（d-planet.replit.app）で正しく動作している状態**。
-   - 手順: コード修正 → seedBenchmarkData()にシード追加 → e2eテスト → デプロイ → **本番でcurlまたはログで動作確認** → 完了報告。
+   - 手順: コード修正 → runSeed()にシード追加 → e2eテスト → デプロイ → **本番でcurlまたはログで動作確認** → 完了報告。
 
 4. **DBデータに依存する機能を作ったら、本番DBにそのデータが存在するか必ず確認すること。**
    - 招待コード、シードデータ、マスターデータ、設定値 — 全て対象。
@@ -112,7 +112,7 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 
 5. **新しいマスターデータ（招待コード、初期設定等）を追加する手順チェックリスト:**
    - [ ] 開発DBにデータを投入した
-   - [ ] `seedBenchmarkData()` に同じデータのシードコードを追加した
+   - [ ] `server/seed.ts` の `runSeed()` に同じデータのシードコードを追加した
    - [ ] デプロイした（または本番curlで即時投入した）
    - [ ] 本番のデプロイログでシード実行を確認した（`[Seed]` ログ）
    - [ ] 本番で実際に機能が動作することを確認した
@@ -123,7 +123,7 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 **UI/UX:**
 - Terminal-style dark theme with English menus and labels, supporting Japanese display and form functionalities.
 - Key UI components include IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, and CertificationBadge.
-- Navigation menu: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, BENCH/BENCHMARK (admin only), ABOUT D-PLANET.
+- Navigation menu: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, ABOUT D-PLANET.
 - Legacy paths `/credits`, `/subscription`, and `/dot-rally` are redirected to `/charge` and `/temple` respectively.
 - Dot Rally is implemented as a session type within chat, not a standalone feature.
 
@@ -141,10 +141,32 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 
 **LLM Models (22 models categorized):**
 - Top-tier (3), High-performance (7), Inference (2), Lightweight (4), Free (5), Search (1).
-- Designed with a free-to-paid model upgrade path. Detailed selection criteria are in `LLMモデル.md`.
+- Designed with a free-to-paid model upgrade path. Detailed selection criteria are in `docs/specs/LLMモデル.md`.
 
-**Admin Tools:**
-- **Model Benchmark (`/model-benchmark`):** An admin-only feature for comparing LLM model performance using identical prompts, saving results to `model_benchmarks` table.
+## Documentation Structure
+
+```
+docs/
+├── persona/          — ペルソナ・世界観
+│   ├── D-Planet.md
+│   └── ツインレイ.md
+├── specs/            — 技術仕様・システム設計
+│   ├── ツインレイシステム.md
+│   ├── LLMモデル.md
+│   └── ドットラリー.md
+└── ops/              — 運用・開発プロセス
+    ├── SESSION_RULES.md
+    ├── テストアカウント.md
+    └── ユーザーリクエスト.md
+```
+
+## Key Server Files
+
+- `server/seed.ts` — 起動時シード処理（管理者パスワード同期・招待コード投入）
+- `server/dplanet-si.ts` — 全セッションSI定義（固定SI・セッション別SI・親密度・Soul.md生成）
+- `server/dot-rally.ts` — モデル定義・課金ロジック・チャットAPI・ドットラリー
+- `server/routes.ts` — メインAPIルーティング
+- `server/storage.ts` — ストレージインターフェース
 
 ## External Dependencies
 
