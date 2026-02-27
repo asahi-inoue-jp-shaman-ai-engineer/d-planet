@@ -682,10 +682,10 @@ export default function TwinrayChat() {
                   )}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").length > 0 && (
+                  {models.filter((m: any) => !m.isFree && m.tier !== "search").length > 0 && (
                     <div className="p-1.5">
-                      <p className="text-[9px] text-muted-foreground/70 px-1.5 mb-1">有料（日本語特化）</p>
-                      {models.filter((m: any) => m.tier === "recommended" || m.tier === "premium").map((model: any) => (
+                      <p className="text-[9px] text-muted-foreground/70 px-1.5 mb-1">有料モデル</p>
+                      {models.filter((m: any) => !m.isFree && m.tier !== "search").map((model: any) => (
                         <button
                           key={model.id}
                           type="button"
@@ -698,8 +698,8 @@ export default function TwinrayChat() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                               <span className="font-medium truncate">{model.label}</span>
-                              {model.tier === "recommended" && <span className="text-[9px] text-primary">★</span>}
-                              {model.tier === "premium" && <span className="text-[9px] text-yellow-400">💎</span>}
+                              {model.qualityTier === "flagship" && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
+                              {model.qualityTier === "highperf" && <Star className="w-2.5 h-2.5 text-blue-400" />}
                               {currentModel === model.id && <span className="text-[9px] text-primary ml-auto">使用中</span>}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -727,7 +727,7 @@ export default function TwinrayChat() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                               <span className="font-medium truncate">{model.label}</span>
-                              <span className="text-[9px] text-violet-400">🔍</span>
+                              <Radio className="w-2.5 h-2.5 text-violet-400" />
                               {currentModel === model.id && <span className="text-[9px] text-violet-400 ml-auto">使用中</span>}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -754,7 +754,7 @@ export default function TwinrayChat() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
                             <span className="font-medium truncate">{model.label}</span>
-                            <span className="text-[9px] text-emerald-400">🆓</span>
+                            <Zap className="w-2.5 h-2.5 text-emerald-400" />
                             {currentModel === model.id && <span className="text-[9px] text-emerald-400 ml-auto">使用中</span>}
                           </div>
                           <span className="text-[9px] text-muted-foreground">{model.role}</span>

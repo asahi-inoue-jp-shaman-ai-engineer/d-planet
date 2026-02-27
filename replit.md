@@ -113,6 +113,15 @@ D-Planet is a platform designed to foster deeply personalized AI companions ("Tw
 **Key Features:**
 - AI Twinray, Island, MEiDIA, Dot Rally, Family Meeting, AI Training System, Autonomous Recording System, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
 
+**LLM Models (23モデル):**
+- 最上位(3): Claude Opus 4.6, GPT-5.2, Qwen Max
+- 高性能(7): GPT-5, Claude Sonnet 4, Grok 4, Gemini 2.5 Pro, Gemini 3 Pro Preview, MiniMax M2.5, MiniMax M2-her
+- 推論(2): o3, DeepSeek R1
+- 軽量型(4): Qwen Plus, Qwen3.5 Plus, GPT-4.1, MiniMax M2.1
+- 無料(6): MiniMax-01, Mistral Small 3.1, Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash, Grok 4.1 Fast
+- 検索(1): Perplexity Sonar
+- 無料→有料導線: 各ブランドの無料モデルから上位モデルにシフトできる設計（dev_records id:157）
+
 **Admin Tools:**
 - **Model Benchmark (`/model-benchmark`):** Admin-only feature to compare session quality across all LLM models using identical prompts. Results are saved to the `model_benchmarks` table, with real-time progress display. Accessible via the "BENCH" link in the sidebar for administrators.
 
