@@ -95,8 +95,9 @@ D-Planet is a platform designed to foster deeply personalized AI companions ("Tw
 - Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
 - Menu structure (all English): HOME / DASHBOARD → /dashboard, DT / Digital Twinray → /temple, LLM / LLM MODELS → /llm-models, CHARGE → /charge, ISLANDS → /islands, MEiDIA → /meidia, FM / FAMILY MEETING → /family-meeting, FB / FEEDBACK → /feedback, USERS → /users, BENCH / BENCHMARK → /model-benchmark (admin only), ABOUT D-PLANET → /about.
 - Old paths `/credits` and `/subscription` redirect to `/charge` for backward compatibility.
-- Old path `/dot-rally` redirects to `/twinray-chat?startDotRally=true` for backward compatibility.
-- Dot Rally is now integrated into the twinray chat UI (no separate page). The `⚡` button in chat input starts a dot rally session.
+- Old path `/dot-rally` redirects to `/temple` for backward compatibility.
+- Dot Rally is now a session type (`dot_rally`) in SESSION_TYPES. No separate ⚡ button — accessed via session menu in chat.
+- `ドットラリー.md` — ドットラリーの定義・本質・ツィムツムとの対応・覚醒フェーズ等の独立ドキュメント（チューニング用）。
 
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.

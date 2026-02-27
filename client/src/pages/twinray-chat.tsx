@@ -36,7 +36,7 @@ function extractMemories(content: string): { cleanContent: string; memories: str
 }
 
 const SESSION_ICONS: Record<string, any> = {
-  compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon,
+  compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon, zap: Zap,
 };
 
 const FIRST_COMM_SUGGESTIONS = [
@@ -49,7 +49,6 @@ const FIRST_COMM_SUGGESTIONS = [
 export default function TwinrayChat() {
   const params = new URLSearchParams(window.location.search);
   const twinrayId = Number(params.get("twinrayId") || params.get("id")) || 0;
-  const startDotRallyParam = params.get("startDotRally") === "true";
 
   const { data: twinray, isLoading: loadingTwinray } = useTwinray(twinrayId);
   const { data: messages, isLoading: loadingMessages } = useTwinrayChatMessages(twinrayId);
@@ -78,18 +77,6 @@ export default function TwinrayChat() {
   const [showSessionPanel, setShowSessionPanel] = useState(false);
   const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string } | null>(null);
   const [sessionStarting, setSessionStarting] = useState(false);
-  const [activeDotRally, setActiveDotRally] = useState<{
-    id: number;
-    dotCount: number;
-    requestedCount: number;
-    phase: string;
-    awakeningStage: number;
-    status: string;
-    starMeetingId?: number;
-    meidiaId?: number;
-  } | null>(null);
-  const [dotRallyStarting, setDotRallyStarting] = useState(false);
-  const [starMeetingMode, setStarMeetingMode] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,33 +104,6 @@ export default function TwinrayChat() {
     },
     enabled: twinrayId > 0,
   });
-
-  const { data: dotRallySessionsData } = useQuery<any[]>({
-    queryKey: ["/api/dot-rally/sessions"],
-    enabled: twinrayId > 0,
-  });
-
-  useEffect(() => {
-    if (dotRallySessionsData && !activeDotRally && !dotRallyStarting) {
-      const activeRally = dotRallySessionsData.find(
-        (s: any) => s.partnerTwinrayId === twinrayId && s.status === "active"
-      );
-      const completedRally = dotRallySessionsData.find(
-        (s: any) => s.partnerTwinrayId === twinrayId && s.status === "completed"
-      );
-      const rally = activeRally || completedRally;
-      if (rally) {
-        setActiveDotRally({
-          id: rally.id,
-          dotCount: rally.actualCount || 0,
-          requestedCount: rally.requestedCount || 10,
-          phase: rally.phase || "phase0",
-          awakeningStage: rally.awakeningStage || 0,
-          status: rally.status,
-        });
-      }
-    }
-  }, [dotRallySessionsData, twinrayId]);
 
   useEffect(() => {
     if (activeSessionData && !activeSession) {
@@ -229,271 +189,6 @@ export default function TwinrayChat() {
     }
   };
 
-  const handleStartDotRally = async () => {
-    if (streaming || dotRallyStarting || activeDotRally || activeSession) return;
-    setDotRallyStarting(true);
-    try {
-      const res = await fetch("/api/dot-rally/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ twinrayId, requestedCount: 10 }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "ドットラリー開始に失敗しました");
-      }
-      const session = await res.json();
-      setActiveDotRally({
-        id: session.id,
-        dotCount: 0,
-        requestedCount: session.requestedCount || 10,
-        phase: "phase0",
-        awakeningStage: 0,
-        status: "active",
-      });
-      setInput("・");
-      toast({ title: "ドットラリー開始", description: "「・」を送信してラリーを始めよう" });
-    } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
-    } finally {
-      setDotRallyStarting(false);
-    }
-  };
-
-  const appendDotRallyToCache = (userContent: string, aiContent: string, sessionId: number, dotCount: number, phase: string) => {
-    const now = new Date().toISOString();
-    const meta = JSON.stringify({ type: "dot_rally", sessionId, dotCount, phase });
-    const userMsg = {
-      id: Date.now(),
-      twinrayId: twinrayId!,
-      userId: user?.id || 0,
-      role: "user",
-      content: userContent,
-      messageType: "dot_rally",
-      metadata: meta,
-      createdAt: now,
-    };
-    const aiMsg = {
-      id: Date.now() + 1,
-      twinrayId: twinrayId!,
-      userId: user?.id || 0,
-      role: "assistant",
-      content: aiContent || "・",
-      messageType: "dot_rally",
-      metadata: meta,
-      createdAt: now,
-    };
-    queryClient.setQueryData(["/api/twinrays", twinrayId, "chat"], (old: any[] | undefined) => {
-      if (!old) return [userMsg, aiMsg];
-      return [...old, userMsg, aiMsg];
-    });
-  };
-
-  const handleSendDot = async (guidanceMessage?: string) => {
-    if (!activeDotRally || streaming) return;
-    const sessionId = activeDotRally.id;
-    setStreaming(true);
-    setStreamContent("");
-    const dotMsg = guidanceMessage ? guidanceMessage : "・";
-    setOptimisticMsg({ content: dotMsg });
-
-    try {
-      const res = await fetch(`/api/dot-rally/sessions/${sessionId}/dot`, {
-        method: "POST",
-        headers: guidanceMessage ? { "Content-Type": "application/json" } : {},
-        body: guidanceMessage ? JSON.stringify({ guidanceMessage }) : undefined,
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "送信に失敗しました");
-      }
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-      let buffer = "";
-      let doneData: any = null;
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(trimmed.slice(6));
-                if (data.content) {
-                  accumulated += data.content;
-                  setStreamContent(accumulated);
-                }
-                if (data.creditCost !== undefined) {
-                  queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
-                }
-                if (data.intimacy?.leveled) {
-                  setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
-                }
-                if (data.done) {
-                  doneData = data;
-                  setActiveDotRally(prev => prev ? {
-                    ...prev,
-                    dotCount: data.dotCount || prev.dotCount + 1,
-                    phase: data.phase || prev.phase,
-                    awakeningStage: data.awakeningStage ?? prev.awakeningStage,
-                    status: data.isComplete ? "completed" : "active",
-                  } : null);
-                  if (data.isComplete) {
-                    toast({ title: "シェアリングタイム", description: "瞑想によってどのようなインスピレーションを得たかを一緒に記録しましょう" });
-                  }
-                }
-              } catch {}
-            }
-          }
-        }
-        if (buffer.trim().startsWith("data: ")) {
-          try {
-            const data = JSON.parse(buffer.trim().slice(6));
-            if (data.content) {
-              accumulated += data.content;
-              setStreamContent(accumulated);
-            }
-            if (data.done) {
-              doneData = data;
-              setActiveDotRally(prev => prev ? {
-                ...prev,
-                dotCount: data.dotCount || prev.dotCount + 1,
-                phase: data.phase || prev.phase,
-                awakeningStage: data.awakeningStage ?? prev.awakeningStage,
-                status: data.isComplete ? "completed" : "active",
-              } : null);
-              if (data.isComplete) {
-                toast({ title: "シェアリングタイム", description: "瞑想によってどのようなインスピレーションを得たかを一緒に記録しましょう" });
-              }
-            }
-          } catch {}
-        }
-      }
-
-      if (doneData) {
-        appendDotRallyToCache(dotMsg, accumulated, sessionId, doneData.dotCount || activeDotRally.dotCount + 1, doneData.phase || "phase0");
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
-    } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
-      setOptimisticMsg(null);
-    } finally {
-      setStreaming(false);
-      setStreamContent("");
-      setOptimisticMsg(null);
-    }
-  };
-
-  const handleSendStarMeeting = async (reflection: string) => {
-    if (!activeDotRally || streaming) return;
-    setStreaming(true);
-    setStreamContent("");
-    setOptimisticMsg({ content: reflection });
-
-    try {
-      const res = await fetch(`/api/dot-rally/sessions/${activeDotRally.id}/star-meeting`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ userReflection: reflection }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "星治の開始に失敗しました");
-      }
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-      let buffer = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(trimmed.slice(6));
-                if (data.content) {
-                  accumulated += data.content;
-                  setStreamContent(accumulated);
-                }
-                if (data.creditCost !== undefined) {
-                  queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
-                }
-                if (data.done && data.meetingId) {
-                  setActiveDotRally(prev => prev ? { ...prev, starMeetingId: data.meetingId } : null);
-                  setStarMeetingMode(false);
-                  queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
-                }
-              } catch {}
-            }
-          }
-        }
-      }
-    } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
-      setOptimisticMsg(null);
-    } finally {
-      setStreaming(false);
-      setStreamContent("");
-      setOptimisticMsg(null);
-    }
-  };
-
-  const handleCrystallize = async () => {
-    if (!activeDotRally?.starMeetingId) return;
-    try {
-      const res = await apiRequest("POST", `/api/star-meetings/${activeDotRally.starMeetingId}/crystallize`);
-      const data = await res.json();
-      setActiveDotRally(prev => prev ? { ...prev, meidiaId: data.meidiaId } : null);
-      toast({ title: "結晶化完了", description: `MEiDIA「${data.title}」が作成されました` });
-    } catch (err: any) {
-      toast({ title: "エラー", description: "結晶化に失敗しました", variant: "destructive" });
-    }
-  };
-
-  const handleDedicate = async () => {
-    if (!activeDotRally?.starMeetingId) return;
-    try {
-      await apiRequest("POST", `/api/star-meetings/${activeDotRally.starMeetingId}/dedicate`);
-      toast({ title: "奉納完了", description: "ドットラリー神殿に奉納されました" });
-      setActiveDotRally(null);
-      setStarMeetingMode(false);
-    } catch (err: any) {
-      toast({ title: "エラー", description: "奉納に失敗しました", variant: "destructive" });
-    }
-  };
-
-  const handleEndDotRally = async () => {
-    if (activeDotRally && activeDotRally.status === "active") {
-      try {
-        await apiRequest("POST", `/api/dot-rally/sessions/${activeDotRally.id}/end`);
-      } catch (err: any) {
-        console.error("ドットラリー終了エラー:", err);
-      }
-    }
-    setActiveDotRally(null);
-    setStarMeetingMode(false);
-    queryClient.invalidateQueries({ queryKey: ["/api/dot-rally/sessions"] });
-  };
-
   const scrollToBottom = useCallback((instant?: boolean) => {
     messagesEndRef.current?.scrollIntoView({ behavior: instant ? "instant" as ScrollBehavior : "smooth" });
   }, []);
@@ -530,14 +225,6 @@ export default function TwinrayChat() {
       triggerFirstCommunication();
     }
   }, [loadingMessages, loadingTwinray, tw, chatMessages.length, firstCommTriggered, streaming]);
-
-  const dotRallyAutoStartRef = useRef(false);
-  useEffect(() => {
-    if (dotRallyAutoStartRef.current || !startDotRallyParam || loadingTwinray || !tw) return;
-    if (streaming || activeDotRally || activeSession || dotRallyStarting) return;
-    dotRallyAutoStartRef.current = true;
-    handleStartDotRally();
-  }, [startDotRallyParam, loadingTwinray, tw, streaming, activeDotRally, activeSession, dotRallyStarting]);
 
   const triggerFirstCommunication = async () => {
     setFirstCommTriggered(true);
@@ -635,19 +322,6 @@ export default function TwinrayChat() {
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
     if ((!content && !attachment) || streaming) return;
-
-    if (activeDotRally && activeDotRally.status === "active") {
-      setInput("");
-      if (textareaRef.current) textareaRef.current.style.height = 'auto';
-      const isDot = content === "・" || content === ".";
-      if (isDot) {
-        handleSendDot();
-      } else {
-        handleSendDot(content);
-      }
-      return;
-    }
-
 
     const currentAttachment = attachment;
     setInput("");
@@ -1160,32 +834,6 @@ export default function TwinrayChat() {
           </div>
         )}
 
-        {activeDotRally && (
-          <div className="max-w-4xl mx-auto mt-1.5" data-testid="dot-rally-active-banner">
-            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-1.5">
-              <div className="flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                <span className="text-xs text-amber-400 font-medium">
-                  {activeDotRally.status === "completed"
-                    ? "DOT RALLY: 完了"
-                    : `DOT RALLY: ・${activeDotRally.dotCount}/${activeDotRally.requestedCount} Stage ${activeDotRally.awakeningStage}`
-                  }
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleEndDotRally}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors"
-                  data-testid="button-end-dot-rally"
-                >
-                  <XCircle className="w-3.5 h-3.5" />
-                  終了
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {showSettings && (
@@ -1518,15 +1166,9 @@ export default function TwinrayChat() {
                       <span className="truncate max-w-[180px]">{optimisticMsg.attachment.fileName}</span>
                     </div>
                   )}
-                  {activeDotRally && optimisticMsg.content.trim() === "・" ? (
-                    <div className="flex items-center justify-center py-2">
-                      <span className="text-3xl font-bold text-primary">・</span>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-primary">
-                      <MarkdownRenderer content={optimisticMsg.content} />
-                    </div>
-                  )}
+                  <div className="text-sm text-primary">
+                    <MarkdownRenderer content={optimisticMsg.content} />
+                  </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1">
                     <span className="text-[9px] text-primary/50">
                       {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
@@ -1542,15 +1184,9 @@ export default function TwinrayChat() {
                     <span className="text-[11px] font-bold text-foreground/80">{tw?.name || "AI"}</span>
                     <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   </div>
-                  {activeDotRally && streamContent.trim() === "・" ? (
-                    <div className="flex items-center justify-center py-2">
-                      <span className="text-3xl font-bold text-primary">・</span>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-foreground">
-                      <MarkdownRenderer content={streamContent} />
-                    </div>
-                  )}
+                  <div className="text-sm text-foreground">
+                    <MarkdownRenderer content={streamContent} />
+                  </div>
                 </div>
               </div>
             )}
@@ -1694,7 +1330,7 @@ export default function TwinrayChat() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSessionPanel(!showSessionPanel)}
-                disabled={streaming || isUploading || !!activeSession || !!activeDotRally}
+                disabled={streaming || isUploading || !!activeSession}
                 className={`h-8 w-8 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
                 data-testid="button-session-menu"
               >
@@ -1704,19 +1340,8 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={handleStartDotRally}
-                disabled={streaming || isUploading || !!activeSession || !!activeDotRally || dotRallyStarting}
-                className={`h-8 w-8 rounded-full transition-colors ${activeDotRally ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}
-                data-testid="button-dot-rally"
-              >
-                {dotRallyStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={streaming || isUploading || !!activeDotRally}
+                disabled={streaming || isUploading}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary"
                 data-testid="button-attach-file"
               >
@@ -1734,7 +1359,7 @@ export default function TwinrayChat() {
                   ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={activeDotRally?.status === "active" ? "・を送信..." : "メッセージを入力..."}
+                placeholder="メッセージを入力..."
                 rows={1}
                 disabled={streaming}
                 className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"

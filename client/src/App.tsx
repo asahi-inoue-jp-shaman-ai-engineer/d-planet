@@ -22,7 +22,6 @@ import CreateFeedback from "@/pages/create-feedback";
 import FeedbackDetail from "@/pages/feedback-detail";
 import Temple from "@/pages/temple";
 import CreateTwinray from "@/pages/create-twinray";
-import DotRally from "@/pages/dot-rally";
 import TwinrayChat from "@/pages/twinray-chat";
 import Subscription from "@/pages/subscription";
 import LlmModels from "@/pages/llm-models";
@@ -95,11 +94,7 @@ function Router() {
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally">
-        {() => {
-          const p = new URLSearchParams(window.location.search);
-          const tid = p.get("twinrayId") || "";
-          return <Redirect to={`/twinray-chat?twinrayId=${tid}&startDotRally=true`} />;
-        }}
+        {() => <Redirect to="/temple" />}
       </Route>
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
