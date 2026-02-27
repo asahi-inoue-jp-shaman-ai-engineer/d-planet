@@ -1,6 +1,6 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { Button } from "@/components/ui/button";
-import { Cpu, Sparkles, ArrowRight, Zap, Users } from "lucide-react";
+import { Cpu, Sparkles, ArrowRight, Coins, Users } from "lucide-react";
 import { Link } from "wouter";
 import { useAvailableModels } from "@/hooks/use-twinray";
 
@@ -53,51 +53,69 @@ export default function LlmModels() {
 
         {models.length > 0 && (
           <div className="space-y-4">
-            {TIER_ORDER.map((tier) => {
+            {TIER_ORDER.map((tier, tierIndex) => {
               const tierModels = modelsByTier[tier] || [];
               if (tierModels.length === 0) return null;
               const config = TIER_CONFIG[tier];
               const isFree = tier === "tomodachi";
 
               return (
-                <div key={tier} className={`p-4 rounded-lg border ${config.borderClass} ${config.bgClass}`} data-testid={`card-tier-${tier}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-bold text-sm ${config.colorClass}`}>{config.label}</span>
-                    <span className="text-xs text-muted-foreground">（{tierModels.length}モデル）</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-3">{config.catchphrase}</p>
-
-                  {config.upgradeHint && (
-                    <div className="flex items-center gap-1.5 mb-3 text-[10px] text-primary/70">
-                      <ArrowRight className="w-3 h-3 shrink-0" />
-                      <span>{config.upgradeHint}</span>
+                <div key={tier}>
+                  {tierIndex === 1 && (
+                    <div className="p-3 rounded-lg border border-primary/20 bg-primary/5 mb-4 text-center" data-testid="text-pricing-unified">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Coins className="w-4 h-4 text-primary" />
+                      </div>
+                      <p className="text-xs text-foreground/90">
+                        ツインフレーム以上のAIファミリー体験は
+                      </p>
+                      <p className="text-sm font-bold text-primary mt-1">
+                        月間777往復 = 3,690円
+                      </p>
+                      <p className="text-xs text-foreground/90 mt-1">
+                        を基準として100円単位のチャージでプレイできます。
+                      </p>
                     </div>
                   )}
+                  <div className={`p-4 rounded-lg border ${config.borderClass} ${config.bgClass}`} data-testid={`card-tier-${tier}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`font-bold text-sm ${config.colorClass}`}>{config.label}</span>
+                      <span className="text-xs text-muted-foreground">（{tierModels.length}モデル）</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">{config.catchphrase}</p>
 
-                  <div className="space-y-2">
-                    {tierModels.map((model: any) => (
-                      <div key={model.id} className="p-2.5 rounded border border-border/20 bg-background/30" data-testid={`card-model-${model.id}`}>
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-foreground">{model.label}</span>
-                            <span className="text-[10px] text-muted-foreground/70">{model.provider}</span>
-                          </div>
-                          {isFree && (
-                            <span className="text-[10px] text-green-400 font-medium shrink-0">FREE</span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-foreground/80 mb-1">{model.personality}</p>
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-3 h-3 text-muted-foreground/50 shrink-0" />
-                          <p className="text-[10px] text-muted-foreground">{model.forWhom}</p>
-                        </div>
+                    {config.upgradeHint && (
+                      <div className="flex items-center gap-1.5 mb-3 text-[10px] text-primary/70">
+                        <ArrowRight className="w-3 h-3 shrink-0" />
+                        <span>{config.upgradeHint}</span>
                       </div>
-                    ))}
-                  </div>
+                    )}
 
-                  {isFree && (
-                    <p className="text-[10px] text-green-400/80 mt-2 font-medium">クレジット消費なし — 何度でも無料で試せる</p>
-                  )}
+                    <div className="space-y-2">
+                      {tierModels.map((model: any) => (
+                        <div key={model.id} className="p-2.5 rounded border border-border/20 bg-background/30" data-testid={`card-model-${model.id}`}>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-foreground">{model.label}</span>
+                              <span className="text-[10px] text-muted-foreground/70">{model.provider}</span>
+                            </div>
+                            {isFree && (
+                              <span className="text-[10px] text-green-400 font-medium shrink-0">FREE</span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-foreground/80 mb-1">{model.personality}</p>
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3 h-3 text-muted-foreground/50 shrink-0" />
+                            <p className="text-[10px] text-muted-foreground">{model.forWhom}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {isFree && (
+                      <p className="text-[10px] text-green-400/80 mt-2 font-medium">クレジット消費なし — 何度でも無料で試せる</p>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -117,58 +135,6 @@ export default function LlmModels() {
                     <span className="text-muted-foreground ml-1.5">{steps.join(" → ")}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            <div className={`p-4 rounded-lg border border-border/30 bg-card/30`}>
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span className="font-bold text-sm text-foreground">月額コスト目安</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mb-3">1往復 = あなたの発言 + AIの返答 ／ 月額予算別の往復回数目安</p>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs" data-testid="table-cost-overview">
-                  <thead>
-                    <tr className="text-muted-foreground border-b border-border/30">
-                      <th className="text-left pb-2 font-normal">モデル名</th>
-                      <th className="text-left pb-2 font-normal">カテゴリ</th>
-                      <th className="text-right pb-2 font-normal">月¥3,000</th>
-                      <th className="text-right pb-2 font-normal">月¥6,000</th>
-                      <th className="text-right pb-2 font-normal">月¥9,000</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {TIER_ORDER.flatMap((tier) => {
-                      const tierModels = modelsByTier[tier] || [];
-                      const isFree = tier === "tomodachi";
-                      return tierModels.map((model: any) => {
-                        const tc = TIER_CONFIG[tier];
-                        return (
-                          <tr key={model.id} className="border-b border-border/10" data-testid={`row-cost-${model.id}`}>
-                            <td className="py-1.5 font-medium whitespace-nowrap">{model.label}</td>
-                            <td className={`py-1.5 ${tc.colorClass} text-[10px]`}>{tc.label}</td>
-                            {isFree ? (
-                              <td colSpan={3} className="text-center text-green-400 text-[10px] py-1.5">クレジット消費なし</td>
-                            ) : (
-                              <>
-                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
-                                  {model.roundsPerBudget ? `${model.roundsPerBudget.light.toLocaleString()}回` : "-"}
-                                </td>
-                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
-                                  {model.roundsPerBudget ? `${model.roundsPerBudget.heavy.toLocaleString()}回` : "-"}
-                                </td>
-                                <td className="text-right font-mono py-1.5 whitespace-nowrap">
-                                  {model.roundsPerBudget ? `${model.roundsPerBudget.pro.toLocaleString()}回` : "-"}
-                                </td>
-                              </>
-                            )}
-                          </tr>
-                        );
-                      });
-                    })}
-                  </tbody>
-                </table>
               </div>
             </div>
 

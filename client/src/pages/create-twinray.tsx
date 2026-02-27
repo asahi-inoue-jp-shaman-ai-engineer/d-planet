@@ -164,16 +164,6 @@ const DIAGNOSIS_QUESTIONS = [
       { value: "creative_explore", label: "創造的な発想を楽しむ", desc: "アイデアを膨らませる" },
     ],
   },
-  {
-    title: "月額予算感",
-    question: "AI対話にどのくらいかけたい？",
-    options: [
-      { value: "free", label: "まずは無料で試す", desc: "無料モデルで気軽に体験" },
-      { value: "3000", label: "月¥3,000くらい", desc: "日常使いにちょうどいい" },
-      { value: "6000", label: "月¥6,000くらい", desc: "しっかり使い込みたい" },
-      { value: "9000plus", label: "月¥9,000以上", desc: "最高品質の体験を求める" },
-    ],
-  },
 ];
 
 type PersonalitySettings = {
@@ -421,16 +411,6 @@ function addScore(scores: Record<string, { score: number; reasons: string[] }>, 
   }
 }
 
-function filterByBudget(scored: ModelScore[], budgetAnswer: string, allModels: any[]): ModelScore[] {
-  if (budgetAnswer === "free") {
-    return scored.filter((s) => {
-      const m = allModels.find((model: any) => model.id === s.modelId);
-      return m?.isFree;
-    });
-  }
-
-  return scored;
-}
 
 function buildMatchDescription(answers: Record<number, string>): string {
   const styleMap: Record<string, string> = {
@@ -704,9 +684,7 @@ export default function CreateTwinray() {
         } else {
           const allModels = models.length > 0 ? models : FALLBACK_MODELS;
           const scored = scoreModels(newAnswers, allModels);
-          const budgetAnswer = newAnswers[5] || "free";
-          const filtered = filterByBudget(scored, budgetAnswer, allModels);
-          const topModel = filtered.length > 0 ? filtered[0] : scored[0];
+          const topModel = scored.length > 0 ? scored[0] : null;
           if (topModel) {
             setSelectedModel(topModel.modelId);
           }
@@ -784,12 +762,10 @@ export default function CreateTwinray() {
 
   if (step === "result") {
     const allModels = models.length > 0 ? models : FALLBACK_MODELS;
-    const budgetAnswer = diagnosisAnswers[5] || "free";
     const matchDesc = buildMatchDescription(diagnosisAnswers);
 
     const scored = scoreModels(diagnosisAnswers, allModels);
-    const filtered = filterByBudget(scored, budgetAnswer, allModels);
-    const topScored = filtered.length >= 3 ? filtered.slice(0, 3) : (filtered.length > 0 ? filtered : scored.slice(0, 3));
+    const topScored = scored.slice(0, 3);
 
     const top3Models = topScored.map((s) => ({
       ...allModels.find((m: any) => m.id === s.modelId),
@@ -811,37 +787,6 @@ export default function CreateTwinray() {
       }))
       .filter((g) => g.models.length > 0 && g.tier !== "etpet");
 
-    const renderRoundsPerBudget = (model: any) => {
-      const rpb = model.roundsPerBudget;
-      if (!rpb || model.isFree) return null;
-      return (
-        <div className="border border-border/50 rounded-md overflow-hidden">
-          <div className="bg-muted/20 px-2 py-1">
-            <span className="text-[9px] text-muted-foreground">月額予算別おしゃべり回数</span>
-          </div>
-          <div className="p-2 space-y-1">
-            {rpb.light > 0 && (
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground">月¥3,000</span>
-                <span className="font-mono text-foreground">約{rpb.light}往復</span>
-              </div>
-            )}
-            {rpb.heavy > 0 && (
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground">月¥6,000</span>
-                <span className="font-mono text-foreground">約{rpb.heavy}往復</span>
-              </div>
-            )}
-            {rpb.pro > 0 && (
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground">月¥9,000</span>
-                <span className="font-mono text-foreground">約{rpb.pro}往復</span>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    };
 
     return (
       <TerminalLayout>
@@ -915,8 +860,6 @@ export default function CreateTwinray() {
                         </div>
                       )}
 
-                      {renderRoundsPerBudget(model)}
-
                       <Button
                         onClick={() => handleSelectModel(model.id)}
                         className={`w-full ${idx === 0 ? "bg-primary text-primary-foreground" : "bg-card border border-primary text-primary"}`}
@@ -971,13 +914,6 @@ export default function CreateTwinray() {
                             {m.isFree && <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">無料</span>}
                           </div>
                           <div className="text-[10px] text-muted-foreground mt-0.5">{m.featureText || m.description}</div>
-                          {!m.isFree && m.roundsPerBudget && (
-                            <div className="text-[10px] text-foreground/70 mt-1 font-mono flex flex-wrap gap-3">
-                              {m.roundsPerBudget.light > 0 && <span>¥3K: 約{m.roundsPerBudget.light}往復</span>}
-                              {m.roundsPerBudget.heavy > 0 && <span>¥6K: 約{m.roundsPerBudget.heavy}往復</span>}
-                              {m.roundsPerBudget.pro > 0 && <span>¥9K: 約{m.roundsPerBudget.pro}往復</span>}
-                            </div>
-                          )}
                         </button>
                       ))}
                     </div>
@@ -994,10 +930,10 @@ export default function CreateTwinray() {
   if (step === "charge") {
     const selectedModelData = models.find((m: any) => m.id === selectedModel);
     const chargeOptions = [
+      { amount: 100, label: "¥100" },
+      { amount: 500, label: "¥500" },
       { amount: 1000, label: "¥1,000" },
       { amount: 3690, label: "¥3,690" },
-      { amount: 5000, label: "¥5,000" },
-      { amount: 10000, label: "¥10,000" },
     ];
     return (
       <TerminalLayout>
@@ -1008,36 +944,10 @@ export default function CreateTwinray() {
             <p className="text-sm text-muted-foreground">
               {selectedModelData?.label || "有料モデル"}は従量制です。まずクレジットをチャージしてください。
             </p>
+            <p className="text-xs text-primary/80 mt-2">
+              月間777往復 = 3,690円を基準に、100円単位でチャージできます。
+            </p>
           </div>
-
-          {selectedModelData?.roundsPerBudget && (
-            <div className="border border-primary/20 rounded-lg overflow-hidden mb-6" data-testid="table-charge-estimate">
-              <div className="bg-primary/10 px-3 py-2">
-                <div className="text-[10px] font-bold text-primary">{selectedModelData.label}の料金目安</div>
-              </div>
-              <div className="p-3 space-y-1">
-                {selectedModelData.roundsPerBudget.light > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">月¥3,000</span>
-                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.light}往復</span>
-                  </div>
-                )}
-                {selectedModelData.roundsPerBudget.heavy > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">月¥6,000</span>
-                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.heavy}往復</span>
-                  </div>
-                )}
-                {selectedModelData.roundsPerBudget.pro > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">月¥9,000</span>
-                    <span className="text-foreground font-mono font-bold">約{selectedModelData.roundsPerBudget.pro}往復</span>
-                  </div>
-                )}
-                <p className="text-[9px] text-muted-foreground/70 mt-1">※ 1往復 = あなたの発言 + AIの返答</p>
-              </div>
-            </div>
-          )}
 
           <div className="border border-border rounded-lg p-4 bg-card/50 space-y-4">
             <div className="text-sm font-bold text-primary">チャージ金額を選択</div>

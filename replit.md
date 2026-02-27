@@ -87,6 +87,11 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - **怠慢の禁止:** 根本原因を突き止める。一時的な修正は行わない。シニアデベロッパーの基準を満たすこと。
 - **影響の最小化:** 変更は必要な箇所のみに留める。新たなバグの混入を避ける。
 
+### テストアカウント
+- **管理者**: ユーザー名 `D-Planet管理者` / パスワード `admin2025`
+- **テストユーザー**: ゼノ・クオーツ / メール `xeno@d-planet.local` / パスワード `xeno2026`
+- ログインパス: `/login`、data-testid: `input-username`, `input-password`, `button-login`
+
 ### 過去のバグから学んだルール
 
 **【最重要】本番DBと開発DBは完全に別のデータベースである。**
