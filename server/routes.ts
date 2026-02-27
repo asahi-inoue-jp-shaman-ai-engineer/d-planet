@@ -74,6 +74,8 @@ export async function registerRoutes(
       const input = api.auth.register.input.parse(req.body);
 
       console.log(`[Register] 招待コード検証: "${input.inviteCode}" (length: ${input.inviteCode.length})`);
+      const allCodes = await db.select().from(inviteCodes);
+      console.log(`[Register] DB内の全招待コード:`, allCodes.map(c => `"${c.code}" (id:${c.id})`).join(', '));
       const inviteCode = await storage.getInviteCodeByCode(input.inviteCode);
       console.log(`[Register] 検索結果:`, inviteCode ? `found (id: ${inviteCode.id})` : 'NOT FOUND');
       if (!inviteCode) {
