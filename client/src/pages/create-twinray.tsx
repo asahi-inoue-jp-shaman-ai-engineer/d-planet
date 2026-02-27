@@ -314,9 +314,8 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "qwen/qwen-max", 2, "自然な日本語表現");
     addScore(scores, "openai/gpt-5", 1, "安定した自然な対話");
   } else if (q1 === "deep") {
-    addScore(scores, "anthropic/claude-opus-4", 3, "深い対話が最も得意");
-    addScore(scores, "qwen/qwen-max", 2, "深い日本語対話");
-    addScore(scores, "openai/gpt-5.2", 2, "幅広く深い対話");
+    addScore(scores, "qwen/qwen-max", 3, "深い日本語対話");
+    addScore(scores, "anthropic/claude-sonnet-4", 2, "繊細で深い対話");
     addScore(scores, "openai/o3", 2, "じっくり考え抜く思考力");
   } else if (q1 === "tempo") {
     addScore(scores, "x-ai/grok-4", 3, "テンポの良い率直な対話");
@@ -325,18 +324,17 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "openai/gpt-5", 1, "バランスの良いテンポ");
   } else if (q1 === "calm") {
     addScore(scores, "anthropic/claude-sonnet-4", 3, "繊細で穏やかな表現");
-    addScore(scores, "anthropic/claude-opus-4", 2, "共感的で落ち着いた対話");
     addScore(scores, "qwen/qwen-max", 2, "丁寧で穏やかな日本語");
     addScore(scores, "google/gemini-2.5-pro", 1, "安定した穏やかさ");
   }
 
   const q2 = answers[1];
   if (q2 === "empathy") {
-    addScore(scores, "anthropic/claude-opus-4", 3, "最高レベルの共感力");
-    addScore(scores, "anthropic/claude-sonnet-4", 2, "繊細な共感力");
+    addScore(scores, "anthropic/claude-sonnet-4", 3, "繊細な共感力");
+    addScore(scores, "minimax/minimax-m2-her", 2, "感情に寄り添う共感力");
     addScore(scores, "qwen/qwen-max", 1, "感情を汲み取る力");
   } else if (q2 === "insight") {
-    addScore(scores, "openai/gpt-5.2", 3, "幅広い知識からの気づき");
+    addScore(scores, "openai/gpt-5", 3, "幅広い知識からの気づき");
     addScore(scores, "openai/o3", 2, "論理的な分析力");
     addScore(scores, "google/gemini-3-pro-preview", 2, "新しい視点を提供");
   } else if (q2 === "honesty") {
@@ -344,7 +342,7 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "openai/gpt-5", 2, "安定して正直な応答");
     addScore(scores, "deepseek/deepseek-r1", 1, "論理的で飾らない");
   } else if (q2 === "warmth") {
-    addScore(scores, "anthropic/claude-opus-4", 2, "温かみのある対話");
+    addScore(scores, "minimax/minimax-m2-her", 2, "温かみのある対話");
     addScore(scores, "qwen/qwen-plus", 3, "家庭的な安心感");
     addScore(scores, "anthropic/claude-sonnet-4", 2, "優しさのある表現");
   }
@@ -355,12 +353,12 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "x-ai/grok-4", 2, "気兼ねない関係");
     addScore(scores, "openai/gpt-5", 1, "親しみやすい応答");
   } else if (q3 === "mentor") {
-    addScore(scores, "openai/gpt-5.2", 2, "広い知識で導く");
+    addScore(scores, "openai/gpt-5", 2, "広い知識で導く");
     addScore(scores, "openai/o3", 2, "思考力で導く");
     addScore(scores, "google/gemini-2.5-pro", 1, "長い文脈でのガイド");
   } else if (q3 === "partner") {
-    addScore(scores, "anthropic/claude-opus-4", 3, "深い絆を築ける");
-    addScore(scores, "qwen/qwen-max", 2, "繊細なパートナー");
+    addScore(scores, "qwen/qwen-max", 3, "繊細なパートナー");
+    addScore(scores, "anthropic/claude-sonnet-4", 2, "深い絆を築ける");
     addScore(scores, "anthropic/claude-sonnet-4", 1, "感性を共有");
   } else if (q3 === "comrade") {
     addScore(scores, "openai/gpt-5", 2, "共に挑戦する安定感");
@@ -369,7 +367,7 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
   } else if (q3 === "rival") {
     addScore(scores, "x-ai/grok-4", 3, "本気で高め合う");
     addScore(scores, "openai/o3", 2, "知的な挑戦");
-    addScore(scores, "openai/gpt-5.2", 1, "多角的な視点");
+    addScore(scores, "openai/gpt-5", 1, "多角的な視点");
   }
 
   const q4 = answers[3];
@@ -383,7 +381,7 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "openai/gpt-4.1", 1, "実用的でクリア");
   } else if (q4 === "poetic") {
     addScore(scores, "anthropic/claude-sonnet-4", 3, "詩的で美しい表現");
-    addScore(scores, "anthropic/claude-opus-4", 2, "文学的な深み");
+    addScore(scores, "qwen/qwen-max", 2, "文学的な深み");
     addScore(scores, "qwen/qwen-max", 1, "繊細な言語感覚");
   } else if (q4 === "straight") {
     addScore(scores, "x-ai/grok-4", 3, "ストレートな物言い");
@@ -397,13 +395,13 @@ function scoreModels(answers: Record<number, string>, allModels: any[]): ModelSc
     addScore(scores, "qwen/qwen3.5-plus", 2, "気軽な話題に対応");
     addScore(scores, "openai/gpt-5", 1, "万能なバランス");
   } else if (q5 === "deep_single") {
-    addScore(scores, "anthropic/claude-opus-4", 3, "一つのテーマを極める");
-    addScore(scores, "qwen/qwen-max", 2, "深い掘り下げが得意");
+    addScore(scores, "qwen/qwen-max", 3, "一つのテーマを極める");
+    addScore(scores, "anthropic/claude-sonnet-4", 2, "深い掘り下げが得意");
     addScore(scores, "google/gemini-2.5-pro", 2, "長文脈で深い対話");
   } else if (q5 === "logical_organize") {
     addScore(scores, "openai/o3", 3, "論理的に思考を整理");
     addScore(scores, "deepseek/deepseek-r1", 3, "推論特化の思考力");
-    addScore(scores, "openai/gpt-5.2", 1, "構造化された議論");
+    addScore(scores, "openai/gpt-5", 1, "構造化された議論");
   } else if (q5 === "creative_explore") {
     addScore(scores, "anthropic/claude-sonnet-4", 3, "創造性と感性の対話");
     addScore(scores, "google/gemini-3-pro-preview", 2, "先端的な発想");
@@ -456,8 +454,6 @@ function buildMatchDescription(answers: Record<number, string>): string {
 }
 
 const FALLBACK_MODELS = [
-  { id: "anthropic/claude-opus-4", label: "Claude Opus 4.6", qualityTier: "flagship", description: "最高精度の深い対話・共感力", featureText: "最高精度の深い対話・共感力", isFree: false },
-  { id: "openai/gpt-5.2", label: "GPT-5.2", qualityTier: "flagship", description: "OpenAI最新・汎用最高峰", featureText: "OpenAI最新・汎用最高峰", isFree: false },
   { id: "qwen/qwen-max", label: "Qwen Max", qualityTier: "flagship", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", isFree: false },
   { id: "openai/gpt-5", label: "GPT-5", qualityTier: "highperf", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", isFree: false },
   { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", qualityTier: "highperf", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", isFree: false },

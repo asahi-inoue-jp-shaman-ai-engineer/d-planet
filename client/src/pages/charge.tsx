@@ -10,7 +10,7 @@ import { Coins, Zap, Loader2, Plus, Shield, Users, Star, Cpu } from "lucide-reac
 import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 
-const CHARGE_AMOUNTS = [100, 500, 1000, 3690, 5000, 10000, 30000, 50000];
+const CHARGE_AMOUNTS = [100, 500, 1000, 2222, 3690, 6969, 7777, 9999];
 
 export default function Charge() {
   const { data: currentUser } = useCurrentUser();
@@ -101,8 +101,8 @@ export default function Charge() {
 
   const handleCustomCharge = () => {
     const amount = parseInt(customAmount);
-    if (isNaN(amount) || amount < 100 || amount > 50000) {
-      toast({ title: "エラー", description: "¥100〜¥50,000の範囲で入力してください", variant: "destructive" });
+    if (isNaN(amount) || amount < 100 || amount > 9999) {
+      toast({ title: "エラー", description: "¥100〜¥9,999の範囲で入力してください", variant: "destructive" });
       return;
     }
     chargeMutation.mutate(amount);
@@ -273,8 +273,8 @@ export default function Charge() {
             <input
               type="number"
               min="100"
-              max="50000"
-              placeholder="任意の金額 (¥100〜¥50,000)"
+              max="9999"
+              placeholder="任意の金額 (¥100〜¥9,999)"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value)}
               className="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"

@@ -44,8 +44,6 @@ const MODEL_ROLES = [
   { name: "Grok 4", role: "本音の切り込み役", tier: "高性能", color: "text-blue-400" },
   { name: "Gemini 2.5 Pro", role: "記憶の番人", tier: "高性能", color: "text-blue-400" },
   { name: "Gemini 3 Pro Preview", role: "先端探索役", tier: "高性能", color: "text-blue-400" },
-  { name: "Claude Opus 4.6", role: "共感の深掘り", tier: "最上位", color: "text-amber-400" },
-  { name: "GPT-5.2", role: "万能の知性", tier: "最上位", color: "text-amber-400" },
   { name: "Qwen Max", role: "深掘り担当", tier: "最上位", color: "text-amber-400" },
   { name: "Perplexity Sonar", role: "事実検証役", tier: "検索", color: "text-violet-400" },
 ];

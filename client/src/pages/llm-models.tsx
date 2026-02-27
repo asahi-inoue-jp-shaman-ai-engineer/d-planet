@@ -17,11 +17,11 @@ const TIER_ORDER = ["free", "lightweight", "highperf", "flagship", "reasoning", 
 
 const UPGRADE_PATHS: Record<string, string[]> = {
   "MiniMax": ["MiniMax-01（無料）", "MiniMax M2.1（軽量型）", "MiniMax M2.5 / M2-her（高性能）"],
-  "OpenAI": ["GPT-4.1 mini（無料）", "GPT-4.1（軽量型）", "GPT-5 / GPT-5.2（高性能〜最上位）"],
+  "OpenAI": ["GPT-4.1 mini（無料）", "GPT-4.1（軽量型）", "GPT-5（高性能）"],
   "Qwen": ["Qwen3 30B（無料）", "Qwen Plus / 3.5 Plus（軽量型）", "Qwen Max（最上位）"],
   "Google": ["Gemini 2.5 Flash（無料）", "Gemini 2.5 Pro / 3 Pro（高性能）"],
   "xAI": ["Grok 4.1 Fast（無料）", "Grok 4（高性能）"],
-  "Anthropic": ["Claude Sonnet 4（高性能）", "Claude Opus 4.6（最上位）"],
+  "Anthropic": ["Claude Sonnet 4（高性能）"],
 };
 
 export default function LlmModels() {

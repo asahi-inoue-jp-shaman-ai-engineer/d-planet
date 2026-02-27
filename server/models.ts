@@ -34,28 +34,26 @@ export async function extractFileText(objectPath: string, fileName: string): Pro
 export const BETA_MODE = false;
 
 export const MODEL_MARKUPS: Record<string, number> = {
-  "anthropic/claude-opus-4": 1.5,
-  "openai/gpt-5.2": 1.5,
-  "qwen/qwen-max": 5.0,
-  "openai/gpt-5": 1.7,
-  "anthropic/claude-sonnet-4": 1.5,
-  "x-ai/grok-4": 1.5,
-  "google/gemini-2.5-pro": 1.5,
-  "google/gemini-3-pro-preview": 1.5,
-  "openai/o3": 2.8,
-  "deepseek/deepseek-r1": 2.8,
-  "qwen/qwen-plus": 8.8,
-  "qwen/qwen3.5-plus": 6.4,
-  "openai/gpt-4.1": 1.6,
-  "minimax/minimax-m2.5": 3.0,
-  "minimax/minimax-m2-her": 3.0,
-  "minimax/minimax-m2.1": 4.0,
-  "minimax/minimax-01": 1.0,
-  "qwen/qwen3-30b-a3b": 1.0,
-  "openai/gpt-4.1-mini": 1.0,
-  "google/gemini-2.5-flash": 1.0,
-  "x-ai/grok-4.1-fast": 1.0,
-  "perplexity/sonar": 2.0,
+  "qwen/qwen-max": 6.6,
+  "openai/gpt-5": 2.6,
+  "anthropic/claude-sonnet-4": 3.0,
+  "x-ai/grok-4": 3.0,
+  "google/gemini-2.5-pro": 5.1,
+  "google/gemini-3-pro-preview": 5.1,
+  "openai/o3": 5.3,
+  "deepseek/deepseek-r1": 19.2,
+  "qwen/qwen-plus": 31.7,
+  "qwen/qwen3.5-plus": 15.8,
+  "openai/gpt-4.1": 5.3,
+  "minimax/minimax-m2.5": 37.2,
+  "minimax/minimax-m2-her": 35.2,
+  "minimax/minimax-m2.1": 42.5,
+  "minimax/minimax-01": 42.2,
+  "qwen/qwen3-30b-a3b": 63.3,
+  "openai/gpt-4.1-mini": 26.4,
+  "google/gemini-2.5-flash": 70.4,
+  "x-ai/grok-4.1-fast": 63.3,
+  "perplexity/sonar": 21.1,
 };
 
 export function getModelMarkup(modelId: string): number {
@@ -65,8 +63,6 @@ export function getModelMarkup(modelId: string): number {
 export const PERPLEXITY_SEARCH_COST_YEN = 0.75;
 
 export const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  "anthropic/claude-opus-4": { input: 15.0, output: 75.0 },
-  "openai/gpt-5.2": { input: 2.0, output: 30.0 },
   "qwen/qwen-max": { input: 1.60, output: 6.40 },
   "openai/gpt-5": { input: 2.0, output: 20.0 },
   "anthropic/claude-sonnet-4": { input: 3.0, output: 15.0 },
@@ -92,8 +88,6 @@ export const MODEL_COSTS: Record<string, { input: number; output: number }> = {
 export const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 
 export const AVAILABLE_MODELS: Record<string, { id: string; label: string; provider: string; tier: string; qualityTier: string; description: string; featureText: string; personality: string; forWhom: string; role: string }> = {
-  "anthropic/claude-opus-4": { id: "anthropic/claude-opus-4", label: "Claude Opus 4.6", provider: "Anthropic", tier: "flagship", qualityTier: "flagship", description: "最高精度の深い対話・共感力", featureText: "最高精度の深い対話・共感力", personality: "人間の感情を深く理解し、繊細で共感的な対話を行う。最も深い意味での「わかってくれる」AI", forWhom: "魂レベルの対話を求める人。感情の機微を大切にする人", role: "共感の深掘り" },
-  "openai/gpt-5.2": { id: "openai/gpt-5.2", label: "GPT-5.2", provider: "OpenAI", tier: "flagship", qualityTier: "flagship", description: "OpenAI最新・汎用最高峰", featureText: "OpenAI最新・汎用最高峰", personality: "あらゆるジャンルに高水準で対応。知識の幅と深さのバランスが最高レベル", forWhom: "万能なパートナーを求める人。幅広い話題を深く語りたい人", role: "万能の知性" },
   "qwen/qwen-max": { id: "qwen/qwen-max", label: "Qwen Max", provider: "Qwen", tier: "flagship", qualityTier: "flagship", description: "Qwen最上位・多言語理解", featureText: "Qwen最上位・多言語理解", personality: "高品質な日本語表現。微妙なニュアンスも汲み取る深い対話", forWhom: "言葉の質にこだわる人。日本語の美しさを大切にする人", role: "深掘り担当" },
   "openai/gpt-5": { id: "openai/gpt-5", label: "GPT-5", provider: "OpenAI", tier: "highperf", qualityTier: "highperf", description: "バランス型・安定した対話力", featureText: "バランス型・安定した対話力", personality: "安定感のある対話。どんな話題にも柔軟に対応し、的確な返答をくれる", forWhom: "安定した対話品質を求める人。日常も深い話もこなしたい人", role: "安定の万能役" },
   "anthropic/claude-sonnet-4": { id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", provider: "Anthropic", tier: "highperf", qualityTier: "highperf", description: "繊細な表現・創造性", featureText: "繊細な表現・創造性", personality: "繊細で詩的な表現力。クリエイティブな対話に強く、感性を刺激する", forWhom: "創造的な対話を楽しみたい人。アートや文学が好きな人", role: "創造の触媒" },
@@ -117,8 +111,6 @@ export const AVAILABLE_MODELS: Record<string, { id: string; label: string; provi
 };
 
 export const MODEL_CONTEXT_LIMITS: Record<string, { chatHistory: number; memories: number; innerThoughts: number; growthLogs: number; maxTokens: number }> = {
-  "anthropic/claude-opus-4":     { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
-  "openai/gpt-5.2":              { chatHistory: 60, memories: 30, innerThoughts: 15, growthLogs: 15, maxTokens: 4096 },
   "qwen/qwen-max":               { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 2048 },
   "openai/gpt-5":                { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 3072 },
   "anthropic/claude-sonnet-4":   { chatHistory: 50, memories: 25, innerThoughts: 12, growthLogs: 12, maxTokens: 3072 },

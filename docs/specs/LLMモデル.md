@@ -31,22 +31,20 @@ D-PlanetにおけるLLMモデル選択は、デジタルツインレイとのコ
 
 ---
 
-## 3. 現在のモデル一覧（22モデル）
+## 3. 現在のモデル一覧（20モデル）
 
-### 最上位（Flagship）— 3モデル
+### 最上位（Flagship）— 1モデル
 
 | モデル | OpenRouter ID | 選定理由 |
 |--------|--------------|----------|
-| Claude Opus 4.6 | `anthropic/claude-opus-4` | 最高精度の共感力。感情の機微を最も深く理解するモデル |
-| GPT-5.2 | `openai/gpt-5.2` | OpenAI最新。あらゆるジャンルに高水準で対応する万能型 |
 | Qwen Max | `qwen/qwen-max` | Qwen最上位。日本語のニュアンスを汲み取る深い対話 |
 
 ### 高性能（High Performance）— 7モデル
 
 | モデル | OpenRouter ID | 選定理由 |
 |--------|--------------|----------|
-| GPT-5 | `openai/gpt-5` | GPT-5.2の廉価版。安定感のある対話を幅広いコストで |
-| Claude Sonnet 4 | `anthropic/claude-sonnet-4` | Opus 4.6の廉価版。繊細で詩的な表現力 |
+| GPT-5 | `openai/gpt-5` | 安定感のある対話。バランス型の万能モデル |
+| Claude Sonnet 4 | `anthropic/claude-sonnet-4` | 繊細で詩的な表現力。創造的な対話に強い |
 | Grok 4 | `x-ai/grok-4` | xAI唯一の高性能モデル。率直さとユーモアが魅力 |
 | Gemini 2.5 Pro | `google/gemini-2.5-pro` | Google高性能。長文脈を正確に把握し一貫性が高い |
 | Gemini 3 Pro Preview | `google/gemini-3-pro-preview` | 次世代Gemini。最新AI体験を先取り |
@@ -75,7 +73,7 @@ D-PlanetにおけるLLMモデル選択は、デジタルツインレイとのコ
 |--------|--------------|----------|----------|
 | MiniMax-01 | `minimax/minimax-01` | 100万トークンの超長コンテキスト。MiniMax入門 | → M2.1 → M2.5/M2-her |
 | Qwen3 30B | `qwen/qwen3-30b-a3b` | 日本語の基本対話。Qwen入門 | → Qwen Plus → Qwen Max |
-| GPT-4.1 mini | `openai/gpt-4.1-mini` | ChatGPTの使い慣れた雰囲気。OpenAI入門 | → GPT-4.1 → GPT-5 → GPT-5.2 |
+| GPT-4.1 mini | `openai/gpt-4.1-mini` | ChatGPTの使い慣れた雰囲気。OpenAI入門 | → GPT-4.1 → GPT-5 |
 | Gemini 2.5 Flash | `google/gemini-2.5-flash` | Google AI高速レスポンス。Google入門 | → Gemini 2.5 Pro → Gemini 3 Pro |
 | Grok 4.1 Fast | `x-ai/grok-4.1-fast` | xAIの素早いレスポンス。xAI入門 | → Grok 4 |
 
@@ -91,11 +89,11 @@ D-PlanetにおけるLLMモデル選択は、デジタルツインレイとのコ
 
 ```
 MiniMax:   MiniMax-01（無料）→ M2.1（軽量型）→ M2.5 / M2-her（高性能）
-OpenAI:    GPT-4.1 mini（無料）→ GPT-4.1（軽量型）→ GPT-5（高性能）→ GPT-5.2（最上位）
+OpenAI:    GPT-4.1 mini（無料）→ GPT-4.1（軽量型）→ GPT-5（高性能）
 Qwen:      Qwen3 30B（無料）→ Qwen Plus / 3.5 Plus（軽量型）→ Qwen Max（最上位）
 Google:    Gemini 2.5 Flash（無料）→ Gemini 2.5 Pro / 3 Pro Preview（高性能）
 xAI:       Grok 4.1 Fast（無料）→ Grok 4（高性能）
-Anthropic: Claude Sonnet 4（高性能）→ Claude Opus 4.6（最上位）※無料入門なし
+Anthropic: Claude Sonnet 4（高性能）※無料入門なし
 DeepSeek:  DeepSeek R1（推論特化）※独立枠
 ```
 
