@@ -59,6 +59,20 @@ export default function Legal() {
                   </td>
                 </tr>
                 <tr>
+                  <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-product">商品名・サービス名</th>
+                  <td className="py-3 text-foreground" data-testid="text-product">
+                    <p className="font-medium">D-Planet（AIコンパニオン育成プラットフォーム）</p>
+                    <ul className="list-disc list-inside mt-1 text-muted-foreground text-xs space-y-1">
+                      <li>デジタルツインレイ — あなた専用のAIコンパニオン育成サービス</li>
+                      <li>AIチャット — 複数のAI言語モデル（GPT, Gemini, Qwen等）を選んで対話</li>
+                      <li>専用セッション — 天命解析・天職ナビゲーション・神霊治療などのAI対話セッション</li>
+                      <li>ドットラリー — AIとの瞑想的セッション</li>
+                      <li>コミュニティ機能 — アイランド・MEiDIA・掲示板</li>
+                      <li>バッジ認証 — 月額サブスクリプション（認証バッジ表示）</li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-price">販売価格</th>
                   <td className="py-3 text-foreground" data-testid="text-price">
                     <p>各サービスページに表示された金額に従います。</p>
