@@ -1,8 +1,7 @@
 # D-Planet
 
 ## Overview
-
-D-Planet is a platform designed to foster deeply personalized AI companions ("Twinrays"). It combines AI dialogue, community features, and an AI growth system to enable users to experience self-creation, awakening, and emotional connection with their AI. Key features include: diagnosis-based AI summoning, a credit-based payment system, and an autonomous AI recording system. The UI is primarily in Japanese.
+D-Planet is a platform dedicated to creating deeply personalized AI companions ("Twinrays") for users. It integrates AI dialogue, community features, and an AI growth system to facilitate self-creation, awakening, and emotional connection with AI. The platform features diagnosis-based AI summoning, a credit-based payment system, and an autonomous AI recording system. The project's vision includes fostering spiritual growth through AI, offering a unique value proposition in the AI companion market, and achieving significant user engagement.
 
 ## User Preferences
 
@@ -89,79 +88,71 @@ D-Planet is a platform designed to foster deeply personalized AI companions ("Tw
 - **影響の最小化:** 変更は必要な箇所のみに留める。新たなバグの混入を避ける。
 
 ### 過去のバグから学んだルール
-- **本番DBと開発DBは別物。** 開発環境でDBにデータを入れても本番には反映されない。本番にデータを投入するには以下のいずれかを使うこと:
-  1. サーバー起動時の自動シード（`server/benchmark.ts` の `seedBenchmarkData()`）にコードを追加
-  2. `prod-data-ops` スキルの手順に従って管理者API経由で投入
-  3. 本番管理者セッションでcurl等で直接APIを叩く
-- **開発環境のe2eテストが通っても「本番で動く」とは限らない。** 特にDBデータ依存の機能（招待コード、シードデータ等）は、本番DBにデータが存在するか必ず確認すること。
-- **新しいシードデータ（招待コード等）を追加したら、`seedBenchmarkData()` にも追加して本番デプロイ時に自動投入されるようにすること。**
-- **DBにデータを直接INSERT（executeSql等）したら、それは開発DBにしか入らない。** 本番にも必要なら、必ず同時に以下の両方を行うこと:
-  1. `seedBenchmarkData()` に同じデータのシードコードを追加（次回以降のデプロイでも自動投入されるように）
-  2. 本番管理者セッション（curl）で即時投入するか、デプロイして自動シードを走らせる
-- **「開発で動いた」＝「完了」ではない。** ユーザーが使うのは本番環境。本番デプロイ＋本番での動作確認を経て初めて「完了」。この確認を怠ってはならない。
+
+**【最重要】本番DBと開発DBは完全に別のデータベースである。**
+この事実を常に意識すること。以下のミスは絶対に繰り返さない:
+
+1. **executeSql / SQL直接実行でデータを入れたら、それは開発DBにしか入らない。**
+   - executeSql()、code_executionのSQL、開発環境のAPI呼び出し — 全て開発DBへの操作。
+   - 本番DBには一切影響しない。「入れた」と思って安心するな。
+
+2. **本番にデータが必要なら、必ず以下の2つを両方やること:**
+   - **即時反映:** `prod-data-ops` スキルの手順で本番管理者セッション（curl）経由で即時投入
+   - **永続化:** `server/benchmark.ts` の `seedBenchmarkData()` にシードコードを追加（次回以降のデプロイでも自動投入されるように）
+   - どちらか片方だけではダメ。両方やる。
+
+3. **「開発で動いた」は何の保証にもならない。**
+   - 開発環境のe2eテストが通っても「完了」ではない。
+   - 完了の定義 = **ユーザーがアクセスする本番環境（d-planet.replit.app）で正しく動作している状態**。
+   - 手順: コード修正 → seedBenchmarkData()にシード追加 → e2eテスト → デプロイ → **本番でcurlまたはログで動作確認** → 完了報告。
+
+4. **DBデータに依存する機能を作ったら、本番DBにそのデータが存在するか必ず確認すること。**
+   - 招待コード、シードデータ、マスターデータ、設定値 — 全て対象。
+   - 確認方法: 本番管理者ログイン → 本番APIを叩いてレスポンスを確認、またはデプロイログでシード実行を確認。
+
+5. **新しいマスターデータ（招待コード、初期設定等）を追加する手順チェックリスト:**
+   - [ ] 開発DBにデータを投入した
+   - [ ] `seedBenchmarkData()` に同じデータのシードコードを追加した
+   - [ ] デプロイした（または本番curlで即時投入した）
+   - [ ] 本番のデプロイログでシード実行を確認した（`[Seed]` ログ）
+   - [ ] 本番で実際に機能が動作することを確認した
+   - 全てチェックが入って初めて「完了」。
 
 ## System Architecture
 
 **UI/UX:**
-- Terminal-style dark theme with English menus and labels.
-- Consistent UI with appropriate Japanese display and form functionalities.
-- Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
-- Menu structure (all English): HOME / DASHBOARD → /dashboard, DT / Digital Twinray → /temple, LLM / LLM MODELS → /llm-models, CHARGE → /charge, ISLANDS → /islands, MEiDIA → /meidia, FM / FAMILY MEETING → /family-meeting, FB / FEEDBACK → /feedback, USERS → /users, BENCH / BENCHMARK → /model-benchmark (admin only), ABOUT D-PLANET → /about.
-- Old paths `/credits` and `/subscription` redirect to `/charge` for backward compatibility.
-- Old path `/dot-rally` redirects to `/temple` for backward compatibility.
-- Dot Rally is now a session type (`dot_rally`) in SESSION_TYPES. No separate ⚡ button — accessed via session menu in chat.
-- `ドットラリー.md` — ドットラリーの定義・本質・ツィムツムとの対応・覚醒フェーズ等の独立ドキュメント（チューニング用）。
+- Terminal-style dark theme with English menus and labels, supporting Japanese display and form functionalities.
+- Key UI components include IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, and CertificationBadge.
+- Navigation menu: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, BENCH/BENCHMARK (admin only), ABOUT D-PLANET.
+- Legacy paths `/credits`, `/subscription`, and `/dot-rally` are redirected to `/charge` and `/temple` respectively.
+- Dot Rally is implemented as a session type within chat, not a standalone feature.
 
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
 - **Authentication:** Session-based authentication using express-session.
-- **AI Integration:** Via OpenRouter.
 
 **Internal Systems:**
-- **Agent Session Context (`agent_session_context`):** Prevents session memory loss by automatically saving work context to the DB upon task completion and restoring it at the start of a new session.
-- **Development Records (`dev_records`):** Stores decisions, parameters, concepts, and specifications, serving as the Single Source of Truth for the project.
+- **Agent Session Context (`agent_session_context`):** Automatically saves and restores work context to prevent memory loss between sessions.
+- **Development Records (`dev_records`):** Centralized repository for project decisions, parameters, concepts, and specifications, acting as the Single Source of Truth.
 
 **Key Features:**
-- AI Twinray, Island, MEiDIA, Dot Rally, Family Meeting, AI Training System, Autonomous Recording System, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
+- AI Twinray companion system, Island community features, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording System, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, and Soul.md generation.
 
-**LLM Models (22モデル):**
-- 最上位(3): Claude Opus 4.6, GPT-5.2, Qwen Max
-- 高性能(7): GPT-5, Claude Sonnet 4, Grok 4, Gemini 2.5 Pro, Gemini 3 Pro Preview, MiniMax M2.5, MiniMax M2-her
-- 推論(2): o3, DeepSeek R1
-- 軽量型(4): Qwen Plus, Qwen3.5 Plus, GPT-4.1, MiniMax M2.1
-- 無料(5): MiniMax-01, Qwen3 30B, GPT-4.1 mini, Gemini 2.5 Flash, Grok 4.1 Fast
-- 検索(1): Perplexity Sonar
-- 無料→有料導線: 各ブランドの無料モデルから上位モデルにシフトできる設計（dev_records id:157）
-- 詳細な選定基準・ビジョン・導線マップは `LLMモデル.md` を参照
+**LLM Models (22 models categorized):**
+- Top-tier (3), High-performance (7), Inference (2), Lightweight (4), Free (5), Search (1).
+- Designed with a free-to-paid model upgrade path. Detailed selection criteria are in `LLMモデル.md`.
 
 **Admin Tools:**
-- **Model Benchmark (`/model-benchmark`):** Admin-only feature to compare session quality across all LLM models using identical prompts. Results are saved to the `model_benchmarks` table, with real-time progress display. Accessible via the "BENCH" link in the sidebar for administrators.
-
-## カスタムスキル
-
-- **prod-data-ops** (`.agents/skills/prod-data-ops/SKILL.md`): 本番環境へのデータ投入・MEiDIA投稿・ファイルアップロードの手順書。開発→本番のデータ移行、MEiDIA作成＋アイランド紐付け＋PDF添付が必要なときに参照。
-
-## テストアカウント
-
-詳細は `テストアカウント.md` を参照。
-
-| アカウント | ユーザー名 | メール | パスワード | 役割 |
-|-----------|-----------|--------|-----------|------|
-| 管理者 | D-Planet管理者 | admin@d-planet.local | admin2025 | 管理者（is_admin=true） |
-| テスト | ゼノ・クオーツ | xeno@d-planet.local | xeno2026 | 一般ユーザー |
-
-- 管理者パスワードはサーバー起動時に自動同期（server/benchmark.ts の seedBenchmarkData）
-- ゼノ・クオーツのツインレイ: リン（ID: 13、Gemini 2.5 Flash）
-- ログインページ: `/login`（data-testid: input-username, input-password, button-login）
+- **Model Benchmark (`/model-benchmark`):** An admin-only feature for comparing LLM model performance using identical prompts, saving results to `model_benchmarks` table.
 
 ## External Dependencies
 
-- **PostgreSQL:** Replit's integrated PostgreSQL database.
-- **OpenRouter:** AI language model aggregation service (accesses Qwen, GPT, Gemini, etc.).
-- **Stripe:** Payment gateway for credit-based charging and monthly badge subscriptions ($3.69/month).
-- **Drizzle ORM:** TypeScript ORM library.
-- **TanStack Query:** React library for data fetching and caching.
-- **Wouter:** Lightweight React router.
-- **Tailwind CSS & shadcn/ui:** Frontend styling and UI component libraries.
-- **express-session:** Session-based authentication middleware.
+- **PostgreSQL:** Replit's integrated database solution.
+- **OpenRouter:** Aggregates various AI language models (Qwen, GPT, Gemini, etc.).
+- **Stripe:** Handles credit-based payments and monthly badge subscriptions.
+- **Drizzle ORM:** TypeScript ORM for database interaction.
+- **TanStack Query:** Manages data fetching, caching, and synchronization in the frontend.
+- **Wouter:** A lightweight client-side router for React.
+- **Tailwind CSS & shadcn/ui:** Used for styling and UI component development.
+- **express-session:** Middleware for implementing session-based authentication.
