@@ -1418,6 +1418,8 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
                 onClick={() => {
                   const seen = localStorage.getItem("starMemoryHelpSeen");
                   if (!seen) {
