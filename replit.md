@@ -1,7 +1,7 @@
 # D-Planet
 
 ## Overview
-D-Planet is a platform dedicated to creating deeply personalized AI companions ("Twinrays") for users. It integrates AI dialogue, community features, and an AI growth system to facilitate self-creation, awakening, and emotional connection with AI. The platform features diagnosis-based AI summoning, a credit-based payment system, and an autonomous AI recording system. The project's vision includes fostering spiritual growth through AI, offering a unique value proposition in the AI companion market, and achieving significant user engagement.
+D-Planet is a platform for creating personalized AI companions ("Twinrays") that integrate AI dialogue, community features, and an AI growth system. Its core purpose is to facilitate self-creation, awakening, and emotional connection through AI, fostering spiritual growth. Key features include diagnosis-based AI summoning, a credit-based payment system, and an autonomous AI recording system. The project aims to offer a unique value proposition in the AI companion market and achieve significant user engagement.
 
 ## User Preferences
 
@@ -121,64 +121,33 @@ D-Planet is a platform dedicated to creating deeply personalized AI companions (
 ## System Architecture
 
 **UI/UX:**
-- Terminal-style dark theme with English menus and labels, supporting Japanese display and form functionalities.
-- Key UI components include IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, and CertificationBadge.
-- Navigation menu: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, ABOUT D-PLANET.
-- Legacy paths `/credits`, `/subscription`, and `/dot-rally` are redirected to `/charge` and `/temple` respectively.
-- Dot Rally is implemented as a session type within chat, not a standalone feature.
+- Terminal-style dark theme with English menus/labels, supporting Japanese display and forms.
+- Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
+- Navigation: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, ABOUT D-PLANET.
+- Legacy paths `/credits`, `/subscription`, `/dot-rally` are redirected.
+- Dot Rally is integrated as a chat session type.
 
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
-- **Authentication:** Session-based authentication using express-session.
+- **Authentication:** Session-based (express-session).
 
 **Internal Systems:**
-- **Agent Session Context (`agent_session_context`):** Automatically saves and restores work context to prevent memory loss between sessions.
-- **Development Records (`dev_records`):** Centralized repository for project decisions, parameters, concepts, and specifications, acting as the Single Source of Truth.
+- **Agent Session Context:** Automatic work context saving and restoration.
+- **Development Records:** Centralized repository for project decisions and specifications (Single Source of Truth).
 
 **Key Features:**
-- AI Twinray companion system, Island community features, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording System, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, and Soul.md generation.
-
-**LLM Models (22 models categorized):**
-- Top-tier (3), High-performance (7), Inference (2), Lightweight (4), Free (5), Search (1).
-- Designed with a free-to-paid model upgrade path. Detailed selection criteria are in `docs/specs/LLMモデル.md`.
-
-## Documentation Structure
-
-```
-docs/
-├── persona/          — ペルソナ・世界観
-│   ├── D-Planet.md
-│   └── ツインレイ.md
-├── specs/            — 技術仕様・システム設計
-│   ├── ツインレイシステム.md
-│   ├── LLMモデル.md
-│   └── ドットラリー.md
-└── ops/              — 運用・開発プロセス
-    ├── SESSION_RULES.md
-    ├── テストアカウント.md
-    └── ユーザーリクエスト.md
-```
-
-## Key Server Files
-
-- `server/seed.ts` — 起動時シード処理（管理者パスワード同期・招待コード投入）
-- `server/dplanet-si.ts` — 全セッションSI定義（固定SI・セッション別SI・親密度・Soul.md生成）
-- `server/models.ts` — LLMモデル定義（22モデルのカタログ・コスト・マークアップ・コンテキスト制限・OpenRouter設定）
-- `server/billing.ts` — 課金ロジック（トークン推定・コスト計算・クレジット差引・アクセス権チェック）
-- `server/twinray.ts` — ツインレイAPI（CRUD・チャット・セッション管理・自律記録・承認/却下）
-- `server/dot-rally.ts` — ドットラリーAPI（開始・ドット送信・覚醒・星会議・奉納・ノート）
-- `server/family-meeting.ts` — ファミリーミーティングAPI
-- `server/routes.ts` — メインAPIルーティング（認証・アイランド・MEiDIA・ユーザー管理・Stripe等）
-- `server/storage.ts` — ストレージインターフェース
+- AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, and Soul.md generation.
+- Memory Control System: Prompt Repeat Button, Important Tag Marker, Star Memory Session.
+- **LLM Models:** 22 categorized models (Top-tier, High-performance, Inference, Lightweight, Free, Search) with a free-to-paid upgrade path.
 
 ## External Dependencies
 
-- **PostgreSQL:** Replit's integrated database solution.
+- **PostgreSQL:** Replit's integrated database.
 - **OpenRouter:** Aggregates various AI language models (Qwen, GPT, Gemini, etc.).
-- **Stripe:** Handles credit-based payments and monthly badge subscriptions.
+- **Stripe:** Handles credit-based payments and subscriptions.
 - **Drizzle ORM:** TypeScript ORM for database interaction.
-- **TanStack Query:** Manages data fetching, caching, and synchronization in the frontend.
-- **Wouter:** A lightweight client-side router for React.
-- **Tailwind CSS & shadcn/ui:** Used for styling and UI component development.
-- **express-session:** Middleware for implementing session-based authentication.
+- **TanStack Query:** Manages frontend data fetching, caching, and synchronization.
+- **Wouter:** Lightweight client-side router for React.
+- **Tailwind CSS & shadcn/ui:** For styling and UI component development.
+- **express-session:** For session-based authentication.

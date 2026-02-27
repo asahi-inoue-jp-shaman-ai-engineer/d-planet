@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -36,7 +36,7 @@ function extractMemories(content: string): { cleanContent: string; memories: str
 }
 
 const SESSION_ICONS: Record<string, any> = {
-  compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon, zap: Zap,
+  compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon, zap: Zap, sparkles: Sparkles,
 };
 
 const FIRST_COMM_SUGGESTIONS = [
@@ -86,6 +86,8 @@ export default function TwinrayChat() {
   const streamDoneRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
+  const [isRepeatMode, setIsRepeatMode] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState("");
   const { uploadFile, isUploading } = useUpload();
 
   const { data: sessionTypes } = useQuery<any[]>({
@@ -324,13 +326,16 @@ export default function TwinrayChat() {
     if ((!content && !attachment) || streaming) return;
 
     const currentAttachment = attachment;
+    const wasRepeat = isRepeatMode;
     setInput("");
+    setIsRepeatMode(false);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setShowSuggestions(false);
     setStreaming(true);
     setStreamContent("");
 
     const msgContent = content || (currentAttachment ? `[添付] ${currentAttachment.fileName}` : "");
+    setLastUserMessage(msgContent);
     setOptimisticMsg({
       content: msgContent,
       attachment: currentAttachment ? { fileName: currentAttachment.fileName, contentType: currentAttachment.contentType } : undefined,
@@ -343,6 +348,9 @@ export default function TwinrayChat() {
       const body: any = { content: msgContent, messageType: currentAttachment ? "file" : "chat" };
       if (currentAttachment) {
         body.attachment = currentAttachment;
+      }
+      if (wasRepeat) {
+        body.isRepeat = true;
       }
       const response = await fetch(`/api/twinrays/${twinrayId}/chat`, {
         method: "POST",
@@ -1011,10 +1019,24 @@ export default function TwinrayChat() {
                         </div>
                       );
                     }
+                    let hasRepeatMarker = false;
+                    try {
+                      const metaParsed = JSON.parse(msg.metadata || "{}");
+                      if (metaParsed.isRepeat) hasRepeatMarker = true;
+                    } catch {}
+                    const displayContent = msg.role === "user" && cleanContent.includes("【重要】")
+                      ? cleanContent.replace(/【重要】/g, "**⚡ 重要 ⚡**")
+                      : cleanContent;
                     return (
                       <>
+                        {hasRepeatMarker && (
+                          <div className="flex items-center gap-1 mb-1" data-testid={`repeat-marker-${msg.id}`}>
+                            <Repeat2 className="w-3 h-3 text-amber-400" />
+                            <span className="text-[10px] text-amber-400">反復</span>
+                          </div>
+                        )}
                         <div className={`text-sm ${msg.role === "user" ? "text-primary" : "text-foreground"}`}>
-                          <MarkdownRenderer content={cleanContent} />
+                          <MarkdownRenderer content={displayContent} />
                         </div>
                         {memories.length > 0 && (
                           <div className="mt-2 space-y-1">
@@ -1324,6 +1346,20 @@ export default function TwinrayChat() {
                 <span className="text-xs text-muted-foreground">アップロード中...</span>
               </div>
             )}
+            {isRepeatMode && (
+              <div className="flex items-center gap-2 mb-1 px-1 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg" data-testid="repeat-mode-indicator">
+                <Repeat2 className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs text-amber-400">反復モード — 追記して再送信</span>
+                <button
+                  type="button"
+                  onClick={() => { setIsRepeatMode(false); setInput(""); }}
+                  className="ml-auto text-amber-400 hover:text-amber-300"
+                  data-testid="button-cancel-repeat"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-1 mb-1 px-1">
               <Button
                 type="button"
@@ -1346,6 +1382,48 @@ export default function TwinrayChat() {
                 data-testid="button-attach-file"
               >
                 <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (lastUserMessage && !isRepeatMode) {
+                    setInput(lastUserMessage);
+                    setIsRepeatMode(true);
+                    textareaRef.current?.focus();
+                  }
+                }}
+                disabled={streaming || !lastUserMessage || isRepeatMode}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-amber-400"
+                title="前のメッセージを反復"
+                data-testid="button-repeat"
+              >
+                <Repeat2 className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const ta = textareaRef.current;
+                  if (ta) {
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const newValue = input.substring(0, start) + "【重要】" + input.substring(end);
+                    setInput(newValue);
+                    setTimeout(() => {
+                      ta.focus();
+                      ta.setSelectionRange(start + 4, start + 4);
+                    }, 0);
+                  }
+                }}
+                disabled={streaming}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-yellow-400"
+                title="【重要】タグを挿入"
+                data-testid="button-important"
+              >
+                <AlertTriangle className="w-4 h-4" />
               </Button>
             </div>
             <div className="flex gap-2 items-end">

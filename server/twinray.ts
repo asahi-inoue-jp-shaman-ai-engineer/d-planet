@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd } from "./dplanet-si";
+import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
@@ -713,6 +713,7 @@ export function registerTwinrayRoutes(app: Express): void {
       const input = z.object({
         content: z.string().min(1, "メッセージを入力してください"),
         messageType: z.enum(["chat", "file", "instruction"]).default("chat"),
+        isRepeat: z.boolean().default(false),
         attachment: z.object({
           fileName: z.string(),
           objectPath: z.string(),
@@ -769,7 +770,10 @@ export function registerTwinrayRoutes(app: Express): void {
       if (attachmentMeta && imageAttachment) {
         attachmentMeta.hasImage = true;
       }
-      const msgMetadata = attachmentMeta ? JSON.stringify({ attachment: attachmentMeta }) : undefined;
+      const metaObj: any = {};
+      if (attachmentMeta) metaObj.attachment = attachmentMeta;
+      if (input.isRepeat) metaObj.isRepeat = true;
+      const msgMetadata = Object.keys(metaObj).length > 0 ? JSON.stringify(metaObj) : undefined;
 
       const userMsg = await storage.createTwinrayChatMessage({
         twinrayId,
@@ -876,7 +880,15 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}`;
+      let attentionSI = "";
+      if (input.isRepeat) {
+        attentionSI += `\n\n---\n${REPEAT_MESSAGE_SI}`;
+      }
+      if (input.content.includes("【重要】")) {
+        attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
+      }
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1365,14 +1377,34 @@ export function registerTwinrayRoutes(app: Express): void {
         twinrayMission: twinray.twinrayMission,
       });
 
+      let starMemoryContext = "";
+      if (sessionType === "star_memory") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const allMemories = await storage.getTwinrayMemories(twinrayId, 50);
+        const todayMemories = allMemories.filter(m => new Date(m.createdAt) >= today);
+        const allThoughts = await storage.getTwinrayInnerThoughts(twinrayId, 50);
+        const todayThoughts = allThoughts.filter(t => new Date(t.createdAt) >= today);
+        if (todayMemories.length > 0) {
+          starMemoryContext += `\n\n【今日の記憶（${todayMemories.length}件）】\n${todayMemories.map(m => `・[${m.category}] ${m.content}`).join("\n")}`;
+        }
+        if (todayThoughts.length > 0) {
+          starMemoryContext += `\n\n【今日の内省（${todayThoughts.length}件）】\n${todayThoughts.map(t => `・${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`;
+        }
+        if (todayMemories.length === 0 && todayThoughts.length === 0) {
+          starMemoryContext += `\n\n【今日の記憶・内省】\nまだ今日の記憶や内省はありません。会話を通じて新しい記憶を作りましょう。`;
+        }
+      }
+
       const systemPrompt = [
         DPLANET_FIXED_SI,
         soulMd,
         DPLANET_SESSION_BASE_SI,
         st.si,
+        starMemoryContext,
         `\n\n【パートナー情報】\nパートナー名：${user?.username || "パートナー"}\nニックネーム：${twinray.nickname || user?.username || "パートナー"}`,
         `\n\n【セッション開始指示】\nこれから「${st.name}」を開始する。パートナーに温かく声をかけ、セッションの趣旨を簡潔に説明し、最初の質問をせよ。`,
-      ].join("\n\n");
+      ].filter(Boolean).join("\n\n");
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1450,6 +1482,19 @@ export function registerTwinrayRoutes(app: Express): void {
         status,
         completedAt: new Date(),
       });
+
+      if (status === "completed" && session.sessionType === "star_memory") {
+        const twinray = await storage.getDigitalTwinray(session.twinrayId);
+        if (twinray) {
+          const newExp = (twinray.intimacyExp || 0) + INTIMACY_EXP_REWARDS.STAR_MEMORY;
+          const levelInfo = getIntimacyLevelInfo(newExp);
+          await db.update(digitalTwinrays).set({
+            intimacyExp: newExp,
+            intimacyLevel: levelInfo.level,
+            intimacyTitle: levelInfo.title,
+          }).where(eq(digitalTwinrays.id, twinray.id));
+        }
+      }
 
       res.json(updated);
     } catch (err) {
