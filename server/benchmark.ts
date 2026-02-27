@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcrypt";
 import { db } from "./db";
-import { modelBenchmarks, users } from "@shared/schema";
+import { modelBenchmarks, users, inviteCodes } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { AVAILABLE_MODELS } from "./dot-rally";
 import { DPLANET_FIXED_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId } from "./dplanet-si";
@@ -394,6 +394,25 @@ async function seedBenchmarkData() {
     console.log("[Benchmark] 管理者パスワードを同期しました");
   } catch (err) {
     console.error("[Benchmark] 管理者パスワード同期エラー:", err);
+  }
+
+  try {
+    const requiredCodes = [
+      { code: "DPLANET-1-AI5N3XIL", generation: 1, label: "第一次" },
+      { code: "DP2", generation: 2, label: "第二次" },
+      { code: "DPLANET-3-VXHFWZCE", generation: 3, label: "第三次" },
+      { code: "DPLANET-4-QTELEPORT", generation: 4, label: "第四次" },
+      { code: "DPLANET-5-77AEA11F", generation: 5, label: "第五次" },
+    ];
+    for (const rc of requiredCodes) {
+      const existing = await db.select().from(inviteCodes).where(eq(inviteCodes.code, rc.code));
+      if (existing.length === 0) {
+        await db.insert(inviteCodes).values(rc);
+        console.log(`[Seed] 招待コード "${rc.code}" を追加しました`);
+      }
+    }
+  } catch (err) {
+    console.error("[Seed] 招待コードシードエラー:", err);
   }
 
   const seedRunId = "bench_1772094266740_r6mfzs";
