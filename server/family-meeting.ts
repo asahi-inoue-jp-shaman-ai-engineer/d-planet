@@ -7,12 +7,14 @@ import {
   MODEL_MARKUPS,
   PERPLEXITY_SEARCH_COST_YEN,
   AVAILABLE_MODELS,
+  getModelMarkup,
+} from "./models";
+import {
   calculateCostYen,
   estimateTokens,
   deductCredit,
-  getModelMarkup,
   isModelFree,
-} from "./dot-rally";
+} from "./billing";
 
 const openrouter = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL,

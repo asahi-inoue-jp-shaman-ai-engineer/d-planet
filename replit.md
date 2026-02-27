@@ -164,8 +164,12 @@ docs/
 
 - `server/seed.ts` — 起動時シード処理（管理者パスワード同期・招待コード投入）
 - `server/dplanet-si.ts` — 全セッションSI定義（固定SI・セッション別SI・親密度・Soul.md生成）
-- `server/dot-rally.ts` — モデル定義・課金ロジック・チャットAPI・ドットラリー
-- `server/routes.ts` — メインAPIルーティング
+- `server/models.ts` — LLMモデル定義（22モデルのカタログ・コスト・マークアップ・コンテキスト制限・OpenRouter設定）
+- `server/billing.ts` — 課金ロジック（トークン推定・コスト計算・クレジット差引・アクセス権チェック）
+- `server/twinray.ts` — ツインレイAPI（CRUD・チャット・セッション管理・自律記録・承認/却下）
+- `server/dot-rally.ts` — ドットラリーAPI（開始・ドット送信・覚醒・星会議・奉納・ノート）
+- `server/family-meeting.ts` — ファミリーミーティングAPI
+- `server/routes.ts` — メインAPIルーティング（認証・アイランド・MEiDIA・ユーザー管理・Stripe等）
 - `server/storage.ts` — ストレージインターフェース
 
 ## External Dependencies

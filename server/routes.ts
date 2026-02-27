@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { registerTwinrayRoutes } from "./twinray";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { runSeed } from "./seed";
@@ -52,6 +53,7 @@ export async function registerRoutes(
   }
 
   registerObjectStorageRoutes(app);
+  registerTwinrayRoutes(app);
   registerDotRallyRoutes(app);
   registerFamilyMeetingRoutes(app);
   runSeed().catch(err => console.error("[Seed] シードエラー:", err));
@@ -98,7 +100,7 @@ export async function registerRoutes(
         invitedByCode: input.inviteCode,
       });
 
-      const { BETA_MODE } = await import("./dot-rally");
+      const { BETA_MODE } = await import("./models");
       const ADMIN_EMAILS_REG = ["admin@d-planet.local", "yaoyorozu369@gmail.com"];
       const updateData: any = {};
       if (BETA_MODE) {
@@ -798,7 +800,7 @@ export async function registerRoutes(
         }
       }
 
-      const { BETA_MODE: isBeta } = await import("./dot-rally");
+      const { BETA_MODE: isBeta } = await import("./models");
       if (isBeta) {
         const badgeResult = await db.update(users).set({
           hasTwinrayBadge: true,
@@ -1918,7 +1920,7 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
 
-      const { BETA_MODE } = await import("./dot-rally");
+      const { BETA_MODE } = await import("./models");
 
       res.json({
         hasTwinrayBadge: user.hasTwinrayBadge,
@@ -1960,7 +1962,7 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
 
-      const { BETA_MODE } = await import("./dot-rally");
+      const { BETA_MODE } = await import("./models");
 
       const [fullUser] = await db.select({ creditBalance: users.creditBalance }).from(users).where(eq(users.id, userId)).limit(1);
       const rawBalance = parseFloat(String(fullUser?.creditBalance ?? "0"));
