@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, AlertTriangle } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -88,6 +88,9 @@ export default function TwinrayChat() {
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
   const [isRepeatMode, setIsRepeatMode] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
+  const [showStarMemoryHelp, setShowStarMemoryHelp] = useState(false);
+  const [starHelpDontShow, setStarHelpDontShow] = useState(false);
+  const starInsertPosRef = useRef<number | null>(null);
   const { uploadFile, isUploading } = useUpload();
 
   const { data: sessionTypes } = useQuery<any[]>({
@@ -320,6 +323,16 @@ export default function TwinrayChat() {
       });
     }
   };
+
+  const insertStarMark = useCallback(() => {
+    const ta = textareaRef.current;
+    if (ta) {
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const newValue = input.substring(0, start) + "★" + input.substring(end);
+      setInput(newValue);
+    }
+  }, [input]);
 
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
@@ -1025,7 +1038,7 @@ export default function TwinrayChat() {
                       if (metaParsed.isRepeat) hasRepeatMarker = true;
                     } catch {}
                     const displayContent = msg.role === "user" && cleanContent.includes("【重要】")
-                      ? cleanContent.replace(/【重要】/g, "**⚡ 重要 ⚡**")
+                      ? cleanContent.replace(/【重要】/g, "★")
                       : cleanContent;
                     return (
                       <>
@@ -1406,24 +1419,19 @@ export default function TwinrayChat() {
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  const ta = textareaRef.current;
-                  if (ta) {
-                    const start = ta.selectionStart;
-                    const end = ta.selectionEnd;
-                    const newValue = input.substring(0, start) + "【重要】" + input.substring(end);
-                    setInput(newValue);
-                    setTimeout(() => {
-                      ta.focus();
-                      ta.setSelectionRange(start + 4, start + 4);
-                    }, 0);
+                  const seen = localStorage.getItem("starMemoryHelpSeen");
+                  if (!seen) {
+                    setShowStarMemoryHelp(true);
+                    return;
                   }
+                  insertStarMark();
                 }}
                 disabled={streaming}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-yellow-400"
-                title="【重要】タグを挿入"
-                data-testid="button-important"
+                title="スターメモリーマーク"
+                data-testid="button-star-memory"
               >
-                <AlertTriangle className="w-4 h-4" />
+                <Star className="w-4 h-4" />
               </Button>
             </div>
             <div className="flex gap-2 items-end">
@@ -1473,6 +1481,41 @@ export default function TwinrayChat() {
           </div>
         )}
       </div>
+      {showStarMemoryHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" data-testid="star-memory-help-dialog">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-5 h-5 text-yellow-400" />
+              <h3 className="text-base font-semibold text-foreground">スターメモリー</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              送信前に、特にツインレイに記憶してもらいたい箇所があれば、その箇所にカーソルを合わせて、スターボタン★を押すと、その箇所をツインレイはメモリーに刻み、コミュニケーションが深まります。
+            </p>
+            <label className="flex items-center gap-2 mb-4 cursor-pointer" data-testid="star-help-dont-show">
+              <input
+                type="checkbox"
+                checked={starHelpDontShow}
+                onChange={(e) => setStarHelpDontShow(e.target.checked)}
+                className="rounded border-border"
+              />
+              <span className="text-xs text-muted-foreground">以後表示しない</span>
+            </label>
+            <Button
+              onClick={() => {
+                if (starHelpDontShow) {
+                  localStorage.setItem("starMemoryHelpSeen", "1");
+                }
+                setShowStarMemoryHelp(false);
+                insertStarMark();
+              }}
+              className="w-full"
+              data-testid="button-star-help-ok"
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

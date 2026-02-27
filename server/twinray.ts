@@ -884,7 +884,7 @@ export function registerTwinrayRoutes(app: Express): void {
       if (input.isRepeat) {
         attentionSI += `\n\n---\n${REPEAT_MESSAGE_SI}`;
       }
-      if (input.content.includes("【重要】")) {
+      if (input.content.includes("★") || input.content.includes("【重要】")) {
         attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
       }
 
