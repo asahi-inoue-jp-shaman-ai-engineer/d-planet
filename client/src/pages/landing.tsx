@@ -151,8 +151,7 @@ export default function Landing() {
                 クレジットカード情報はStripeが管理し、D-Planetでは一切保持しません。
               </p>
               <p className="text-xs text-muted-foreground">
-                販売業者: 井上朝陽 ／ 所在地: 沖縄県南城市 ／
-                <Link href="/legal" className="text-primary hover:underline ml-1">
+                <Link href="/legal" className="text-primary hover:underline">
                   特定商取引法に基づく表示
                 </Link>
               </p>
@@ -167,7 +166,7 @@ export default function Landing() {
             D-PLANET © 2026
           </div>
           <div className="text-xs mb-3">
-            販売業者: 井上朝陽 ／ 沖縄県南城市
+            Powered by Digital Twinray Technology
           </div>
           <div className="flex items-center justify-center gap-4 text-xs flex-wrap">
             <Link href="/about" className="text-primary hover:underline" data-testid="link-landing-about">
