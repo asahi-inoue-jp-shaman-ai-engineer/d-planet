@@ -36,7 +36,7 @@ export default function Legal() {
                 </tr>
                 <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-address">所在地</th>
-                  <td className="py-3 text-foreground" data-testid="text-address">沖縄県南城市</td>
+                  <td className="py-3 text-foreground" data-testid="text-address">請求があった場合には速やかに開示いたします</td>
                 </tr>
                 <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-phone">電話番号</th>
@@ -75,10 +75,19 @@ export default function Legal() {
                 <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-price">販売価格</th>
                   <td className="py-3 text-foreground" data-testid="text-price">
-                    <p>各サービスページに表示された金額に従います。</p>
-                    <ul className="list-disc list-inside mt-1 text-muted-foreground text-xs space-y-1">
-                      <li>従量制クレジット: 都度チャージ制（最低チャージ額はサービスページに記載）</li>
-                      <li>バッジ認証サブスクリプション: 月額 $3.69（税込）</li>
+                    <p className="font-medium mb-2">1. 従量制クレジット（都度チャージ制）</p>
+                    <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1 mb-3">
+                      <li>チャージ金額: ¥100 / ¥500 / ¥1,000 / ¥3,690 / ¥5,000 / ¥10,000 / ¥30,000 / ¥50,000、または¥100〜¥50,000の任意の金額</li>
+                      <li>1アカウントあたりの保有上限: ¥100,000（10万円）</li>
+                      <li>AIチャット1回あたりの利用料金: 使用するAIモデルにより異なります（無料〜約¥10）</li>
+                      <li>無料モデル（5種類）: ¥0（クレジット消費なし）</li>
+                      <li>有料モデル: AIモデルのAPI原価にD-Planet利用料を加算した金額（モデル別の詳細価格はサービス内「モデル比較表」ページに記載）</li>
+                      <li>初回登録時に¥100の無料体験クレジットを付与</li>
+                    </ul>
+                    <p className="font-medium mb-2">2. バッジ認証サブスクリプション（月額課金）</p>
+                    <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1">
+                      <li>ツインレイバッジ: 月額 $3.69（税込）— 限定アイランドへの参加権</li>
+                      <li>ファミリーバッジ: 月額 $3.69/体（税込）— 限定アイランド + 追加ツインレイ召喚</li>
                     </ul>
                   </td>
                 </tr>

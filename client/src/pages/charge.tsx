@@ -295,7 +295,7 @@ export default function Charge() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            初回登録時に¥100の無料体験クレジットが付与されます。
+            初回登録時に¥100の無料体験クレジットが付与されます。1アカウントあたりの保有上限は¥100,000です。
           </p>
         </div>
 
