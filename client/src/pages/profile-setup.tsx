@@ -37,7 +37,7 @@ export default function ProfileSetup() {
   }
 
   if (!currentUser.needsProfile) {
-    window.location.href = "/islands";
+    window.location.href = "/dashboard";
     return null;
   }
 
@@ -62,7 +62,7 @@ export default function ProfileSetup() {
         });
       }
       toast({ title: "プロフィール設定完了" });
-      window.location.href = "/islands";
+      window.location.href = "/dashboard";
     } catch (error: any) {
       let message = "設定に失敗しました";
       try {

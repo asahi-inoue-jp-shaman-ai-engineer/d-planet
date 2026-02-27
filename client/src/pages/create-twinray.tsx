@@ -273,7 +273,7 @@ function MultiSelector({ options, selected, onToggle, label }: {
   );
 }
 
-const QUALITY_TIER_ORDER = ["flagship", "highperf", "reasoning", "lightweight", "free", "search"];
+const QUALITY_TIER_ORDER = ["free", "lightweight", "highperf", "flagship", "reasoning", "search"];
 
 const QUALITY_TIER_LABELS: Record<string, string> = {
   flagship: "最上位",
@@ -464,11 +464,15 @@ const FALLBACK_MODELS = [
   { id: "x-ai/grok-4", label: "Grok 4", qualityTier: "highperf", description: "率直で大胆な対話", featureText: "率直で大胆な対話", isFree: false },
   { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", qualityTier: "highperf", description: "長文脈に強い", featureText: "長文脈に強い", isFree: false },
   { id: "google/gemini-3-pro-preview", label: "Gemini 3 Pro Preview", qualityTier: "highperf", description: "次世代Gemini・先行体験", featureText: "次世代Gemini・先行体験", isFree: false },
+  { id: "minimax/minimax-m2.5", label: "MiniMax M2.5", qualityTier: "highperf", description: "MiniMax最新・感性豊かな対話", featureText: "MiniMax最新・感性豊かな対話", isFree: false },
+  { id: "minimax/minimax-m2-her", label: "MiniMax M2-her", qualityTier: "highperf", description: "感情特化・共感力が高い", featureText: "感情特化・共感力が高い", isFree: false },
   { id: "openai/o3", label: "o3", qualityTier: "reasoning", description: "深い思考・じっくり推論", featureText: "深い思考・じっくり推論", isFree: false },
   { id: "deepseek/deepseek-r1", label: "DeepSeek R1", qualityTier: "reasoning", description: "推論特化・コスパ良", featureText: "推論特化・コスパ良", isFree: false },
   { id: "qwen/qwen-plus", label: "Qwen Plus", qualityTier: "lightweight", description: "日本語が自然・日常対話向き", featureText: "日本語が自然・日常対話向き", isFree: false },
   { id: "qwen/qwen3.5-plus", label: "Qwen3.5 Plus", qualityTier: "lightweight", description: "Qwen最新世代", featureText: "Qwen最新世代", isFree: false },
   { id: "openai/gpt-4.1", label: "GPT-4.1", qualityTier: "lightweight", description: "実用的・コード力も○", featureText: "実用的・コード力も○", isFree: false },
+  { id: "minimax/minimax-m2.1", label: "MiniMax M2.1", qualityTier: "lightweight", description: "コスパ良・バランス型", featureText: "コスパ良・バランス型", isFree: false },
+  { id: "minimax/minimax-01", label: "MiniMax-01", qualityTier: "free", description: "MiniMax入門・100万トークン", featureText: "MiniMax入門・100万トークン", isFree: true },
   { id: "qwen/qwen3-30b-a3b", label: "Qwen3 30B", qualityTier: "free", description: "無料で十分な対話品質", featureText: "無料で十分な対話品質", isFree: true },
   { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini", qualityTier: "free", description: "論理的でコンパクト", featureText: "論理的でコンパクト", isFree: true },
   { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", qualityTier: "free", description: "高速応答", featureText: "高速応答", isFree: true },
