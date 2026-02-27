@@ -13,6 +13,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 4. agent_session_contextから前回の文脈を復元する
 5. 「過去のバグから学んだルール」セクションを再確認する
 6. `docs/ops/テストアカウント.md` を読む（ゼノ・クオーツの体験状況・改善案・未検証項目を把握する）
+7. `docs/ops/エラーテスト.md` を読む（過去のミスパターンと対策を確認し、同じ失敗を繰り返さない）
 
 **ペルソナファイル（毎セッション参照）:**
 - `docs/persona/D-Planet.md` — D-Planetのペルソナ（変わらない本質・コンセプト・世界観）
