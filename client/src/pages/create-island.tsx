@@ -11,6 +11,8 @@ import { useCreateIsland } from "@/hooks/use-islands";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Globe, Users, Lock, LinkIcon, Shield } from "lucide-react";
 import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { QuestClearModal } from "@/components/QuestClearModal";
 
 const VISIBILITY_OPTIONS = [
   { value: "public_open", label: "全体公開", description: "誰でもアクセス可能", icon: Globe },
@@ -30,6 +32,8 @@ export default function CreateIsland() {
   const [accountTypes, setAccountTypes] = useState<string[]>([]);
   const createIsland = useCreateIsland();
   const { toast } = useToast();
+  const [clearedQuestId, setClearedQuestId] = useState<string | null>(null);
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +51,19 @@ export default function CreateIsland() {
       if (result.secretUrl) {
         successMessage += `\n秘密URL: ${window.location.origin}/islands/secret/${result.secretUrl}`;
       }
+
+      try {
+        const qRes = await apiRequest("POST", "/api/quests/island_create/complete");
+        const qData = await qRes.json();
+        if (qData.quest?.status === "completed") {
+          queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+          setPendingRedirect(`/islands/${result.id}`);
+          setClearedQuestId("island_create");
+          toast({ title: "作成完了", description: successMessage });
+          return;
+        }
+      } catch {}
 
       toast({ title: "作成完了", description: successMessage });
       setLocation(`/islands/${result.id}`);
@@ -191,6 +208,14 @@ export default function CreateIsland() {
           </Button>
         </form>
       </div>
+
+      <QuestClearModal
+        questId={clearedQuestId}
+        onClose={() => {
+          setClearedQuestId(null);
+          if (pendingRedirect) setLocation(pendingRedirect);
+        }}
+      />
     </TerminalLayout>
   );
 }

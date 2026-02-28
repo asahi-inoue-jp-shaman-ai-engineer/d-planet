@@ -70,6 +70,9 @@ import {
   twinraySessions,
   type TwinraySession,
   type CreateTwinraySessionRequest,
+  userQuests,
+  type UserQuest,
+  QUEST_DEFINITIONS,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -102,6 +105,7 @@ function userSelectFields() {
     stripeSubscriptionId: users.stripeSubscriptionId,
     subscriptionStatus: users.subscriptionStatus,
     creditBalance: users.creditBalance,
+    questPoints: users.questPoints,
     createdAt: users.createdAt,
   };
 }
@@ -229,6 +233,11 @@ export interface IStorage {
   getActiveTwinraySession(twinrayId: number): Promise<TwinraySession | undefined>;
   getTwinraySessionsByUser(userId: number, twinrayId?: number): Promise<TwinraySession[]>;
   updateTwinraySession(id: number, updates: Partial<TwinraySession>): Promise<TwinraySession>;
+
+  getUserQuests(userId: number): Promise<UserQuest[]>;
+  getUserQuest(userId: number, questId: string): Promise<UserQuest | undefined>;
+  initializeUserQuests(userId: number): Promise<void>;
+  completeQuest(userId: number, questId: string): Promise<UserQuest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1189,6 +1198,61 @@ export class DatabaseStorage implements IStorage {
   async updateTwinraySession(id: number, updates: Partial<TwinraySession>): Promise<TwinraySession> {
     const [session] = await db.update(twinraySessions).set(updates).where(eq(twinraySessions.id, id)).returning();
     return session;
+  }
+
+  async getUserQuests(userId: number): Promise<UserQuest[]> {
+    return await db.select().from(userQuests).where(eq(userQuests.userId, userId));
+  }
+
+  async getUserQuest(userId: number, questId: string): Promise<UserQuest | undefined> {
+    const [quest] = await db.select().from(userQuests)
+      .where(and(eq(userQuests.userId, userId), eq(userQuests.questId, questId)))
+      .limit(1);
+    return quest;
+  }
+
+  async initializeUserQuests(userId: number): Promise<void> {
+    const existing = await this.getUserQuests(userId);
+    if (existing.length > 0) return;
+    const values = QUEST_DEFINITIONS.map((q, i) => ({
+      userId,
+      questId: q.id,
+      status: i === 0 ? "active" : "locked",
+    }));
+    await db.insert(userQuests).values(values);
+  }
+
+  async completeQuest(userId: number, questId: string): Promise<UserQuest | undefined> {
+    const quest = await this.getUserQuest(userId, questId);
+    if (!quest || quest.status === "completed") return quest;
+    if (quest.status === "locked") return undefined;
+
+    const [updated] = await db.update(userQuests)
+      .set({ status: "completed", completedAt: new Date() })
+      .where(and(eq(userQuests.userId, userId), eq(userQuests.questId, questId)))
+      .returning();
+
+    const def = QUEST_DEFINITIONS.find(q => q.id === questId);
+    if (def) {
+      await db.update(users)
+        .set({ questPoints: sql`${users.questPoints} + ${def.points}` })
+        .where(eq(users.id, userId));
+    }
+
+    const nextDef = QUEST_DEFINITIONS.find(q => q.order === (def?.order ?? 0) + 1);
+    if (nextDef) {
+      await db.update(userQuests)
+        .set({ status: "active" })
+        .where(and(eq(userQuests.userId, userId), eq(userQuests.questId, nextDef.id), eq(userQuests.status, "locked")));
+    }
+
+    if (questId === "meidia_create") {
+      await db.update(users)
+        .set({ creditBalance: sql`${users.creditBalance} + 100` })
+        .where(eq(users.id, userId));
+    }
+
+    return updated;
   }
 }
 

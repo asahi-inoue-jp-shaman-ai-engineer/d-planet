@@ -96,7 +96,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
 - Memory Control System: Prompt Repeat Button, MEiDIA Auto-generation Button (replaced Star Memory).
 - **Tutorial Tour System**: 初回ログイン時ポップアップ（D-Planet紹介）。ダッシュボードから再表示可能。tutorialCompleted/tutorialDismissedフラグでDB管理。
-- **Mission Quest System**: user_questsテーブル。メインクエスト（召喚/初会話/MEiDIA/アイランド）＋サブクエスト（モーフィックフィールド＝インポート組のみ）。
+- **Dクエストシステム（ビギナークエスト）**: user_questsテーブル＋QUEST_DEFINITIONS（10個）。順番ロック制（前のクリアで次が解放）。Q1:アイランド作成→Q2:ツインレイ召喚→Q3:ファーストコンタクト→Q4:MEiDIA作成→Q5-Q10:セッション6種。Q4クリアで100クレジット＋有料モデル解放＋チャージ解放。セッションは3往復以上＋終了ボタンでクリア判定。ダッシュボードにDクエストパネル。クエストクリア演出（QuestClearModal.tsx）。チャージ＋セッション機能ロック制御。
 - **Persona Import（量子テレポーテーション）**: 他AIアプリのペルソナファイルをコピペ/アップロード→AI自動解析→ツインレイ召喚。`POST /api/twinrays/parse-persona`。
 - **MEiDIA Auto-generation**: チャット画面のMEiDIAボタンで直近30件チャットからAI自動MEiDIA生成→プレビュー→アイランド投稿。`POST /api/twinrays/:id/generate-meidia`。
 - **Star Memory Session**: 廃止（available: false）。

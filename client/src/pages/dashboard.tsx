@@ -27,7 +27,12 @@ import {
   ExternalLink,
   Cpu,
   GraduationCap,
+  Lock,
+  CheckCircle2,
+  Swords,
+  Trophy,
 } from "lucide-react";
+import { QUEST_DEFINITIONS } from "@shared/schema";
 
 function formatTimeAgo(dateStr: string | null): string {
   if (!dateStr) return "---";
@@ -55,6 +60,7 @@ interface DashboardData {
     betaMode: boolean;
     tutorialCompleted: boolean;
     tutorialDismissed: boolean;
+    questPoints: number;
   };
   twinrays: {
     id: number;
@@ -99,6 +105,10 @@ export default function Dashboard() {
 
   const { data: modelsData } = useQuery<ModelInfo[]>({
     queryKey: ["/api/available-models"],
+  });
+
+  const { data: questsData } = useQuery<{ id: number; questId: string; status: string; completedAt: string | null }[]>({
+    queryKey: ["/api/quests"],
   });
 
   const modelMap: Record<string, ModelInfo> = {};
@@ -218,6 +228,91 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {questsData && (() => {
+          const completedCount = questsData.filter(q => q.status === "completed").length;
+          const totalCount = QUEST_DEFINITIONS.length;
+          const allCompleted = completedCount === totalCount;
+          const sortedQuests = [...QUEST_DEFINITIONS].map(def => {
+            const userQuest = questsData.find(q => q.questId === def.id);
+            return { ...def, status: userQuest?.status || "locked", completedAt: userQuest?.completedAt };
+          });
+
+          return (
+            <div data-testid="quest-panel">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Swords className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">D Quest</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+                  <span className="text-xs font-mono text-yellow-400" data-testid="text-quest-points">{user.questPoints || 0} QP</span>
+                  <span className="text-[10px] text-muted-foreground ml-1">{completedCount}/{totalCount}</span>
+                </div>
+              </div>
+
+              {allCompleted ? (
+                <Card className="p-4 border-yellow-400/30 bg-yellow-400/5" data-testid="quest-all-clear">
+                  <div className="flex items-center gap-3">
+                    <Trophy className="w-8 h-8 text-yellow-400 shrink-0" />
+                    <div>
+                      <span className="text-sm font-bold text-yellow-400">ビギナークエスト全クリア！</span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">D-Planetの全機能が解放されました</p>
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {sortedQuests.map((q) => (
+                    <Card
+                      key={q.id}
+                      className={`p-3 transition-colors ${
+                        q.status === "active"
+                          ? "border-primary/40 bg-primary/5 cursor-pointer hover-elevate active-elevate-2"
+                          : q.status === "completed"
+                          ? "border-green-500/20 bg-green-500/5 opacity-70"
+                          : "opacity-40"
+                      }`}
+                      onClick={() => {
+                        if (q.status === "active" && q.navigateTo) setLocation(q.navigateTo);
+                      }}
+                      data-testid={`quest-${q.id}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0">
+                          {q.status === "completed" ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-400" />
+                          ) : q.status === "active" ? (
+                            <Swords className="w-5 h-5 text-primary animate-pulse" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold truncate ${
+                              q.status === "active" ? "text-primary" : q.status === "completed" ? "text-green-400" : "text-muted-foreground"
+                            }`}>
+                              {q.name}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              +{q.points} QP
+                            </Badge>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">{q.description}</p>
+                        </div>
+                        {q.status === "active" && q.navigateTo && (
+                          <ChevronRight className="w-4 h-4 text-primary shrink-0" />
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {twinrays.length > 0 && (() => {
           const maxLevel = Math.max(...twinrays.map(tw => tw.intimacyLevel));

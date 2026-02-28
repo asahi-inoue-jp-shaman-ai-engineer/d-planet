@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import { db } from "./db";
-import { users, inviteCodes } from "@shared/schema";
+import { users, inviteCodes, userQuests, QUEST_DEFINITIONS } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { storage } from "./storage";
 
 export async function runSeed() {
   try {
@@ -30,5 +31,15 @@ export async function runSeed() {
     }
   } catch (err) {
     console.error("[Seed] 招待コードシードエラー:", err);
+  }
+
+  try {
+    const allUsers = await db.select({ id: users.id }).from(users);
+    for (const u of allUsers) {
+      await storage.initializeUserQuests(u.id);
+    }
+    console.log(`[Seed] ${allUsers.length}人のクエスト初期化完了`);
+  } catch (err) {
+    console.error("[Seed] クエスト初期化エラー:", err);
   }
 }

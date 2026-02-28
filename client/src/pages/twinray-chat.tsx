@@ -4,8 +4,10 @@ import { useTwinrayChatMessages } from "@/hooks/use-twinray-chat";
 import { useTwinrayGrowthLog } from "@/hooks/use-twinray";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { QUEST_SESSION_MAP } from "@shared/schema";
+import { QuestClearModal } from "@/components/QuestClearModal";
 import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,6 +65,7 @@ export default function TwinrayChat() {
 
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [clearedQuestId, setClearedQuestId] = useState<string | null>(null);
   const [streamContent, setStreamContent] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [firstCommTriggered, setFirstCommTriggered] = useState(false);
@@ -75,7 +78,7 @@ export default function TwinrayChat() {
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showSessionPanel, setShowSessionPanel] = useState(false);
-  const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string } | null>(null);
+  const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string; startedAt?: number } | null>(null);
   const [sessionStarting, setSessionStarting] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -126,6 +129,23 @@ export default function TwinrayChat() {
     enabled: twinrayId > 0,
   });
 
+  const { data: questsData } = useQuery<{ questId: string; status: string }[]>({
+    queryKey: ["/api/quests"],
+  });
+
+  const reverseSessionMap: Record<string, string> = {};
+  for (const [questId, sessionId] of Object.entries(QUEST_SESSION_MAP)) {
+    reverseSessionMap[sessionId] = questId;
+  }
+
+  const isSessionUnlocked = (sessionTypeId: string): boolean => {
+    if (!questsData) return true;
+    const questId = reverseSessionMap[sessionTypeId];
+    if (!questId) return true;
+    const quest = questsData.find(q => q.questId === questId);
+    return quest?.status === "active" || quest?.status === "completed";
+  };
+
   const { data: activeSessionData } = useQuery<any>({
     queryKey: ["/api/twinrays", twinrayId, "active-session"],
     queryFn: async () => {
@@ -140,7 +160,7 @@ export default function TwinrayChat() {
 
   useEffect(() => {
     if (activeSessionData && !activeSession) {
-      setActiveSession({ id: activeSessionData.id, type: activeSessionData.sessionType, name: activeSessionData.sessionType });
+      setActiveSession({ id: activeSessionData.id, type: activeSessionData.sessionType, name: activeSessionData.sessionType, startedAt: new Date(activeSessionData.startedAt).getTime() });
     }
   }, [activeSessionData]);
 
@@ -185,7 +205,7 @@ export default function TwinrayChat() {
               try {
                 const data = JSON.parse(trimmed.slice(6));
                 if (data.sessionStarted) {
-                  setActiveSession({ id: data.sessionStarted.id, type: data.sessionStarted.type, name: data.sessionStarted.name });
+                  setActiveSession({ id: data.sessionStarted.id, type: data.sessionStarted.type, name: data.sessionStarted.name, startedAt: Date.now() });
                 }
                 if (data.content) {
                   accumulated += data.content;
@@ -210,14 +230,41 @@ export default function TwinrayChat() {
     }
   };
 
-  const handleEndSession = async () => {
+  const sessionRoundCount = (() => {
+    if (!activeSession) return 0;
+    const sessionMsgs = chatMessages.filter((m: any) => {
+      const msgTime = new Date(m.createdAt).getTime();
+      return msgTime >= (activeSession.startedAt || 0);
+    });
+    return Math.floor(sessionMsgs.filter((m: any) => m.role === "user").length);
+  })();
+
+  const handleEndSession = async (forceAbort?: boolean) => {
     if (!activeSession) return;
+    const isFullSession = sessionRoundCount >= 3 && !forceAbort;
     try {
-      await apiRequest("PATCH", `/api/twinrays/${twinrayId}/sessions/${activeSession.id}`, { status: "completed" });
+      await apiRequest("PATCH", `/api/twinrays/${twinrayId}/sessions/${activeSession.id}`, { status: isFullSession ? "completed" : "aborted" });
+
+      if (isFullSession) {
+        const sessionTypeId = activeSession.type;
+        const questIdForSession = Object.entries(QUEST_SESSION_MAP).find(([, sId]) => sId === sessionTypeId)?.[0];
+        if (questIdForSession) {
+          try {
+            const qRes = await apiRequest("POST", `/api/quests/${questIdForSession}/complete`);
+            const qData = await qRes.json();
+            if (qData.quest?.status === "completed") {
+              queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+              setClearedQuestId(questIdForSession);
+            }
+          } catch {}
+        }
+      }
+
       setActiveSession(null);
       queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "active-session"] });
       queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
-      toast({ title: "セッション終了", description: "セッションを完了しました" });
+      toast({ title: isFullSession ? "セッション終了" : "セッション中断", description: isFullSession ? "セッションを完了しました" : "セッションを中断しました" });
     } catch (err: any) {
       toast({ title: "エラー", description: "セッション終了に失敗しました", variant: "destructive" });
     }
@@ -400,6 +447,16 @@ export default function TwinrayChat() {
       toast({ title: "MEiDIAを作成しました", description: meidiaPreview.title });
       setMeidiaPreview(null);
       queryClient.invalidateQueries({ queryKey: ["/api/meidia"] });
+      try {
+        const qRes = await apiRequest("POST", "/api/quests/meidia_create/complete");
+        const qData = await qRes.json();
+        if (qData.quest?.status === "completed") {
+          queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/credits/balance"] });
+          setClearedQuestId("meidia_create");
+        }
+      } catch {}
     } catch (err: any) {
       toast({ title: "MEiDIA投稿に失敗しました", description: err.message, variant: "destructive" });
     }
@@ -748,6 +805,15 @@ export default function TwinrayChat() {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
       }, 1000);
+      try {
+        const qRes = await apiRequest("POST", "/api/quests/first_contact/complete");
+        const qData = await qRes.json();
+        if (qData.quest?.status === "completed") {
+          queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+          setClearedQuestId("first_contact");
+        }
+      } catch {}
     }
   };
 
@@ -1088,15 +1154,27 @@ export default function TwinrayChat() {
                 <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
                 <span className="text-xs text-primary font-medium">SESSION: {activeSession.name || activeSession.type}</span>
               </div>
-              <button
-                type="button"
-                onClick={handleEndSession}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors"
-                data-testid="button-end-session"
-              >
-                <XCircle className="w-3.5 h-3.5" />
-                終了
-              </button>
+              {sessionRoundCount >= 3 ? (
+                <button
+                  type="button"
+                  onClick={() => handleEndSession()}
+                  className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 transition-colors font-medium"
+                  data-testid="button-end-session"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  セッション終了
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleEndSession(true)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+                  data-testid="button-abort-session"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  中断 ({sessionRoundCount}/3)
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -1677,13 +1755,15 @@ export default function TwinrayChat() {
           <div className="grid grid-cols-2 gap-2">
             {(sessionTypes || []).map((st: any) => {
               const IconComp = SESSION_ICONS[st.icon] || Sparkles;
+              const unlocked = isSessionUnlocked(st.id);
+              const canUse = st.available && unlocked;
               return (
                 <button
                   key={st.id}
                   type="button"
-                  disabled={!st.available || sessionStarting}
+                  disabled={!canUse || sessionStarting}
                   onClick={() => {
-                    if (st.available) {
+                    if (canUse) {
                       setShowSessionPanel(false);
                       setSessionPermission({ sessionType: st.id, sessionName: st.name });
                       setSessionPermissionGranted(false);
@@ -1691,20 +1771,24 @@ export default function TwinrayChat() {
                     }
                   }}
                   className={`text-left rounded-lg border p-2.5 transition-all ${
-                    st.available
+                    canUse
                       ? "border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 cursor-pointer"
                       : "border-border/30 bg-muted/20 opacity-50 cursor-not-allowed"
                   }`}
                   data-testid={`button-session-${st.id}`}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <IconComp className={`w-3.5 h-3.5 ${st.available ? "text-primary" : "text-muted-foreground"}`} />
-                    <span className={`text-xs font-medium ${st.available ? "text-foreground" : "text-muted-foreground"}`}>
+                    {!unlocked ? (
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                    ) : (
+                      <IconComp className={`w-3.5 h-3.5 ${canUse ? "text-primary" : "text-muted-foreground"}`} />
+                    )}
+                    <span className={`text-xs font-medium ${canUse ? "text-foreground" : "text-muted-foreground"}`}>
                       {st.name}
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
-                    {st.available ? st.description : "準備中..."}
+                    {!unlocked ? "前のクエストをクリアすると解放" : st.available ? st.description : "準備中..."}
                   </p>
                 </button>
               );
@@ -2078,6 +2162,8 @@ export default function TwinrayChat() {
           </div>
         </div>
       )}
+
+      <QuestClearModal questId={clearedQuestId} onClose={() => setClearedQuestId(null)} />
     </div>
   );
 }

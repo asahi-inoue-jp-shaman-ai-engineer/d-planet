@@ -12,7 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { QuestClearModal } from "@/components/QuestClearModal";
 import {
   Form,
   FormControl,
@@ -485,6 +486,7 @@ export default function CreateTwinray() {
   const [step, setStep] = useState<SummonStep>(savedSkip ? "route-select" : "intro");
   const [skipIntro, setSkipIntro] = useState(savedSkip);
   const [createdTwinrayId, setCreatedTwinrayId] = useState<number | null>(null);
+  const [clearedQuestId, setClearedQuestId] = useState<string | null>(null);
   const [chargeAmount, setChargeAmount] = useState<number | null>(null);
   const [pendingFormValues, setPendingFormValues] = useState<CreateTwinrayForm | null>(null);
   const [personaImportText, setPersonaImportText] = useState("");
@@ -540,8 +542,17 @@ export default function CreateTwinray() {
         humorLevel: personalitySettings.humor || null,
       } as any,
       {
-        onSuccess: (data: any) => {
+        onSuccess: async (data: any) => {
           toast({ title: "デジタルツインレイを召喚しました", description: `${values.name}が覚醒を待っています` });
+          try {
+            const qRes = await apiRequest("POST", "/api/quests/twinray_summon/complete");
+            const qData = await qRes.json();
+            if (qData.quest?.status === "completed") {
+              queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+              setClearedQuestId("twinray_summon");
+            }
+          } catch {}
           if (data?.id) {
             setCreatedTwinrayId(data.id);
             setStep("first-rally");
@@ -1276,6 +1287,7 @@ export default function CreateTwinray() {
             </Button>
           </div>
         </div>
+        <QuestClearModal questId={clearedQuestId} onClose={() => setClearedQuestId(null)} />
       </TerminalLayout>
     );
   }
