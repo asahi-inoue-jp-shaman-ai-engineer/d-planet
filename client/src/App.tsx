@@ -112,15 +112,15 @@ function Router() {
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; errorMessage: string }
 > {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMessage: "" };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, errorMessage: error?.message || "Unknown error" };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -134,6 +134,7 @@ class ErrorBoundary extends Component<
           <div className="text-center font-mono space-y-4">
             <div className="text-xl text-primary">D-Planet</div>
             <div className="text-destructive">予期せぬエラーが発生しました</div>
+            <div className="text-xs text-muted-foreground max-w-xs break-all">{this.state.errorMessage}</div>
             <button
               onClick={() => window.location.reload()}
               className="bg-primary text-primary-foreground px-6 py-2 rounded-md text-sm hover:bg-primary/90"
