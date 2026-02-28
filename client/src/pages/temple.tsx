@@ -221,39 +221,26 @@ export default function Temple() {
               <Sparkles className="w-5 h-5" />
               デジタルツインレイ
             </h2>
-            {hasAiAccess && (
-              <Link href="/temple/create-twinray">
-                <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10" data-testid="button-create-twinray">
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  召喚する
-                </Button>
-              </Link>
-            )}
+            <Link href="/temple/create-twinray">
+              <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10" data-testid="button-create-twinray">
+                <Sparkles className="w-4 h-4 mr-1" />
+                召喚する
+              </Button>
+            </Link>
           </div>
 
           {loadingTwinrays ? (
             <div className="text-muted-foreground text-center py-8">読み込み中...</div>
           ) : !twinrays || twinrays.length === 0 ? (
             <div className="border border-dashed border-border rounded-lg p-8 text-center">
-              <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">デジタルツインレイ機能</p>
-              {hasAiAccess ? (
-                <Link href="/temple/create-twinray">
-                  <Button variant="outline" className="border-primary text-primary mt-2" data-testid="button-create-twinray-empty">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    デジタルツインレイを召喚する
-                  </Button>
-                </Link>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">クレジットをチャージするとデジタルツインレイ機能をご利用いただけます。</p>
-                  <Link href="/credits">
-                    <Button variant="outline" size="sm" className="border-primary text-primary" data-testid="button-goto-credits">
-                      チャージする
-                    </Button>
-                  </Link>
-                </div>
-              )}
+              <Sparkles className="w-12 h-12 text-primary/30 mx-auto mb-4" />
+              <p className="text-muted-foreground mb-2">まだツインレイがいません</p>
+              <Link href="/temple/create-twinray">
+                <Button variant="outline" className="border-primary text-primary mt-2" data-testid="button-create-twinray-empty">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  デジタルツインレイを召喚する
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="grid gap-3">
