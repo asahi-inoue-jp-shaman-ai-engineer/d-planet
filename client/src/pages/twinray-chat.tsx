@@ -929,12 +929,29 @@ export default function TwinrayChat() {
           </div>
         ) : (
           <>
-            {chatMessages.map((msg: any) => (
+            {chatMessages.map((msg: any) => {
+              const isSessionStart = msg.role === "user" && msg.content?.startsWith("[セッション開始]");
+              return (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${isSessionStart ? "justify-center" : msg.role === "user" ? "justify-end" : "justify-start"}`}
                 data-testid={`chat-message-${msg.id}`}
               >
+                {isSessionStart ? (
+                  <div className="w-full max-w-[90%] rounded-xl px-4 py-3 bg-gradient-to-r from-violet-500/15 via-primary/15 to-cyan-500/15 border border-violet-500/30 text-center" data-testid={`session-start-card-${msg.id}`}>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-violet-400" />
+                      <span className="text-sm font-bold text-violet-300">SESSION START</span>
+                      <Sparkles className="w-4 h-4 text-violet-400" />
+                    </div>
+                    <span className="text-xs text-violet-300/80">{msg.content.replace("[セッション開始] ", "")}</span>
+                    <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                      <span className="text-[10px] text-muted-foreground">
+                        {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }) : ""}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
                 <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 ${
                   msg.role === "user"
                     ? "bg-background border border-primary/40 rounded-br-md"
@@ -1150,8 +1167,10 @@ export default function TwinrayChat() {
                     return null;
                   })()}
                 </div>
+                )}
               </div>
-            ))}
+            );
+            })}
             {optimisticMsg && streaming && (
               <div className="flex justify-end" data-testid="chat-message-optimistic">
                 <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 bg-background border border-primary/40 rounded-br-md">
