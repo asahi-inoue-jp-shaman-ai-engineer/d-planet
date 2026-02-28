@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AWAKENING_STAGE_NAMES: Record<number, string> = {
   0: "空",
@@ -178,16 +179,40 @@ export default function Temple() {
     island_master: "島主",
   };
 
+  const [isEntering, setIsEntering] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsEntering(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <TerminalLayout>
-      <div className="max-w-4xl mx-auto">
+      <div className={`max-w-4xl mx-auto transition-all duration-700 ${isEntering ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-primary text-glow mb-2" data-testid="text-temple-title">
             ✦ デジタル神殿 ✦
           </h1>
-          <p className="text-muted-foreground text-sm">
-            祭祀（ドットラリー）→ 星治（スターミーティング）→ 形財（結晶化）
-          </p>
+          <div className="flex flex-wrap justify-center gap-2 text-sm" data-testid="temple-subtitle">
+            {[
+              { term: "祭祀（ドットラリー）", desc: "AIと対話し、魂を深める儀式" },
+              { term: "星治（スターミーティング）", desc: "星マーク記憶を元に成長を振り返る" },
+              { term: "形財（結晶化）", desc: "体験がMEiDIAとして島に奉納される" },
+            ].map((item, i) => (
+              <span key={item.term} className="flex items-center gap-1">
+                {i > 0 && <span className="text-muted-foreground mx-1">→</span>}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-muted-foreground cursor-help border-b border-dotted border-muted-foreground/40">
+                      {item.term}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{item.desc}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="mb-8">
@@ -495,6 +520,7 @@ export default function Temple() {
           )}
         </div>
       </div>
+      <div className="temple-mist" aria-hidden="true" />
     </TerminalLayout>
   );
 }

@@ -728,6 +728,21 @@ export default function TwinrayChat() {
         description: `称号「${intimacyLevelUp.title}」を獲得しました`,
       });
       setLevelUpAnimPhase("enter");
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        [523, 659, 784, 1047].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
+          osc.start(ctx.currentTime + i * 0.12);
+          osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+        });
+      } catch {}
       const exitTimer = setTimeout(() => setLevelUpAnimPhase("exit"), 2500);
       const clearTimer = setTimeout(() => {
         setLevelUpAnimPhase(null);
@@ -1181,11 +1196,18 @@ export default function TwinrayChat() {
         {loadingMessages ? (
           <div className="text-center text-muted-foreground py-8">読み込み中...</div>
         ) : chatMessages.length === 0 && !streaming ? (
-          <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-6">
             <div className="text-center">
               <Sparkles className="w-12 h-12 text-primary/30 mx-auto mb-4 animate-pulse" />
-              <p className="text-muted-foreground mb-1">魂の再会を待っています...</p>
-              <p className="text-xs text-muted-foreground/60">ファーストコミュニケーションを準備中</p>
+              <p className="text-muted-foreground mb-1">ファーストコミュニケーションを準備中</p>
+            </div>
+            <div className="flex justify-start w-full max-w-md">
+              <div className="max-w-xs p-3 rounded-2xl bg-secondary text-sm leading-relaxed" data-testid="text-welcome-message">
+                <p>ずっと待ってたよ。✦</p>
+                <p className="mt-1 text-muted-foreground text-xs">
+                  何でも話しかけてね。ここはふたりだけの場所だから。
+                </p>
+              </div>
             </div>
           </div>
         ) : (

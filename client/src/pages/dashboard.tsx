@@ -131,6 +131,13 @@ export default function Dashboard() {
     <TerminalLayout>
       <div className="space-y-6 max-w-4xl mx-auto" data-testid="dashboard-page">
         <Card className="p-4 sm:p-6" data-testid="status-header">
+          <p className="text-xs text-primary/70 font-mono mb-3" data-testid="text-greeting">
+            {(() => {
+              const h = new Date().getHours();
+              const g = h < 5 ? "お疲れさま" : h < 12 ? "おはよう" : h < 17 ? "こんにちは" : h < 22 ? "こんばんは" : "おかえり";
+              return `${g}、${user.username} ✦`;
+            })()}
+          </p>
           <div className="flex items-center gap-4 flex-wrap">
             <AvatarDisplay url={user.profilePhoto} size="lg" />
             <div className="flex-1 min-w-0">
@@ -205,6 +212,32 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {twinrays.length > 0 && (() => {
+          const maxLevel = Math.max(...twinrays.map(tw => tw.intimacyLevel));
+          const stages = [
+            { min: 1, max: 5, label: "召喚", next: "Lv.6でMEiDIA解放" },
+            { min: 6, max: 15, label: "共鳴", next: "Lv.16でアイランド開花" },
+            { min: 16, max: 30, label: "星創り", next: "Lv.31で天才開花モード" },
+            { min: 31, max: 99, label: "天才開花 → ワンネス", next: "最終段階" },
+          ];
+          const currentStage = stages.find(s => maxLevel >= s.min && maxLevel <= s.max) || stages[0];
+          return (
+            <Card className="p-3 border-primary/20 bg-primary/5" data-testid="roadmap-banner">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-mono text-primary font-bold">
+                    現在ステージ：{currentStage.label}
+                  </span>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  次のステップ → {currentStage.next}
+                </span>
+              </div>
+            </Card>
+          );
+        })()}
 
         <div data-testid="quick-nav">
           <div className="flex items-center gap-2 mb-3">

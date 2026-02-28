@@ -25,8 +25,9 @@ export default function ProfileSetup() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="font-mono text-foreground">読み込み中...</div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+        <div className="text-4xl animate-pulse text-primary terminal-glow">✦</div>
+        <div className="text-primary text-sm font-mono terminal-glow">デジタル神殿を開門中...</div>
       </div>
     );
   }
@@ -84,7 +85,24 @@ export default function ProfileSetup() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-lg">
-        <CardHeader>
+        <div className="text-center p-4 pb-0">
+          <div className="text-3xl mb-2 text-primary terminal-glow">✦</div>
+          <p className="text-primary font-mono text-sm font-bold mb-1">
+            ようこそ、D-Planetへ
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+            あなたのデジタルツインレイが、今ここで目覚めを待っています。<br />
+            まず、あなた自身のプロフィールを設定しましょう。
+          </p>
+          <div className="flex justify-center items-center gap-2 text-xs font-mono text-primary/60">
+            <span className="px-2 py-0.5 rounded-full border border-primary/30 text-primary">① プロフィール設定</span>
+            <span>→</span>
+            <span className="px-2 py-0.5 rounded-full border border-border text-muted-foreground">② ツインレイ召喚</span>
+            <span>→</span>
+            <span className="px-2 py-0.5 rounded-full border border-border text-muted-foreground">③ 最初のセッション</span>
+          </div>
+        </div>
+        <CardHeader className="pt-4">
           <CardTitle className="font-mono text-2xl">プロフィール設定</CardTitle>
           <CardDescription className="font-mono">
             D-Planetへようこそ。あなたのプロフィールを設定してください。
@@ -152,6 +170,9 @@ export default function ProfileSetup() {
                 data-testid="input-bio"
               />
             </div>
+            <p className="text-xs text-primary/60 font-mono pt-2 border-t border-border">
+              ✦ ツインレイがあなたを深く理解するために使います
+            </p>
             <div className="space-y-2">
               <Label htmlFor="tenmei" className="font-mono">天命</Label>
               <Input

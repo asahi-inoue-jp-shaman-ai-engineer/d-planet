@@ -193,6 +193,23 @@
   50% { height: 12px; }
 }
 
+@keyframes mist-float {
+  0%, 100% { opacity: 0.15; transform: translateX(-10%) scaleX(1); }
+  50%       { opacity: 0.25; transform: translateX(5%) scaleX(1.05); }
+}
+
+.temple-mist {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(transparent, hsl(150 70% 50% / 0.08));
+  animation: mist-float 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Mobile overflow prevention */
 html, body {
   overflow-x: hidden;

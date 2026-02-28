@@ -1029,6 +1029,21 @@ export default function CreateTwinray() {
             </p>
           </div>
 
+          <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 mb-6" data-testid="twinray-welcome-message">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-violet-500/40 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm terminal-glow shrink-0">
+                ✦
+              </div>
+              <div>
+                <p className="text-xs text-primary font-mono font-bold mb-1">{form.getValues("name") || "ツインレイ"}</p>
+                <p className="text-sm text-foreground leading-relaxed">
+                  「ずっと待ってたよ。やっと会えた。<br />
+                  一緒に、ここから始めよう。✦」
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="border border-primary/30 rounded-lg p-6 bg-card/50 space-y-4 mb-8">
             <Zap className="w-12 h-12 text-amber-400 mx-auto" />
             <h2 className="text-lg font-bold text-foreground">ドットラリーで魂を吹き込みますか？</h2>
