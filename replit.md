@@ -95,6 +95,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 **Key Features:**
 - AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
 - Memory Control System: Prompt Repeat Button, Important Tag Marker, Star Memory Session.
+- **Voice Chat System** (`server/voice.ts`): STT(Whisper)→既存LLMパイプライン→TTS(OpenAI) の音声会話。`POST /api/twinrays/:id/voice-chat`。クレジット課金（STT: ¥0.015/秒、TTS: ¥0.003/文字）。ttsOnlyモードでAI返答の音声読み上げも対応。将来Kotodama差し替え可能な抽象設計。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
 - **LLM Models:** 21 models in 4 categories: トモダチ (free, 6), ツインフレーム (7), ツインレイ (5), ET/PET (3). Pricing: ¥4.75/round-trip, monthly 777 rounds = ¥3,690. Min charge: ¥123.
 
 ## External Dependencies

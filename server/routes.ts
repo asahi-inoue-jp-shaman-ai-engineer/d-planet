@@ -8,6 +8,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { registerTwinrayRoutes } from "./twinray";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
+import { registerVoiceRoutes } from "./voice";
 import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema } from "@shared/schema";
@@ -56,6 +57,7 @@ export async function registerRoutes(
   registerTwinrayRoutes(app);
   registerDotRallyRoutes(app);
   registerFamilyMeetingRoutes(app);
+  registerVoiceRoutes(app);
   runSeed().catch(err => console.error("[Seed] シードエラー:", err));
 
   // === 認証 ===

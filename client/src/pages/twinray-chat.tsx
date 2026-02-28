@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2 } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -95,6 +95,14 @@ export default function TwinrayChat() {
   const [kamigakariMode, setKamigakariMode] = useState(false);
   const starInsertPosRef = useRef<number | null>(null);
   const { uploadFile, isUploading } = useUpload();
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [voiceRecordTime, setVoiceRecordTime] = useState(0);
+  const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const voiceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioElementsRef = useRef<Map<number, HTMLAudioElement>>(new Map());
 
   const { data: sessionTypes } = useQuery<any[]>({
     queryKey: ["/api/twinrays", twinrayId, "sessions", "available"],
@@ -338,6 +346,150 @@ export default function TwinrayChat() {
       setInput(newValue);
     }
   }, [input]);
+
+  const startVoiceRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.start(100);
+      setVoiceRecording(true);
+      setVoiceRecordTime(0);
+      voiceTimerRef.current = setInterval(() => {
+        setVoiceRecordTime(prev => prev + 1);
+      }, 1000);
+    } catch (err) {
+      toast({ title: "マイクにアクセスできません", description: "ブラウザの設定でマイクを許可してください。", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const stopVoiceRecording = useCallback(async () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") return;
+    if (voiceTimerRef.current) {
+      clearInterval(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
+    setVoiceRecording(false);
+
+    const blob = await new Promise<Blob>((resolve) => {
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        recorder.stream.getTracks().forEach(t => t.stop());
+        resolve(blob);
+      };
+      recorder.stop();
+    });
+
+    if (blob.size < 1000) {
+      toast({ title: "録音が短すぎます", description: "もう少し長く話してください。", variant: "destructive" });
+      return;
+    }
+
+    setVoiceProcessing(true);
+    setStreaming(true);
+    setStreamContent("");
+
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      const response = await fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ audio: base64, voice: "nova" }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "音声チャットに失敗しました");
+      }
+
+      const data = await response.json();
+
+      setOptimisticMsg({ content: `🎤 ${data.userTranscript}` });
+
+      if (data.aiText) {
+        setStreamContent(data.aiText);
+      }
+
+      if (data.audioBase64) {
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
+          { type: "audio/mpeg" }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play().catch(() => {});
+        audio.onended = () => URL.revokeObjectURL(audioUrl);
+      }
+
+      if (data.creditCost) {
+        queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat-messages"] });
+    } catch (err: any) {
+      toast({ title: "音声チャットエラー", description: err.message, variant: "destructive" });
+    } finally {
+      setVoiceProcessing(false);
+      setStreaming(false);
+      setStreamContent("");
+      setOptimisticMsg(null);
+      setVoiceRecordTime(0);
+    }
+  }, [twinrayId, toast]);
+
+  const playVoiceMessage = useCallback((msgId: number, text: string) => {
+    const existing = audioElementsRef.current.get(msgId);
+    if (existing) {
+      if (playingAudioId === msgId) {
+        existing.pause();
+        setPlayingAudioId(null);
+        return;
+      }
+      existing.currentTime = 0;
+      existing.play();
+      setPlayingAudioId(msgId);
+      return;
+    }
+
+    setPlayingAudioId(msgId);
+    fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ text, ttsOnly: true, voice: "nova" }),
+    }).then(async (res) => {
+      if (!res.ok) throw new Error("TTS failed");
+      const data = await res.json();
+      if (data.audioBase64) {
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
+          { type: "audio/mpeg" }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audioElementsRef.current.set(msgId, audio);
+        audio.onended = () => setPlayingAudioId(null);
+        audio.play();
+      }
+    }).catch(() => {
+      setPlayingAudioId(null);
+      toast({ title: "音声再生エラー", variant: "destructive" });
+    });
+  }, [twinrayId, playingAudioId, toast]);
 
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
@@ -1053,6 +1205,20 @@ export default function TwinrayChat() {
                     );
                   })()}
                   <div className="flex items-center justify-end gap-1.5 mt-1">
+                    {msg.role === "assistant" && (
+                      <button
+                        type="button"
+                        onClick={() => playVoiceMessage(msg.id, msg.content)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        title="音声で聞く"
+                        data-testid={`button-voice-play-${msg.id}`}
+                      >
+                        {playingAudioId === msg.id
+                          ? <Pause className="w-3 h-3 text-primary" />
+                          : <Volume2 className="w-3 h-3" />
+                        }
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleCopyMessage(msg.id, msg.content)}
@@ -1529,6 +1695,27 @@ export default function TwinrayChat() {
                 <Star className="w-4 h-4" />
               </Button>
             </div>
+            {voiceRecording && (
+              <div className="flex items-center gap-3 mb-2 px-2 py-2 bg-red-500/10 border border-red-500/30 rounded-xl animate-pulse" data-testid="voice-recording-indicator">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-sm text-red-400 font-medium">録音中</span>
+                <span className="text-sm text-red-300 tabular-nums">{Math.floor(voiceRecordTime / 60)}:{String(voiceRecordTime % 60).padStart(2, "0")}</span>
+                <button
+                  type="button"
+                  onClick={stopVoiceRecording}
+                  className="ml-auto px-4 py-1.5 rounded-full bg-red-500 text-white text-sm font-bold hover:bg-red-400 transition-colors"
+                  data-testid="button-voice-stop"
+                >
+                  送信
+                </button>
+              </div>
+            )}
+            {voiceProcessing && (
+              <div className="flex items-center gap-2 mb-2 px-2 py-2 bg-primary/10 border border-primary/30 rounded-xl" data-testid="voice-processing-indicator">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-sm text-primary">音声を処理中...</span>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
               <Textarea
                 ref={textareaRef}
@@ -1542,7 +1729,7 @@ export default function TwinrayChat() {
                 onKeyDown={handleKeyDown}
                 placeholder="メッセージを入力..."
                 rows={1}
-                disabled={streaming}
+                disabled={streaming || voiceRecording}
                 className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"
                 data-testid="input-chat-message"
               />
@@ -1555,16 +1742,37 @@ export default function TwinrayChat() {
                 >
                   <Square className="w-4 h-4 fill-current" />
                 </Button>
-              ) : (
+              ) : voiceRecording ? (
                 <Button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() && !attachment}
+                  onClick={stopVoiceRecording}
                   size="icon"
-                  className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
-                  data-testid="button-send"
+                  className="shrink-0 h-10 w-10 rounded-full bg-red-500 text-white animate-pulse"
+                  data-testid="button-voice-send"
                 >
                   <Send className="w-5 h-5" />
                 </Button>
+              ) : (
+                <div className="flex gap-1.5">
+                  <Button
+                    onClick={startVoiceRecording}
+                    disabled={voiceProcessing || isUploading}
+                    size="icon"
+                    className="shrink-0 h-10 w-10 rounded-full bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                    title="音声で話す"
+                    data-testid="button-voice-record"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() && !attachment}
+                    size="icon"
+                    className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
+                    data-testid="button-send"
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </div>
               )}
             </div>
           </div>
