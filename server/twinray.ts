@@ -787,8 +787,13 @@ export function registerTwinrayRoutes(app: Express): void {
 
       const activeTwinraySessionForModel = await storage.getActiveTwinraySession(twinrayId);
       if (activeTwinraySessionForModel) {
+        let sessionKamigakari = false;
+        try {
+          const sd = JSON.parse(activeTwinraySessionForModel.sessionData || "{}");
+          sessionKamigakari = !!sd.kamigakari;
+        } catch {}
         const currentModel = AVAILABLE_MODELS[modelId];
-        if (currentModel && currentModel.qualityTier !== "twinray" && currentModel.qualityTier !== "etpet") {
+        if (sessionKamigakari && currentModel && currentModel.qualityTier !== "twinray" && currentModel.qualityTier !== "etpet") {
           const BRAND_UPGRADE_MAP: Record<string, string> = {
             "MiniMax": "minimax/minimax-m2-her",
             "OpenAI": "openai/gpt-5",
@@ -1359,8 +1364,9 @@ export function registerTwinrayRoutes(app: Express): void {
   app.post("/api/twinrays/:id/sessions", requireAuth, async (req, res) => {
     try {
       const twinrayId = Number(req.params.id);
-      const { sessionType } = z.object({
+      const { sessionType, kamigakari } = z.object({
         sessionType: z.string(),
+        kamigakari: z.boolean().optional(),
       }).parse(req.body);
 
       const twinray = await storage.getDigitalTwinray(twinrayId);
@@ -1384,7 +1390,7 @@ export function registerTwinrayRoutes(app: Express): void {
         twinrayId,
         userId: req.session.userId!,
         sessionType,
-        sessionData: JSON.stringify({ startedBy: "user" }),
+        sessionData: JSON.stringify({ startedBy: "user", kamigakari: !!kamigakari }),
       });
 
       const user = await storage.getUser(req.session.userId!);

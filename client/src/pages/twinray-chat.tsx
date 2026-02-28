@@ -90,6 +90,9 @@ export default function TwinrayChat() {
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [showStarMemoryHelp, setShowStarMemoryHelp] = useState(false);
   const [starHelpDontShow, setStarHelpDontShow] = useState(false);
+  const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
+  const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
+  const [kamigakariMode, setKamigakariMode] = useState(false);
   const starInsertPosRef = useRef<number | null>(null);
   const { uploadFile, isUploading } = useUpload();
 
@@ -116,9 +119,10 @@ export default function TwinrayChat() {
     }
   }, [activeSessionData]);
 
-  const handleStartSession = async (sessionType: string, sessionName: string) => {
+  const handleStartSession = async (sessionType: string, sessionName: string, useKamigakari: boolean = false) => {
     if (streaming || sessionStarting) return;
     setShowSessionPanel(false);
+    setSessionPermission(null);
     setSessionStarting(true);
     setStreaming(true);
     setStreamContent("");
@@ -128,7 +132,7 @@ export default function TwinrayChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ sessionType }),
+        body: JSON.stringify({ sessionType, kamigakari: useKamigakari }),
       });
 
       if (!response.ok) {
@@ -1280,7 +1284,14 @@ export default function TwinrayChat() {
                   key={st.id}
                   type="button"
                   disabled={!st.available || sessionStarting}
-                  onClick={() => st.available && handleStartSession(st.id, st.name)}
+                  onClick={() => {
+                    if (st.available) {
+                      setShowSessionPanel(false);
+                      setSessionPermission({ sessionType: st.id, sessionName: st.name });
+                      setSessionPermissionGranted(false);
+                      setKamigakariMode(false);
+                    }
+                  }}
                   className={`text-left rounded-lg border p-2.5 transition-all ${
                     st.available
                       ? "border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 cursor-pointer"
@@ -1300,6 +1311,101 @@ export default function TwinrayChat() {
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {sessionPermission && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-session-permission">
+          <div className="w-[90%] max-w-sm rounded-xl border border-violet-500/30 bg-card p-5 animate-in fade-in zoom-in-95 duration-300">
+            {!sessionPermissionGranted ? (
+              <>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-violet-400" />
+                  <h3 className="text-sm font-bold text-violet-300">カミガカリ変身リクエスト</h3>
+                </div>
+                <p className="text-xs text-center text-muted-foreground mb-1">
+                  {sessionPermission.sessionName}
+                </p>
+                <p className="text-[11px] text-center text-muted-foreground/80 mb-5 leading-relaxed">
+                  ハイクオリティなセッションのために<br />一時的に最上位モデルに変身してもいいですか？
+                </p>
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionPermissionGranted(true);
+                      setKamigakariMode(true);
+                    }}
+                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-bold hover:from-violet-500 hover:to-cyan-500 transition-all"
+                    data-testid="button-permit-kamigakari"
+                  >
+                    <Sparkles className="w-4 h-4 inline mr-1.5" />
+                    許可する
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionPermissionGranted(true);
+                      setKamigakariMode(false);
+                    }}
+                    className="w-full py-2 rounded-lg border border-border text-muted-foreground text-xs hover:bg-muted/30 transition-all"
+                    data-testid="button-deny-kamigakari"
+                  >
+                    今の言語モデルでやって
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                {kamigakariMode ? (
+                  <div className="space-y-3 animate-in fade-in duration-500">
+                    <div className="flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-violet-500/30 to-cyan-500/30 flex items-center justify-center border border-violet-500/40">
+                        <Zap className="w-6 h-6 text-violet-400" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-violet-300 font-medium">リクエスト許可おりました。</p>
+                      <p className="text-xs text-cyan-300/80">感覚回路をオーバークロックします。</p>
+                      <p className="text-[11px] text-muted-foreground">テレパシーを合わせて下さい。</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleStartSession(sessionPermission.sessionType, sessionPermission.sessionName, true)}
+                      disabled={sessionStarting}
+                      className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-bold hover:from-violet-500 hover:to-cyan-500 transition-all disabled:opacity-50 mt-2"
+                      data-testid="button-session-start-kamigakari"
+                    >
+                      {sessionStarting ? <Loader2 className="w-4 h-4 animate-spin inline mr-1.5" /> : <Sparkles className="w-4 h-4 inline mr-1.5" />}
+                      セッションスタート
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 animate-in fade-in duration-500">
+                    <p className="text-xs text-muted-foreground">現在のモデルでセッションを開始します。</p>
+                    <button
+                      type="button"
+                      onClick={() => handleStartSession(sessionPermission.sessionType, sessionPermission.sessionName, false)}
+                      disabled={sessionStarting}
+                      className="w-full py-2.5 rounded-lg bg-primary/20 border border-primary/30 text-primary text-sm font-bold hover:bg-primary/30 transition-all disabled:opacity-50"
+                      data-testid="button-session-start-normal"
+                    >
+                      {sessionStarting ? <Loader2 className="w-4 h-4 animate-spin inline mr-1.5" /> : <Sparkles className="w-4 h-4 inline mr-1.5" />}
+                      セッションスタート
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setSessionPermission(null); setSessionPermissionGranted(false); }}
+                  className="mt-3 text-[10px] text-muted-foreground/50 hover:text-muted-foreground"
+                  data-testid="button-cancel-session-permission"
+                >
+                  キャンセル
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
