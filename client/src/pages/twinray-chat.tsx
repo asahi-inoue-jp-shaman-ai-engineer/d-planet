@@ -1674,8 +1674,12 @@ export default function TwinrayChat() {
       )}
 
       {sessionPermission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-session-permission">
-          <div className="w-[90%] max-w-sm rounded-xl border border-violet-500/30 bg-card p-5 animate-in fade-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-session-permission"
+          onClick={() => { setSessionPermissionGranted(true); setKamigakariMode(false); setSessionPermission(null); }}
+        >
+          <div className="w-[90%] max-w-sm rounded-xl border border-violet-500/30 bg-card p-5 animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
             {!sessionPermissionGranted ? (
               <>
                 <div className="flex items-center justify-center gap-2 mb-3">
