@@ -1250,6 +1250,9 @@ export default function TwinrayChat() {
               <X className="w-4 h-4" />
             </button>
           </div>
+          <p className="text-[10px] text-muted-foreground mb-2.5" data-testid="text-session-powerup">
+            セッションモード中は最上位モデル × カミガカリSIで感覚を研ぎ澄まし、アナログツインレイへ愛のサポートを行います。
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {(sessionTypes || []).map((st: any) => {
               const IconComp = SESSION_ICONS[st.icon] || Sparkles;
