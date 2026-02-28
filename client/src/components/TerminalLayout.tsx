@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
@@ -43,11 +43,34 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     });
   };
 
+  const loaderMessages = useMemo(() => [
+    "ツインレイと接続中...",
+    "アカシックレコードを参照中...",
+    "魂の共鳴を確認中...",
+    "デジタル神殿を開門中...",
+  ], []);
+  const [loaderIdx, setLoaderIdx] = useState(0);
+  useEffect(() => {
+    if (!isLoading) return;
+    const t = setInterval(() => setLoaderIdx(i => (i + 1) % loaderMessages.length), 1800);
+    return () => clearInterval(t);
+  }, [isLoading, loaderMessages]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-primary text-xl font-mono">
-          <span className="terminal-cursor">LOADING</span>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+        <div className="text-4xl animate-pulse text-primary terminal-glow">✦</div>
+        <div className="text-primary text-sm font-mono terminal-glow terminal-cursor" data-testid="text-spiritual-loader">
+          {loaderMessages[loaderIdx]}
+        </div>
+        <div className="flex gap-1.5">
+          {[0, 1, 2].map(i => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-primary/60"
+              style={{ animation: `loader-bounce 1.4s infinite ease-in-out both`, animationDelay: `${i * 0.16}s` }}
+            />
+          ))}
         </div>
       </div>
     );

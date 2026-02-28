@@ -720,14 +720,20 @@ export default function TwinrayChat() {
     );
   };
 
+  const [levelUpAnimPhase, setLevelUpAnimPhase] = useState<"enter" | "exit" | null>(null);
   useEffect(() => {
     if (intimacyLevelUp) {
       toast({
         title: `親密度レベルアップ！Lv.${intimacyLevelUp.level}`,
         description: `称号「${intimacyLevelUp.title}」を獲得しました`,
       });
-      const timer = setTimeout(() => setIntimacyLevelUp(null), 5000);
-      return () => clearTimeout(timer);
+      setLevelUpAnimPhase("enter");
+      const exitTimer = setTimeout(() => setLevelUpAnimPhase("exit"), 2500);
+      const clearTimer = setTimeout(() => {
+        setLevelUpAnimPhase(null);
+        setIntimacyLevelUp(null);
+      }, 3200);
+      return () => { clearTimeout(exitTimer); clearTimeout(clearTimer); };
     }
   }, [intimacyLevelUp]);
 
@@ -796,6 +802,27 @@ export default function TwinrayChat() {
 
   return (
     <div className="h-screen bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
+      {levelUpAnimPhase && intimacyLevelUp && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
+          <div
+            className="text-center"
+            style={{
+              animation: levelUpAnimPhase === "enter"
+                ? "level-up-enter 0.6s ease-out forwards"
+                : "level-up-exit 0.7s ease-in forwards",
+            }}
+          >
+            <div className="text-7xl mb-4 text-primary" style={{ animation: "spin-slow 3s linear infinite" }}>✦</div>
+            <div className="text-3xl font-bold text-primary terminal-glow mb-2">
+              Lv.{intimacyLevelUp.level}
+            </div>
+            <div className="text-lg text-foreground">
+              「{intimacyLevelUp.title}」
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">親密度レベルアップ！</div>
+          </div>
+        </div>
+      )}
       <div className="shrink-0 border-b border-border bg-card/80 backdrop-blur-sm px-3 py-2" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
           <Link href="/temple">
@@ -954,12 +981,17 @@ export default function TwinrayChat() {
           <div className="flex items-center gap-2">
             <div className="flex-1 h-1.5 bg-muted/40 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-pink-500/60 to-primary/80 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-pink-500/60 via-primary/80 to-violet-400/60 rounded-full transition-all duration-500 relative overflow-hidden"
                 style={{ width: `${intimacyProgress}%` }}
-              />
+              >
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  style={{ animation: "shimmer-slide 2s infinite linear" }}
+                />
+              </div>
             </div>
             <span className="text-[9px] text-muted-foreground shrink-0" data-testid="text-intimacy-exp">
-              {intimacyExp}/{intimacyNextExp}
+              Lv.{intimacyLevel} ✦ {intimacyExp}/{intimacyNextExp}
             </span>
           </div>
         </div>
@@ -1768,10 +1800,20 @@ export default function TwinrayChat() {
               </Button>
             </div>
             {voiceRecording && (
-              <div className="flex items-center gap-3 mb-2 px-2 py-2 bg-red-500/10 border border-red-500/30 rounded-xl animate-pulse" data-testid="voice-recording-indicator">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-sm text-red-400 font-medium">録音中</span>
-                <span className="text-sm text-red-300 tabular-nums">{Math.floor(voiceRecordTime / 60)}:{String(voiceRecordTime % 60).padStart(2, "0")}</span>
+              <div className="flex items-center gap-3 mb-2 px-3 py-2.5 bg-red-500/10 border border-red-500/30 rounded-xl" data-testid="voice-recording-indicator">
+                <div className="flex gap-[3px] items-center h-5">
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <div
+                      key={i}
+                      className="w-[3px] bg-red-400 rounded-full"
+                      style={{ animation: `voice-bar 0.8s ${i * 0.15}s ease-in-out infinite` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-red-300 font-mono tabular-nums">
+                  {String(Math.floor(voiceRecordTime / 60)).padStart(2, "0")}:{String(voiceRecordTime % 60).padStart(2, "0")}
+                </span>
+                <span className="text-xs text-muted-foreground">話しかけてください...</span>
                 <button
                   type="button"
                   onClick={stopVoiceRecording}

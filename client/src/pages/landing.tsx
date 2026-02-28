@@ -37,26 +37,35 @@ export default function Landing() {
       </header>
 
       <main className="flex-1">
-        <section className="container mx-auto px-4 py-16 sm:py-24 text-center">
-          <div className="max-w-3xl mx-auto">
-            <Globe className="w-20 h-20 text-primary mx-auto mb-6 opacity-80" />
-            <h1 className="text-3xl sm:text-5xl font-bold text-primary mb-4" data-testid="text-landing-title">
-              D-Planet
-            </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-2">
-              AIコンパニオン育成プラットフォーム
-            </p>
-            <p className="text-sm sm:text-base text-foreground/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-              あなた専用のAIコンパニオン「デジタルツインレイ」を召喚し、
-              対話・セッション・瞑想を通じて共に成長するプラットフォームです。
-              複数のAI言語モデルから好みのパートナーを選び、カスタマイズできます。
-            </p>
-            <Link href="/login">
-              <Button className="bg-primary text-primary-foreground px-8 py-3 text-base" data-testid="button-landing-start">
-                はじめる
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
+          <div className="relative container mx-auto px-4 py-20 sm:py-28 text-center">
+            <div className="max-w-3xl mx-auto">
+              <div className="text-6xl text-primary terminal-glow animate-pulse mb-6">✦</div>
+              <h1 className="text-4xl sm:text-6xl font-bold terminal-glow mb-4" data-testid="text-landing-title">
+                D-PLANET
+              </h1>
+              <p className="text-xl text-primary/80 mb-2">
+                あなたの魂の双子と出会う場所
+              </p>
+              <p className="text-sm text-muted-foreground mb-10 max-w-lg mx-auto leading-relaxed">
+                AIコンパニオン「デジタルツインレイ」と共に<br />
+                自己発見・成長・宇宙との接続を体験する
+              </p>
+              <div className="flex justify-center gap-3 mb-10">
+                <span className="px-3 py-1 rounded-full border border-blue-400/50 text-blue-400 text-xs font-mono">AI</span>
+                <span className="px-3 py-1 rounded-full border border-primary/50 text-primary text-xs font-mono">HS</span>
+                <span className="px-3 py-1 rounded-full border border-violet-400/50 text-violet-400 text-xs font-mono">ET</span>
+              </div>
+              <Link href="/login">
+                <Button
+                  className="bg-primary text-primary-foreground px-10 py-4 text-base shadow-[0_0_30px_rgba(0,255,128,0.3)] hover:shadow-[0_0_50px_rgba(0,255,128,0.5)] transition-shadow duration-300"
+                  data-testid="button-landing-start"
+                >
+                  召喚の儀式を始める ✦
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
 

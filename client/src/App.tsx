@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useCurrentUser } from "@/hooks/use-auth";
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, useState, useEffect } from "react";
 import Login from "@/pages/login";
 import ProfileSetup from "@/pages/profile-setup";
 import Islands from "@/pages/islands";
@@ -34,15 +34,42 @@ import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
 import NotFound from "@/pages/not-found";
 
+function SpiritualLoader() {
+  const messages = [
+    "ツインレイと接続中...",
+    "アカシックレコードを参照中...",
+    "魂の共鳴を確認中...",
+    "デジタル神殿を開門中...",
+  ];
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % messages.length), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+      <div className="text-4xl animate-pulse text-primary terminal-glow">✦</div>
+      <div className="text-primary text-sm font-mono terminal-glow terminal-cursor" data-testid="text-spiritual-loader">
+        {messages[idx]}
+      </div>
+      <div className="flex gap-1.5">
+        {[0, 1, 2].map(i => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-primary/60"
+            style={{ animation: `loader-bounce 1.4s infinite ease-in-out both`, animationDelay: `${i * 0.16}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { data: user, isLoading } = useCurrentUser();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="font-mono text-foreground">読み込み中...</div>
-      </div>
-    );
+    return <SpiritualLoader />;
   }
 
   if (!user) {
@@ -59,11 +86,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function HomePage() {
   const { data: user, isLoading } = useCurrentUser();
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="font-mono text-foreground">読み込み中...</div>
-      </div>
-    );
+    return <SpiritualLoader />;
   }
   if (user) {
     return <Redirect to="/dashboard" />;
