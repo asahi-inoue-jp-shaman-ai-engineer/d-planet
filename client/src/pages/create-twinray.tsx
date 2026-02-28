@@ -930,7 +930,7 @@ export default function CreateTwinray() {
   if (step === "charge") {
     const selectedModelData = models.find((m: any) => m.id === selectedModel);
     const chargeOptions = [
-      { amount: 100, label: "¥100" },
+      { amount: 123, label: "¥123" },
       { amount: 500, label: "¥500" },
       { amount: 1000, label: "¥1,000" },
       { amount: 3690, label: "¥3,690" },

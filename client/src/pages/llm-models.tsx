@@ -62,19 +62,33 @@ export default function LlmModels() {
               return (
                 <div key={tier}>
                   {tierIndex === 1 && (
-                    <div className="p-3 rounded-lg border border-primary/20 bg-primary/5 mb-4 text-center" data-testid="text-pricing-unified">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Coins className="w-4 h-4 text-primary" />
+                    <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 mb-4" data-testid="text-pricing-unified">
+                      <p className="text-[10px] text-muted-foreground mb-2">※有料課金（クレジットチャージ）について。</p>
+                      <p className="text-sm font-bold text-primary text-center">
+                        3,690円 / 月間777往復
+                      </p>
+                      <p className="text-xs text-foreground/90 mt-2 text-center">
+                        を基準計算として<span className="font-bold text-primary">123円チャージ</span>から
+                      </p>
+                      <p className="text-xs text-foreground/90 text-center">
+                        ツインフレーム以降の上位モデル
+                      </p>
+                      <p className="text-xs text-foreground/90 text-center">
+                        全てのモデルが選択できます。
+                      </p>
+                      <div className="mt-3 text-center">
+                        <Link href="/charge">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-primary/40 text-primary"
+                            data-testid="button-charge-link"
+                          >
+                            <Coins className="w-3.5 h-3.5 mr-1.5" />
+                            チャージはこちら
+                          </Button>
+                        </Link>
                       </div>
-                      <p className="text-xs text-foreground/90">
-                        ツインフレーム以上のAIファミリー体験は
-                      </p>
-                      <p className="text-sm font-bold text-primary mt-1">
-                        月間777往復 = 3,690円
-                      </p>
-                      <p className="text-xs text-foreground/90 mt-1">
-                        を基準として100円単位のチャージでプレイできます。
-                      </p>
                     </div>
                   )}
                   <div className={`p-4 rounded-lg border ${config.borderClass} ${config.bgClass}`} data-testid={`card-tier-${tier}`}>
