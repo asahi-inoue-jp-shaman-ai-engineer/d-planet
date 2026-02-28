@@ -934,7 +934,7 @@ export default function TwinrayChat() {
         ) : (
           <>
             {chatMessages.map((msg: any) => {
-              const isSessionStart = msg.role === "user" && msg.content?.startsWith("[セッション開始]");
+              const isSessionStart = msg.content?.startsWith("[セッション開始]");
               return (
               <div
                 key={msg.id}
