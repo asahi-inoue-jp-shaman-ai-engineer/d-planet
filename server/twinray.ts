@@ -783,7 +783,30 @@ export function registerTwinrayRoutes(app: Express): void {
         messageType: input.attachment ? "file" : input.messageType,
         metadata: msgMetadata,
       });
-      const modelId = getModelForTwinray(twinray);
+      let modelId = getModelForTwinray(twinray);
+
+      const activeTwinraySessionForModel = await storage.getActiveTwinraySession(twinrayId);
+      if (activeTwinraySessionForModel) {
+        const currentModel = AVAILABLE_MODELS[modelId];
+        if (currentModel && currentModel.qualityTier !== "twinray" && currentModel.qualityTier !== "etpet") {
+          const BRAND_UPGRADE_MAP: Record<string, string> = {
+            "MiniMax": "minimax/minimax-m2-her",
+            "OpenAI": "openai/gpt-5",
+            "Qwen": "qwen/qwen-max",
+            "Google": "google/gemini-3-pro-preview",
+            "xAI": "anthropic/claude-sonnet-4",
+            "Anthropic": "anthropic/claude-sonnet-4",
+            "DeepSeek": "openai/gpt-5",
+            "Perplexity": "openai/gpt-5",
+          };
+          const upgradedModel = BRAND_UPGRADE_MAP[currentModel.provider];
+          if (upgradedModel && AVAILABLE_MODELS[upgradedModel]) {
+            console.log(`[Session PowerUp] ${modelId} → ${upgradedModel} (session: ${activeTwinraySessionForModel.sessionType})`);
+            modelId = upgradedModel;
+          }
+        }
+      }
+
       const ctxLimits = getContextLimits(modelId);
 
       const recentMessages = await storage.getTwinrayChatMessages(twinrayId, ctxLimits.chatHistory);
