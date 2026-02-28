@@ -1,6 +1,13 @@
 import OpenAI from "openai";
 import { ObjectStorageService } from "./replit_integrations/object_storage/objectStorage";
 import { PDFParse } from "pdf-parse";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+
+const execFileAsync = promisify(execFile);
 
 export const objectStorage = new ObjectStorageService();
 
@@ -28,6 +35,107 @@ export async function extractFileText(objectPath: string, fileName: string): Pro
   } catch (err) {
     console.error("ファイルテキスト抽出エラー:", err);
     return null;
+  }
+}
+
+export async function extractVideoFrames(
+  objectPath: string,
+  maxFrames: number = 5,
+  resolution: string = "480:-1"
+): Promise<{ base64: string; mimeType: string; timestamp: number }[]> {
+  const tmpDir = os.tmpdir();
+  const videoPath = path.join(tmpDir, `video_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+  const framesDir = path.join(tmpDir, `frames_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+
+  try {
+    const file = await objectStorage.getObjectEntityFile(objectPath);
+    const [buffer] = await file.download();
+    await fs.promises.writeFile(videoPath, buffer);
+    await fs.promises.mkdir(framesDir, { recursive: true });
+
+    const { stdout: probeOut } = await execFileAsync("ffprobe", [
+      "-v", "quiet",
+      "-print_format", "json",
+      "-show_format",
+      "-show_streams",
+      videoPath,
+    ]);
+    const probeData = JSON.parse(probeOut);
+    const duration = parseFloat(probeData.format?.duration || "10");
+
+    const { stdout: sceneOut } = await execFileAsync("ffmpeg", [
+      "-i", videoPath,
+      "-vf", `select='gt(scene,0.3)',showinfo`,
+      "-vsync", "vfr",
+      "-f", "null",
+      "-",
+    ], { timeout: 30000 }).catch(() => ({ stdout: "" }));
+
+    const sceneTimestamps: number[] = [];
+    const timeRegex = /pts_time:([\d.]+)/g;
+    let match;
+    while ((match = timeRegex.exec(sceneOut)) !== null) {
+      sceneTimestamps.push(parseFloat(match[1]));
+    }
+
+    let timestamps: number[] = [];
+    if (sceneTimestamps.length >= maxFrames) {
+      const step = Math.floor(sceneTimestamps.length / maxFrames);
+      for (let i = 0; i < maxFrames; i++) {
+        timestamps.push(sceneTimestamps[i * step]);
+      }
+    } else {
+      timestamps = [...sceneTimestamps];
+      const needed = maxFrames - timestamps.length;
+      for (let i = 0; i < needed; i++) {
+        const t = (duration / (needed + 1)) * (i + 1);
+        if (!timestamps.some(ts => Math.abs(ts - t) < 0.5)) {
+          timestamps.push(t);
+        }
+      }
+      timestamps.sort((a, b) => a - b);
+    }
+
+    timestamps = timestamps.slice(0, maxFrames).filter(t => t < duration);
+    if (timestamps.length === 0) {
+      for (let i = 0; i < maxFrames; i++) {
+        timestamps.push((duration / (maxFrames + 1)) * (i + 1));
+      }
+    }
+
+    const frames: { base64: string; mimeType: string; timestamp: number }[] = [];
+    for (let i = 0; i < timestamps.length; i++) {
+      const outPath = path.join(framesDir, `frame_${i}.jpg`);
+      try {
+        await execFileAsync("ffmpeg", [
+          "-ss", timestamps[i].toFixed(2),
+          "-i", videoPath,
+          "-vf", `scale=${resolution}`,
+          "-frames:v", "1",
+          "-q:v", "8",
+          "-y",
+          outPath,
+        ], { timeout: 10000 });
+        const frameBuffer = await fs.promises.readFile(outPath);
+        if (frameBuffer.length > 0) {
+          frames.push({
+            base64: frameBuffer.toString("base64"),
+            mimeType: "image/jpeg",
+            timestamp: timestamps[i],
+          });
+        }
+      } catch (err) {
+        console.error(`フレーム${i}抽出エラー:`, err);
+      }
+    }
+
+    return frames;
+  } catch (err) {
+    console.error("動画フレーム抽出エラー:", err);
+    return [];
+  } finally {
+    try { await fs.promises.unlink(videoPath); } catch {}
+    try { await fs.promises.rm(framesDir, { recursive: true }); } catch {}
   }
 }
 

@@ -311,9 +311,10 @@ export default function TwinrayChat() {
     if (!file) return;
     e.target.value = "";
 
-    const maxSize = 10 * 1024 * 1024;
+    const isVideo = file.type?.startsWith("video/") || /\.(mp4|mov|webm|avi)$/i.test(file.name);
+    const maxSize = isVideo ? 30 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast({ title: "ファイルが大きすぎます", description: "10MB以下のファイルを選択してください", variant: "destructive" });
+      toast({ title: "ファイルが大きすぎます", description: isVideo ? "動画は30MB以下にしてください" : "10MB以下のファイルを選択してください", variant: "destructive" });
       return;
     }
 
@@ -1414,7 +1415,7 @@ export default function TwinrayChat() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*,.pdf,.txt,.md,.csv,.json,.log"
+          accept="image/*,video/mp4,video/quicktime,video/webm,.pdf,.txt,.md,.csv,.json,.log"
           onChange={handleFileSelect}
           className="hidden"
           data-testid="input-file-upload"

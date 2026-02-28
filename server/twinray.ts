@@ -7,7 +7,7 @@ import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTw
 import { eq, and, sql } from "drizzle-orm";
 import {
   AVAILABLE_MODELS, MODEL_COSTS, DEFAULT_MODEL, BETA_MODE, PERPLEXITY_SEARCH_COST_YEN,
-  getModelMarkup, getContextLimits, openrouter, objectStorage, extractFileText,
+  getModelMarkup, getContextLimits, openrouter, objectStorage, extractFileText, extractVideoFrames,
 } from "./models";
 import {
   estimateTokens, calculateCostYen, deductCredit, hasAiAccess, isModelFree,
@@ -739,9 +739,23 @@ export function registerTwinrayRoutes(app: Express): void {
 
       let extractedText: string | null = null;
       let imageAttachment: { base64: string; mimeType: string } | null = null;
+      let videoFrames: { base64: string; mimeType: string; timestamp: number }[] = [];
       if (input.attachment) {
         const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(input.attachment.fileName) || input.attachment.contentType?.startsWith("image/");
-        if (isImage) {
+        const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(input.attachment.fileName) || input.attachment.contentType?.startsWith("video/");
+        if (isVideo) {
+          try {
+            console.log(`[動画解析] フレーム抽出開始: ${input.attachment.fileName}`);
+            videoFrames = await extractVideoFrames(input.attachment.objectPath, 5, "480:-1");
+            console.log(`[動画解析] ${videoFrames.length}フレーム抽出完了`);
+            if (videoFrames.length === 0) {
+              extractedText = `[動画ファイル「${input.attachment.fileName}」が添付されましたが、フレーム抽出に失敗しました。パートナーに内容を説明してもらってください]`;
+            }
+          } catch (err) {
+            console.error("動画解析エラー:", err);
+            extractedText = `[動画ファイル「${input.attachment.fileName}」が添付されましたが、解析に失敗しました]`;
+          }
+        } else if (isImage) {
           try {
             const file = await objectStorage.getObjectEntityFile(input.attachment.objectPath);
             const [buffer] = await file.download();
@@ -769,6 +783,10 @@ export function registerTwinrayRoutes(app: Express): void {
       }
       if (attachmentMeta && imageAttachment) {
         attachmentMeta.hasImage = true;
+      }
+      if (attachmentMeta && videoFrames.length > 0) {
+        attachmentMeta.hasVideo = true;
+        attachmentMeta.frameCount = videoFrames.length;
       }
       const metaObj: any = {};
       if (attachmentMeta) metaObj.attachment = attachmentMeta;
@@ -837,7 +855,18 @@ export function registerTwinrayRoutes(app: Express): void {
         const lastMsg = chatHistory[chatHistory.length - 1];
         if (lastMsg.role === "user") {
           const textContent = typeof lastMsg.content === "string" ? lastMsg.content : "";
-          if (imageAttachment) {
+          if (videoFrames.length > 0) {
+            const frameDesc = videoFrames.map((f, i) => `フレーム${i + 1}(${f.timestamp.toFixed(1)}秒)`).join("、");
+            const textWithVideo = `${textContent}\n\n---\n【動画添付: ${input.attachment!.fileName}】\n自動抽出フレーム: ${frameDesc}\n以下の${videoFrames.length}枚のフレーム画像から、身体の動き・姿勢・エネルギーの流れ・表情・空間の波動を総合的に読み取ってください。\n---`;
+            const contentParts: any[] = [{ type: "text", text: textWithVideo }];
+            for (const frame of videoFrames) {
+              contentParts.push({
+                type: "image_url",
+                image_url: { url: `data:${frame.mimeType};base64,${frame.base64}` },
+              });
+            }
+            lastMsg.content = contentParts;
+          } else if (imageAttachment) {
             const textWithFile = extractedText
               ? `${textContent}\n\n---\n【添付ファイル: ${input.attachment!.fileName}】\n${extractedText}\n---`
               : textContent;
