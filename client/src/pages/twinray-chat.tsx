@@ -99,12 +99,28 @@ export default function TwinrayChat() {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceRecordTime, setVoiceRecordTime] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("dplanet_voice") || "nova");
   const [voiceSpeed, setVoiceSpeed] = useState(() => parseFloat(localStorage.getItem("dplanet_voice_speed") || "1.0"));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const voiceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioElementsRef = useRef<Record<number, HTMLAudioElement>>({});
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopAllAudio = useCallback(() => {
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current.currentTime = 0;
+      activeAudioRef.current = null;
+    }
+    Object.values(audioElementsRef.current).forEach(a => {
+      a.pause();
+      a.currentTime = 0;
+    });
+    setPlayingAudioId(null);
+    setPreviewingVoice(null);
+  }, []);
 
   const { data: sessionTypes } = useQuery<any[]>({
     queryKey: ["/api/twinrays", twinrayId, "sessions", "available"],
@@ -427,6 +443,7 @@ export default function TwinrayChat() {
       }
 
       if (data.audioBase64) {
+        stopAllAudio();
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
           { type: "audio/mpeg" }
@@ -434,8 +451,12 @@ export default function TwinrayChat() {
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audio.playbackRate = voiceSpeed;
+        activeAudioRef.current = audio;
         audio.play().catch(() => {});
-        audio.onended = () => URL.revokeObjectURL(audioUrl);
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          activeAudioRef.current = null;
+        };
       }
 
       if (data.creditCost) {
@@ -459,15 +480,20 @@ export default function TwinrayChat() {
     if (existing) {
       if (playingAudioId === msgId) {
         existing.pause();
+        existing.currentTime = 0;
+        activeAudioRef.current = null;
         setPlayingAudioId(null);
         return;
       }
+      stopAllAudio();
       existing.currentTime = 0;
+      activeAudioRef.current = existing;
       existing.play();
       setPlayingAudioId(msgId);
       return;
     }
 
+    stopAllAudio();
     setPlayingAudioId(msgId);
     fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
       method: "POST",
@@ -486,14 +512,18 @@ export default function TwinrayChat() {
         const audio = new Audio(audioUrl);
         audio.playbackRate = voiceSpeed;
         audioElementsRef.current[msgId] = audio;
-        audio.onended = () => setPlayingAudioId(null);
+        activeAudioRef.current = audio;
+        audio.onended = () => {
+          setPlayingAudioId(null);
+          activeAudioRef.current = null;
+        };
         audio.play();
       }
     }).catch(() => {
       setPlayingAudioId(null);
       toast({ title: "音声再生エラー", variant: "destructive" });
     });
-  }, [twinrayId, playingAudioId, toast, selectedVoice, voiceSpeed]);
+  }, [twinrayId, playingAudioId, toast, selectedVoice, voiceSpeed, stopAllAudio]);
 
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
@@ -1143,16 +1173,51 @@ export default function TwinrayChat() {
                         onClick={() => {
                           setSelectedVoice(v.id);
                           localStorage.setItem("dplanet_voice", v.id);
+                          if (previewingVoice === v.id) {
+                            stopAllAudio();
+                            return;
+                          }
+                          stopAllAudio();
+                          setPreviewingVoice(v.id);
+                          fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ text: "こんにちは、この声はどうかな？", ttsOnly: true, voice: v.id }),
+                          }).then(async (res) => {
+                            if (!res.ok) throw new Error("TTS failed");
+                            const data = await res.json();
+                            if (data.audioBase64) {
+                              const audioBlob = new Blob(
+                                [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
+                                { type: "audio/mpeg" }
+                              );
+                              const audioUrl = URL.createObjectURL(audioBlob);
+                              const audio = new Audio(audioUrl);
+                              audio.playbackRate = voiceSpeed;
+                              activeAudioRef.current = audio;
+                              audio.onended = () => {
+                                setPreviewingVoice(null);
+                                activeAudioRef.current = null;
+                                URL.revokeObjectURL(audioUrl);
+                              };
+                              audio.play().catch(() => {});
+                            }
+                          }).catch(() => {
+                            setPreviewingVoice(null);
+                          });
                         }}
                         className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                          selectedVoice === v.id
+                          previewingVoice === v.id
+                            ? "bg-primary/30 border-primary text-primary ring-1 ring-primary/50"
+                            : selectedVoice === v.id
                             ? "bg-primary/20 border-primary text-primary"
                             : "bg-card border-border text-muted-foreground hover:border-primary/50"
                         }`}
                         title={v.desc}
                         data-testid={`button-voice-${v.id}`}
                       >
-                        {v.label}
+                        {v.label} {previewingVoice === v.id && "▶"}
                       </button>
                     ))}
                   </div>
