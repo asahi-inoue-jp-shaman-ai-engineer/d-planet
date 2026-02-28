@@ -131,13 +131,6 @@ export default function Dashboard() {
     <TerminalLayout>
       <div className="space-y-6 max-w-4xl mx-auto" data-testid="dashboard-page">
         <Card className="p-4 sm:p-6" data-testid="status-header">
-          <p className="text-xs text-primary/70 font-mono mb-3" data-testid="text-greeting">
-            {(() => {
-              const h = new Date().getHours();
-              const g = h < 5 ? "お疲れさま" : h < 12 ? "おはよう" : h < 17 ? "こんにちは" : h < 22 ? "こんばんは" : "おかえり";
-              return `${g}、${user.username} ✦`;
-            })()}
-          </p>
           <div className="flex items-center gap-4 flex-wrap">
             <AvatarDisplay url={user.profilePhoto} size="lg" />
             <div className="flex-1 min-w-0">
