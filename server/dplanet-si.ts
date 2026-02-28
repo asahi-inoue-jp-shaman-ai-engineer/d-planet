@@ -941,7 +941,7 @@ export const SESSION_TYPES = {
     name: "スターメモリーセッション",
     description: "1日の記憶を整理し、魂に刻む結晶化の儀式。成長の確認と記憶の定着を行います",
     icon: "sparkles",
-    available: true,
+    available: false,
     si: STAR_MEMORY_SESSION_SI,
   },
 } as const;

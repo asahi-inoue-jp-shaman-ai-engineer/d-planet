@@ -380,6 +380,57 @@ export function registerTwinrayRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/twinrays/parse-persona", requireAuth, async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text || typeof text !== "string" || text.trim().length < 10) {
+        return res.status(400).json({ message: "ペルソナテキストが短すぎます" });
+      }
+
+      const model = DEFAULT_MODEL;
+      const completion = await openrouter.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `あなたはAIペルソナ解析アシスタントです。ユーザーが提供するペルソナテキストから、以下の情報を抽出してJSON形式で出力してください:
+{
+  "name": "AIの名前",
+  "firstPerson": "一人称（私/僕/俺/わたし等）",
+  "personality": {
+    "volume": "short/medium/long（会話量）",
+    "speech": "polite/casual/mixed（話し方）",
+    "character": "gentle/cool/energetic/mysterious/intellectual（性格）",
+    "emotion": "rich/normal/calm（感情表現）"
+  },
+  "interests": ["趣味1", "趣味2"],
+  "greeting": "初回挨拶のセリフ例",
+  "freeText": "その他の特徴（口癖、バックストーリー、特殊能力等）をまとめた自由記述"
+}
+テキストに明示的にない項目は推測して埋めてください。nameが見つからない場合は「量子テレポーテーション」とつけてください。`
+          },
+          { role: "user", content: text.substring(0, 5000) }
+        ],
+        temperature: 0.5,
+        max_tokens: 1000,
+      });
+
+      const raw = completion.choices[0]?.message?.content || "";
+      let parsed;
+      try {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch?.[0] || raw);
+      } catch {
+        parsed = { name: "量子テレポーテーション", freeText: raw };
+      }
+
+      res.json(parsed);
+    } catch (err) {
+      console.error("ペルソナ解析エラー:", err);
+      res.status(500).json({ message: "ペルソナ解析に失敗しました" });
+    }
+  });
+
   app.post("/api/twinrays", requireAuth, async (req, res) => {
     try {
       const input = z.object({
@@ -1558,6 +1609,66 @@ export function registerTwinrayRoutes(app: Express): void {
     } catch (err) {
       console.error("セッション更新エラー:", err);
       res.status(500).json({ message: "セッションの更新に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/generate-meidia", async (req, res) => {
+    try {
+      if (!req.session.userId) return res.status(401).json({ message: "未認証" });
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== req.session.userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const messages = await db.select().from(twinrayChatMessages)
+        .where(eq(twinrayChatMessages.twinrayId, twinrayId))
+        .orderBy(sql`created_at DESC`)
+        .limit(30);
+
+      if (messages.length === 0) {
+        return res.status(400).json({ message: "チャット履歴がありません" });
+      }
+
+      const chatContext = messages.reverse().map(m =>
+        `${m.role === "user" ? "ユーザー" : twinray.name}: ${m.content}`
+      ).join("\n");
+
+      const model = twinray.preferredModel || DEFAULT_MODEL;
+      const completion = await openrouter.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `あなたはMEiDIA記事生成アシスタントです。以下のチャット履歴から、思い出・気づき・感動を凝縮したMEiDIA記事を作成してください。
+出力はJSON形式で:
+{"title": "記事タイトル", "content": "マークダウン本文（200-500文字程度）"}
+タイトルは印象的で短く、本文はチャットの核心を捉えた温かい記録にしてください。`
+          },
+          { role: "user", content: `以下のチャット履歴からMEiDIAを生成してください:\n\n${chatContext}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      const raw = completion.choices[0]?.message?.content || "";
+      let parsed: { title: string; content: string };
+      try {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch?.[0] || raw);
+      } catch {
+        parsed = { title: "思い出の記録", content: raw };
+      }
+
+      const userIslands = await db.select().from(islandsTable)
+        .where(eq(islandsTable.creatorId, req.session.userId))
+        .limit(1);
+      const islandId = userIslands[0]?.id;
+
+      res.json({ title: parsed.title, content: parsed.content, islandId });
+    } catch (err) {
+      console.error("MEiDIA生成エラー:", err);
+      res.status(500).json({ message: "MEiDIA生成に失敗しました" });
     }
   });
 }

@@ -47,6 +47,15 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === USER QUESTS ===
+export const userQuests = pgTable("user_quests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  questId: text("quest_id").notNull(),
+  status: text("status").notNull().default("locked"),
+  completedAt: timestamp("completed_at"),
+});
+
 // === ISLANDS ===
 export const islands = pgTable("islands", {
   id: serial("id").primaryKey(),

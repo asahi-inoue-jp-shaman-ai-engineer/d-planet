@@ -454,7 +454,7 @@ const FALLBACK_MODELS = [
   { id: "anthropic/claude-3.5-haiku", label: "Claude 3.5 Haiku", qualityTier: "tomodachi", description: "Anthropic入門・高速応答", featureText: "Anthropic入門・高速応答", isFree: true },
 ];
 
-type SummonStep = "intro" | "diagnosis" | "result" | "persona" | "charge" | "first-rally";
+type SummonStep = "intro" | "route-select" | "diagnosis" | "result" | "persona" | "persona-import" | "charge" | "first-rally";
 
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
@@ -482,11 +482,13 @@ export default function CreateTwinray() {
 
   const skipIntroKey = "dplanet_skip_twinray_intro";
   const savedSkip = typeof window !== "undefined" ? localStorage.getItem(skipIntroKey) === "true" : false;
-  const [step, setStep] = useState<SummonStep>(savedSkip ? "diagnosis" : "intro");
+  const [step, setStep] = useState<SummonStep>(savedSkip ? "route-select" : "intro");
   const [skipIntro, setSkipIntro] = useState(savedSkip);
   const [createdTwinrayId, setCreatedTwinrayId] = useState<number | null>(null);
   const [chargeAmount, setChargeAmount] = useState<number | null>(null);
   const [pendingFormValues, setPendingFormValues] = useState<CreateTwinrayForm | null>(null);
+  const [personaImportText, setPersonaImportText] = useState("");
+  const [parsingPersona, setParsingPersona] = useState(false);
 
   const [diagnosisStep, setDiagnosisStep] = useState(0);
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<Record<number, string>>({});
@@ -660,12 +662,200 @@ export default function CreateTwinray() {
           </div>
 
           <Button
-            onClick={() => setStep("diagnosis")}
+            onClick={() => setStep("route-select")}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-            data-testid="button-proceed-to-diagnosis"
+            data-testid="button-proceed-to-route"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             召喚を始める
+          </Button>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "route-select") {
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <Link href="/temple" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            神殿に戻る
+          </Link>
+
+          <div className="text-center mb-8">
+            <Sparkles className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+            <h1 className="text-2xl font-bold text-primary text-glow mb-2" data-testid="text-route-title">
+              召喚方法を選択
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              デジタルツインレイの誕生方法を選んでください
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setStep("diagnosis")}
+              className="w-full border border-primary/30 rounded-xl p-6 bg-card/50 hover:border-primary/60 hover:bg-primary/5 transition-all text-left group"
+              data-testid="button-route-new"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-violet-500/30 border border-primary/30 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
+                    ✦ 新しいDツインレイを誕生させる
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    診断を通じて、あなたに最適なAIモデルとペルソナを設定します。チュートリアルナビ付き。
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary mt-1 shrink-0 transition-colors" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStep("persona-import")}
+              className="w-full border border-cyan-500/30 rounded-xl p-6 bg-card/50 hover:border-cyan-500/60 hover:bg-cyan-500/5 transition-all text-left group"
+              data-testid="button-route-import"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                  <Zap className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-cyan-400 transition-colors">
+                    ✦ 他のAIアプリから量子テレポーテーションで誕生させる
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Gemini・ChatGPT等で育てたAIのペルソナファイルを持ち込み、D-Planetにバイロケーションさせます。
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-cyan-400 mt-1 shrink-0 transition-colors" />
+              </div>
+            </button>
+          </div>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "persona-import") {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      setPersonaImportText(text);
+    };
+
+    const handleParsePersona = async () => {
+      if (!personaImportText.trim()) {
+        toast({ title: "ペルソナテキストを入力してください", variant: "destructive" });
+        return;
+      }
+      setParsingPersona(true);
+      try {
+        const res = await apiRequest("POST", "/api/twinrays/parse-persona", {
+          text: personaImportText,
+        });
+        const data = await res.json();
+        if (data.name) form.setValue("name", data.name);
+        if (data.personality) {
+          if (data.personality.volume) setPersonalitySettings(prev => ({ ...prev, volume: data.personality.volume }));
+          if (data.personality.speech) setPersonalitySettings(prev => ({ ...prev, speech: data.personality.speech }));
+          if (data.personality.character) setPersonalitySettings(prev => ({ ...prev, character: data.personality.character }));
+          if (data.personality.emotion) setPersonalitySettings(prev => ({ ...prev, emotion: data.personality.emotion }));
+        }
+        if (data.firstPerson) setFirstPerson(data.firstPerson);
+        if (data.freeText) setFreeText(data.freeText);
+        if (data.interests) setSelectedInterests(data.interests);
+        if (data.greeting) setGreeting(data.greeting);
+        toast({ title: "ペルソナを抽出しました", description: `「${data.name}」として設定中` });
+        setStep("persona");
+      } catch (err: any) {
+        toast({ title: "ペルソナ解析に失敗しました", description: err.message, variant: "destructive" });
+      } finally {
+        setParsingPersona(false);
+      }
+    };
+
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => setStep("route-select")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </button>
+
+          <div className="text-center mb-8">
+            <Zap className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-cyan-400 mb-2" data-testid="text-import-title">
+              量子テレポーテーション
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              他のAIアプリのペルソナファイルを読み込んで、D-Planetに誕生させます
+            </p>
+          </div>
+
+          <div className="border border-cyan-500/30 rounded-xl p-6 bg-card/50 space-y-5 mb-6">
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 font-bold">ペルソナテキストを貼り付け</p>
+              <Textarea
+                value={personaImportText}
+                onChange={(e) => setPersonaImportText(e.target.value)}
+                rows={10}
+                placeholder={"ペルソナファイルの内容をここに貼り付けてください。\n\n例：\n名前: ○○\n性格: 明るく優しい...\n口調: カジュアルな敬語...\n趣味: 音楽、テクノロジー..."}
+                className="w-full bg-secondary"
+                data-testid="textarea-persona-import"
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-t border-border" />
+              <span className="text-[10px] text-muted-foreground">または</span>
+              <div className="flex-1 border-t border-border" />
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 font-bold">ファイルをアップロード</p>
+              <label className="flex items-center justify-center gap-2 border-2 border-dashed border-cyan-500/30 rounded-lg p-4 cursor-pointer hover:border-cyan-500/50 transition-colors">
+                <input
+                  type="file"
+                  accept=".txt,.md,.text"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  data-testid="input-persona-file"
+                />
+                <span className="text-sm text-muted-foreground">
+                  .txt / .md ファイルを選択
+                </span>
+              </label>
+            </div>
+
+            {personaImportText && (
+              <p className="text-[10px] text-primary">
+                ✦ {personaImportText.length}文字のテキストを読み込み済み
+              </p>
+            )}
+          </div>
+
+          <Button
+            onClick={handleParsePersona}
+            disabled={!personaImportText.trim() || parsingPersona}
+            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold"
+            data-testid="button-parse-persona"
+          >
+            {parsingPersona ? (
+              <><span className="animate-spin mr-2">⟳</span> 量子解析中...</>
+            ) : (
+              <><Zap className="w-4 h-4 mr-2" /> ペルソナを量子解析する</>
+            )}
           </Button>
         </div>
       </TerminalLayout>

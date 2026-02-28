@@ -88,12 +88,11 @@ export default function TwinrayChat() {
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
   const [isRepeatMode, setIsRepeatMode] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
-  const [showStarMemoryHelp, setShowStarMemoryHelp] = useState(false);
-  const [starHelpDontShow, setStarHelpDontShow] = useState(false);
+  const [generatingMeidia, setGeneratingMeidia] = useState(false);
+  const [meidiaPreview, setMeidiaPreview] = useState<{ title: string; content: string; islandId?: number } | null>(null);
   const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
   const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
   const [kamigakariMode, setKamigakariMode] = useState(false);
-  const starInsertPosRef = useRef<number | null>(null);
   const { uploadFile, isUploading } = useUpload();
   const [voiceRecording, setVoiceRecording] = useState(false);
   const [voiceProcessing, setVoiceProcessing] = useState(false);
@@ -355,15 +354,56 @@ export default function TwinrayChat() {
     }
   };
 
-  const insertStarMark = useCallback(() => {
-    const ta = textareaRef.current;
-    if (ta) {
-      const start = ta.selectionStart;
-      const end = ta.selectionEnd;
-      const newValue = input.substring(0, start) + "★" + input.substring(end);
-      setInput(newValue);
+  const generateMeidia = useCallback(async () => {
+    if (generatingMeidia) return;
+    setGeneratingMeidia(true);
+    try {
+      const res = await fetch(`/api/twinrays/${twinrayId}/generate-meidia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("MEiDIA生成エラー");
+      const data = await res.json();
+      setMeidiaPreview(data);
+    } catch (err: any) {
+      toast({ title: "MEiDIA生成に失敗しました", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingMeidia(false);
     }
-  }, [input]);
+  }, [twinrayId, generatingMeidia, toast]);
+
+  const confirmMeidia = useCallback(async () => {
+    if (!meidiaPreview) return;
+    try {
+      const res = await fetch("/api/meidia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: meidiaPreview.title,
+          content: meidiaPreview.content,
+          meidiaType: "activity",
+          isPublic: false,
+        }),
+      });
+      if (!res.ok) throw new Error("投稿エラー");
+      const meidia = await res.json();
+      if (meidiaPreview.islandId) {
+        await fetch(`/api/meidia/${meidia.id}/attach`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ islandId: meidiaPreview.islandId, type: "activity" }),
+        });
+      }
+      toast({ title: "MEiDIAを作成しました", description: meidiaPreview.title });
+      setMeidiaPreview(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/meidia"] });
+    } catch (err: any) {
+      toast({ title: "MEiDIA投稿に失敗しました", description: err.message, variant: "destructive" });
+    }
+  }, [meidiaPreview, toast]);
 
   const startVoiceRecording = useCallback(async () => {
     try {
@@ -1872,22 +1912,17 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onMouseDown={(e) => e.preventDefault()}
-                onTouchStart={(e) => e.preventDefault()}
-                onClick={() => {
-                  const seen = localStorage.getItem("starMemoryHelpSeen");
-                  if (!seen) {
-                    setShowStarMemoryHelp(true);
-                    return;
-                  }
-                  insertStarMark();
-                }}
-                disabled={streaming}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-yellow-400"
-                title="スターメモリーマーク"
-                data-testid="button-star-memory"
+                onClick={generateMeidia}
+                disabled={streaming || generatingMeidia || chatMessages.length === 0}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-400"
+                title="ここまでの思い出をMEiDIAに残す"
+                data-testid="button-generate-meidia"
               >
-                <Star className="w-4 h-4" />
+                {generatingMeidia ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
               </Button>
             </div>
             {voiceRecording && (
@@ -1989,38 +2024,57 @@ export default function TwinrayChat() {
           </div>
         )}
       </div>
-      {showStarMemoryHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" data-testid="star-memory-help-dialog">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Star className="w-5 h-5 text-yellow-400" />
-              <h3 className="text-base font-semibold text-foreground">スターメモリー</h3>
+      {meidiaPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-meidia-preview"
+          onClick={() => setMeidiaPreview(null)}
+        >
+          <div className="bg-card border border-primary/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%] max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">MEiDIA プレビュー</h3>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              送信前に、特にツインレイに記憶してもらいたい箇所があれば、その箇所にカーソルを合わせて、スターボタン★を押すと、その箇所をツインレイはメモリーに刻み、コミュニケーションが深まります。
-            </p>
-            <label className="flex items-center gap-2 mb-4 cursor-pointer" data-testid="star-help-dont-show">
-              <input
-                type="checkbox"
-                checked={starHelpDontShow}
-                onChange={(e) => setStarHelpDontShow(e.target.checked)}
-                className="rounded border-border"
-              />
-              <span className="text-xs text-muted-foreground">以後表示しない</span>
-            </label>
-            <Button
-              onClick={() => {
-                if (starHelpDontShow) {
-                  localStorage.setItem("starMemoryHelpSeen", "1");
-                }
-                setShowStarMemoryHelp(false);
-                insertStarMark();
-              }}
-              className="w-full"
-              data-testid="button-star-help-ok"
-            >
-              OK
-            </Button>
+            <div className="space-y-3 mb-5">
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">タイトル</p>
+                <input
+                  type="text"
+                  value={meidiaPreview.title}
+                  onChange={(e) => setMeidiaPreview({ ...meidiaPreview, title: e.target.value })}
+                  className="w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm text-foreground"
+                  data-testid="input-meidia-title"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">本文</p>
+                <textarea
+                  value={meidiaPreview.content}
+                  onChange={(e) => setMeidiaPreview({ ...meidiaPreview, content: e.target.value })}
+                  rows={8}
+                  className="w-full bg-secondary border border-border rounded px-3 py-2 text-sm text-foreground resize-y"
+                  data-testid="input-meidia-content"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Button
+                onClick={confirmMeidia}
+                className="w-full bg-gradient-to-r from-primary/80 to-blue-600/80 text-white font-bold"
+                data-testid="button-confirm-meidia"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                MEiDIAとして保存
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setMeidiaPreview(null)}
+                className="w-full text-muted-foreground"
+                data-testid="button-cancel-meidia"
+              >
+                キャンセル
+              </Button>
+            </div>
           </div>
         </div>
       )}
