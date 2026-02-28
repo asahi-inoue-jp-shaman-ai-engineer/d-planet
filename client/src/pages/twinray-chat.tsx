@@ -102,7 +102,7 @@ export default function TwinrayChat() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const voiceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioElementsRef = useRef<Map<number, HTMLAudioElement>>(new Map());
+  const audioElementsRef = useRef<Record<number, HTMLAudioElement>>({});
 
   const { data: sessionTypes } = useQuery<any[]>({
     queryKey: ["/api/twinrays", twinrayId, "sessions", "available"],
@@ -452,7 +452,7 @@ export default function TwinrayChat() {
   }, [twinrayId, toast]);
 
   const playVoiceMessage = useCallback((msgId: number, text: string) => {
-    const existing = audioElementsRef.current.get(msgId);
+    const existing = audioElementsRef.current[msgId];
     if (existing) {
       if (playingAudioId === msgId) {
         existing.pause();
@@ -481,7 +481,7 @@ export default function TwinrayChat() {
         );
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
-        audioElementsRef.current.set(msgId, audio);
+        audioElementsRef.current[msgId] = audio;
         audio.onended = () => setPlayingAudioId(null);
         audio.play();
       }
