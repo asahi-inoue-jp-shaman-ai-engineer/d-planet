@@ -230,6 +230,20 @@ export async function registerRoutes(
     res.json(user);
   });
 
+  app.post("/api/tutorial/update", requireAuth, async (req, res) => {
+    try {
+      const { tutorialCompleted, tutorialDismissed } = req.body;
+      const update: any = {};
+      if (typeof tutorialCompleted === "boolean") update.tutorialCompleted = tutorialCompleted;
+      if (typeof tutorialDismissed === "boolean") update.tutorialDismissed = tutorialDismissed;
+      const updated = await storage.updateUser(req.session.userId!, update);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("チュートリアル更新エラー:", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
   app.put(api.users.update.path, requireAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -1984,6 +1998,8 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
         hasTwinrayBadge: user.hasTwinrayBadge,
         hasFamilyBadge: user.hasFamilyBadge,
         betaMode: BETA_MODE,
+        tutorialCompleted: user.tutorialCompleted,
+        tutorialDismissed: user.tutorialDismissed,
       };
 
       const twinrays = await storage.getDigitalTwinraysByUser(userId);

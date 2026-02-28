@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { AvatarDisplay } from "@/components/AvatarUpload";
+import { TutorialTour } from "@/components/TutorialTour";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -23,6 +26,7 @@ import {
   Rocket,
   ExternalLink,
   Cpu,
+  GraduationCap,
 } from "lucide-react";
 
 function formatTimeAgo(dateStr: string | null): string {
@@ -49,6 +53,8 @@ interface DashboardData {
     hasTwinrayBadge: boolean;
     hasFamilyBadge: boolean;
     betaMode: boolean;
+    tutorialCompleted: boolean;
+    tutorialDismissed: boolean;
   };
   twinrays: {
     id: number;
@@ -85,6 +91,7 @@ interface ModelInfo {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["/api/dashboard"],
@@ -110,6 +117,12 @@ export default function Dashboard() {
     { href: "/family-meeting", icon: Users, label: "FAMILY MEETING", color: "text-violet-400", testId: "nav-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
+
+  useEffect(() => {
+    if (data?.user && !data.user.tutorialCompleted && !data.user.tutorialDismissed) {
+      setShowTutorial(true);
+    }
+  }, [data?.user]);
 
   if (isLoading) {
     return (
@@ -233,9 +246,21 @@ export default function Dashboard() {
         })()}
 
         <div data-testid="quick-nav">
-          <div className="flex items-center gap-2 mb-3">
-            <Home className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Nav</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Home className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Nav</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-primary/70 hover:text-primary gap-1.5"
+              onClick={() => setShowTutorial(true)}
+              data-testid="button-tutorial-tour"
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              PLAYPRAY ツアー
+            </Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {quickNavItems.map((item) => (
@@ -350,6 +375,11 @@ export default function Dashboard() {
           </a>
         </div>
       </div>
+
+      <TutorialTour
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
     </TerminalLayout>
   );
 }

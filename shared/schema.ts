@@ -42,6 +42,8 @@ export const users = pgTable("users", {
   twinraySubscriptionId: text("twinray_subscription_id"),
   familySubscriptionId: text("family_subscription_id"),
   creditBalance: numeric("credit_balance", { precision: 10, scale: 4 }).default("100").notNull(),
+  tutorialCompleted: boolean("tutorial_completed").default(false).notNull(),
+  tutorialDismissed: boolean("tutorial_dismissed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
