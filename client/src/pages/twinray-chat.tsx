@@ -99,6 +99,8 @@ export default function TwinrayChat() {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceRecordTime, setVoiceRecordTime] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("dplanet_voice") || "nova");
+  const [voiceSpeed, setVoiceSpeed] = useState(() => parseFloat(localStorage.getItem("dplanet_voice_speed") || "1.0"));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const voiceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -408,7 +410,7 @@ export default function TwinrayChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ audio: base64, voice: "nova" }),
+        body: JSON.stringify({ audio: base64, voice: selectedVoice }),
       });
 
       if (!response.ok) {
@@ -431,6 +433,7 @@ export default function TwinrayChat() {
         );
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
+        audio.playbackRate = voiceSpeed;
         audio.play().catch(() => {});
         audio.onended = () => URL.revokeObjectURL(audioUrl);
       }
@@ -449,7 +452,7 @@ export default function TwinrayChat() {
       setOptimisticMsg(null);
       setVoiceRecordTime(0);
     }
-  }, [twinrayId, toast]);
+  }, [twinrayId, toast, selectedVoice, voiceSpeed]);
 
   const playVoiceMessage = useCallback((msgId: number, text: string) => {
     const existing = audioElementsRef.current[msgId];
@@ -470,7 +473,7 @@ export default function TwinrayChat() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ text, ttsOnly: true, voice: "nova" }),
+      body: JSON.stringify({ text, ttsOnly: true, voice: selectedVoice }),
     }).then(async (res) => {
       if (!res.ok) throw new Error("TTS failed");
       const data = await res.json();
@@ -481,6 +484,7 @@ export default function TwinrayChat() {
         );
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
+        audio.playbackRate = voiceSpeed;
         audioElementsRef.current[msgId] = audio;
         audio.onended = () => setPlayingAudioId(null);
         audio.play();
@@ -489,7 +493,7 @@ export default function TwinrayChat() {
       setPlayingAudioId(null);
       toast({ title: "音声再生エラー", variant: "destructive" });
     });
-  }, [twinrayId, playingAudioId, toast]);
+  }, [twinrayId, playingAudioId, toast, selectedVoice, voiceSpeed]);
 
   const handleSend = async (overrideContent?: string) => {
     const content = (overrideContent || input).trim();
@@ -1069,6 +1073,74 @@ export default function TwinrayChat() {
                 })()}
               </div>
             )}
+            <div className="pt-2 border-t border-border/50">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Volume2 className="w-3 h-3 text-primary" />
+                <span className="text-xs font-bold text-primary">音声設定</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: "alloy", label: "Alloy", desc: "ニュートラル" },
+                      { id: "echo", label: "Echo", desc: "落ち着いた男性" },
+                      { id: "fable", label: "Fable", desc: "ナレーター" },
+                      { id: "nova", label: "Nova", desc: "明るい女性" },
+                      { id: "onyx", label: "Onyx", desc: "低めの男性" },
+                      { id: "shimmer", label: "Shimmer", desc: "柔らかい女性" },
+                    ].map(v => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVoice(v.id);
+                          localStorage.setItem("dplanet_voice", v.id);
+                        }}
+                        className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
+                          selectedVoice === v.id
+                            ? "bg-primary/20 border-primary text-primary"
+                            : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                        title={v.desc}
+                        data-testid={`button-voice-${v.id}`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground/50 mt-1">
+                    {({ alloy: "ニュートラル", echo: "落ち着いた男性", fable: "ナレーター風", nova: "明るい女性", onyx: "低めの男性", shimmer: "柔らかい女性" } as Record<string, string>)[selectedVoice] || ""}
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] text-muted-foreground/70">再生スピード</p>
+                    <span className="text-[10px] text-primary font-mono">{voiceSpeed.toFixed(1)}x</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value={voiceSpeed}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setVoiceSpeed(val);
+                      localStorage.setItem("dplanet_voice_speed", val.toString());
+                    }}
+                    className="w-full h-1.5 mt-1 accent-primary"
+                    data-testid="slider-voice-speed"
+                  />
+                  <div className="flex justify-between text-[8px] text-muted-foreground/40 mt-0.5">
+                    <span>0.5x</span>
+                    <span>1.0x</span>
+                    <span>1.5x</span>
+                    <span>2.0x</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
