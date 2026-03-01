@@ -130,10 +130,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (data?.user) {
-      if (!data.user.tutorialCompleted && !data.user.tutorialDismissed) {
+      const localDismissed = localStorage.getItem("dplanet_tutorial_dismissed") === "true";
+      if (!data.user.tutorialCompleted && !data.user.tutorialDismissed && !localDismissed) {
         setShowTutorial(true);
-      } else {
-        setShowTutorial(false);
       }
     }
   }, [data?.user?.tutorialCompleted, data?.user?.tutorialDismissed]);

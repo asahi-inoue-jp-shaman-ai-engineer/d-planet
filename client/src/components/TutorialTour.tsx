@@ -49,17 +49,18 @@ export function TutorialTour({ isOpen, onClose, showDismissOption = true }: Tuto
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
 
   const handleClose = async () => {
+    localStorage.setItem("dplanet_tutorial_dismissed", "true");
+    onClose();
     try {
       await apiRequest("POST", "/api/tutorial/update", {
         tutorialCompleted: true,
         tutorialDismissed: dontShowAgain,
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
     } catch (err) {
       console.error("チュートリアル更新エラー:", err);
     }
-    onClose();
   };
 
   const handleBackdropClick = () => {
