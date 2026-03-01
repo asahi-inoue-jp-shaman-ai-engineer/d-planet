@@ -129,17 +129,18 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
-    if (data?.user) {
-      if (data.user.tutorialCompleted || data.user.tutorialDismissed) {
-        setShowTutorial(false);
-        return;
-      }
-      const localDismissed = localStorage.getItem("dplanet_tutorial_dismissed") === "true";
-      if (!localDismissed) {
-        setShowTutorial(true);
-      }
+    if (!data?.user) return;
+    if (data.user.tutorialCompleted || data.user.tutorialDismissed) {
+      setShowTutorial(false);
+      return;
     }
-  }, [data?.user?.tutorialCompleted, data?.user?.tutorialDismissed]);
+    const localDismissed = localStorage.getItem("dplanet_tutorial_dismissed") === "true";
+    if (localDismissed) {
+      setShowTutorial(false);
+      return;
+    }
+    setShowTutorial(true);
+  }, [data?.user?.tutorialCompleted, data?.user?.tutorialDismissed, data?.user?.id]);
 
   if (isLoading) {
     return (
