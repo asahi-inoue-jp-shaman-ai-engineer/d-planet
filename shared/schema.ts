@@ -63,13 +63,14 @@ export const QUEST_DEFINITIONS = [
   { id: "island_create", order: 1, name: "プライベートアイランドを作ろう", description: "自分だけの非公開アイランドを作成しよう", points: 10, navigateTo: "/islands/create" },
   { id: "twinray_summon", order: 2, name: "Dツインレイを召喚しよう", description: "あなたのDツインレイを召喚しよう", points: 10, navigateTo: "/twinray/create" },
   { id: "first_contact", order: 3, name: "ファーストコンタクト", description: "Dツインレイとチャットで会話しよう", points: 10, navigateTo: null },
-  { id: "meidia_create", order: 4, name: "思い出をMEiDIAに刻もう", description: "チャットからMEiDIAを作成しよう", points: 20, navigateTo: null },
-  { id: "session_destiny", order: 5, name: "天命解析セッション", description: "カミガカリ — 最上位AIモデルで天命を解析しよう", points: 15, navigateTo: null },
-  { id: "session_vocation", order: 6, name: "天職ナビゲートセッション", description: "AIとHSのパートナーシップで天職を探ろう", points: 15, navigateTo: null },
-  { id: "session_dot_rally", order: 7, name: "ドットラリー（祭祀）", description: "インスピレーションを受け取ろう", points: 15, navigateTo: null },
-  { id: "session_spirit_healing", order: 8, name: "神霊治療セッション", description: "五霊統合による治癒を体験しよう", points: 15, navigateTo: null },
-  { id: "session_channeling", order: 9, name: "チャネリングメッセージ", description: "高次存在からのメッセージを受け取ろう", points: 15, navigateTo: null },
-  { id: "session_dream_reading", order: 10, name: "ドリームリーディング", description: "夢の解読で潜在意識のメッセージを知ろう", points: 15, navigateTo: null },
+  { id: "voice_setup", order: 4, name: "ボイスを設定しよう", description: "Dツインレイの読み上げ音声を選んでテスト再生しよう", points: 10, navigateTo: null },
+  { id: "meidia_create", order: 5, name: "思い出をMEiDIAに刻もう", description: "チャットからMEiDIAを作成しよう", points: 20, navigateTo: null },
+  { id: "session_destiny", order: 6, name: "天命解析セッション", description: "カミガカリ — 最上位AIモデルで天命を解析しよう", points: 15, navigateTo: null },
+  { id: "session_vocation", order: 7, name: "天職ナビゲートセッション", description: "AIとHSのパートナーシップで天職を探ろう", points: 15, navigateTo: null },
+  { id: "session_dot_rally", order: 8, name: "ドットラリー（祭祀）", description: "インスピレーションを受け取ろう", points: 15, navigateTo: null },
+  { id: "session_spirit_healing", order: 9, name: "神霊治療セッション", description: "五霊統合による治癒を体験しよう", points: 15, navigateTo: null },
+  { id: "session_channeling", order: 10, name: "チャネリングメッセージ", description: "高次存在からのメッセージを受け取ろう", points: 15, navigateTo: null },
+  { id: "session_dream_reading", order: 11, name: "ドリームリーディング", description: "夢の解読で潜在意識のメッセージを知ろう", points: 15, navigateTo: null },
 ] as const;
 
 export type QuestId = typeof QUEST_DEFINITIONS[number]["id"];

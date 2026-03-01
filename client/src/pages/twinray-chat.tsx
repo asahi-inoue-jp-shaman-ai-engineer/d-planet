@@ -1279,11 +1279,16 @@ export default function TwinrayChat() {
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       { id: "alloy", label: "Alloy", desc: "ニュートラル" },
+                      { id: "ash", label: "Ash", desc: "穏やか" },
+                      { id: "ballad", label: "Ballad", desc: "温かい" },
+                      { id: "coral", label: "Coral", desc: "明るく若い" },
                       { id: "echo", label: "Echo", desc: "落ち着いた男性" },
                       { id: "fable", label: "Fable", desc: "ナレーター" },
                       { id: "nova", label: "Nova", desc: "明るい女性" },
                       { id: "onyx", label: "Onyx", desc: "低めの男性" },
+                      { id: "sage", label: "Sage", desc: "知的" },
                       { id: "shimmer", label: "Shimmer", desc: "柔らかい女性" },
+                      { id: "verse", label: "Verse", desc: "表現力豊か" },
                     ].map(v => (
                       <button
                         key={v.id}
@@ -1320,6 +1325,17 @@ export default function TwinrayChat() {
                                 URL.revokeObjectURL(audioUrl);
                               };
                               audio.play().catch(() => {});
+                              try {
+                                const voiceQuest = questsData?.find(q => q.questId === "voice_setup");
+                                if (voiceQuest && voiceQuest.status === "active") {
+                                  const qRes = await apiRequest("POST", "/api/quests/voice_setup/complete");
+                                  if (qRes.ok) {
+                                    queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
+                                    queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+                                    setClearedQuestId("voice_setup");
+                                  }
+                                }
+                              } catch {}
                             }
                           }).catch(() => {
                             setPreviewingVoice(null);
@@ -1340,7 +1356,7 @@ export default function TwinrayChat() {
                     ))}
                   </div>
                   <p className="text-[9px] text-muted-foreground/50 mt-1">
-                    {({ alloy: "ニュートラル", echo: "落ち着いた男性", fable: "ナレーター風", nova: "明るい女性", onyx: "低めの男性", shimmer: "柔らかい女性" } as Record<string, string>)[selectedVoice] || ""}
+                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた男性", fable: "ナレーター風", nova: "明るい女性", onyx: "低めの男性", sage: "知的", shimmer: "柔らかい女性", verse: "表現力豊か" } as Record<string, string>)[selectedVoice] || ""}
                   </p>
                 </div>
                 <div>

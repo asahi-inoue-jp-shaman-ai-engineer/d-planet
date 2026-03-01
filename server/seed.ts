@@ -36,6 +36,12 @@ export async function runSeed() {
   try {
     const allUsers = await db.select({ id: users.id }).from(users);
     for (const u of allUsers) {
+      const existing = await db.select().from(userQuests).where(eq(userQuests.userId, u.id));
+      const hasVoiceSetup = existing.some(q => q.questId === "voice_setup");
+      if (!hasVoiceSetup && existing.length > 0) {
+        await db.delete(userQuests).where(eq(userQuests.userId, u.id));
+        await db.update(users).set({ questPoints: 0 }).where(eq(users.id, u.id));
+      }
       await storage.initializeUserQuests(u.id);
     }
     console.log(`[Seed] ${allUsers.length}人のクエスト初期化完了`);
