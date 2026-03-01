@@ -510,11 +510,14 @@ export default function TwinrayChat() {
         reader.readAsDataURL(blob);
       });
 
+      const sttAbort = new AbortController();
+      const sttTimer = setTimeout(() => sttAbort.abort(), 30000);
       const res = await fetch("/api/stt/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ audio: base64 }),
-      });
+        signal: sttAbort.signal,
+      }).finally(() => clearTimeout(sttTimer));
 
       if (!res.ok) {
         const err = await res.json();
@@ -592,12 +595,15 @@ export default function TwinrayChat() {
         reader.readAsDataURL(blob);
       });
 
+      const vcAbort = new AbortController();
+      const vcTimer = setTimeout(() => vcAbort.abort(), 60000);
       const response = await fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ audio: base64, voice: selectedVoice }),
-      });
+        signal: vcAbort.signal,
+      }).finally(() => clearTimeout(vcTimer));
 
       if (!response.ok) {
         const err = await response.json();
@@ -665,12 +671,15 @@ export default function TwinrayChat() {
 
     stopAllAudio();
     setPlayingAudioId(msgId);
+    const ttsAbort1 = new AbortController();
+    const ttsTimer1 = setTimeout(() => ttsAbort1.abort(), 30000);
     fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ text, ttsOnly: true, voice: selectedVoice }),
-    }).then(async (res) => {
+      signal: ttsAbort1.signal,
+    }).finally(() => clearTimeout(ttsTimer1)).then(async (res) => {
       if (!res.ok) throw new Error("TTS failed");
       const data = await res.json();
       if (data.audioBase64) {
@@ -1427,12 +1436,15 @@ export default function TwinrayChat() {
                                   }
                                   stopAllAudio();
                                   setPreviewingVoice(v.id);
+                                  const ttsAbort2 = new AbortController();
+                                  const ttsTimer2 = setTimeout(() => ttsAbort2.abort(), 30000);
                                   fetch(`/api/twinrays/${twinrayId}/voice-chat`, {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     credentials: "include",
                                     body: JSON.stringify({ text: "こんにちは、この声はどうかな？", ttsOnly: true, voice: v.id }),
-                                  }).then(async (res) => {
+                                    signal: ttsAbort2.signal,
+                                  }).finally(() => clearTimeout(ttsTimer2)).then(async (res) => {
                                     if (!res.ok) throw new Error("TTS failed");
                                     const data = await res.json();
                                     if (data.audioBase64) {
