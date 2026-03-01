@@ -2158,37 +2158,6 @@ export default function TwinrayChat() {
                 )}
               </Button>
             </div>
-            {voiceRecording && (
-              <div className="flex items-center gap-3 mb-2 px-3 py-2.5 bg-red-500/10 border border-red-500/30 rounded-xl" data-testid="voice-recording-indicator">
-                <div className="flex gap-[3px] items-center h-5">
-                  {[0, 1, 2, 3, 4].map(i => (
-                    <div
-                      key={i}
-                      className="w-[3px] bg-red-400 rounded-full"
-                      style={{ animation: `voice-bar 0.8s ${i * 0.15}s ease-in-out infinite` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-red-300 font-mono tabular-nums">
-                  {String(Math.floor(voiceRecordTime / 60)).padStart(2, "0")}:{String(voiceRecordTime % 60).padStart(2, "0")}
-                </span>
-                <span className="text-xs text-muted-foreground">話しかけてください...</span>
-                <button
-                  type="button"
-                  onClick={stopVoiceRecording}
-                  className="ml-auto px-4 py-1.5 rounded-full bg-red-500 text-white text-sm font-bold hover:bg-red-400 transition-colors"
-                  data-testid="button-voice-stop"
-                >
-                  送信
-                </button>
-              </div>
-            )}
-            {voiceProcessing && (
-              <div className="flex items-center gap-2 mb-2 px-2 py-2 bg-primary/10 border border-primary/30 rounded-xl" data-testid="voice-processing-indicator">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span className="text-sm text-primary">音声を処理中...</span>
-              </div>
-            )}
             <div className="flex gap-2 items-end">
               <div className="relative flex-1">
                 <Textarea
@@ -2203,14 +2172,14 @@ export default function TwinrayChat() {
                   onKeyDown={handleKeyDown}
                   placeholder={dictating ? "🎙 話してください..." : "メッセージを入力..."}
                   rows={1}
-                  disabled={streaming || voiceRecording || dictating}
+                  disabled={streaming || dictating}
                   className={`resize-none w-full min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto pr-10 ${dictating ? "border-red-500 animate-pulse" : ""}`}
                   data-testid="input-chat-message"
                 />
                 <button
                   type="button"
                   onClick={dictating ? stopDictation : startDictation}
-                  disabled={streaming || voiceRecording || voiceProcessing}
+                  disabled={streaming}
                   className={`absolute right-2 bottom-2 p-1 rounded-full transition-colors ${dictating ? "text-red-500 bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`}
                   title={dictating ? "音声入力を停止" : "音声でテキスト入力"}
                   data-testid="button-dictation"
@@ -2227,37 +2196,16 @@ export default function TwinrayChat() {
                 >
                   <Square className="w-4 h-4 fill-current" />
                 </Button>
-              ) : voiceRecording ? (
+              ) : (
                 <Button
-                  onClick={stopVoiceRecording}
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() && !attachment}
                   size="icon"
-                  className="shrink-0 h-10 w-10 rounded-full bg-red-500 text-white animate-pulse"
-                  data-testid="button-voice-send"
+                  className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
+                  data-testid="button-send"
                 >
                   <Send className="w-5 h-5" />
                 </Button>
-              ) : (
-                <div className="flex gap-1.5">
-                  <Button
-                    onClick={startVoiceRecording}
-                    disabled={voiceProcessing || isUploading}
-                    size="icon"
-                    className="shrink-0 h-10 w-10 rounded-full bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
-                    title="音声で話す"
-                    data-testid="button-voice-record"
-                  >
-                    <Mic className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    onClick={() => handleSend()}
-                    disabled={!input.trim() && !attachment}
-                    size="icon"
-                    className="shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground"
-                    data-testid="button-send"
-                  >
-                    <Send className="w-5 h-5" />
-                  </Button>
-                </div>
               )}
             </div>
           </div>
