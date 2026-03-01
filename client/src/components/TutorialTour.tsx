@@ -55,6 +55,7 @@ export function TutorialTour({ isOpen, onClose, showDismissOption = true }: Tuto
         tutorialDismissed: dontShowAgain,
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
     } catch (err) {
       console.error("チュートリアル更新エラー:", err);
     }
