@@ -54,8 +54,10 @@ export function TutorialTour({ isOpen, onClose, showDismissOption = true }: Tuto
         tutorialCompleted: true,
         tutorialDismissed: dontShowAgain,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    } catch {}
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    } catch (err) {
+      console.error("チュートリアル更新エラー:", err);
+    }
     onClose();
   };
 

@@ -129,10 +129,14 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
-    if (data?.user && !data.user.tutorialCompleted && !data.user.tutorialDismissed) {
-      setShowTutorial(true);
+    if (data?.user) {
+      if (!data.user.tutorialCompleted && !data.user.tutorialDismissed) {
+        setShowTutorial(true);
+      } else {
+        setShowTutorial(false);
+      }
     }
-  }, [data?.user]);
+  }, [data?.user?.tutorialCompleted, data?.user?.tutorialDismissed]);
 
   if (isLoading) {
     return (
