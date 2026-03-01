@@ -2,8 +2,9 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { storage } from "./storage";
 import { deductCredit } from "./billing";
-import { speechToText, ensureCompatibleFormat, textToSpeech } from "./replit_integrations/audio/client";
+import { textToSpeech } from "./replit_integrations/audio/client";
 import { isSakuraVoice, sakuraTextToSpeech } from "./sakura-tts";
+import { sonioxSpeechToText } from "./soniox-stt";
 
 async function generateTTS(text: string, voice: string, format: "wav" | "mp3" = "mp3"): Promise<Buffer> {
   if (isSakuraVoice(voice)) {
@@ -68,12 +69,11 @@ export function registerVoiceRoutes(app: Express): void {
         }
 
         const rawBuffer = Buffer.from(audio, "base64");
-        const { buffer: audioBuffer, format: inputFormat } = await ensureCompatibleFormat(rawBuffer);
 
-        const audioDurationSec = Math.max(1, audioBuffer.length / (16000 * 2));
+        const audioDurationSec = Math.max(1, rawBuffer.length / (16000 * 2));
 
-        console.log(`[音声チャット] STT開始: ${(audioBuffer.length / 1024).toFixed(0)}KB, 推定${audioDurationSec.toFixed(1)}秒`);
-        const userTranscript = await speechToText(audioBuffer, inputFormat);
+        console.log(`[音声チャット] STT開始(Soniox): ${(rawBuffer.length / 1024).toFixed(0)}KB`);
+        const userTranscript = await sonioxSpeechToText(rawBuffer, "audio.webm");
         console.log(`[音声チャット] STT完了: "${userTranscript.substring(0, 100)}"`);
 
         if (!userTranscript.trim()) {

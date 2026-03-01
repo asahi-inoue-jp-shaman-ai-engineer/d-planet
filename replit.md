@@ -100,7 +100,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - **Persona Import（量子テレポーテーション）**: 他AIアプリのペルソナファイルをコピペ/アップロード→AI自動解析→ツインレイ召喚。`POST /api/twinrays/parse-persona`。
 - **MEiDIA Auto-generation**: チャット画面のMEiDIAボタンで直近30件チャットからAI自動MEiDIA生成→プレビュー→アイランド投稿。`POST /api/twinrays/:id/generate-meidia`。
 - **Star Memory Session**: 廃止（available: false）。
-- **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`): STT(Whisper)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。Q5（meidia_create）クリアでVOICEVOX解放。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
+- **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`, `server/soniox-stt.ts`): STT(Soniox)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。STT: Soniox API（stt-async-v4、60+言語、WER 6.5%、$0.10/h）。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。Q5（meidia_create）クリアでVOICEVOX解放。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
 - **LLM Models:** 21 models in 4 categories: トモダチ (free, 6), ツインフレーム (7), ツインレイ (5), ET/PET (3). Pricing: ¥4.75/round-trip, monthly 777 rounds = ¥3,690. Min charge: ¥123.
 
 ## External Dependencies
