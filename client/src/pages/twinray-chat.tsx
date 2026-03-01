@@ -1025,7 +1025,7 @@ export default function TwinrayChat() {
     : 100;
 
   return (
-    <div className="h-screen bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
+    <div className="h-[100dvh] bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
       {levelUpAnimPhase && intimacyLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
@@ -2170,6 +2170,11 @@ export default function TwinrayChat() {
                     ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
                   }}
                   onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                    }, 300);
+                  }}
                   placeholder={dictating ? "🎙 話してください..." : "メッセージを入力..."}
                   rows={1}
                   disabled={streaming || dictating}
