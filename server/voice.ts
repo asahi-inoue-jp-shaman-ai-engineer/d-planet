@@ -37,10 +37,21 @@ export function registerVoiceRoutes(app: Express): void {
           const cleanTtsText = ttsText.substring(0, 2000);
           const selectedVoice = voice || "nova";
           const audioResponse = await generateTTS(cleanTtsText, selectedVoice, "mp3");
+          let ttsCreditCost = 0;
+          if (isSakuraVoice(selectedVoice)) {
+            const user = await storage.getUser(req.session.userId!);
+            if (!user?.isAdmin) {
+              const ttsCost = cleanTtsText.length * TTS_COST_PER_CHAR_YEN;
+              if (ttsCost > 0) {
+                await deductCredit(req.session.userId!, ttsCost);
+                ttsCreditCost = ttsCost;
+              }
+            }
+          }
           return res.json({
             audioBase64: audioResponse.toString("base64"),
             audioFormat: "mp3",
-            creditCost: 0,
+            creditCost: ttsCreditCost,
           });
         }
 
