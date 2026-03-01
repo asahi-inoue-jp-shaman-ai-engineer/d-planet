@@ -169,4 +169,40 @@ export function registerVoiceRoutes(app: Express): void {
       }
     }
   );
+
+  app.post(
+    "/api/stt/transcribe",
+    requireAuth,
+    express.json({ limit: "50mb" }),
+    async (req: Request, res: Response) => {
+      try {
+        const { audio } = req.body;
+        if (!audio) {
+          return res.status(400).json({ message: "音声データが必要です" });
+        }
+
+        const rawBuffer = Buffer.from(audio, "base64");
+        const audioDurationSec = Math.max(1, rawBuffer.length / (16000 * 2));
+
+        console.log(`[STT] 文字起こし開始(Soniox): ${(rawBuffer.length / 1024).toFixed(0)}KB`);
+        const transcript = await sonioxSpeechToText(rawBuffer, "audio.webm");
+        console.log(`[STT] 文字起こし完了: "${transcript.substring(0, 100)}"`);
+
+        let creditCost = 0;
+        const user = await storage.getUser(req.session.userId!);
+        if (!user?.isAdmin) {
+          const sttCost = audioDurationSec * STT_COST_PER_SEC_YEN;
+          if (sttCost > 0) {
+            await deductCredit(req.session.userId!, sttCost);
+            creditCost = sttCost;
+          }
+        }
+
+        res.json({ transcript, creditCost });
+      } catch (err) {
+        console.error("STTエラー:", err);
+        res.status(500).json({ message: "文字起こしに失敗しました" });
+      }
+    }
+  );
 }

@@ -99,6 +99,9 @@ export default function TwinrayChat() {
   const { uploadFile, isUploading } = useUpload();
   const [voiceRecording, setVoiceRecording] = useState(false);
   const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [dictating, setDictating] = useState(false);
+  const dictRecorderRef = useRef<MediaRecorder | null>(null);
+  const dictChunksRef = useRef<Blob[]>([]);
   const [voiceRecordTime, setVoiceRecordTime] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
   const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
@@ -461,6 +464,76 @@ export default function TwinrayChat() {
       toast({ title: "MEiDIA投稿に失敗しました", description: err.message, variant: "destructive" });
     }
   }, [meidiaPreview, toast]);
+
+  const startDictation = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      dictRecorderRef.current = recorder;
+      dictChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) dictChunksRef.current.push(e.data);
+      };
+      recorder.start(100);
+      setDictating(true);
+    } catch (err) {
+      toast({ title: "マイクにアクセスできません", description: "ブラウザの設定でマイクを許可してください。", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const stopDictation = useCallback(async () => {
+    const recorder = dictRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") return;
+    setDictating(false);
+
+    const blob = await new Promise<Blob>((resolve) => {
+      recorder.onstop = () => {
+        const b = new Blob(dictChunksRef.current, { type: "audio/webm" });
+        recorder.stream.getTracks().forEach(t => t.stop());
+        resolve(b);
+      };
+      recorder.stop();
+    });
+
+    if (blob.size < 1000) {
+      toast({ title: "録音が短すぎます", description: "もう少し長く話してください。", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      const res = await fetch("/api/stt/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio: base64 }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "文字起こし失敗");
+      }
+
+      const data = await res.json();
+      if (data.transcript) {
+        setInput(prev => prev ? prev + " " + data.transcript : data.transcript);
+        if (data.creditCost > 0) {
+          toast({ title: "音声入力完了", description: `${data.creditCost.toFixed(2)}クレジット消費` });
+        }
+      } else {
+        toast({ title: "音声を認識できませんでした", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "音声入力エラー", description: err.message, variant: "destructive" });
+    }
+  }, [toast, setInput]);
 
   const startVoiceRecording = useCallback(async () => {
     try {
@@ -2117,22 +2190,34 @@ export default function TwinrayChat() {
               </div>
             )}
             <div className="flex gap-2 items-end">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  const ta = e.target;
-                  ta.style.height = 'auto';
-                  ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder="メッセージを入力..."
-                rows={1}
-                disabled={streaming || voiceRecording}
-                className="resize-none flex-1 min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto"
-                data-testid="input-chat-message"
-              />
+              <div className="relative flex-1">
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    const ta = e.target;
+                    ta.style.height = 'auto';
+                    ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={dictating ? "🎙 話してください..." : "メッセージを入力..."}
+                  rows={1}
+                  disabled={streaming || voiceRecording || dictating}
+                  className={`resize-none w-full min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto pr-10 ${dictating ? "border-red-500 animate-pulse" : ""}`}
+                  data-testid="input-chat-message"
+                />
+                <button
+                  type="button"
+                  onClick={dictating ? stopDictation : startDictation}
+                  disabled={streaming || voiceRecording || voiceProcessing}
+                  className={`absolute right-2 bottom-2 p-1 rounded-full transition-colors ${dictating ? "text-red-500 bg-red-500/10" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`}
+                  title={dictating ? "音声入力を停止" : "音声でテキスト入力"}
+                  data-testid="button-dictation"
+                >
+                  {dictating ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+              </div>
               {streaming ? (
                 <Button
                   onClick={handleStopStreaming}
