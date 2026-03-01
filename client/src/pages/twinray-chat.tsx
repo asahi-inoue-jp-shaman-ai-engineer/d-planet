@@ -1384,7 +1384,7 @@ export default function TwinrayChat() {
                         }}
                         className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
                           previewingVoice === v.id
-                            ? "bg-primary/30 border-primary text-primary ring-1 ring-primary/50"
+                            ? "border-primary text-primary ring-1 ring-primary/50 animate-pulse"
                             : selectedVoice === v.id
                             ? "bg-primary/20 border-primary text-primary"
                             : "bg-card border-border text-muted-foreground hover:border-primary/50"
@@ -1392,7 +1392,7 @@ export default function TwinrayChat() {
                         title={v.desc}
                         data-testid={`button-voice-${v.id}`}
                       >
-                        {v.label} {previewingVoice === v.id && "▶"}
+                        {v.label}
                       </button>
                     ))}
                       </div>
