@@ -1276,20 +1276,29 @@ export default function TwinrayChat() {
               <div className="space-y-2">
                 <div>
                   <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { id: "alloy", label: "Alloy", desc: "ニュートラル" },
-                      { id: "ash", label: "Ash", desc: "穏やか" },
-                      { id: "ballad", label: "Ballad", desc: "温かい" },
+                  {[
+                    { group: "♀ 女声", voices: [
                       { id: "coral", label: "Coral", desc: "明るく若い" },
-                      { id: "echo", label: "Echo", desc: "落ち着いた男性" },
-                      { id: "fable", label: "Fable", desc: "ナレーター" },
-                      { id: "nova", label: "Nova", desc: "明るい女性" },
-                      { id: "onyx", label: "Onyx", desc: "低めの男性" },
+                      { id: "nova", label: "Nova", desc: "明るい" },
+                      { id: "shimmer", label: "Shimmer", desc: "柔らかい" },
                       { id: "sage", label: "Sage", desc: "知的" },
-                      { id: "shimmer", label: "Shimmer", desc: "柔らかい女性" },
+                      { id: "ballad", label: "Ballad", desc: "温かい" },
+                    ]},
+                    { group: "♂ 男声", voices: [
+                      { id: "echo", label: "Echo", desc: "落ち着いた" },
+                      { id: "onyx", label: "Onyx", desc: "低め" },
+                      { id: "fable", label: "Fable", desc: "ナレーター" },
+                      { id: "ash", label: "Ash", desc: "穏やか" },
                       { id: "verse", label: "Verse", desc: "表現力豊か" },
-                    ].map(v => (
+                    ]},
+                    { group: "◯ 中性", voices: [
+                      { id: "alloy", label: "Alloy", desc: "ニュートラル" },
+                    ]},
+                  ].map(category => (
+                    <div key={category.group} className="mb-2">
+                      <p className="text-[8px] text-muted-foreground/60 mb-1 font-bold">{category.group}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                    {category.voices.map(v => (
                       <button
                         key={v.id}
                         type="button"
@@ -1354,9 +1363,11 @@ export default function TwinrayChat() {
                         {v.label} {previewingVoice === v.id && "▶"}
                       </button>
                     ))}
-                  </div>
+                      </div>
+                    </div>
+                  ))}
                   <p className="text-[9px] text-muted-foreground/50 mt-1">
-                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた男性", fable: "ナレーター風", nova: "明るい女性", onyx: "低めの男性", sage: "知的", shimmer: "柔らかい女性", verse: "表現力豊か" } as Record<string, string>)[selectedVoice] || ""}
+                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か" } as Record<string, string>)[selectedVoice] || ""}
                   </p>
                 </div>
                 <div>
