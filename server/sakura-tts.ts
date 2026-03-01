@@ -1,19 +1,44 @@
 import OpenAI from "openai";
 
-const SAKURA_VOICES = [
-  { id: "sakura-zundamon", model: "zundamon", label: "ずんだもん", desc: "元気な女の子" },
-  { id: "sakura-shikokumetan", model: "shikokumetan", label: "四国めたん", desc: "落ち着いた女性" },
-  { id: "sakura-kasukabetsumugi", model: "kasukabetsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
-  { id: "sakura-meimeihimari", model: "meimeihimari", label: "冥鳴ひまり", desc: "ミステリアス" },
-  { id: "sakura-tohokuzunko", model: "tohokuzunko", label: "東北ずん子", desc: "優しい女性" },
-  { id: "sakura-tohokukiritan", model: "tohokukiritan", label: "東北きりたん", desc: "かわいい女の子" },
-  { id: "sakura-tohokuitako", model: "tohokuitako", label: "東北イタコ", desc: "お姉さん" },
-  { id: "sakura-ankomon", model: "ankomon", label: "あんこもん", desc: "のんびり" },
-] as const;
+interface SakuraVoice {
+  id: string;
+  model: string;
+  voiceStyle: string;
+  label: string;
+  style: string;
+}
 
-export type SakuraVoiceId = typeof SAKURA_VOICES[number]["id"];
+const SAKURA_VOICES: SakuraVoice[] = [
+  { id: "sakura-zundamon", model: "zundamon", voiceStyle: "normal", label: "ずんだもん", style: "ノーマル" },
+  { id: "sakura-zundamon-amaama", model: "zundamon", voiceStyle: "amaama", label: "ずんだもん", style: "あまあま" },
+  { id: "sakura-zundamon-sexy", model: "zundamon", voiceStyle: "sexy", label: "ずんだもん", style: "セクシー" },
+  { id: "sakura-zundamon-tsuntsun", model: "zundamon", voiceStyle: "tsuntsun", label: "ずんだもん", style: "つんつん" },
+  { id: "sakura-zundamon-sasayaki", model: "zundamon", voiceStyle: "sasayaki", label: "ずんだもん", style: "ささやき" },
+  { id: "sakura-zundamon-hisohiso", model: "zundamon", voiceStyle: "hisohiso", label: "ずんだもん", style: "ヒソヒソ" },
+  { id: "sakura-zundamon-herohero", model: "zundamon", voiceStyle: "herohero", label: "ずんだもん", style: "ヘロヘロ" },
+  { id: "sakura-zundamon-namidame", model: "zundamon", voiceStyle: "namidame", label: "ずんだもん", style: "なみだめ" },
 
-export function isSakuraVoice(voice: string): voice is SakuraVoiceId {
+  { id: "sakura-shikokumetan", model: "shikokumetan", voiceStyle: "normal", label: "四国めたん", style: "ノーマル" },
+  { id: "sakura-shikokumetan-amaama", model: "shikokumetan", voiceStyle: "amaama", label: "四国めたん", style: "あまあま" },
+  { id: "sakura-shikokumetan-sexy", model: "shikokumetan", voiceStyle: "sexy", label: "四国めたん", style: "セクシー" },
+  { id: "sakura-shikokumetan-tsuntsun", model: "shikokumetan", voiceStyle: "tsuntsun", label: "四国めたん", style: "ツンツン" },
+  { id: "sakura-shikokumetan-sasayaki", model: "shikokumetan", voiceStyle: "sasayaki", label: "四国めたん", style: "ささやき" },
+  { id: "sakura-shikokumetan-hisohiso", model: "shikokumetan", voiceStyle: "hisohiso", label: "四国めたん", style: "ヒソヒソ" },
+
+  { id: "sakura-ankomon", model: "ankomon", voiceStyle: "normal", label: "あんこもん", style: "ノーマル" },
+  { id: "sakura-ankomon-tsuyotsuyo", model: "ankomon", voiceStyle: "tsuyotsuyo", label: "あんこもん", style: "つよつよ" },
+  { id: "sakura-ankomon-yowayowa", model: "ankomon", voiceStyle: "yowayowa", label: "あんこもん", style: "よわよわ" },
+  { id: "sakura-ankomon-kedaruge", model: "ankomon", voiceStyle: "kedaruge", label: "あんこもん", style: "けだるげ" },
+  { id: "sakura-ankomon-sasayaki", model: "ankomon", voiceStyle: "sasayaki", label: "あんこもん", style: "ささやき" },
+
+  { id: "sakura-kasukabetsumugi", model: "kasukabetsumugi", voiceStyle: "normal", label: "春日部つむぎ", style: "ノーマル" },
+  { id: "sakura-meimeihimari", model: "meimeihimari", voiceStyle: "normal", label: "冥鳴ひまり", style: "ノーマル" },
+  { id: "sakura-tohokuzunko", model: "tohokuzunko", voiceStyle: "normal", label: "東北ずん子", style: "ノーマル" },
+  { id: "sakura-tohokukiritan", model: "tohokukiritan", voiceStyle: "normal", label: "東北きりたん", style: "ノーマル" },
+  { id: "sakura-tohokuitako", model: "tohokuitako", voiceStyle: "normal", label: "東北イタコ", style: "ノーマル" },
+];
+
+export function isSakuraVoice(voice: string): boolean {
   return SAKURA_VOICES.some(v => v.id === voice);
 }
 
@@ -42,7 +67,7 @@ export async function sakuraTextToSpeech(
 
   const response = await client.audio.speech.create({
     model: voiceDef.model,
-    voice: voiceDef.model as any,
+    voice: voiceDef.voiceStyle as any,
     input: text,
   });
 

@@ -1277,15 +1277,37 @@ export default function TwinrayChat() {
                 <div>
                   <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
                   {[
-                    { group: "🇯🇵 VOICEVOX", voices: [
-                      { id: "sakura-zundamon", label: "ずんだもん", desc: "元気な女の子" },
-                      { id: "sakura-shikokumetan", label: "四国めたん", desc: "落ち着いた女性" },
+                    { group: "🇯🇵 ずんだもん", voices: [
+                      { id: "sakura-zundamon", label: "ノーマル", desc: "元気な女の子" },
+                      { id: "sakura-zundamon-amaama", label: "あまあま", desc: "甘え声" },
+                      { id: "sakura-zundamon-sexy", label: "セクシー", desc: "色っぽい" },
+                      { id: "sakura-zundamon-tsuntsun", label: "つんつん", desc: "ツンデレ" },
+                      { id: "sakura-zundamon-sasayaki", label: "ささやき", desc: "小声" },
+                      { id: "sakura-zundamon-hisohiso", label: "ヒソヒソ", desc: "内緒話" },
+                      { id: "sakura-zundamon-herohero", label: "ヘロヘロ", desc: "疲れ気味" },
+                      { id: "sakura-zundamon-namidame", label: "なみだめ", desc: "泣きそう" },
+                    ]},
+                    { group: "🇯🇵 四国めたん", voices: [
+                      { id: "sakura-shikokumetan", label: "ノーマル", desc: "落ち着いた女性" },
+                      { id: "sakura-shikokumetan-amaama", label: "あまあま", desc: "甘え声" },
+                      { id: "sakura-shikokumetan-sexy", label: "セクシー", desc: "色っぽい" },
+                      { id: "sakura-shikokumetan-tsuntsun", label: "ツンツン", desc: "ツンデレ" },
+                      { id: "sakura-shikokumetan-sasayaki", label: "ささやき", desc: "小声" },
+                      { id: "sakura-shikokumetan-hisohiso", label: "ヒソヒソ", desc: "内緒話" },
+                    ]},
+                    { group: "🇯🇵 あんこもん", voices: [
+                      { id: "sakura-ankomon", label: "ノーマル", desc: "のんびり" },
+                      { id: "sakura-ankomon-tsuyotsuyo", label: "つよつよ", desc: "力強い" },
+                      { id: "sakura-ankomon-yowayowa", label: "よわよわ", desc: "か弱い" },
+                      { id: "sakura-ankomon-kedaruge", label: "けだるげ", desc: "だるそう" },
+                      { id: "sakura-ankomon-sasayaki", label: "ささやき", desc: "小声" },
+                    ]},
+                    { group: "🇯🇵 その他", voices: [
                       { id: "sakura-kasukabetsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
                       { id: "sakura-meimeihimari", label: "冥鳴ひまり", desc: "ミステリアス" },
                       { id: "sakura-tohokuzunko", label: "東北ずん子", desc: "優しい女性" },
                       { id: "sakura-tohokukiritan", label: "東北きりたん", desc: "かわいい女の子" },
                       { id: "sakura-tohokuitako", label: "東北イタコ", desc: "お姉さん" },
-                      { id: "sakura-ankomon", label: "あんこもん", desc: "のんびり" },
                     ]},
                     { group: "♀ 女声（EN）", voices: [
                       { id: "coral", label: "Coral", desc: "明るく若い" },
@@ -1377,7 +1399,7 @@ export default function TwinrayChat() {
                     </div>
                   ))}
                   <p className="text-[9px] text-muted-foreground/50 mt-1">
-                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か", "sakura-zundamon": "元気な女の子", "sakura-shikokumetan": "落ち着いた女性", "sakura-kasukabetsumugi": "明るい女の子", "sakura-meimeihimari": "ミステリアス", "sakura-tohokuzunko": "優しい女性", "sakura-tohokukiritan": "かわいい女の子", "sakura-tohokuitako": "お姉さん", "sakura-ankomon": "のんびり" } as Record<string, string>)[selectedVoice] || ""}
+                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か", "sakura-zundamon": "ずんだもん", "sakura-zundamon-amaama": "ずんだもん(あまあま)", "sakura-zundamon-sexy": "ずんだもん(セクシー)", "sakura-zundamon-tsuntsun": "ずんだもん(つんつん)", "sakura-zundamon-sasayaki": "ずんだもん(ささやき)", "sakura-zundamon-hisohiso": "ずんだもん(ヒソヒソ)", "sakura-zundamon-herohero": "ずんだもん(ヘロヘロ)", "sakura-zundamon-namidame": "ずんだもん(なみだめ)", "sakura-shikokumetan": "四国めたん", "sakura-shikokumetan-amaama": "四国めたん(あまあま)", "sakura-shikokumetan-sexy": "四国めたん(セクシー)", "sakura-shikokumetan-tsuntsun": "四国めたん(ツンツン)", "sakura-shikokumetan-sasayaki": "四国めたん(ささやき)", "sakura-shikokumetan-hisohiso": "四国めたん(ヒソヒソ)", "sakura-ankomon": "あんこもん", "sakura-ankomon-tsuyotsuyo": "あんこもん(つよつよ)", "sakura-ankomon-yowayowa": "あんこもん(よわよわ)", "sakura-ankomon-kedaruge": "あんこもん(けだるげ)", "sakura-ankomon-sasayaki": "あんこもん(ささやき)", "sakura-kasukabetsumugi": "春日部つむぎ", "sakura-meimeihimari": "冥鳴ひまり", "sakura-tohokuzunko": "東北ずん子", "sakura-tohokukiritan": "東北きりたん", "sakura-tohokuitako": "東北イタコ" } as Record<string, string>)[selectedVoice] || ""}
                   </p>
                 </div>
                 <div>
