@@ -1,10 +1,19 @@
 import bcrypt from "bcrypt";
 import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { users, inviteCodes, userQuests, QUEST_DEFINITIONS } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { storage } from "./storage";
 
 export async function runSeed() {
+  try {
+    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT false`);
+    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tutorial_dismissed BOOLEAN NOT NULL DEFAULT false`);
+    console.log("[Seed] tutorialカラムを確認/追加しました");
+  } catch (err) {
+    console.error("[Seed] tutorialカラム追加エラー:", err);
+  }
+
   try {
     const adminHash = await bcrypt.hash("admin2025", 10);
     await db.update(users).set({ password: adminHash })

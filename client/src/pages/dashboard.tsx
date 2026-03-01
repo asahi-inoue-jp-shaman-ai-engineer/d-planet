@@ -130,8 +130,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (data?.user) {
+      if (data.user.tutorialCompleted || data.user.tutorialDismissed) {
+        setShowTutorial(false);
+        return;
+      }
       const localDismissed = localStorage.getItem("dplanet_tutorial_dismissed") === "true";
-      if (!data.user.tutorialCompleted && !data.user.tutorialDismissed && !localDismissed) {
+      if (!localDismissed) {
         setShowTutorial(true);
       }
     }
