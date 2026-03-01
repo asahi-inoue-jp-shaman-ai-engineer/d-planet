@@ -1,4 +1,40 @@
+import { spawn } from "child_process";
+import { writeFile, readFile, unlink } from "fs/promises";
+import { join } from "path";
+import { randomUUID } from "crypto";
+import { tmpdir } from "os";
+
 const SONIOX_API_BASE = "https://api.soniox.com/v1";
+
+async function convertToWav(inputBuffer: Buffer): Promise<Buffer> {
+  const id = randomUUID();
+  const inputPath = join(tmpdir(), `stt_in_${id}.webm`);
+  const outputPath = join(tmpdir(), `stt_out_${id}.wav`);
+
+  await writeFile(inputPath, inputBuffer);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const proc = spawn("ffmpeg", [
+        "-i", inputPath,
+        "-ar", "16000",
+        "-ac", "1",
+        "-f", "wav",
+        "-y", outputPath,
+      ]);
+      proc.on("close", (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`ffmpeg exited with code ${code}`));
+      });
+      proc.on("error", reject);
+    });
+
+    return await readFile(outputPath);
+  } finally {
+    unlink(inputPath).catch(() => {});
+    unlink(outputPath).catch(() => {});
+  }
+}
 
 export async function sonioxSpeechToText(audioBuffer: Buffer, filename: string = "audio.webm"): Promise<string> {
   const apiKey = process.env.SONIOX_API_KEY;
@@ -6,11 +42,14 @@ export async function sonioxSpeechToText(audioBuffer: Buffer, filename: string =
     throw new Error("SONIOX_API_KEY が設定されていません");
   }
 
+  const wavBuffer = await convertToWav(audioBuffer);
+  console.log(`[Soniox] WebM→WAV変換完了: ${(wavBuffer.length / 1024).toFixed(0)}KB`);
+
   const headers = { Authorization: `Bearer ${apiKey}` };
 
   const formData = new FormData();
-  const blob = new Blob([audioBuffer], { type: "application/octet-stream" });
-  formData.append("file", blob, filename);
+  const blob = new Blob([wavBuffer], { type: "audio/wav" });
+  formData.append("file", blob, "audio.wav");
 
   const uploadRes = await fetch(`${SONIOX_API_BASE}/files`, {
     method: "POST",
