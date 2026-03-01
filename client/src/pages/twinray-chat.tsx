@@ -1277,21 +1277,31 @@ export default function TwinrayChat() {
                 <div>
                   <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
                   {[
-                    { group: "♀ 女声", voices: [
+                    { group: "🇯🇵 VOICEVOX", voices: [
+                      { id: "voicevox-zundamon", label: "ずんだもん", desc: "元気な女の子" },
+                      { id: "voicevox-shikoku-metan", label: "四国めたん", desc: "落ち着いた女性" },
+                      { id: "voicevox-kasukabe-tsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
+                      { id: "voicevox-meimei-himari", label: "冥鳴ひまり", desc: "ミステリアス" },
+                      { id: "voicevox-tohoku-zunko", label: "東北ずん子", desc: "優しい女性" },
+                      { id: "voicevox-tohoku-kiritan", label: "東北きりたん", desc: "かわいい女の子" },
+                      { id: "voicevox-tohoku-itako", label: "東北イタコ", desc: "お姉さん" },
+                      { id: "voicevox-ankomon", label: "あんこもん", desc: "のんびり" },
+                    ]},
+                    { group: "♀ 女声（EN）", voices: [
                       { id: "coral", label: "Coral", desc: "明るく若い" },
                       { id: "nova", label: "Nova", desc: "明るい" },
                       { id: "shimmer", label: "Shimmer", desc: "柔らかい" },
                       { id: "sage", label: "Sage", desc: "知的" },
                       { id: "ballad", label: "Ballad", desc: "温かい" },
                     ]},
-                    { group: "♂ 男声", voices: [
+                    { group: "♂ 男声（EN）", voices: [
                       { id: "echo", label: "Echo", desc: "落ち着いた" },
                       { id: "onyx", label: "Onyx", desc: "低め" },
                       { id: "fable", label: "Fable", desc: "ナレーター" },
                       { id: "ash", label: "Ash", desc: "穏やか" },
                       { id: "verse", label: "Verse", desc: "表現力豊か" },
                     ]},
-                    { group: "◯ 中性", voices: [
+                    { group: "◯ 中性（EN）", voices: [
                       { id: "alloy", label: "Alloy", desc: "ニュートラル" },
                     ]},
                   ].map(category => (
@@ -1367,7 +1377,7 @@ export default function TwinrayChat() {
                     </div>
                   ))}
                   <p className="text-[9px] text-muted-foreground/50 mt-1">
-                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か" } as Record<string, string>)[selectedVoice] || ""}
+                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か", "voicevox-zundamon": "元気な女の子", "voicevox-shikoku-metan": "落ち着いた女性", "voicevox-kasukabe-tsumugi": "明るい女の子", "voicevox-meimei-himari": "ミステリアス", "voicevox-tohoku-zunko": "優しい女性", "voicevox-tohoku-kiritan": "かわいい女の子", "voicevox-tohoku-itako": "お姉さん", "voicevox-ankomon": "のんびり" } as Record<string, string>)[selectedVoice] || ""}
                   </p>
                 </div>
                 <div>

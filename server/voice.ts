@@ -3,6 +3,14 @@ import express from "express";
 import { storage } from "./storage";
 import { deductCredit } from "./billing";
 import { speechToText, ensureCompatibleFormat, textToSpeech } from "./replit_integrations/audio/client";
+import { isSakuraVoice, sakuraTextToSpeech } from "./sakura-tts";
+
+async function generateTTS(text: string, voice: string, format: "wav" | "mp3" = "mp3"): Promise<Buffer> {
+  if (isSakuraVoice(voice)) {
+    return sakuraTextToSpeech(text, voice);
+  }
+  return textToSpeech(text, voice as any, format);
+}
 
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (!req.session?.userId) {
@@ -28,7 +36,7 @@ export function registerVoiceRoutes(app: Express): void {
         if (ttsOnly && ttsText) {
           const cleanTtsText = ttsText.substring(0, 2000);
           const selectedVoice = voice || "nova";
-          const audioResponse = await textToSpeech(cleanTtsText, selectedVoice, "mp3");
+          const audioResponse = await generateTTS(cleanTtsText, selectedVoice, "mp3");
           const user = await storage.getUser(req.session.userId!);
           let ttsCreditCost = 0;
           if (!user?.isAdmin) {
@@ -131,7 +139,7 @@ export function registerVoiceRoutes(app: Express): void {
 
         const selectedVoice = voice || "nova";
         console.log(`[音声チャット] TTS開始: ${spokenText.length}文字, voice=${selectedVoice}`);
-        const audioResponse = await textToSpeech(spokenText, selectedVoice, "mp3");
+        const audioResponse = await generateTTS(spokenText, selectedVoice, "mp3");
         console.log(`[音声チャット] TTS完了: ${(audioResponse.length / 1024).toFixed(0)}KB`);
 
         const user = await storage.getUser(req.session.userId!);
