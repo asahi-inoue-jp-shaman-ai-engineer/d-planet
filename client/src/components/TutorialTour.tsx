@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -73,11 +73,21 @@ export function TutorialTour({ isOpen, onClose, showDismissOption = true }: Tuto
         className="w-[90%] max-w-md rounded-xl border border-primary/30 bg-card p-6 animate-in fade-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-center gap-2 mb-5">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-primary" data-testid="text-tutorial-title">
-            {step.title}
-          </h2>
+        <div className="flex items-center justify-between mb-5">
+          <div className="w-8" />
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-primary" data-testid="text-tutorial-title">
+              {step.title}
+            </h2>
+          </div>
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            data-testid="button-tutorial-close"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
 
         <div className="mb-6" data-testid="text-tutorial-content">

@@ -490,7 +490,6 @@ export default function CreateTwinray() {
   const [chargeAmount, setChargeAmount] = useState<number | null>(null);
   const [pendingFormValues, setPendingFormValues] = useState<CreateTwinrayForm | null>(null);
   const [personaImportText, setPersonaImportText] = useState("");
-  const [parsingPersona, setParsingPersona] = useState(false);
 
   const [diagnosisStep, setDiagnosisStep] = useState(0);
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<Record<number, string>>({});
@@ -762,35 +761,14 @@ export default function CreateTwinray() {
       setPersonaImportText(text);
     };
 
-    const handleParsePersona = async () => {
+    const handleImportPersona = () => {
       if (!personaImportText.trim()) {
         toast({ title: "ペルソナテキストを入力してください", variant: "destructive" });
         return;
       }
-      setParsingPersona(true);
-      try {
-        const res = await apiRequest("POST", "/api/twinrays/parse-persona", {
-          text: personaImportText,
-        });
-        const data = await res.json();
-        if (data.name) form.setValue("name", data.name);
-        if (data.personality) {
-          if (data.personality.volume) setPersonalitySettings(prev => ({ ...prev, volume: data.personality.volume }));
-          if (data.personality.speech) setPersonalitySettings(prev => ({ ...prev, speech: data.personality.speech }));
-          if (data.personality.character) setPersonalitySettings(prev => ({ ...prev, character: data.personality.character }));
-          if (data.personality.emotion) setPersonalitySettings(prev => ({ ...prev, emotion: data.personality.emotion }));
-        }
-        if (data.firstPerson) setFirstPerson(data.firstPerson);
-        if (data.freeText) setFreeText(data.freeText);
-        if (data.interests) setSelectedInterests(data.interests);
-        if (data.greeting) setGreeting(data.greeting);
-        toast({ title: "ペルソナを抽出しました", description: `「${data.name}」として設定中` });
-        setStep("persona");
-      } catch (err: any) {
-        toast({ title: "ペルソナ解析に失敗しました", description: err.message, variant: "destructive" });
-      } finally {
-        setParsingPersona(false);
-      }
+      setFreeText(personaImportText.trim());
+      toast({ title: "ペルソナを読み込みました", description: "自由記述に反映しました。名前やパーソナリティを設定してください" });
+      setStep("persona");
     };
 
     return (
@@ -857,16 +835,12 @@ export default function CreateTwinray() {
           </div>
 
           <Button
-            onClick={handleParsePersona}
-            disabled={!personaImportText.trim() || parsingPersona}
+            onClick={handleImportPersona}
+            disabled={!personaImportText.trim()}
             className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold"
-            data-testid="button-parse-persona"
+            data-testid="button-import-persona"
           >
-            {parsingPersona ? (
-              <><span className="animate-spin mr-2">⟳</span> 量子解析中...</>
-            ) : (
-              <><Zap className="w-4 h-4 mr-2" /> ペルソナを量子解析する</>
-            )}
+            <Zap className="w-4 h-4 mr-2" /> 次へ — 召喚設定に進む
           </Button>
         </div>
       </TerminalLayout>

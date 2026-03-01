@@ -54,9 +54,8 @@ function GrowthDashboard({ twinrayId, isExpanded }: { twinrayId: number; isExpan
 
   if (!data) return null;
 
-  const { intimacy, stats, unlockedAbilities, nextAbilities, quests } = data;
+  const { intimacy, stats, unlockedAbilities, nextAbilities } = data;
   const expToNext = intimacy.level < 10 ? intimacy.nextLevelExp - intimacy.currentExp : 0;
-  const firstIncompleteIndex = quests.findIndex((q: any) => !q.completed);
 
   return (
     <div className="space-y-3 pt-2 border-t border-border" data-testid={`section-growth-dashboard-${twinrayId}`}>
@@ -120,40 +119,6 @@ function GrowthDashboard({ twinrayId, isExpanded }: { twinrayId: number; isExpan
         )}
       </div>
 
-      <div className="space-y-1">
-        <span className="text-xs font-semibold text-foreground">クエスト</span>
-        <div className="space-y-1">
-          {quests.map((quest: any, index: number) => {
-            const isCurrent = index === firstIncompleteIndex;
-            const isCompleted = quest.completed;
-            return (
-              <div
-                key={quest.level}
-                className={`flex items-start gap-2 px-2 py-1.5 rounded-md text-xs ${
-                  isCurrent
-                    ? "bg-primary/10 border border-primary/30"
-                    : ""
-                }`}
-                data-testid={`quest-item-${quest.level}-${twinrayId}`}
-              >
-                {isCompleted ? (
-                  <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                ) : (
-                  <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className={`font-semibold ${isCompleted ? "text-primary" : isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
-                    Lv.{quest.level} {quest.title}
-                  </div>
-                  <div className={`${isCompleted ? "text-muted-foreground" : isCurrent ? "text-foreground/70" : "text-muted-foreground/60"}`}>
-                    {quest.description}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
