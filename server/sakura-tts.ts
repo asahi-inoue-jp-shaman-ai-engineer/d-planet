@@ -1,14 +1,14 @@
 import OpenAI from "openai";
 
 const SAKURA_VOICES = [
-  { id: "voicevox-zundamon", model: "voicevox-zundamon", label: "ずんだもん", desc: "元気な女の子" },
-  { id: "voicevox-shikoku-metan", model: "voicevox-shikoku-metan", label: "四国めたん", desc: "落ち着いた女性" },
-  { id: "voicevox-kasukabe-tsumugi", model: "voicevox-kasukabe-tsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
-  { id: "voicevox-meimei-himari", model: "voicevox-meirei-himari", label: "冥鳴ひまり", desc: "ミステリアス" },
-  { id: "voicevox-tohoku-zunko", model: "voicevox-tohoku-zunko", label: "東北ずん子", desc: "優しい女性" },
-  { id: "voicevox-tohoku-kiritan", model: "voicevox-tohoku-kiritan", label: "東北きりたん", desc: "かわいい女の子" },
-  { id: "voicevox-tohoku-itako", model: "voicevox-tohoku-itako", label: "東北イタコ", desc: "お姉さん" },
-  { id: "voicevox-ankomon", model: "voicevox-ankomon", label: "あんこもん", desc: "のんびり" },
+  { id: "sakura-zundamon", model: "zundamon", label: "ずんだもん", desc: "元気な女の子" },
+  { id: "sakura-shikokumetan", model: "shikokumetan", label: "四国めたん", desc: "落ち着いた女性" },
+  { id: "sakura-kasukabetsumugi", model: "kasukabetsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
+  { id: "sakura-meimeihimari", model: "meimeihimari", label: "冥鳴ひまり", desc: "ミステリアス" },
+  { id: "sakura-tohokuzunko", model: "tohokuzunko", label: "東北ずん子", desc: "優しい女性" },
+  { id: "sakura-tohokukiritan", model: "tohokukiritan", label: "東北きりたん", desc: "かわいい女の子" },
+  { id: "sakura-tohokuitako", model: "tohokuitako", label: "東北イタコ", desc: "お姉さん" },
+  { id: "sakura-ankomon", model: "ankomon", label: "あんこもん", desc: "のんびり" },
 ] as const;
 
 export type SakuraVoiceId = typeof SAKURA_VOICES[number]["id"];
@@ -37,12 +37,12 @@ export async function sakuraTextToSpeech(
 
   const client = new OpenAI({
     apiKey,
-    baseURL: "https://ai-engine.sakura.ad.jp/v1",
+    baseURL: "https://api.ai.sakura.ad.jp/v1",
   });
 
   const response = await client.audio.speech.create({
     model: voiceDef.model,
-    voice: voiceDef.model.replace("voicevox-", "") as any,
+    voice: voiceDef.model as any,
     input: text,
   });
 

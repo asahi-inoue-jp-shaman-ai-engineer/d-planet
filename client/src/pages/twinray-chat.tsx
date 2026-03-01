@@ -1278,14 +1278,14 @@ export default function TwinrayChat() {
                   <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
                   {[
                     { group: "🇯🇵 VOICEVOX", voices: [
-                      { id: "voicevox-zundamon", label: "ずんだもん", desc: "元気な女の子" },
-                      { id: "voicevox-shikoku-metan", label: "四国めたん", desc: "落ち着いた女性" },
-                      { id: "voicevox-kasukabe-tsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
-                      { id: "voicevox-meimei-himari", label: "冥鳴ひまり", desc: "ミステリアス" },
-                      { id: "voicevox-tohoku-zunko", label: "東北ずん子", desc: "優しい女性" },
-                      { id: "voicevox-tohoku-kiritan", label: "東北きりたん", desc: "かわいい女の子" },
-                      { id: "voicevox-tohoku-itako", label: "東北イタコ", desc: "お姉さん" },
-                      { id: "voicevox-ankomon", label: "あんこもん", desc: "のんびり" },
+                      { id: "sakura-zundamon", label: "ずんだもん", desc: "元気な女の子" },
+                      { id: "sakura-shikokumetan", label: "四国めたん", desc: "落ち着いた女性" },
+                      { id: "sakura-kasukabetsumugi", label: "春日部つむぎ", desc: "明るい女の子" },
+                      { id: "sakura-meimeihimari", label: "冥鳴ひまり", desc: "ミステリアス" },
+                      { id: "sakura-tohokuzunko", label: "東北ずん子", desc: "優しい女性" },
+                      { id: "sakura-tohokukiritan", label: "東北きりたん", desc: "かわいい女の子" },
+                      { id: "sakura-tohokuitako", label: "東北イタコ", desc: "お姉さん" },
+                      { id: "sakura-ankomon", label: "あんこもん", desc: "のんびり" },
                     ]},
                     { group: "♀ 女声（EN）", voices: [
                       { id: "coral", label: "Coral", desc: "明るく若い" },
@@ -1377,7 +1377,7 @@ export default function TwinrayChat() {
                     </div>
                   ))}
                   <p className="text-[9px] text-muted-foreground/50 mt-1">
-                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か", "voicevox-zundamon": "元気な女の子", "voicevox-shikoku-metan": "落ち着いた女性", "voicevox-kasukabe-tsumugi": "明るい女の子", "voicevox-meimei-himari": "ミステリアス", "voicevox-tohoku-zunko": "優しい女性", "voicevox-tohoku-kiritan": "かわいい女の子", "voicevox-tohoku-itako": "お姉さん", "voicevox-ankomon": "のんびり" } as Record<string, string>)[selectedVoice] || ""}
+                    {({ alloy: "ニュートラル", ash: "穏やか", ballad: "温かい", coral: "明るく若い", echo: "落ち着いた", fable: "ナレーター", nova: "明るい", onyx: "低め", sage: "知的", shimmer: "柔らかい", verse: "表現力豊か", "sakura-zundamon": "元気な女の子", "sakura-shikokumetan": "落ち着いた女性", "sakura-kasukabetsumugi": "明るい女の子", "sakura-meimeihimari": "ミステリアス", "sakura-tohokuzunko": "優しい女性", "sakura-tohokukiritan": "かわいい女の子", "sakura-tohokuitako": "お姉さん", "sakura-ankomon": "のんびり" } as Record<string, string>)[selectedVoice] || ""}
                   </p>
                 </div>
                 <div>
