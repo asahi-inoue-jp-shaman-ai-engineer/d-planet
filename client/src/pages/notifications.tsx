@@ -23,6 +23,9 @@ export default function Notifications() {
     if (notification.relatedType === "meidia" && notification.relatedId) {
       return `/meidia/${notification.relatedId}`;
     }
+    if (notification.relatedType === "festival" && notification.relatedId) {
+      return `/festivals/${notification.relatedId}`;
+    }
     return null;
   };
 

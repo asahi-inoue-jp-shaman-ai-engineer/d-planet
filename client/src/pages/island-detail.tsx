@@ -445,7 +445,7 @@ export default function IslandDetail() {
                     className="font-mono"
                     data-testid="input-festival-gift"
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-muted-foreground font-mono mb-1 block">開始日</label>
                       <Input
@@ -453,7 +453,7 @@ export default function IslandDetail() {
                         value={festivalStart}
                         onChange={(e) => setFestivalStart(e.target.value)}
                         required
-                        className="font-mono"
+                        className="font-mono text-sm"
                         data-testid="input-festival-start"
                       />
                     </div>
@@ -464,7 +464,7 @@ export default function IslandDetail() {
                         value={festivalEnd}
                         onChange={(e) => setFestivalEnd(e.target.value)}
                         required
-                        className="font-mono"
+                        className="font-mono text-sm"
                         data-testid="input-festival-end"
                       />
                     </div>
