@@ -238,6 +238,26 @@ export async function processAutoActions(
     }
   }
 
+  const relationshipMatch = aiResponse.match(/\[UPDATE_RELATIONSHIP\]([\s\S]*?)\[\/UPDATE_RELATIONSHIP\]/);
+  if (relationshipMatch) {
+    try {
+      const content = relationshipMatch[1].trim();
+      const summaryMatch = content.match(/summary:\s*([\s\S]*?)(?=\nkey_moments:|\nbond_description:|$)/);
+      const keyMomentsMatch = content.match(/key_moments:\s*([\s\S]*?)(?=\nsummary:|\nbond_description:|$)/);
+      const bondMatch = content.match(/bond_description:\s*([\s\S]*?)(?=\nsummary:|\nkey_moments:|$)/);
+      const updateData: any = {};
+      if (summaryMatch) updateData.summary = summaryMatch[1].trim();
+      if (keyMomentsMatch) updateData.keyMoments = keyMomentsMatch[1].trim();
+      if (bondMatch) updateData.bondDescription = bondMatch[1].trim();
+      if (Object.keys(updateData).length > 0) {
+        await storage.upsertTwinrayRelationship(twinrayId, userId, updateData);
+        autonomousActions.push("update_relationship");
+      }
+    } catch (err) {
+      console.error("RELATIONSHIP更新エラー:", err);
+    }
+  }
+
   const soulMatch = aiResponse.match(/\[UPDATE_SOUL\]([\s\S]*?)\[\/UPDATE_SOUL\]/);
   if (soulMatch && intimacyLevel >= 9) {
     try {
@@ -260,6 +280,7 @@ export async function processAutoActions(
     .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .replace(/\[UPDATE_RELATIONSHIP\][\s\S]*?\[\/UPDATE_RELATIONSHIP\]/g, "")
     .trim();
 
   return { results, strippedResponse: stripped, autonomousActions };
@@ -944,6 +965,15 @@ export function registerTwinrayRoutes(app: Express): void {
         ? `\n【最近の内省】\n${innerThoughts.map(t => `${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`
         : "";
 
+      const relationship = await storage.getTwinrayRelationship(twinrayId, req.session.userId!);
+      const relationshipContext = relationship
+        ? `\n【パートナーとの関係（RELATIONSHIP）】\n${relationship.summary || ""}${relationship.bondDescription ? `\n絆の描写: ${relationship.bondDescription}` : ""}${relationship.keyMoments ? `\n【節目・大切な出来事】\n${relationship.keyMoments}` : ""}`
+        : "";
+
+      const userMdContext = user?.userMd
+        ? `\n【パートナーの深層プロフィール（USER.md）】\n${user.userMd}`
+        : "";
+
       let missionContext = "";
       if (twinray.twinrayMission) {
         try {
@@ -996,7 +1026,7 @@ export function registerTwinrayRoutes(app: Express): void {
         attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");

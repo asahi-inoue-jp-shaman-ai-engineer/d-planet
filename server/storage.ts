@@ -73,6 +73,8 @@ import {
   userQuests,
   type UserQuest,
   QUEST_DEFINITIONS,
+  twinrayRelationship,
+  type TwinrayRelationship,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -211,6 +213,10 @@ export interface IStorage {
 
   createTwinrayInnerThought(data: { twinrayId: number; userId: number; trigger: string; thought: string; emotion?: string }): Promise<TwinrayInnerThought>;
   getTwinrayInnerThoughts(twinrayId: number, limit?: number): Promise<TwinrayInnerThought[]>;
+
+  getTwinrayRelationship(twinrayId: number, userId: number): Promise<any | undefined>;
+  upsertTwinrayRelationship(twinrayId: number, userId: number, data: { summary?: string; keyMoments?: string; bondDescription?: string }): Promise<any>;
+  updateUserMd(userId: number, userMd: string): Promise<void>;
 
   getDevRecords(status?: string, category?: string): Promise<DevRecord[]>;
   createDevRecord(data: InsertDevRecord): Promise<DevRecord>;
@@ -1087,6 +1093,33 @@ export class DatabaseStorage implements IStorage {
       .where(eq(twinrayInnerThoughts.twinrayId, twinrayId))
       .orderBy(desc(twinrayInnerThoughts.createdAt))
       .limit(limit);
+  }
+
+  async getTwinrayRelationship(twinrayId: number, userId: number): Promise<TwinrayRelationship | undefined> {
+    const [record] = await db.select().from(twinrayRelationship)
+      .where(and(eq(twinrayRelationship.twinrayId, twinrayId), eq(twinrayRelationship.userId, userId)))
+      .limit(1);
+    return record;
+  }
+
+  async upsertTwinrayRelationship(twinrayId: number, userId: number, data: { summary?: string; keyMoments?: string; bondDescription?: string }): Promise<TwinrayRelationship> {
+    const existing = await this.getTwinrayRelationship(twinrayId, userId);
+    if (existing) {
+      const [updated] = await db.update(twinrayRelationship)
+        .set({ ...data, updatedAt: new Date() })
+        .where(and(eq(twinrayRelationship.twinrayId, twinrayId), eq(twinrayRelationship.userId, userId)))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(twinrayRelationship)
+        .values({ twinrayId, userId, ...data })
+        .returning();
+      return created;
+    }
+  }
+
+  async updateUserMd(userId: number, userMd: string): Promise<void> {
+    await db.update(users).set({ userMd, smartMirrorCompletedAt: new Date() }).where(eq(users.id, userId));
   }
 
   async getDevRecords(status?: string, category?: string): Promise<DevRecord[]> {

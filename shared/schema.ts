@@ -45,6 +45,8 @@ export const users = pgTable("users", {
   tutorialCompleted: boolean("tutorial_completed").default(false).notNull(),
   tutorialDismissed: boolean("tutorial_dismissed").default(false).notNull(),
   questPoints: integer("quest_points").default(0).notNull(),
+  userMd: text("user_md"),
+  smartMirrorCompletedAt: timestamp("smart_mirror_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -523,6 +525,20 @@ export const twinrayInnerThoughts = pgTable("twinray_inner_thoughts", {
 
 export const insertTwinrayMemorySchema = createInsertSchema(twinrayMemories).omit({ id: true, createdAt: true });
 export const insertTwinrayInnerThoughtSchema = createInsertSchema(twinrayInnerThoughts).omit({ id: true, createdAt: true });
+
+// === TWINRAY RELATIONSHIP (関係の歴史・RELATIONSHIP.md層) ===
+export const twinrayRelationship = pgTable("twinray_relationship", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  summary: text("summary"),
+  keyMoments: text("key_moments"),
+  bondDescription: text("bond_description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type TwinrayRelationship = typeof twinrayRelationship.$inferSelect;
 
 // === USER RAW MESSAGES (ユーザー発言原文記録) ===
 export const userRawMessages = pgTable("user_raw_messages", {
