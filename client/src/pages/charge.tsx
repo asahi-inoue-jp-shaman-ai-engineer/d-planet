@@ -94,11 +94,6 @@ export default function Charge() {
     },
   });
 
-  const { data: questsData } = useQuery<{ questId: string; status: string }[]>({
-    queryKey: ["/api/quests"],
-  });
-  const meidiaQuestCleared = questsData?.find(q => q.questId === "meidia_create")?.status === "completed";
-
   const balance = balanceData?.balance ?? 0;
   const betaMode = badgeData?.betaMode ?? false;
   const hasTwinrayBadge = badgeData?.hasTwinrayBadge ?? false;

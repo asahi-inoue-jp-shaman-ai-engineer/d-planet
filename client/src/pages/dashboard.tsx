@@ -37,7 +37,6 @@ import {
   Copy,
   Mic,
 } from "lucide-react";
-import { QUEST_DEFINITIONS } from "@shared/schema";
 
 function formatTimeAgo(dateStr: string | null): string {
   if (!dateStr) return "---";
@@ -253,10 +252,6 @@ export default function Dashboard() {
 
   const { data: modelsData } = useQuery<ModelInfo[]>({
     queryKey: ["/api/available-models"],
-  });
-
-  const { data: questsData } = useQuery<{ id: number; questId: string; status: string; completedAt: string | null }[]>({
-    queryKey: ["/api/quests"],
   });
 
   const { data: bulletinsData } = useQuery<{ id: number; twinrayId: number; userId: number; content: string; type: string; isPublic: boolean; createdAt: string; twinrayName: string }[]>({

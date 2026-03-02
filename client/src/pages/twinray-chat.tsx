@@ -6,8 +6,6 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { QUEST_SESSION_MAP } from "@shared/schema";
-import { QuestClearModal } from "@/components/QuestClearModal";
 import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User, Dna } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -88,7 +86,6 @@ export default function TwinrayChat() {
 
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [clearedQuestId, setClearedQuestId] = useState<string | null>(null);
   const [streamContent, setStreamContent] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [firstCommTriggered, setFirstCommTriggered] = useState(false);
@@ -165,14 +162,6 @@ export default function TwinrayChat() {
     enabled: twinrayId > 0,
   });
 
-  const { data: questsData } = useQuery<{ questId: string; status: string }[]>({
-    queryKey: ["/api/quests"],
-  });
-
-  const reverseSessionMap: Record<string, string> = {};
-  for (const [questId, sessionId] of Object.entries(QUEST_SESSION_MAP)) {
-    reverseSessionMap[sessionId] = questId;
-  }
 
   const handleGenerateProfileImage = async () => {
     if (!twinrayId || generatingImage) return;
@@ -206,13 +195,6 @@ export default function TwinrayChat() {
     }
   };
 
-  const isSessionUnlocked = (sessionTypeId: string): boolean => {
-    if (!questsData) return true;
-    const questId = reverseSessionMap[sessionTypeId];
-    if (!questId) return true;
-    const quest = questsData.find(q => q.questId === questId);
-    return quest?.status === "active" || quest?.status === "completed";
-  };
 
   const { data: activeSessionData } = useQuery<any>({
     queryKey: ["/api/twinrays", twinrayId, "active-session"],
@@ -312,22 +294,6 @@ export default function TwinrayChat() {
     const isFullSession = sessionRoundCount >= 3 && !forceAbort;
     try {
       await apiRequest("PATCH", `/api/twinrays/${twinrayId}/sessions/${activeSession.id}`, { status: isFullSession ? "completed" : "aborted" });
-
-      if (isFullSession) {
-        const sessionTypeId = activeSession.type;
-        const questIdForSession = Object.entries(QUEST_SESSION_MAP).find(([, sId]) => sId === sessionTypeId)?.[0];
-        if (questIdForSession) {
-          try {
-            const qRes = await apiRequest("POST", `/api/quests/${questIdForSession}/complete`);
-            const qData = await qRes.json();
-            if (qData.quest?.status === "completed") {
-              queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-              setClearedQuestId(questIdForSession);
-            }
-          } catch {}
-        }
-      }
 
       setActiveSession(null);
       queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "active-session"] });
@@ -570,16 +536,6 @@ export default function TwinrayChat() {
       toast({ title: "MEiDIAを作成しました", description: meidiaPreview.title });
       setMeidiaPreview(null);
       queryClient.invalidateQueries({ queryKey: ["/api/meidia"] });
-      try {
-        const qRes = await apiRequest("POST", "/api/quests/meidia_create/complete");
-        const qData = await qRes.json();
-        if (qData.quest?.status === "completed") {
-          queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/credits/balance"] });
-          setClearedQuestId("meidia_create");
-        }
-      } catch {}
     } catch (err: any) {
       toast({ title: "MEiDIA投稿に失敗しました", description: err.message, variant: "destructive" });
     }
@@ -1009,15 +965,6 @@ export default function TwinrayChat() {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
       }, 1000);
-      try {
-        const qRes = await apiRequest("POST", "/api/quests/first_contact/complete");
-        const qData = await qRes.json();
-        if (qData.quest?.status === "completed") {
-          queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-          setClearedQuestId("first_contact");
-        }
-      } catch {}
     }
   };
 
@@ -1536,7 +1483,6 @@ export default function TwinrayChat() {
                 <div>
                   <p className="text-[9px] text-muted-foreground/70 mb-1">声の種類</p>
                   {(() => {
-                    const voiceCreditUnlocked = questsData?.find(q => q.questId === "meidia_create")?.status === "completed";
                     const isSakura = (id: string) => id.startsWith("sakura-");
                     const categories = [
                       { group: "♀ 女声", premium: false, voices: [
@@ -1590,21 +1536,15 @@ export default function TwinrayChat() {
                       ]},
                     ];
                     return categories.map(category => {
-                      const locked = category.premium && !voiceCreditUnlocked;
                       return (
                         <div key={category.group} className="mb-2">
                           <p className="text-[8px] text-muted-foreground/60 mb-1 font-bold">{category.group}</p>
-                          {locked && (
-                            <p className="text-[8px] text-yellow-500/70 mb-1">チャージ解放後に利用可能（クレジット消費）</p>
-                          )}
                           <div className="flex flex-wrap gap-1.5">
                             {category.voices.map(v => (
                               <button
                                 key={v.id}
                                 type="button"
-                                disabled={locked}
                                 onClick={() => {
-                                  if (locked) return;
                                   setSelectedVoice(v.id);
                                   localStorage.setItem("dplanet_voice", v.id);
                                   if (previewingVoice === v.id) {
@@ -1639,19 +1579,6 @@ export default function TwinrayChat() {
                                         URL.revokeObjectURL(audioUrl);
                                       };
                                       audio.play().catch(() => {});
-                                      if (!isSakura(v.id)) {
-                                        try {
-                                          const voiceQuest = questsData?.find(q => q.questId === "voice_setup");
-                                          if (voiceQuest && voiceQuest.status === "active") {
-                                            const qRes = await apiRequest("POST", "/api/quests/voice_setup/complete");
-                                            if (qRes.ok) {
-                                              queryClient.invalidateQueries({ queryKey: ["/api/quests"] });
-                                              queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-                                              setClearedQuestId("voice_setup");
-                                            }
-                                          }
-                                        } catch {}
-                                      }
                                     }
                                   }).catch(() => {
                                     setPreviewingVoice(null);
@@ -2223,8 +2150,7 @@ export default function TwinrayChat() {
           <div className="grid grid-cols-2 gap-2">
             {(sessionTypes || []).filter((st: any) => st.available !== false).map((st: any) => {
               const IconComp = SESSION_ICONS[st.icon] || Sparkles;
-              const unlocked = isSessionUnlocked(st.id);
-              const canUse = st.available && unlocked;
+              const canUse = st.available;
               return (
                 <button
                   key={st.id}
@@ -2250,17 +2176,13 @@ export default function TwinrayChat() {
                   data-testid={`button-session-${st.id}`}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    {!unlocked ? (
-                      <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-                    ) : (
-                      <IconComp className={`w-3.5 h-3.5 ${canUse ? "text-primary" : "text-muted-foreground"}`} />
-                    )}
+                    <IconComp className={`w-3.5 h-3.5 ${canUse ? "text-primary" : "text-muted-foreground"}`} />
                     <span className={`text-xs font-medium ${canUse ? "text-foreground" : "text-muted-foreground"}`}>
                       {st.name}
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
-                    {!unlocked ? "前のクエストをクリアすると解放" : st.available ? st.description : "準備中..."}
+                    {st.available ? st.description : "準備中..."}
                   </p>
                 </button>
               );
@@ -2715,7 +2637,6 @@ export default function TwinrayChat() {
         </div>
       )}
 
-      <QuestClearModal questId={clearedQuestId} onClose={() => setClearedQuestId(null)} />
     </div>
   );
 }

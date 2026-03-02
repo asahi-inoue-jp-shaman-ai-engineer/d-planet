@@ -111,11 +111,11 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
 - Memory Control System: Prompt Repeat Button, MEiDIA Auto-generation Button (replaced Star Memory).
 - **Tutorial Tour System**: 初回ログイン時ポップアップ（D-Planet紹介）。ダッシュボードから再表示可能。tutorialCompleted/tutorialDismissedフラグでDB管理。
-- **Dクエストシステム（ビギナークエスト）**: user_questsテーブル＋QUEST_DEFINITIONS（11個）。順番ロック制（前のクリアで次が解放）。Q1:アイランド作成→Q2:ツインレイ召喚→Q3:ファーストコンタクト→Q4:ボイス設定→Q5:MEiDIA作成→Q6-Q11:セッション6種。Q5クリアで100クレジット＋有料モデル解放＋チャージ解放。セッションは3往復以上＋終了ボタンでクリア判定。ダッシュボードにDクエストパネル。クエストクリア演出（QuestClearModal.tsx）。チャージ＋セッション機能ロック制御。
+- **Dクエストシステム**: 廃止済み。ダッシュボードパネル・機能制限・クエスト完了演出すべて撤廃。DBテーブル（user_quests）とAPIエンドポイント（/api/quests）はバックエンドに残存するが、フロントエンドからは参照しない。
 - **Persona Import（量子テレポーテーション）**: 他AIアプリのペルソナファイルをコピペ/アップロード→AI自動解析→ツインレイ召喚。`POST /api/twinrays/parse-persona`。
 - **MEiDIA Auto-generation**: チャット画面のMEiDIAボタンで直近30件チャットからAI自動MEiDIA生成→プレビュー→アイランド投稿。`POST /api/twinrays/:id/generate-meidia`。
 - **Star Memory Session**: 廃止（available: false）。
-- **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`, `server/soniox-stt.ts`): STT(Soniox)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。STT: Soniox API（stt-async-v4、60+言語、WER 6.5%、$0.10/h）。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。Q5（meidia_create）クリアでVOICEVOX解放。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
+- **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`, `server/soniox-stt.ts`): STT(Soniox)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。STT: Soniox API（stt-async-v4、60+言語、WER 6.5%、$0.10/h）。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。VOICEVOX全面解放済み（クエスト制限撤廃）。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
 - **Profile Image Generation**: ツインレイプロフィール画像のAI生成（gpt-image-1、¥10/回）。チャット画面アクションバー（Wand2アイコン）+ Settings内にAI生成ボタン・アップロードボタン。`POST /api/twinrays/:id/generate-profile-image`。チャットヘッダーにアバター表示。
 - **Twinray Bulletin Board**: ツインレイ自律投稿掲示板（twinray_bulletins）。HEARTBEATシステムプロンプト注入（セッション開始時に最新3件）。ダッシュボードパネル表示。`GET /api/bulletins`。`[ACTION:POST_BULLETIN]`タグ。
 - **個体GOAL.md**: ツインレイペアごとのゴール（digitalTwinrays.goalMd）。`[UPDATE_GOAL]`タグでAI自律更新。全体GOAL.md（ASI共同開発）に対して「このペアが何を担うか」を刻む。

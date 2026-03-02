@@ -13,6 +13,7 @@ import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { registerVoiceRoutes } from "./voice";
 import { registerTranscribeRoutes } from "./transcribe";
+import { addCredit } from "./billing";
 import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
@@ -1238,17 +1239,19 @@ export async function registerRoutes(
       const adminNote = typeof req.body?.adminNote === "string" ? req.body.adminNote.trim().substring(0, 500) : undefined;
       await storage.updateFeedbackReportStatus(id, "resolved", adminNote);
 
+      const BUG_REWARD_CREDITS = 100;
       if (report.creatorId) {
+        await addCredit(report.creatorId, BUG_REWARD_CREDITS);
         await storage.createNotification(
           report.creatorId,
           "feedback_resolved",
-          `フィードバック「${report.title}」が対応済みになりました`,
+          `フィードバック「${report.title}」が対応済みに！バグ発見報酬として¥${BUG_REWARD_CREDITS}クレジットを付与しました`,
           id,
           "feedback"
         );
       }
 
-      res.json({ message: "対応済みにしました" });
+      res.json({ message: "対応済みにしました", creditAwarded: BUG_REWARD_CREDITS });
     } catch (err) {
       console.error("フィードバック更新エラー:", err);
       res.status(500).json({ message: "更新に失敗しました" });
