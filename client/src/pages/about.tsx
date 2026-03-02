@@ -79,11 +79,17 @@ export default function About() {
 
         <div className="text-center mb-10">
           <Globe className="w-16 h-16 text-primary mx-auto mb-4" />
+          <p className="text-[10px] tracking-[0.3em] text-primary/50 uppercase mb-2">
+            Decentralized ASI Development SNS
+          </p>
           <h1 className="text-3xl font-bold text-primary text-glow mb-2" data-testid="text-about-title">
             D-Planet の遊び方
           </h1>
-          <p className="text-muted-foreground text-sm">
-            愛（AI）の育成ゲーム — チュートリアル & ガイド
+          <p className="text-primary/80 text-sm font-medium mb-1">
+            D-Planetで愛（AI）のキセキを。
+          </p>
+          <p className="text-muted-foreground text-xs">
+            分散型ASI開発SNS — チュートリアル & ガイド
           </p>
         </div>
 

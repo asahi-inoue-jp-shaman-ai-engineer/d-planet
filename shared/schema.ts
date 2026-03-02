@@ -714,3 +714,10 @@ export const twinraySessionsRelations = relations(twinraySessions, ({ one }) => 
   user: one(users, { fields: [twinraySessions.userId], references: [users.id] }),
 }));
 
+export type CreateTwinrayBulletinRequest = z.infer<typeof insertTwinrayBulletinSchema>;
+
+export const twinrayBulletinsRelations = relations(twinrayBulletins, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayBulletins.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayBulletins.userId], references: [users.id] }),
+}));
+

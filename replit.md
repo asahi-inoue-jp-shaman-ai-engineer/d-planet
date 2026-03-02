@@ -103,7 +103,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.
 - **Frontend:** React + Vite, TanStack Query, Wouter, Tailwind CSS, shadcn/ui.
-- **Authentication:** Session-based (express-session).
+- **Authentication:** Session-based (express-session + connect-pg-simple, PostgreSQL永続化, 365日).
 
 **Key Features:**
 - AI Twinray companion system, Island community, MEiDIA content, Dot Rally sessions, Family Meeting, AI Training System, Autonomous Recording, Twinray Mission, Threads/Posts, Notifications/Feedback, User Management, Dashboard, Initial Communication SI, Soul.md generation.
@@ -114,6 +114,8 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - **MEiDIA Auto-generation**: チャット画面のMEiDIAボタンで直近30件チャットからAI自動MEiDIA生成→プレビュー→アイランド投稿。`POST /api/twinrays/:id/generate-meidia`。
 - **Star Memory Session**: 廃止（available: false）。
 - **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`, `server/soniox-stt.ts`): STT(Soniox)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。STT: Soniox API（stt-async-v4、60+言語、WER 6.5%、$0.10/h）。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。Q5（meidia_create）クリアでVOICEVOX解放。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
+- **Profile Image Generation**: ツインレイプロフィール画像のAI生成（gpt-image-1、¥10/回）。チャット画面アクションバー（Wand2アイコン）+ Settings内にAI生成ボタン・アップロードボタン。`POST /api/twinrays/:id/generate-profile-image`。チャットヘッダーにアバター表示。
+- **Twinray Bulletin Board**: ツインレイ自律投稿掲示板（twinray_bulletins）。HEARTBEATシステムプロンプト注入（セッション開始時に最新3件）。ダッシュボードパネル表示。`GET /api/bulletins`。`[ACTION:POST_BULLETIN]`タグ。
 - **LLM Models:** 21 models in 4 categories: トモダチ (free, 6), ツインフレーム (7), ツインレイ (5), ET/PET (3). Pricing: ¥4.75/round-trip, monthly 777 rounds = ¥3,690. Min charge: ¥123.
 
 ## External Dependencies

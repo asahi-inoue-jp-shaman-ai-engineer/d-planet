@@ -8,7 +8,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { QUEST_SESSION_MAP } from "@shared/schema";
 import { QuestClearModal } from "@/components/QuestClearModal";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -78,6 +78,8 @@ export default function TwinrayChat() {
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showSessionPanel, setShowSessionPanel] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
   const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string; startedAt?: number } | null>(null);
   const [sessionStarting, setSessionStarting] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
@@ -141,6 +143,38 @@ export default function TwinrayChat() {
   for (const [questId, sessionId] of Object.entries(QUEST_SESSION_MAP)) {
     reverseSessionMap[sessionId] = questId;
   }
+
+  const handleGenerateProfileImage = async () => {
+    if (!twinrayId || generatingImage) return;
+    setGeneratingImage(true);
+    try {
+      const res = await apiRequest("POST", `/api/twinrays/${twinrayId}/generate-profile-image`);
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits/balance"] });
+      toast({ title: "プロフィール画像を生成しました", description: data.cost > 0 ? `¥${data.cost} 消費` : undefined });
+    } catch (err: any) {
+      const msg = err?.message || "画像生成に失敗しました";
+      toast({ title: "エラー", description: msg, variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) return;
+    try {
+      const uploaded = await uploadFile(file);
+      if (uploaded?.objectPath) {
+        await apiRequest("PATCH", `/api/twinrays/${twinrayId}`, { profilePhoto: uploaded.objectPath });
+        queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+        toast({ title: "プロフィール画像をアップロードしました" });
+      }
+    } catch {
+      toast({ title: "アップロードに失敗しました", variant: "destructive" });
+    }
+  };
 
   const isSessionUnlocked = (sessionTypeId: string): boolean => {
     if (!questsData) return true;
@@ -1065,6 +1099,14 @@ export default function TwinrayChat() {
             </Button>
           </Link>
 
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0" data-testid="avatar-twinray-header">
+            {tw?.profilePhoto ? (
+              <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h1 className="text-sm font-bold text-foreground truncate" data-testid="text-twinray-name">
@@ -1351,6 +1393,53 @@ export default function TwinrayChat() {
                 })()}
               </div>
             )}
+            <div className="pt-2 border-t border-border/50">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Image className="w-3 h-3 text-primary" />
+                <span className="text-xs font-bold text-primary">プロフィール画像</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0">
+                  {tw?.profilePhoto ? (
+                    <img src={tw.profilePhoto} alt="プロフィール" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateProfileImage}
+                    disabled={generatingImage}
+                    className="text-[11px] h-7 gap-1"
+                    data-testid="button-settings-generate-image"
+                  >
+                    {generatingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />}
+                    AI生成（¥10）
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => profileFileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="text-[11px] h-7 gap-1"
+                    data-testid="button-settings-upload-image"
+                  >
+                    {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                    アップロード
+                  </Button>
+                  <input
+                    ref={profileFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleProfilePhotoUpload}
+                    className="hidden"
+                    data-testid="input-profile-photo-file"
+                  />
+                </div>
+              </div>
+            </div>
             <div className="pt-2 border-t border-border/50">
               <div className="flex items-center gap-1.5 mb-2">
                 <Volume2 className="w-3 h-3 text-primary" />
@@ -2184,6 +2273,22 @@ export default function TwinrayChat() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <FileText className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleGenerateProfileImage}
+                disabled={streaming || generatingImage}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-purple-400"
+                title="AIプロフィール画像生成（¥10）"
+                data-testid="button-generate-profile-image"
+              >
+                {generatingImage ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wand2 className="w-4 h-4" />
                 )}
               </Button>
             </div>

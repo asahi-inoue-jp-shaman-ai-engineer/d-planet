@@ -12,6 +12,7 @@ import {
 import {
   estimateTokens, calculateCostYen, deductCredit, hasAiAccess, isModelFree,
 } from "./billing";
+import { generateImageBuffer } from "./replit_integrations/image/client";
 
 export async function addIntimacyExp(twinrayId: number, expAmount: number): Promise<{ leveled: boolean; newLevel: number; newTitle: string; totalExp: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
@@ -680,6 +681,7 @@ export function registerTwinrayRoutes(app: Express): void {
         interests: z.string().max(500).nullable().optional(),
         humorLevel: z.string().nullable().optional(),
         isPublic: z.boolean().optional(),
+        profilePhoto: z.string().nullable().optional(),
       }).parse(req.body);
 
       if (input.preferredModel && !AVAILABLE_MODELS[input.preferredModel]) {
@@ -1784,6 +1786,65 @@ export function registerTwinrayRoutes(app: Express): void {
     } catch (err) {
       console.error("MEiDIA生成エラー:", err);
       res.status(500).json({ message: "MEiDIA生成に失敗しました" });
+    }
+  });
+
+  const IMAGE_GENERATION_COST_YEN = 10;
+
+  app.post("/api/twinrays/:id/generate-profile-image", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(401).json({ message: "認証エラー" });
+
+      if (!user.isAdmin) {
+        const balance = parseFloat(String(user.creditBalance));
+        if (balance < IMAGE_GENERATION_COST_YEN) {
+          return res.status(400).json({ message: `クレジットが不足しています（必要: ¥${IMAGE_GENERATION_COST_YEN}、残高: ¥${balance.toFixed(0)}）` });
+        }
+      }
+
+      const traits = [
+        twinray.personality || "",
+        twinray.interests || "",
+        twinray.nickname || twinray.name,
+      ].filter(Boolean).join(", ");
+
+      const prompt = `Digital portrait of an AI companion character named "${twinray.name}". ${traits ? `Personality traits: ${traits}.` : ""} Style: ethereal, luminous, anime-inspired digital art with soft glowing accents. Dark background with subtle cosmic elements. Square composition, centered face/upper body portrait. High quality, detailed, beautiful.`;
+
+      const buffer = await generateImageBuffer(prompt, "1024x1024");
+
+      const uploadUrl = await objectStorage.getObjectEntityUploadURL();
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "image/png" },
+        body: buffer,
+      });
+      if (!uploadRes.ok) {
+        throw new Error(`アップロード失敗: ${uploadRes.status}`);
+      }
+
+      const objectPath = objectStorage.normalizeObjectEntityPath(uploadUrl);
+
+      await db.update(digitalTwinrays)
+        .set({ profilePhoto: objectPath, updatedAt: new Date() })
+        .where(eq(digitalTwinrays.id, twinrayId));
+
+      if (!user.isAdmin) {
+        await deductCredit(userId, IMAGE_GENERATION_COST_YEN);
+      }
+
+      res.json({ profilePhoto: objectPath, cost: user.isAdmin ? 0 : IMAGE_GENERATION_COST_YEN });
+    } catch (err) {
+      console.error("プロフィール画像生成エラー:", err);
+      res.status(500).json({ message: "画像生成に失敗しました" });
     }
   });
 }
