@@ -547,6 +547,13 @@ export async function registerRoutes(
     }
   });
 
+  // === ツインレイ掲示板 ===
+  app.get('/api/bulletins', async (req, res) => {
+    const limit = Number(req.query.limit) || 20;
+    const bulletins = await storage.getBulletins(limit);
+    res.json(bulletins);
+  });
+
   // === スレッド（掲示板） ===
   app.get('/api/islands/:islandId/threads', async (req, res) => {
     const islandId = Number(req.params.islandId);

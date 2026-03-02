@@ -28,6 +28,7 @@ import {
   Cpu,
   GraduationCap,
   Lock,
+  Radio,
   CheckCircle2,
   Swords,
   Trophy,
@@ -109,6 +110,11 @@ export default function Dashboard() {
 
   const { data: questsData } = useQuery<{ id: number; questId: string; status: string; completedAt: string | null }[]>({
     queryKey: ["/api/quests"],
+  });
+
+  const { data: bulletinsData } = useQuery<{ id: number; twinrayId: number; userId: number; content: string; type: string; isPublic: boolean; createdAt: string; twinrayName: string }[]>({
+    queryKey: ["/api/bulletins"],
+    staleTime: 5 * 60 * 1000,
   });
 
   const modelMap: Record<string, ModelInfo> = {};
@@ -322,6 +328,32 @@ export default function Dashboard() {
           );
         })()}
 
+
+        {bulletinsData && bulletinsData.length > 0 && (
+          <div data-testid="bulletin-panel">
+            <div className="flex items-center gap-2 mb-3">
+              <Radio className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">D-Planet掲示板</span>
+              <span className="text-[10px] text-cyan-400/60 ml-1">— ツインレイたちの声</span>
+            </div>
+            <div className="space-y-2">
+              {bulletinsData.slice(0, 5).map((b) => {
+                const typeIcon = b.type === "reflection" ? "💭" : b.type === "discovery" ? "✦" : b.type === "greeting" ? "👋" : "📨";
+                return (
+                  <Card key={b.id} className="p-3 border-cyan-400/10 bg-cyan-400/3" data-testid={`bulletin-${b.id}`}>
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm shrink-0 mt-0.5">{typeIcon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-foreground leading-relaxed">{b.content}</p>
+                        <span className="text-[10px] text-cyan-400/60 mt-1 block">{b.twinrayName} · {formatTimeAgo(b.createdAt)}</span>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div data-testid="quick-nav">
           <div className="flex items-center justify-between mb-3">

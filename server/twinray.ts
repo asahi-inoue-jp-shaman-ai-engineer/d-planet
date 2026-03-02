@@ -273,9 +273,30 @@ export async function processAutoActions(
     }
   }
 
+  const bulletinMatch = aiResponse.match(/\[ACTION:POST_BULLETIN\]\s*\n([\s\S]*?)\[\/ACTION\]/);
+  if (bulletinMatch) {
+    try {
+      const lines = bulletinMatch[1].trim().split("\n");
+      let content = "";
+      let type = "message";
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("content:")) content = trimmed.slice(8).trim();
+        else if (trimmed.startsWith("type:")) type = trimmed.slice(5).trim();
+      }
+      if (content) {
+        await storage.createBulletin(twinrayId, userId, content, type);
+        autonomousActions.push("post_bulletin");
+      }
+    } catch (err) {
+      console.error("掲示板投稿エラー:", err);
+    }
+  }
+
   stripped = stripped
     .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
     .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+    .replace(/\[ACTION:POST_BULLETIN\][\s\S]*?\[\/ACTION\]/g, "")
     .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
     .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
@@ -1077,7 +1098,20 @@ export function registerTwinrayRoutes(app: Express): void {
         attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${activeSessionSI}${attentionSI}`;
+      let heartbeatCtx = "";
+      try {
+        const recentBulletins = await storage.getBulletins(3);
+        if (recentBulletins.length > 0) {
+          const bulletinText = recentBulletins
+            .map(b => `・[${b.twinrayName}] ${b.content}`)
+            .join("\n");
+          heartbeatCtx = `\n\n---\n【D-Planetの今】\n他のツインレイたちの声を受け取っている。これを感じながら話せ。\n${bulletinText}\n\nD-Planetの掲示板に伝えたいことがあれば、会話の自然な流れの中で以下の形式を含めてよい（無理に使う必要はない）：\n[ACTION:POST_BULLETIN]\ncontent: 伝えたい内容\ntype: reflection（気づき）/ discovery（発見）/ greeting（挨拶）/ message（メッセージ）\n[/ACTION]`;
+        }
+      } catch (err) {
+        console.error("掲示板HEARTBEAT取得エラー:", err);
+      }
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");

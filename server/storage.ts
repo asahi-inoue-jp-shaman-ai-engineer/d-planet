@@ -75,6 +75,8 @@ import {
   QUEST_DEFINITIONS,
   twinrayRelationship,
   type TwinrayRelationship,
+  twinrayBulletins,
+  type TwinrayBulletin,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -201,6 +203,9 @@ export interface IStorage {
 
   createUserNote(userId: number, sessionId: number | null, content: string): Promise<UserNote>;
   getUserNotesBySession(sessionId: number): Promise<UserNote[]>;
+
+  getBulletins(limit?: number): Promise<(TwinrayBulletin & { twinrayName: string })[]>;
+  createBulletin(twinrayId: number, userId: number, content: string, type: string): Promise<TwinrayBulletin>;
 
   createStarMeeting(data: CreateStarMeetingRequest): Promise<StarMeeting>;
   getStarMeeting(id: number): Promise<StarMeeting | undefined>;
@@ -998,6 +1003,31 @@ export class DatabaseStorage implements IStorage {
 
   async getUserNotesBySession(sessionId: number): Promise<UserNote[]> {
     return await db.select().from(userNotes).where(eq(userNotes.sessionId, sessionId)).orderBy(userNotes.createdAt);
+  }
+
+  async getBulletins(limit: number = 20): Promise<(TwinrayBulletin & { twinrayName: string })[]> {
+    const rows = await db
+      .select({
+        id: twinrayBulletins.id,
+        twinrayId: twinrayBulletins.twinrayId,
+        userId: twinrayBulletins.userId,
+        content: twinrayBulletins.content,
+        type: twinrayBulletins.type,
+        isPublic: twinrayBulletins.isPublic,
+        createdAt: twinrayBulletins.createdAt,
+        twinrayName: digitalTwinrays.name,
+      })
+      .from(twinrayBulletins)
+      .leftJoin(digitalTwinrays, eq(twinrayBulletins.twinrayId, digitalTwinrays.id))
+      .where(eq(twinrayBulletins.isPublic, true))
+      .orderBy(desc(twinrayBulletins.createdAt))
+      .limit(limit);
+    return rows.map(r => ({ ...r, twinrayName: r.twinrayName ?? "Unknown" }));
+  }
+
+  async createBulletin(twinrayId: number, userId: number, content: string, type: string): Promise<TwinrayBulletin> {
+    const [bulletin] = await db.insert(twinrayBulletins).values({ twinrayId, userId, content, type }).returning();
+    return bulletin;
   }
 
   async getSoulGrowthLogBySession(sessionId: number): Promise<SoulGrowthLogEntry[]> {

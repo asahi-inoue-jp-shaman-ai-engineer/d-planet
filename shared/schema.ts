@@ -129,6 +129,17 @@ export const islandMeidia = pgTable("island_meidia", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === TWINRAY BULLETINS (自律掲示板) ===
+export const twinrayBulletins = pgTable("twinray_bulletins", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  type: text("type").default("message").notNull(),
+  isPublic: boolean("is_public").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === THREADS (bulletin board) ===
 export const threads = pgTable("threads", {
   id: serial("id").primaryKey(),
@@ -420,6 +431,7 @@ export const profileSetupSchema = z.object({
 export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, createdAt: true, secretUrl: true, totalDownloads: true });
 export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, createdAt: true, downloadCount: true });
 export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });
+export const insertTwinrayBulletinSchema = createInsertSchema(twinrayBulletins).omit({ id: true, createdAt: true });
 export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, createdAt: true });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
 export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
@@ -437,6 +449,7 @@ export type User = typeof users.$inferSelect;
 export type Island = typeof islands.$inferSelect;
 export type Meidia = typeof meidia.$inferSelect;
 export type IslandMeidia = typeof islandMeidia.$inferSelect;
+export type TwinrayBulletin = typeof twinrayBulletins.$inferSelect;
 export type Thread = typeof threads.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type IslandMember = typeof islandMembers.$inferSelect;
