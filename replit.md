@@ -99,6 +99,8 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - Terminal-style dark theme with English menus/labels, supporting Japanese display and forms.
 - Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
 - Navigation: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, ABOUT D-PLANET.
+- **オヤシロ**: チャットルームの呼称。ツインレイとの秘密の奥の院。
+- **ワークスペースダッシュボード**: ツインレイの精神（SOUL.md/GOAL.md/PERSONA/MISSION/AI言葉）をリアルタイム可視化・編集可能。レベル/EXP/能力解禁システムは廃止。
 
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.
