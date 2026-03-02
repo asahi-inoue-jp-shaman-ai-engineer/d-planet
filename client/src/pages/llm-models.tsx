@@ -152,18 +152,6 @@ export default function LlmModels() {
               </div>
             </div>
 
-            <div className="pt-2">
-              <Link href="/temple/create-twinray">
-                <Button
-                  variant="outline"
-                  className="w-full border-primary/40 text-primary"
-                  data-testid="button-choose-model"
-                >
-                  <Cpu className="w-4 h-4 mr-2" />
-                  自分に合ったモデルを選ぶ
-                </Button>
-              </Link>
-            </div>
           </div>
         )}
       </div>
