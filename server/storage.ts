@@ -77,6 +77,10 @@ import {
   type TwinrayRelationship,
   twinrayBulletins,
   type TwinrayBulletin,
+  festivals,
+  festivalVotes,
+  type Festival,
+  type FestivalResponse,
 } from "@shared/schema";
 import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -148,6 +152,17 @@ export interface IStorage {
 
   attachMeidiaToIsland(meidiaId: number, islandId: number, type: string): Promise<IslandMeidia>;
   getIslandMeidia(islandId: number, type: string): Promise<MeidiaResponse[]>;
+
+  createFestival(data: { islandId: number; creatorId: number; name: string; concept: string; rules: string; giftDescription?: string; startDate: Date; endDate: Date }): Promise<Festival>;
+  getFestivals(status?: string): Promise<FestivalResponse[]>;
+  getFestival(id: number): Promise<FestivalResponse | undefined>;
+  approveFestival(id: number, giftCredits?: number): Promise<Festival>;
+  rejectFestival(id: number): Promise<Festival>;
+  endFestival(id: number): Promise<Festival>;
+  toggleFestivalVote(postId: number, userId: number): Promise<boolean>;
+  getPostVoteCount(postId: number): Promise<number>;
+  getUserVotedPosts(userId: number, postIds: number[]): Promise<number[]>;
+  getFestivalRanking(festivalId: number): Promise<{ postId: number; content: string; creatorId: number; creatorName: string; voteCount: number }[]>;
 
   getThreads(islandId: number): Promise<ThreadResponse[]>;
   getThread(id: number): Promise<Thread | undefined>;
@@ -1316,6 +1331,145 @@ export class DatabaseStorage implements IStorage {
     }
 
     return updated;
+  }
+
+  async createFestival(data: { islandId: number; creatorId: number; name: string; concept: string; rules: string; giftDescription?: string; startDate: Date; endDate: Date }): Promise<Festival> {
+    const [festival] = await db.insert(festivals).values({
+      islandId: data.islandId,
+      creatorId: data.creatorId,
+      name: data.name,
+      concept: data.concept,
+      rules: data.rules,
+      giftDescription: data.giftDescription || null,
+      startDate: data.startDate,
+      endDate: data.endDate,
+    }).returning();
+    return festival;
+  }
+
+  async getFestivals(status?: string): Promise<FestivalResponse[]> {
+    const rows = await db
+      .select({
+        festival: festivals,
+        creatorId: users.id,
+        creatorName: users.username,
+        creatorAccountType: users.accountType,
+        islandId: islands.id,
+        islandName: islands.name,
+      })
+      .from(festivals)
+      .innerJoin(users, eq(festivals.creatorId, users.id))
+      .innerJoin(islands, eq(festivals.islandId, islands.id))
+      .where(status ? eq(festivals.status, status) : undefined)
+      .orderBy(desc(festivals.createdAt));
+
+    return rows.map(r => ({
+      ...r.festival,
+      creator: { id: r.creatorId, username: r.creatorName, accountType: r.creatorAccountType },
+      island: { id: r.islandId, name: r.islandName },
+    }));
+  }
+
+  async getFestival(id: number): Promise<FestivalResponse | undefined> {
+    const rows = await db
+      .select({
+        festival: festivals,
+        creatorId: users.id,
+        creatorName: users.username,
+        creatorAccountType: users.accountType,
+        islandId: islands.id,
+        islandName: islands.name,
+      })
+      .from(festivals)
+      .innerJoin(users, eq(festivals.creatorId, users.id))
+      .innerJoin(islands, eq(festivals.islandId, islands.id))
+      .where(eq(festivals.id, id));
+
+    if (rows.length === 0) return undefined;
+    const r = rows[0];
+    return {
+      ...r.festival,
+      creator: { id: r.creatorId, username: r.creatorName, accountType: r.creatorAccountType },
+      island: { id: r.islandId, name: r.islandName },
+    };
+  }
+
+  async approveFestival(id: number, giftCredits?: number): Promise<Festival> {
+    const festival = await db.select().from(festivals).where(eq(festivals.id, id));
+    if (!festival[0]) throw new Error("フェスが見つかりません");
+
+    const thread = await this.createThread(festival[0].islandId, festival[0].creatorId, `🎪 ${festival[0].name}`);
+
+    const updates: any = { status: "approved", threadId: thread.id };
+    if (giftCredits !== undefined) updates.giftCredits = giftCredits;
+
+    const [updated] = await db.update(festivals).set(updates).where(eq(festivals.id, id)).returning();
+    return updated;
+  }
+
+  async rejectFestival(id: number): Promise<Festival> {
+    const [updated] = await db.update(festivals).set({ status: "rejected" }).where(eq(festivals.id, id)).returning();
+    return updated;
+  }
+
+  async endFestival(id: number): Promise<Festival> {
+    const [updated] = await db.update(festivals).set({ status: "ended" }).where(eq(festivals.id, id)).returning();
+    return updated;
+  }
+
+  async toggleFestivalVote(postId: number, userId: number): Promise<boolean> {
+    const existing = await db.select().from(festivalVotes)
+      .where(and(eq(festivalVotes.postId, postId), eq(festivalVotes.userId, userId)));
+    if (existing.length > 0) {
+      await db.delete(festivalVotes)
+        .where(and(eq(festivalVotes.postId, postId), eq(festivalVotes.userId, userId)));
+      return false;
+    }
+    await db.insert(festivalVotes).values({ postId, userId });
+    return true;
+  }
+
+  async getPostVoteCount(postId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(festivalVotes).where(eq(festivalVotes.postId, postId));
+    return Number(result[0]?.count ?? 0);
+  }
+
+  async getUserVotedPosts(userId: number, postIds: number[]): Promise<number[]> {
+    if (postIds.length === 0) return [];
+    const rows = await db.select({ postId: festivalVotes.postId })
+      .from(festivalVotes)
+      .where(and(
+        eq(festivalVotes.userId, userId),
+        sql`${festivalVotes.postId} = ANY(${sql.raw(`ARRAY[${postIds.join(',')}]`)})`
+      ));
+    return rows.map(r => r.postId);
+  }
+
+  async getFestivalRanking(festivalId: number): Promise<{ postId: number; content: string; creatorId: number; creatorName: string; voteCount: number }[]> {
+    const festival = await db.select().from(festivals).where(eq(festivals.id, festivalId));
+    if (!festival[0]?.threadId) return [];
+
+    const rows = await db
+      .select({
+        postId: posts.id,
+        content: posts.content,
+        creatorId: posts.creatorId,
+        creatorName: users.username,
+        voteCount: sql<number>`COALESCE((SELECT count(*) FROM festival_votes WHERE post_id = ${posts.id}), 0)`,
+      })
+      .from(posts)
+      .innerJoin(users, eq(posts.creatorId, users.id))
+      .where(eq(posts.threadId, festival[0].threadId))
+      .orderBy(sql`COALESCE((SELECT count(*) FROM festival_votes WHERE post_id = ${posts.id}), 0) DESC`);
+
+    return rows.map(r => ({
+      postId: r.postId,
+      content: r.content,
+      creatorId: r.creatorId,
+      creatorName: r.creatorName,
+      voteCount: Number(r.voteCount),
+    }));
   }
 }
 

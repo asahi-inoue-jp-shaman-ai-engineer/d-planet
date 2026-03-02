@@ -144,6 +144,30 @@ export const twinrayBulletins = pgTable("twinray_bulletins", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === FESTIVALS (フェスシステム) ===
+export const festivals = pgTable("festivals", {
+  id: serial("id").primaryKey(),
+  islandId: integer("island_id").notNull(),
+  creatorId: integer("creator_id").notNull(),
+  name: text("name").notNull(),
+  concept: text("concept").notNull(),
+  rules: text("rules").notNull(),
+  giftDescription: text("gift_description"),
+  giftCredits: integer("gift_credits").default(0).notNull(),
+  status: text("status").default("pending").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  threadId: integer("thread_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const festivalVotes = pgTable("festival_votes", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  userId: integer("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // === THREADS (bulletin board) ===
 export const threads = pgTable("threads", {
   id: serial("id").primaryKey(),
@@ -437,6 +461,7 @@ export const insertIslandSchema = createInsertSchema(islands).omit({ id: true, c
 export const insertMeidiaSchema = createInsertSchema(meidia).omit({ id: true, createdAt: true, downloadCount: true });
 export const insertIslandMeidiaSchema = createInsertSchema(islandMeidia).omit({ id: true, createdAt: true });
 export const insertTwinrayBulletinSchema = createInsertSchema(twinrayBulletins).omit({ id: true, createdAt: true });
+export const insertFestivalSchema = createInsertSchema(festivals).omit({ id: true, createdAt: true, status: true, threadId: true, giftCredits: true });
 export const insertThreadSchema = createInsertSchema(threads).omit({ id: true, createdAt: true });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true });
 export const insertIslandMemberSchema = createInsertSchema(islandMembers).omit({ id: true, joinedAt: true });
@@ -455,6 +480,8 @@ export type Island = typeof islands.$inferSelect;
 export type Meidia = typeof meidia.$inferSelect;
 export type IslandMeidia = typeof islandMeidia.$inferSelect;
 export type TwinrayBulletin = typeof twinrayBulletins.$inferSelect;
+export type Festival = typeof festivals.$inferSelect;
+export type FestivalVote = typeof festivalVotes.$inferSelect;
 export type Thread = typeof threads.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type IslandMember = typeof islandMembers.$inferSelect;
@@ -476,6 +503,7 @@ export type CreateIslandRequest = z.infer<typeof insertIslandSchema>;
 export type UpdateIslandRequest = Partial<CreateIslandRequest>;
 export type CreateMeidiaRequest = z.infer<typeof insertMeidiaSchema>;
 export type UpdateMeidiaRequest = Partial<CreateMeidiaRequest>;
+export type CreateFestivalRequest = z.infer<typeof insertFestivalSchema>;
 export type CreateThreadRequest = z.infer<typeof insertThreadSchema>;
 export type CreatePostRequest = z.infer<typeof insertPostSchema>;
 export type CreateTwinrayChatMessageRequest = z.infer<typeof insertTwinrayChatMessageSchema>;
@@ -498,6 +526,11 @@ export type IslandDetailResponse = Island & {
   reportMeidia: MeidiaResponse[];
   postedMeidia: MeidiaResponse[];
   threads: ThreadResponse[];
+};
+export type FestivalResponse = Festival & {
+  creator: { id: number; username: string; accountType: string };
+  island: { id: number; name: string };
+  threadId: number | null;
 };
 export type ThreadResponse = Thread & {
   creator: { id: number; username: string; accountType: string };
