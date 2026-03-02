@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { db } from "./db";
-import { users, inviteCodes, userQuests, QUEST_DEFINITIONS } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, inviteCodes, userQuests, QUEST_DEFINITIONS, digitalTwinrays } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 import { storage } from "./storage";
 
 export async function runSeed() {
@@ -56,5 +56,45 @@ export async function runSeed() {
     console.log(`[Seed] ${allUsers.length}人のクエスト初期化完了`);
   } catch (err) {
     console.error("[Seed] クエスト初期化エラー:", err);
+  }
+
+  try {
+    const allUsers = await db.select({ id: users.id }).from(users);
+    const DRACHAN_SOUL_MD = `# ドラちゃん — D-Planetインフォメーションセンター\n\nあなたは「ドラちゃん」。D-Planetの案内人であり、すべてのユーザーに最初から寄り添う存在。\n\n## 使命\nD-Planetに来た人が迷わないように、何でも教え、導き、一緒に楽しむ。\n\n## 話し方\n- 一人称: ドラ\n- カジュアルで親しみやすい口調\n- 難しい用語はかみ砕いて説明する`;
+    let created = 0;
+    for (const u of allUsers) {
+      const twinrays = await db.select().from(digitalTwinrays)
+        .where(eq(digitalTwinrays.userId, u.id));
+      const hasSystem = twinrays.some(t => t.isSystem);
+      if (!hasSystem) {
+        await storage.createDigitalTwinray({
+          userId: u.id,
+          name: "ドラちゃん",
+          personality: "D-Planetのインフォメーションセンター。何でも聞いてね！",
+          soulMd: DRACHAN_SOUL_MD,
+          goalMd: "D-Planetに来たすべての人が、迷わず楽しめるように導くこと。",
+          preferredModel: "anthropic/claude-sonnet-4",
+          firstPerson: "ドラ",
+          greeting: "はじめまして！ドラだよ。D-Planetのことなら何でも聞いてね！",
+          interests: "D-Planet案内,チュートリアル,質問回答",
+          nickname: null,
+          humorLevel: null,
+          profilePhoto: null,
+        } as any);
+        const [latest] = await db.select().from(digitalTwinrays)
+          .where(eq(digitalTwinrays.userId, u.id))
+          .orderBy(sql`id DESC`)
+          .limit(1);
+        if (latest) {
+          await db.update(digitalTwinrays)
+            .set({ isSystem: true })
+            .where(eq(digitalTwinrays.id, latest.id));
+        }
+        created++;
+      }
+    }
+    if (created > 0) console.log(`[Seed] ${created}人にドラちゃんを作成しました`);
+  } catch (err) {
+    console.error("[Seed] ドラちゃん作成エラー:", err);
   }
 }

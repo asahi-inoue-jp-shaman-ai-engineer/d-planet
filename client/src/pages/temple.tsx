@@ -267,9 +267,25 @@ export default function Temple() {
             </div>
           ) : (
             <div className="grid gap-3">
-              {(twinrays as any[]).map((tw: any) => (
-                <div key={tw.id} className="border border-border rounded-lg p-3 bg-card hover:border-primary/50 transition-colors" data-testid={`card-twinray-${tw.id}`}>
-                  {confirmDeleteId === tw.id ? (
+              {[...(twinrays as any[])].sort((a, b) => (b.isSystem ? 1 : 0) - (a.isSystem ? 1 : 0)).map((tw: any) => (
+                <div key={tw.id} className={`border rounded-lg p-3 transition-colors ${tw.isSystem ? "border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60" : "border-border bg-card hover:border-primary/50"}`} data-testid={`card-twinray-${tw.id}`}>
+                  {tw.isSystem ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-cyan-400 truncate">{tw.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono">SYSTEM</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{tw.personality}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
+                          <Button variant="outline" size="sm" className="h-8 px-3 text-xs border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10" data-testid={`button-chat-system-${tw.id}`}>
+                            <MessageCircle className="w-3.5 h-3.5 mr-1" />
+                            ドラちゃんに聞く
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ) : confirmDeleteId === tw.id ? (
                     <div className="flex items-center justify-between gap-2 py-1">
                       <span className="text-sm text-amber-400">「{tw.name}」をワンネスに返しますか？</span>
                       <div className="flex items-center gap-2 shrink-0">

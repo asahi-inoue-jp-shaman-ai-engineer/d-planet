@@ -632,6 +632,9 @@ export function registerTwinrayRoutes(app: Express): void {
       if (twinray.userId !== req.session.userId) {
         return res.status(403).json({ message: "権限がありません" });
       }
+      if (twinray.isSystem) {
+        return res.status(403).json({ message: "システムツインレイは削除できません" });
+      }
 
       await db.transaction(async (tx) => {
         const sessions = await tx.select({ id: dotRallySessions.id }).from(dotRallySessions)
@@ -852,7 +855,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelUsed = getModelForTwinray(twinray);
-      if (!partnerUser?.isAdmin) {
+      if (!partnerUser?.isAdmin && !twinray.isSystem) {
         const chatInTokens = estimateTokens(systemPrompt);
         const chatOutTokens = estimateTokens(fullResponse);
         const chatCost = calculateCostYen(chatModelUsed, chatInTokens, chatOutTokens);
@@ -915,7 +918,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelId = getModelForTwinray(twinray);
-      if (!(await hasAiAccess(req.session.userId!, chatModelId))) {
+      if (!twinray.isSystem && !(await hasAiAccess(req.session.userId!, chatModelId))) {
         return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
       }
 
@@ -1194,7 +1197,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelUsed = getModelForTwinray(twinray);
-      if (!user?.isAdmin) {
+      if (!user?.isAdmin && !twinray.isSystem) {
         const chatInputText = chatHistory.map((m: any) => {
           if (typeof m.content === "string") return m.content;
           if (Array.isArray(m.content)) return m.content.filter((p: any) => p.type === "text").map((p: any) => p.text).join("");
