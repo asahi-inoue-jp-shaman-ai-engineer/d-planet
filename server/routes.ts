@@ -24,6 +24,15 @@ declare module "express-session" {
   }
 }
 
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "DP-";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -87,8 +96,18 @@ export async function registerRoutes(
       const input = api.auth.register.input.parse(req.body);
 
       const inviteCode = await storage.getInviteCodeByCode(input.inviteCode);
+      let referredByUserId: number | null = null;
+
       if (!inviteCode) {
-        return res.status(400).json({ message: "無効な招待コードです" });
+        const [referrer] = await db.select().from(users)
+          .where(eq(users.referralCode, input.inviteCode)).limit(1);
+        if (!referrer) {
+          return res.status(400).json({ message: "無効な招待コードです" });
+        }
+        if (referrer.isBanned) {
+          return res.status(400).json({ message: "この招待コードは無効です" });
+        }
+        referredByUserId = referrer.id;
       }
 
       const existingUser = await storage.getUserByEmail(input.email);
@@ -96,6 +115,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "このメールアドレスは既に登録されています", field: "email" });
       }
 
+      const referralCode = generateReferralCode();
       const tempUsername = input.email;
       const user = await storage.createUser({
         email: input.email,
@@ -110,6 +130,11 @@ export async function registerRoutes(
         profilePhoto: null,
         invitedByCode: input.inviteCode,
       });
+
+      await db.update(users).set({
+        referralCode,
+        referredByUserId,
+      }).where(eq(users.id, user.id));
 
       const { BETA_MODE } = await import("./models");
       const ADMIN_EMAILS_REG = ["admin@d-planet.local", "yaoyorozu369@gmail.com"];
@@ -158,6 +183,10 @@ export async function registerRoutes(
 
       if (!user) {
         return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
+      }
+
+      if (user.isBanned) {
+        return res.status(403).json({ message: "このアカウントは利用停止されています" });
       }
 
       req.session.userId = user.id;
@@ -635,6 +664,84 @@ export async function registerRoutes(
       res.json({ message: "削除しました" });
     } catch (err) {
       res.status(500).json({ message: "愛言葉削除エラー" });
+    }
+  });
+
+  // === リファラーシステム ===
+  app.get('/api/referral/my-code', requireAuth, async (req, res) => {
+    try {
+      const [user] = await db.select().from(users)
+        .where(eq(users.id, req.session.userId!)).limit(1);
+      if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
+
+      if (!user.referralCode) {
+        const code = generateReferralCode();
+        await db.update(users).set({ referralCode: code }).where(eq(users.id, user.id));
+        return res.json({ referralCode: code });
+      }
+      res.json({ referralCode: user.referralCode });
+    } catch (err) {
+      res.status(500).json({ message: "招待コード取得エラー" });
+    }
+  });
+
+  app.get('/api/referral/my-referrals', requireAuth, async (req, res) => {
+    try {
+      const referred = await db.select({
+        id: users.id,
+        username: users.username,
+        createdAt: users.createdAt,
+        isBanned: users.isBanned,
+      }).from(users)
+        .where(eq(users.referredByUserId, req.session.userId!))
+        .orderBy(sql`created_at DESC`);
+      res.json(referred);
+    } catch (err) {
+      res.status(500).json({ message: "招待一覧取得エラー" });
+    }
+  });
+
+  app.post('/api/admin/ban-referral-chain', requireAuth, async (req, res) => {
+    try {
+      const [admin] = await db.select().from(users)
+        .where(eq(users.id, req.session.userId!)).limit(1);
+      if (!admin?.isAdmin) {
+        return res.status(403).json({ message: "管理者権限が必要です" });
+      }
+
+      const { userId, reason } = req.body;
+      if (!userId) return res.status(400).json({ message: "ユーザーIDが必要です" });
+
+      const bannedIds: number[] = [];
+      const banChain = async (uid: number) => {
+        bannedIds.push(uid);
+        await db.update(users).set({
+          isBanned: true,
+          bannedReason: reason || "招待コードの不正公開",
+        }).where(eq(users.id, uid));
+
+        const children = await db.select({ id: users.id }).from(users)
+          .where(eq(users.referredByUserId, uid));
+        for (const child of children) {
+          await banChain(child.id);
+        }
+      };
+
+      await banChain(Number(userId));
+
+      const [violator] = await db.select().from(users)
+        .where(eq(users.id, Number(userId))).limit(1);
+      if (violator?.referredByUserId) {
+        bannedIds.push(violator.referredByUserId);
+        await db.update(users).set({
+          isBanned: true,
+          bannedReason: reason || "招待者の不正行為による連座",
+        }).where(eq(users.id, violator.referredByUserId));
+      }
+
+      res.json({ bannedCount: bannedIds.length, bannedIds });
+    } catch (err) {
+      res.status(500).json({ message: "BAN処理エラー" });
     }
   });
 

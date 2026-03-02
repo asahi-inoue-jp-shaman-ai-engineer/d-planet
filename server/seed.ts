@@ -34,8 +34,17 @@ export async function runSeed() {
   }
 
   try {
-    const allUsers = await db.select({ id: users.id }).from(users);
+    const allUsers = await db.select({ id: users.id, referralCode: users.referralCode }).from(users);
     for (const u of allUsers) {
+      if (!u.referralCode) {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "DP-";
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        await db.update(users).set({ referralCode: code }).where(eq(users.id, u.id));
+      }
+
       const existing = await db.select().from(userQuests).where(eq(userQuests.userId, u.id));
       const hasVoiceSetup = existing.some(q => q.questId === "voice_setup");
       if (!hasVoiceSetup && existing.length > 0) {

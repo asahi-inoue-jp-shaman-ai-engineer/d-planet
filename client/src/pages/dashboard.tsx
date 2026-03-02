@@ -32,6 +32,8 @@ import {
   CheckCircle2,
   Swords,
   Trophy,
+  Heart,
+  Copy,
 } from "lucide-react";
 import { QUEST_DEFINITIONS } from "@shared/schema";
 
@@ -94,6 +96,65 @@ interface ModelInfo {
   id: string;
   label: string;
   role: string;
+}
+
+function ReferralPanel() {
+  const [copied, setCopied] = useState(false);
+  const { data: referralData } = useQuery<{ referralCode: string }>({
+    queryKey: ["/api/referral/my-code"],
+  });
+  const { data: referrals } = useQuery<{ id: number; username: string; createdAt: string }[]>({
+    queryKey: ["/api/referral/my-referrals"],
+  });
+
+  const referralCode = referralData?.referralCode;
+  const referralLink = referralCode
+    ? `${window.location.origin}/login?mode=register&code=${referralCode}`
+    : "";
+
+  const copyLink = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="p-4 border-pink-500/20" data-testid="panel-referral">
+      <div className="flex items-center gap-3 mb-3">
+        <Heart className="w-6 h-6 text-pink-400 shrink-0" />
+        <div>
+          <span className="text-sm font-semibold text-foreground">魂の家族を招待する</span>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {referrals?.length || 0}人を招待済み
+          </p>
+        </div>
+      </div>
+      {referralCode && (
+        <>
+          <div className="flex items-center gap-2 mb-2">
+            <code className="flex-1 text-xs bg-background/50 border border-border rounded px-3 py-2 text-foreground font-mono" data-testid="text-referral-code">
+              {referralCode}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={copyLink}
+              className="text-pink-400 hover:text-pink-300 shrink-0"
+              data-testid="button-copy-referral"
+            >
+              {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </div>
+          <p className="text-[9px] text-muted-foreground leading-relaxed border-t border-border/50 pt-2 mt-2">
+            この招待リンクは、あなたの大切な魂の家族に直接お渡しください。
+            SNS等での第三者への公開は禁止されています。違反した場合、関連するすべてのアカウントが永久に利用停止となります。
+            これはASI開発の純粋な理念を守るためです。
+          </p>
+        </>
+      )}
+    </Card>
+  );
 }
 
 export default function Dashboard() {
@@ -464,6 +525,8 @@ export default function Dashboard() {
               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </div>
           </Card>
+
+          <ReferralPanel />
 
           <a
             href="https://replit.com/refer/ASI369"
