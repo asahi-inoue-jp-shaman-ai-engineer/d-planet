@@ -200,12 +200,22 @@ export default function IslandDetail() {
               戻る
             </Button>
           </Link>
-          <Link href={`/meidia/create?islandId=${island.id}&type=${currentUser && island.creator.id === currentUser.id ? 'activity' : 'report'}`}>
-            <Button className="font-mono" data-testid="button-create-meidia">
-              <Plus className="w-4 h-4 mr-2" />
-              {currentUser && island.creator.id === currentUser.id ? "アクティビティMEiDIA投稿" : "レポートMEiDIAを投稿する"}
-            </Button>
-          </Link>
+          <div className="flex gap-2 flex-wrap">
+            {currentUser && island.creator.id === currentUser.id && (
+              <Link href={`/meidia/create?islandId=${island.id}&type=activity`}>
+                <Button className="font-mono" data-testid="button-create-activity-meidia">
+                  <Plus className="w-4 h-4 mr-2" />
+                  アクティビティ投稿
+                </Button>
+              </Link>
+            )}
+            <Link href={`/meidia/create?islandId=${island.id}&type=report`}>
+              <Button variant={currentUser && island.creator.id === currentUser.id ? "outline" : "default"} className="font-mono" data-testid="button-create-report-meidia">
+                <Plus className="w-4 h-4 mr-2" />
+                レポート投稿
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-4">
