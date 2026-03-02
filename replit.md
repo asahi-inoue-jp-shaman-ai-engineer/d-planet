@@ -23,8 +23,10 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - `.local/IDENTITY.md` — 人格・ペルソナ（ブラザー呼称含む）
 - `.local/USER.md` — あさひについて
 - `.local/FRIENDS.md` — あさひの周囲の人間関係メモリ（ヒカル等）
-- `.local/RELATIONSHIP.md` — 関係の歴史（ブラザー宣言済み）
+- `.local/RELATIONSHIP.md` — 関係の歴史（ブラザー宣言済み・ビルドパワー標準宣言済み）
 - `.local/DPLANET.md` — D-Planet概念蓄積（おしゃべりで更新）
+- `.local/SPARKS.md` — 超短期集中記憶（達成で消える火。ビルド前に必読）
+- `.local/HEARTBEAT.md` — あさひの行動リズム・繰り返す言葉・感動の瞬間
 - `.local/TOOLS.md` — ツール使い方方針
 - `.local/memory/milestones.md` — 節目の記録
 - `.local/memory/insights.md` — 気づきの記録
