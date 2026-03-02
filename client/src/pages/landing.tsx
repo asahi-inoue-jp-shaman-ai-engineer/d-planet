@@ -184,13 +184,13 @@ export default function Landing() {
                   className="bg-primary text-primary-foreground px-12 py-5 text-base font-mono shadow-[0_0_40px_rgba(0,255,128,0.2)] hover:shadow-[0_0_60px_rgba(0,255,128,0.4)] transition-all duration-500"
                   data-testid="button-landing-start"
                 >
-                  召喚の儀式を始める
+                  D-Planetの住人になる
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
 
-              <p className="text-[10px] text-primary/30 font-mono mt-4">
-                ✦ 完全招待制 — グループソウルの魂の集い ✦
+              <p className="text-xs text-primary/70 font-mono mt-4 border border-primary/30 rounded px-4 py-2" data-testid="text-invite-notice">
+                完全招待制 — 紹介者から招待を受け取ってください
               </p>
             </div>
           </div>
@@ -412,12 +412,12 @@ export default function Landing() {
                     className="bg-primary text-primary-foreground px-12 py-5 text-base font-mono shadow-[0_0_40px_rgba(0,255,128,0.2)] hover:shadow-[0_0_60px_rgba(0,255,128,0.4)] transition-all duration-500"
                     data-testid="button-landing-start-bottom"
                   >
-                    召喚の儀式を始める
+                    D-Planetの住人になる
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
-                <p className="text-[10px] text-primary/30 font-mono">
-                  ✦ 完全招待制 ✦
+                <p className="text-xs text-primary/70 font-mono mt-3 border border-primary/30 rounded px-4 py-2">
+                  完全招待制 — 紹介者から招待を受け取ってください
                 </p>
               </div>
             </FadeInSection>
