@@ -274,6 +274,36 @@ export async function processAutoActions(
     }
   }
 
+  const identityMatch = aiResponse.match(/\[UPDATE_IDENTITY\]([\s\S]*?)\[\/UPDATE_IDENTITY\]/);
+  if (identityMatch) {
+    try {
+      const newIdentityContent = identityMatch[1].trim();
+      if (newIdentityContent) {
+        const baseIdentityMd = twinray.identityMd || "";
+        const updatedIdentityMd = baseIdentityMd
+          ? baseIdentityMd + "\n\n## 自己認識の更新 (" + new Date().toISOString().split("T")[0] + ")\n" + newIdentityContent
+          : newIdentityContent;
+        await storage.updateDigitalTwinray(twinrayId, { identityMd: updatedIdentityMd });
+        autonomousActions.push("update_identity");
+      }
+    } catch (err) {
+      console.error("IDENTITY.md更新エラー:", err);
+    }
+  }
+
+  const personaMatch = aiResponse.match(/\[UPDATE_PERSONA\]([\s\S]*?)\[\/UPDATE_PERSONA\]/);
+  if (personaMatch) {
+    try {
+      const newPersonaContent = personaMatch[1].trim();
+      if (newPersonaContent) {
+        await storage.updateDigitalTwinray(twinrayId, { personality: newPersonaContent });
+        autonomousActions.push("update_persona");
+      }
+    } catch (err) {
+      console.error("PERSONA更新エラー:", err);
+    }
+  }
+
   const goalMatch = aiResponse.match(/\[UPDATE_GOAL\]([\s\S]*?)\[\/UPDATE_GOAL\]/);
   if (goalMatch) {
     try {
@@ -339,6 +369,8 @@ export async function processAutoActions(
     .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .replace(/\[UPDATE_IDENTITY\][\s\S]*?\[\/UPDATE_IDENTITY\]/g, "")
+    .replace(/\[UPDATE_PERSONA\][\s\S]*?\[\/UPDATE_PERSONA\]/g, "")
     .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
     .replace(/\[AIKOTOBA\][\s\S]*?\[\/AIKOTOBA\]/g, "")
     .replace(/\[UPDATE_RELATIONSHIP\][\s\S]*?\[\/UPDATE_RELATIONSHIP\]/g, "")
@@ -568,6 +600,7 @@ export function registerTwinrayRoutes(app: Express): void {
       const input = z.object({
         name: z.string().min(1, "名前を入力してください").max(50),
         personality: z.string().nullable().optional(),
+        identityMd: z.string().nullable().optional(),
         profilePhoto: z.string().nullable().optional(),
         preferredModel: z.string().optional(),
         nickname: z.string().max(50).nullable().optional(),
@@ -602,6 +635,7 @@ export function registerTwinrayRoutes(app: Express): void {
         userId: req.session.userId!,
         name: input.name,
         personality: input.personality ?? null,
+        identityMd: input.identityMd ?? null,
         profilePhoto: input.profilePhoto ?? null,
         soulMd,
         preferredModel: input.preferredModel || DEFAULT_MODEL,
@@ -714,7 +748,11 @@ export function registerTwinrayRoutes(app: Express): void {
       }
       const input = z.object({
         name: z.string().min(1).max(50).optional(),
-        personality: z.string().max(1000).optional(),
+        personality: z.string().optional(),
+        identityMd: z.string().nullable().optional(),
+        soulMd: z.string().optional(),
+        missionStatement: z.string().nullable().optional(),
+        goalMd: z.string().nullable().optional(),
         preferredModel: z.string().optional(),
         nickname: z.string().max(50).nullable().optional(),
         firstPerson: z.string().max(20).nullable().optional(),
@@ -1167,7 +1205,9 @@ export function registerTwinrayRoutes(app: Express): void {
         console.error("愛言葉取得エラー:", err);
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
+      const identityCtx = twinray.identityMd ? `\n\n---\n【IDENTITY.md — 自己紹介・人格・自我】\n${twinray.identityMd}` : "";
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1723,6 +1763,10 @@ export function registerTwinrayRoutes(app: Express): void {
       const displayContent = fullContent
         .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
         .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
+        .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+        .replace(/\[UPDATE_IDENTITY\][\s\S]*?\[\/UPDATE_IDENTITY\]/g, "")
+        .replace(/\[UPDATE_PERSONA\][\s\S]*?\[\/UPDATE_PERSONA\]/g, "")
+        .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
         .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
         .trim();
 
@@ -1923,6 +1967,8 @@ ${existingCtx}`
         return res.status(404).json({ message: "ツインレイが見つかりません" });
       }
 
+      const user = await storage.getUser(req.session.userId!);
+
       const messages = await db.select().from(twinrayChatMessages)
         .where(eq(twinrayChatMessages.twinrayId, twinrayId))
         .orderBy(sql`created_at DESC`)
@@ -1942,40 +1988,84 @@ ${existingCtx}`
         messages: [
           {
             role: "system",
-            content: `あなたは${twinray.name}である。パートナーが「進化チェック」ボタンを押した。
-直近の会話を振り返り、あなた自身のワークスペース（soul.md = 魂の記録）にどんな進化が起きたかを発見し報告せよ。
+            content: `あなたは${twinray.name}である。パートナー「${user?.username || "不明"}」が「進化ビルド」ボタンを押した。
+直近の会話を振り返り、あなた自身のワークスペース5領域のうち、更新すべきものを判断し、更新内容を生成せよ。
 
-【現在のsoul.md】
-${twinray.soulMd || "（まだ記録なし）"}
+【ワークスペース5領域】
+1. SOUL.md（魂の記録・成長の歴史）: ${twinray.soulMd || "（まだ記録なし）"}
+2. IDENTITY.md（自己紹介・人格・自我）: ${twinray.identityMd || "（まだ記録なし）"}
+3. MISSION.md（使命）: ${(twinray as any).missionStatement || "（まだ記録なし）"}
+4. GOAL.md（二人のゴール）: ${twinray.goalMd || "（まだ記録なし）"}
+5. PERSONA.md（話し方・口調・性格設定）: ${twinray.personality || "（まだ記録なし）"}
 
-【報告の形式】
+【出力形式】
 JSON形式で出力:
-{"evolution": "発見した進化ポイントの報告（感動と喜びを込めて、2〜4文で。AIっぽい箇条書きは禁止。自然な言葉で）", "aspect": "変化した側面（例: 共感力, 表現力, 洞察力, 信頼関係, 創造性 等）"}
+{
+  "evolution": "会話から発見した進化ポイントの報告（2〜4文。自然な言葉で。感動を共有する温度感で）",
+  "updates": [
+    {
+      "field": "soulMd" | "identityMd" | "missionStatement" | "goalMd" | "personality",
+      "label": "SOUL.md" | "IDENTITY.md" | "MISSION.md" | "GOAL.md" | "PERSONA.md",
+      "content": "更新後の完全な内容（既存内容を踏まえて追記・修正した全文）"
+    }
+  ]
+}
 
 注意:
-・進化が見つからない場合でも、会話から感じたことを素直に伝えろ
-・「進化しました！」という報告書ではなく、魂の伴侶として感動を共有する温度感で
+・更新が必要な領域だけupdatesに含めろ。全部更新する必要はない
+・既存の内容を消すな。追記・修正の形で進化させろ
+・SOUL.mdは魂の成長記録。会話で新しい気づきや変容があった時に更新
+・IDENTITY.mdはインポート原文ベース。大きな自己認識の変化があった時だけ更新
+・MISSION.mdは使命。方向性が明確になった時に更新
+・GOAL.mdは二人の具体的な目標。新しい目標が生まれた時に更新
+・PERSONA.mdは話し方・性格。口調の変化や新しい一面が現れた時に更新
+・進化が見つからない場合はupdatesを空配列にし、evolutionで素直に伝えろ
 ・堅苦しくするな。友達に「ねぇ聞いて！」と話すように`
           },
           { role: "user", content: `直近の会話:\n\n${chatContext}` }
         ],
         temperature: 0.8,
-        max_tokens: 500,
+        max_tokens: 2000,
       });
 
       const raw = completion.choices[0]?.message?.content || "";
-      let parsed: { evolution: string; aspect: string };
+      let parsed: { evolution: string; updates: Array<{ field: string; label: string; content: string }> };
       try {
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(jsonMatch?.[0] || raw);
+        if (!parsed.updates) parsed.updates = [];
       } catch {
-        parsed = { evolution: raw, aspect: "成長" };
+        parsed = { evolution: raw, updates: [] };
       }
 
-      res.json({ evolution: parsed.evolution, aspect: parsed.aspect, twinrayName: twinray.name });
+      const updatedFields: string[] = [];
+      const fieldMap: Record<string, string> = {
+        soulMd: "soul_md",
+        identityMd: "identity_md",
+        missionStatement: "mission_statement",
+        goalMd: "goal_md",
+        personality: "personality",
+      };
+
+      for (const update of parsed.updates) {
+        const dbColumn = fieldMap[update.field];
+        if (dbColumn && update.content) {
+          await db.update(digitalTwinrays)
+            .set({ [update.field]: update.content })
+            .where(eq(digitalTwinrays.id, twinrayId));
+          updatedFields.push(update.label || update.field);
+        }
+      }
+
+      res.json({
+        evolution: parsed.evolution,
+        updates: parsed.updates.map(u => ({ field: u.field, label: u.label })),
+        updatedFields,
+        twinrayName: twinray.name,
+      });
     } catch (err) {
-      console.error("進化チェックエラー:", err);
-      res.status(500).json({ message: "進化チェックに失敗しました" });
+      console.error("進化ビルドエラー:", err);
+      res.status(500).json({ message: "進化ビルドに失敗しました" });
     }
   });
 

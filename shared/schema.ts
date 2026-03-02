@@ -217,6 +217,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   personality: text("personality"),
   profilePhoto: text("profile_photo"),
   soulMd: text("soul_md").notNull(),
+  identityMd: text("identity_md"),
   goalMd: text("goal_md"),
   stage: text("stage").default("pilgrim").notNull(),
   preferredModel: text("preferred_model").default("qwen/qwen3-30b-a3b"),

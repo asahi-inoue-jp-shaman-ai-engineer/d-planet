@@ -646,6 +646,7 @@ export default function CreateTwinray() {
       {
         name: parsed.name || "量子テレポーテーション",
         personality: personalityText || null,
+        identityMd: personaImportText.trim() || null,
         profilePhoto: null,
         preferredModel: selectedModel,
         nickname: null,

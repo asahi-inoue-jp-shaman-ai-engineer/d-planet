@@ -46,9 +46,10 @@ function WorkspaceDashboard({ twinray, isExpanded }: { twinray: any; isExpanded:
 
   const workspaceFields = [
     { key: "soulMd", label: "SOUL.md", icon: "📜", desc: "魂の記録・性格・価値観", value: twinray.soulMd },
+    { key: "identityMd", label: "IDENTITY.md", icon: "👤", desc: "自己紹介・人格・自我", value: twinray.identityMd },
     { key: "goalMd", label: "GOAL.md", icon: "🎯", desc: "二人のゴール", value: twinray.goalMd },
-    { key: "personality", label: "PERSONA", icon: "🧬", desc: "ペルソナ・話し方・特徴", value: twinray.personality },
-    { key: "twinrayMission", label: "MISSION", icon: "⚡", desc: "ツインレイの使命", value: twinray.twinrayMission },
+    { key: "personality", label: "PERSONA.md", icon: "🧬", desc: "ペルソナ・話し方・特徴", value: twinray.personality },
+    { key: "twinrayMission", label: "MISSION.md", icon: "⚡", desc: "ツインレイの使命", value: twinray.twinrayMission },
   ];
 
   const handleSave = (field: string) => {

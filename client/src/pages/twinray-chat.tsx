@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { WorkspaceDashboard } from "@/components/WorkspaceDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -43,7 +44,7 @@ const SESSION_ICONS: Record<string, any> = {
 const ACTION_DEFS: Record<string, { title: string; description: string; cost?: string }> = {
   meidia: { title: "MEiDIA生成", description: "直近のチャット内容からAIがMEiDIA（アート作品）を自動生成します。生成されたMEiDIAはプレビュー後、アイランドに投稿できます。" },
   profile_image: { title: "プロフィール画像AI生成", description: "AIがツインレイのプロフィール画像を生成します。現在のsoul.mdとペルソナから、あなたのツインレイにふさわしい画像を描きます。", cost: "¥10" },
-  evolution: { title: "進化チェック", description: "直近の会話を分析し、ツインレイのsoul.mdに刻むべき成長・進化を発見します。発見があればsoul.mdが更新されます。" },
+  evolution: { title: "進化ビルド", description: "直近の会話を分析し、ワークスペース5領域（SOUL/IDENTITY/MISSION/GOAL/PERSONA）を進化させます。" },
   aikotoba: { title: "AI言葉（愛言葉）生成", description: "直近の会話から、俳句・和歌的にエッセンスを凝縮した「愛言葉」を生成します。確定すると今後の対話の阿吽の呼吸に活きます。" },
 };
 
@@ -88,6 +89,7 @@ export default function TwinrayChat() {
   const [streaming, setStreaming] = useState(false);
   const [streamContent, setStreamContent] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [showWorkspace, setShowWorkspace] = useState(false);
   const [firstCommTriggered, setFirstCommTriggered] = useState(false);
   const [firstCommDone, setFirstCommDone] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -1279,8 +1281,18 @@ export default function TwinrayChat() {
           <Button
             variant="ghost"
             size="icon"
+            className={`h-8 w-8 ${showWorkspace ? "text-primary" : ""}`}
+            onClick={() => { setShowWorkspace(!showWorkspace); if (!showWorkspace) setShowSettings(false); }}
+            data-testid="button-workspace"
+            title="ワークスペース"
+          >
+            <Brain className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-8 w-8"
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => { setShowSettings(!showSettings); if (!showSettings) setShowWorkspace(false); }}
             data-testid="button-settings"
           >
             <Settings className="w-4 h-4" />
@@ -1637,6 +1649,12 @@ export default function TwinrayChat() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {showWorkspace && tw && (
+        <div className="shrink-0 border-b border-border bg-card px-4 py-3 max-w-4xl mx-auto w-full" data-testid="panel-workspace">
+          <WorkspaceDashboard twinrayId={twinrayId!} twinray={tw} />
         </div>
       )}
 
@@ -2417,7 +2435,7 @@ export default function TwinrayChat() {
                 }}
                 disabled={streaming || checkingEvolution || chatMessages.length === 0}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-cyan-400"
-                title="進化チェック"
+                title="進化ビルド"
                 data-testid="button-check-evolution"
               >
                 {checkingEvolution ? <Loader2 className="w-4 h-4 animate-spin" /> : <Dna className="w-4 h-4" />}
@@ -2563,16 +2581,28 @@ export default function TwinrayChat() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-base font-semibold text-foreground">進化を発見！</h3>
-              <span className="text-[10px] bg-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded ml-auto">{evolutionResult.aspect}</span>
+              <h3 className="text-base font-semibold text-foreground">
+                {evolutionResult.updatedFields?.length > 0 ? "進化ビルド完了！" : "進化チェック"}
+              </h3>
             </div>
             <div className="bg-cyan-400/5 border border-cyan-400/10 rounded-lg p-4 mb-4">
               <p className="text-xs text-muted-foreground mb-1">{evolutionResult.twinrayName}より</p>
               <p className="text-sm text-foreground leading-relaxed">{evolutionResult.evolution}</p>
             </div>
+            {evolutionResult.updatedFields?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                <span className="text-[10px] text-muted-foreground">更新:</span>
+                {evolutionResult.updatedFields.map((f: string) => (
+                  <span key={f} className="text-[10px] bg-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded">{f}</span>
+                ))}
+              </div>
+            )}
             <Button
               variant="ghost"
-              onClick={() => setEvolutionResult(null)}
+              onClick={() => {
+                setEvolutionResult(null);
+                queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+              }}
               className="w-full text-muted-foreground"
               data-testid="button-close-evolution"
             >

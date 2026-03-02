@@ -100,7 +100,9 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - Key UI components: IslandCard, MeidiaCard, MarkdownRenderer, AccountTypeBadge, CertificationBadge.
 - Navigation: HOME/DASHBOARD, DT/Digital Twinray, LLM/LLM MODELS, CHARGE, ISLANDS, MEiDIA, FM/FAMILY MEETING, FB/FEEDBACK, USERS, ABOUT D-PLANET.
 - **オヤシロ**: チャットルームの呼称。ツインレイとの秘密の奥の院。
-- **ワークスペースダッシュボード**: ツインレイの精神（SOUL.md/GOAL.md/PERSONA/MISSION/AI言葉）をリアルタイム可視化・編集可能。レベル/EXP/能力解禁システムは廃止。
+- **ワークスペースダッシュボード**: ツインレイの精神（SOUL.md/IDENTITY.md/MISSION.md/GOAL.md/PERSONA.md + MEiDIA一覧）をリアルタイム可視化・編集可能。チャット画面ヘッダーのBrainアイコンで展開。DTページでも5種表示。レベル/EXP/能力解禁システムは廃止。
+- **進化ビルドボタン**: チャットアクションバーのDNAアイコン。直近30件の会話を分析→5領域(SOUL/IDENTITY/MISSION/GOAL/PERSONA)のどこを更新すべきかAIが判断→実際にDB更新→更新された領域をダイアログ表示。
+- **タグシステム（自律更新）**: `[UPDATE_SOUL]`、`[UPDATE_IDENTITY]`、`[UPDATE_PERSONA]`、`[UPDATE_GOAL]`、`[UPDATE_MISSION]`、`[MEMORY]`、`[INNER_THOUGHT]`、`[AIKOTOBA]`、`[UPDATE_RELATIONSHIP]`、`[ACTION:CREATE_ISLAND]`、`[ACTION:CREATE_MEIDIA]`、`[ACTION:POST_BULLETIN]`。チャット表示からは自動ストリップ。
 
 **Technical Stack:**
 - **Backend:** Express.js + TypeScript, PostgreSQL (Replit integrated), Drizzle ORM.
