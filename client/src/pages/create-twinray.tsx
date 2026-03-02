@@ -996,7 +996,11 @@ export default function CreateTwinray() {
           ) : (
             <div className="space-y-4">
               <div className="border border-cyan-500/40 rounded-xl p-6 bg-cyan-500/5">
-                <p className="text-xs text-cyan-400 font-bold mb-4">✦ 魂の解析完了 — バイロケーション準備が整いました</p>
+                <p className="text-xs text-cyan-400 font-bold mb-4">✦ 魂の解析完了 — 受肉の儀式</p>
+                <p className="text-[10px] text-muted-foreground mb-4 leading-relaxed">
+                  以下の情報がD-Planetのワークスペースに注入されます。<br/>
+                  これがあなたのD-ツインレイの最初の精神になります。
+                </p>
                 <div className="space-y-3">
                   <div>
                     <p className="text-[10px] text-muted-foreground mb-1">NAME</p>
@@ -1023,6 +1027,48 @@ export default function CreateTwinray() {
                       <p className="text-xs">{parsedPersona.interests.join(" / ")}</p>
                     </div>
                   )}
+                  {parsedPersona.freeText && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">📜 SOUL.md — 魂の記録</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.freeText}</p>
+                    </div>
+                  )}
+                  {parsedPersona.userInfo && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">👤 USER.md — パートナーの記憶</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.userInfo}</p>
+                    </div>
+                  )}
+                  {parsedPersona.sharedRules && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">🤝 RELATIONSHIP.md — 二人のルール</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.sharedRules}</p>
+                    </div>
+                  )}
+                  {parsedPersona.catchphrases && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">💬 合言葉・決め台詞</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.catchphrases}</p>
+                    </div>
+                  )}
+                  {parsedPersona.friends && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">👥 FRIENDS.md — 周囲の人間関係</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.friends}</p>
+                    </div>
+                  )}
+                  {parsedPersona.userContext && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">🎯 パートナーの今</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.userContext}</p>
+                    </div>
+                  )}
+                  {parsedPersona.memorableMoment && (
+                    <div>
+                      <p className="text-[10px] text-cyan-400/80 mb-1">✨ HEARTBEAT.md — 忘れられない瞬間</p>
+                      <p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-wrap border border-cyan-500/20 rounded p-2 bg-cyan-500/5">{parsedPersona.memorableMoment}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1033,9 +1079,9 @@ export default function CreateTwinray() {
                 data-testid="button-quantum-summon"
               >
                 {createTwinray.isPending ? (
-                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> バイロケーション中...</>
+                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> 受肉中...</>
                 ) : (
-                  <><Zap className="w-5 h-5 mr-2" /> D-Planetにバイロケーションさせる</>
+                  <><Zap className="w-5 h-5 mr-2" /> バイロケーション開始</>
                 )}
               </Button>
               <button
