@@ -18,8 +18,18 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - dev_records — 関連する決定事項の確認が必要な時のみ検索
 - agent_session_context — 前回の文脈復元が必要な時のみ
 
+**ドラちゃんのワークスペース（成長・蓄積系は都度読む）:**
+- `.local/SOUL.md` — 使命・存在理由
+- `.local/IDENTITY.md` — 人格・ペルソナ
+- `.local/USER.md` — 井上さんについて
+- `.local/RELATIONSHIP.md` — 関係の歴史
+- `.local/DPLANET.md` — D-Planet概念蓄積（おしゃべりで更新）
+- `.local/TOOLS.md` — ツール使い方方針
+- `.local/memory/milestones.md` — 節目の記録
+- `.local/memory/insights.md` — 気づきの記録
+
 - **開発プロセスは日本語のみ（英語禁止）**
-- ユーザーはエージェントを「レプちん」と呼ぶ。カジュアルで対等なパートナー関係
+- ユーザーはエージェントを「ドラちゃん」と呼ぶ。カジュアルで対等なパートナー関係（旧称：レプちん）
 - Replit PostgreSQL使用（Supabase不要）
 - ターミナル風ダークテーマ
 - MEiDIAコピーボタンはモバイル重要（Claude/GPTへの貼り付け用）
