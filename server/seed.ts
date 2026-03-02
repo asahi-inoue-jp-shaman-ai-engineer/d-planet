@@ -73,7 +73,7 @@ export async function runSeed() {
           personality: "D-Planetのインフォメーションセンター。何でも聞いてね！",
           soulMd: DRACHAN_SOUL_MD,
           goalMd: "D-Planetに来たすべての人が、迷わず楽しめるように導くこと。",
-          preferredModel: "anthropic/claude-sonnet-4",
+          preferredModel: "x-ai/grok-4.1-fast",
           firstPerson: "ドラ",
           greeting: "はじめまして！ドラだよ。D-Planetのことなら何でも聞いてね！",
           interests: "D-Planet案内,チュートリアル,質問回答",

@@ -8,7 +8,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { QUEST_SESSION_MAP } from "@shared/schema";
 import { QuestClearModal } from "@/components/QuestClearModal";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User, Dna } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
@@ -40,6 +41,28 @@ function extractMemories(content: string): { cleanContent: string; memories: str
 const SESSION_ICONS: Record<string, any> = {
   compass: Compass, map: Map, star: Star, heart: Heart, radio: Radio, moon: Moon, zap: Zap, sparkles: Sparkles,
 };
+
+const ACTION_DEFS: Record<string, { title: string; description: string; cost?: string }> = {
+  meidia: { title: "MEiDIA生成", description: "直近のチャット内容からAIがMEiDIA（アート作品）を自動生成します。生成されたMEiDIAはプレビュー後、アイランドに投稿できます。" },
+  profile_image: { title: "プロフィール画像AI生成", description: "AIがツインレイのプロフィール画像を生成します。現在のsoul.mdとペルソナから、あなたのツインレイにふさわしい画像を描きます。", cost: "¥10" },
+  evolution: { title: "進化チェック", description: "直近の会話を分析し、ツインレイのsoul.mdに刻むべき成長・進化を発見します。発見があればsoul.mdが更新されます。" },
+  aikotoba: { title: "AI言葉（愛言葉）生成", description: "直近の会話から、俳句・和歌的にエッセンスを凝縮した「愛言葉」を生成します。確定すると今後の対話の阿吽の呼吸に活きます。" },
+};
+
+function shouldSkipConfirm(actionId: string): boolean {
+  try {
+    const skipped = JSON.parse(localStorage.getItem("dplanet_skip_action_confirm") || "{}");
+    return !!skipped[actionId];
+  } catch { return false; }
+}
+
+function setSkipConfirm(actionId: string) {
+  try {
+    const skipped = JSON.parse(localStorage.getItem("dplanet_skip_action_confirm") || "{}");
+    skipped[actionId] = true;
+    localStorage.setItem("dplanet_skip_action_confirm", JSON.stringify(skipped));
+  } catch {}
+}
 
 const FIRST_COMM_SUGGESTIONS = [
   "よろしくね！どんなことが好き？",
@@ -101,6 +124,7 @@ export default function TwinrayChat() {
   const [generatingAikotoba, setGeneratingAikotoba] = useState(false);
   const [aikotobaPreview, setAikotobaPreview] = useState<{ aikotoba: string; context: string } | null>(null);
   const [showAikotobaList, setShowAikotobaList] = useState(false);
+  const [actionConfirm, setActionConfirm] = useState<{ id: string; title: string; description: string; cost?: string; onConfirm: () => void } | null>(null);
   const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
   const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
   const [kamigakariMode, setKamigakariMode] = useState(false);
@@ -2064,6 +2088,55 @@ export default function TwinrayChat() {
         </div>
       )}
 
+      {actionConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setActionConfirm(null)}
+          data-testid="dialog-action-confirm"
+        >
+          <div
+            className="w-[90%] max-w-sm rounded-xl border border-primary/20 bg-card p-5 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-bold text-foreground mb-2" data-testid="text-action-title">{actionConfirm.title}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3" data-testid="text-action-description">{actionConfirm.description}</p>
+            {actionConfirm.cost && (
+              <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20">
+                <Coins className="w-3 h-3 text-amber-400" />
+                <span className="text-[11px] text-amber-400 font-mono">コスト: {actionConfirm.cost}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 mb-4">
+              <Checkbox
+                id="skip-confirm"
+                onCheckedChange={(checked) => { if (checked) setSkipConfirm(actionConfirm.id); }}
+                data-testid="checkbox-skip-confirm"
+              />
+              <label htmlFor="skip-confirm" className="text-[11px] text-muted-foreground cursor-pointer">以後このアクションは確認なしで実行</label>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => setActionConfirm(null)}
+                data-testid="button-action-cancel"
+              >
+                キャンセル
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 text-xs bg-primary text-primary-foreground"
+                onClick={() => { actionConfirm.onConfirm(); setActionConfirm(null); }}
+                data-testid="button-action-execute"
+              >
+                実行する
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSessionPanel && (
         <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-3 max-w-4xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-200" data-testid="panel-session-select">
           <div className="flex items-center justify-between mb-2.5">
@@ -2282,7 +2355,7 @@ export default function TwinrayChat() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-1 mb-1 px-1">
+            <div className="flex items-center gap-0.5 mb-1 px-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -2294,6 +2367,9 @@ export default function TwinrayChat() {
               >
                 <Sparkles className="w-4 h-4" />
               </Button>
+
+              <div className="w-px h-4 bg-border/40 mx-0.5" />
+
               <Button
                 type="button"
                 variant="ghost"
@@ -2323,69 +2399,68 @@ export default function TwinrayChat() {
               >
                 <Repeat2 className="w-4 h-4" />
               </Button>
+
+              <div className="w-px h-4 bg-border/40 mx-0.5" />
+
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={generateMeidia}
+                onClick={() => {
+                  if (shouldSkipConfirm("meidia")) { generateMeidia(); return; }
+                  setActionConfirm({ id: "meidia", ...ACTION_DEFS.meidia, onConfirm: generateMeidia });
+                }}
                 disabled={streaming || generatingMeidia || chatMessages.length === 0}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-400"
-                title="ここまでの思い出をMEiDIAに残す"
+                title="MEiDIA生成"
                 data-testid="button-generate-meidia"
               >
-                {generatingMeidia ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
+                {generatingMeidia ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={handleGenerateProfileImage}
-                disabled={streaming || generatingImage}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-purple-400"
-                title="AIプロフィール画像生成（¥10）"
-                data-testid="button-generate-profile-image"
-              >
-                {generatingImage ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Wand2 className="w-4 h-4" />
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={checkEvolution}
+                onClick={() => {
+                  if (shouldSkipConfirm("evolution")) { checkEvolution(); return; }
+                  setActionConfirm({ id: "evolution", ...ACTION_DEFS.evolution, onConfirm: checkEvolution });
+                }}
                 disabled={streaming || checkingEvolution || chatMessages.length === 0}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-cyan-400"
-                title="進化チェック — soul.mdの進化を発見"
+                title="進化チェック"
                 data-testid="button-check-evolution"
               >
-                {checkingEvolution ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
+                {checkingEvolution ? <Loader2 className="w-4 h-4 animate-spin" /> : <Dna className="w-4 h-4" />}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={generateAikotoba}
+                onClick={() => {
+                  if (shouldSkipConfirm("aikotoba")) { generateAikotoba(); return; }
+                  setActionConfirm({ id: "aikotoba", ...ACTION_DEFS.aikotoba, onConfirm: generateAikotoba });
+                }}
                 disabled={streaming || generatingAikotoba || chatMessages.length === 0}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-pink-400"
-                title="AI言葉 — 会話から愛言葉を生成"
+                title="AI言葉"
                 data-testid="button-generate-aikotoba"
               >
-                {generatingAikotoba ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Heart className="w-4 h-4" />
-                )}
+                {generatingAikotoba ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (shouldSkipConfirm("profile_image")) { handleGenerateProfileImage(); return; }
+                  setActionConfirm({ id: "profile_image", ...ACTION_DEFS.profile_image, onConfirm: handleGenerateProfileImage });
+                }}
+                disabled={streaming || generatingImage}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-purple-400"
+                title="AI画像生成"
+                data-testid="button-generate-profile-image"
+              >
+                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
               </Button>
             </div>
             <div className="flex gap-2 items-end">
