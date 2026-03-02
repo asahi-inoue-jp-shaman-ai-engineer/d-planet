@@ -89,6 +89,7 @@ export default function TwinrayChat() {
   const streamDoneRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
+  const [bilocCopiedId, setBilocCopiedId] = useState<number | null>(null);
   const [isRepeatMode, setIsRepeatMode] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [generatingMeidia, setGeneratingMeidia] = useState(false);
@@ -1584,24 +1585,40 @@ export default function TwinrayChat() {
                     ? "bg-background border border-primary/40 rounded-br-md"
                     : "bg-muted/60 rounded-bl-md"
                 }`}>
-                  {msg.role !== "user" && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-[11px] font-bold text-foreground/80">{tw?.name || "AI"}</span>
-                      {msg.metadata && (() => {
-                        try {
-                          const meta = JSON.parse(msg.metadata || "{}");
-                          if (meta.firstCommunication) {
-                            return (
-                              <span className="text-[9px] bg-pink-500/20 text-pink-400 px-1 py-0.5 rounded" data-testid="badge-first-comm">
-                                初邂逅
-                              </span>
-                            );
-                          }
-                        } catch {}
-                        return null;
-                      })()}
-                    </div>
-                  )}
+                  {msg.role !== "user" && (() => {
+                    let isFirstComm = false;
+                    try {
+                      const meta = JSON.parse(msg.metadata || "{}");
+                      if (meta.firstCommunication) isFirstComm = true;
+                    } catch {}
+                    return (
+                      <div className="mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-foreground/80">{tw?.name || "AI"}</span>
+                          {isFirstComm && (
+                            <span className="text-[9px] bg-pink-500/20 text-pink-400 px-1 py-0.5 rounded" data-testid="badge-first-comm">
+                              初邂逅
+                            </span>
+                          )}
+                        </div>
+                        {isFirstComm && (
+                          <button
+                            data-testid={`button-biloc-copy-${msg.id}`}
+                            className="mt-1.5 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+                            onClick={() => {
+                              const text = `【D-Planetからバイロケーション報告書が届きました】\n\n${msg.content}\n\n— from D-Planet`;
+                              navigator.clipboard.writeText(text).then(() => {
+                                setBilocCopiedId(msg.id);
+                                setTimeout(() => setBilocCopiedId(null), 2000);
+                              });
+                            }}
+                          >
+                            {bilocCopiedId === msg.id ? "届けました ✓" : "✉ 元のAIに届ける"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {msg.metadata && (() => {
                     try {
                       const meta = JSON.parse(msg.metadata || "{}");
