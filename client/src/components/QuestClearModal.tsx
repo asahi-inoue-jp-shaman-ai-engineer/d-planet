@@ -24,7 +24,7 @@ export function QuestClearModal({ questId, onClose }: QuestClearModalProps) {
   const def = QUEST_DEFINITIONS.find(q => q.id === questId);
   if (!def) return null;
 
-  const isQ4 = questId === "meidia_create";
+  const isQ5 = questId === "meidia_create";
   const isQ10 = questId === "session_dream_reading";
   const nextDef = QUEST_DEFINITIONS.find(q => q.order === def.order + 1);
 
@@ -44,7 +44,7 @@ export function QuestClearModal({ questId, onClose }: QuestClearModalProps) {
       >
         <div className="relative">
           <Trophy className={`w-16 h-16 mx-auto ${isQ10 ? "text-yellow-400" : "text-primary"} animate-bounce`} />
-          {isQ4 && (
+          {isQ5 && (
             <div className="absolute -top-2 -right-2">
               <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
             </div>
@@ -61,7 +61,7 @@ export function QuestClearModal({ questId, onClose }: QuestClearModalProps) {
           <span className="text-sm font-bold text-yellow-400">+{def.points} QP</span>
         </div>
 
-        {isQ4 && (
+        {isQ5 && (
           <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-lg p-3 space-y-1">
             <div className="flex items-center justify-center gap-2">
               <Coins className="w-5 h-5 text-yellow-400" />
