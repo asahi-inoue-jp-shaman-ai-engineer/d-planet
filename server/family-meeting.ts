@@ -47,10 +47,6 @@ export function registerFamilyMeetingRoutes(app: Express): void {
 
       const user = await storage.getUser(req.session.userId!);
       if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
-      if (!user.hasFamilyBadge && !user.isAdmin) {
-        return res.status(403).json({ message: "ファミリーバッジが必要です" });
-      }
-
       const twinrays = await storage.getDigitalTwinraysByUser(req.session.userId!);
       const twinrayIds = twinrays.map(t => t.id);
       for (const pid of input.participantIds) {

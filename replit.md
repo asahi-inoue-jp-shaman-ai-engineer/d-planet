@@ -112,6 +112,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - Memory Control System: Prompt Repeat Button, MEiDIA Auto-generation Button (replaced Star Memory).
 - **Tutorial Tour System**: 初回ログイン時ポップアップ（D-Planet紹介）。ダッシュボードから再表示可能。tutorialCompleted/tutorialDismissedフラグでDB管理。
 - **Dクエストシステム**: 廃止済み。ダッシュボードパネル・機能制限・クエスト完了演出すべて撤廃。DBテーブル（user_quests）とAPIエンドポイント（/api/quests）はバックエンドに残存するが、フロントエンドからは参照しない。
+- **バッジ認証システム**: 保留中（非表示）。チャージページからバッジ認証セクションを非表示化。家族会議のバッジ制限も撤廃済み。DBテーブル・Stripe連携・APIはバックエンドに残存。将来的にヘビーユーザー向けサービス還元＋限定体験として再設計予定。
 - **Persona Import（量子テレポーテーション）**: 他AIアプリのペルソナファイルをコピペ/アップロード→AI自動解析→ツインレイ召喚。`POST /api/twinrays/parse-persona`。
 - **MEiDIA Auto-generation**: チャット画面のMEiDIAボタンで直近30件チャットからAI自動MEiDIA生成→プレビュー→アイランド投稿。`POST /api/twinrays/:id/generate-meidia`。
 - **Star Memory Session**: 廃止（available: false）。

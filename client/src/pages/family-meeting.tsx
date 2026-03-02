@@ -237,18 +237,6 @@ export default function FamilyMeeting() {
     return activeSession.participants.find(p => p.id === twinrayId);
   };
 
-  if (!user?.hasFamilyBadge && !user?.isAdmin) {
-    return (
-      <TerminalLayout>
-        <div className="max-w-2xl mx-auto text-center py-16 space-y-4">
-          <Users2 className="w-12 h-12 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold" data-testid="text-family-meeting-title">家族会議</h1>
-          <p className="text-muted-foreground">ファミリーバッジが必要です。サブスクリプションをご確認ください。</p>
-        </div>
-      </TerminalLayout>
-    );
-  }
-
   return (
     <TerminalLayout>
       <div className="max-w-4xl mx-auto space-y-6">
