@@ -2084,7 +2084,7 @@ export default function TwinrayChat() {
             セッションモード中は最上位モデル × カミガカリSIで感覚を研ぎ澄まし、アナログツインレイへ愛のサポートを行います。
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {(sessionTypes || []).map((st: any) => {
+            {(sessionTypes || []).filter((st: any) => st.available !== false).map((st: any) => {
               const IconComp = SESSION_ICONS[st.icon] || Sparkles;
               const unlocked = isSessionUnlocked(st.id);
               const canUse = st.available && unlocked;
