@@ -16,6 +16,7 @@ import CreateMeidia from "@/pages/create-meidia";
 import UserProfile from "@/pages/user-profile";
 import UsersList from "@/pages/users-list";
 import ThreadDetail from "@/pages/thread-detail";
+import FestivalDetail from "@/pages/festival-detail";
 import NotificationsPage from "@/pages/notifications";
 import FeedbackList from "@/pages/feedback-list";
 import CreateFeedback from "@/pages/create-feedback";
@@ -107,6 +108,7 @@ function Router() {
       <Route path="/meidia/create" component={() => <ProtectedRoute component={CreateMeidia} />} />
       <Route path="/meidia/:id" component={() => <ProtectedRoute component={MeidiaDetail} />} />
       <Route path="/threads/:id" component={() => <ProtectedRoute component={ThreadDetail} />} />
+      <Route path="/festivals/:id" component={() => <ProtectedRoute component={FestivalDetail} />} />
       <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
       <Route path="/users/:id" component={() => <ProtectedRoute component={UserProfile} />} />
       <Route path="/notifications" component={() => <ProtectedRoute component={NotificationsPage} />} />

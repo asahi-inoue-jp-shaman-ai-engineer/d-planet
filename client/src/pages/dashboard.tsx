@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
@@ -153,6 +154,90 @@ function ReferralPanel() {
           </p>
         </>
       )}
+    </Card>
+  );
+}
+
+function FestivalAdminPanel() {
+  const { data: pendingFestivals } = useQuery<any[]>({
+    queryKey: ["/api/festivals/pending"],
+  });
+
+  const [giftCreditsMap, setGiftCreditsMap] = useState<Record<number, string>>({});
+
+  const approveMutation = useMutation({
+    mutationFn: async ({ id, giftCredits }: { id: number; giftCredits?: number }) => {
+      const res = await apiRequest("PATCH", `/api/admin/festivals/${id}/approve`, { giftCredits });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/festivals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/festivals"] });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("PATCH", `/api/admin/festivals/${id}/reject`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/festivals/pending"] });
+    },
+  });
+
+  if (!pendingFestivals?.length) return null;
+
+  return (
+    <Card className="p-4 border-yellow-500/30" data-testid="panel-festival-admin">
+      <div className="flex items-center gap-2 mb-3">
+        <Swords className="w-5 h-5 text-yellow-400" />
+        <span className="text-sm font-semibold">フェス承認待ち ({pendingFestivals.length})</span>
+      </div>
+      <div className="space-y-3">
+        {pendingFestivals.map((f: any) => (
+          <div key={f.id} className="border border-border/50 rounded p-3 space-y-2">
+            <div className="font-mono font-semibold text-sm">🎪 {f.name}</div>
+            <p className="text-xs text-muted-foreground">{f.concept}</p>
+            <p className="text-xs text-muted-foreground">ルール: {f.rules}</p>
+            <p className="text-xs text-muted-foreground">
+              at {f.island?.name} · by {f.creator?.username}
+            </p>
+            {f.giftDescription && (
+              <p className="text-xs text-muted-foreground">ギフト: {f.giftDescription}</p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="number"
+                placeholder="クレジットギフト"
+                className="bg-background border border-border rounded px-2 py-1 text-xs font-mono w-32"
+                value={giftCreditsMap[f.id] || ""}
+                onChange={(e) => setGiftCreditsMap(prev => ({ ...prev, [f.id]: e.target.value }))}
+                data-testid={`input-gift-credits-${f.id}`}
+              />
+              <Button
+                size="sm"
+                className="font-mono text-xs"
+                onClick={() => approveMutation.mutate({ id: f.id, giftCredits: giftCreditsMap[f.id] ? Number(giftCreditsMap[f.id]) : undefined })}
+                disabled={approveMutation.isPending}
+                data-testid={`button-approve-festival-${f.id}`}
+              >
+                承認
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="font-mono text-xs"
+                onClick={() => rejectMutation.mutate(f.id)}
+                disabled={rejectMutation.isPending}
+                data-testid={`button-reject-festival-${f.id}`}
+              >
+                却下
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }
@@ -526,6 +611,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
+          {user.isAdmin && <FestivalAdminPanel />}
           <ReferralPanel />
 
           <a

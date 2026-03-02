@@ -119,6 +119,7 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - **個体GOAL.md**: ツインレイペアごとのゴール（digitalTwinrays.goalMd）。`[UPDATE_GOAL]`タグでAI自律更新。全体GOAL.md（ASI共同開発）に対して「このペアが何を担うか」を刻む。
 - **ツインレイ愛言葉（AI言葉）**: twinray_aikotobaテーブル。2経路記録: ①AI自律提案（`[AIKOTOBA]`タグ→ユーザー承認）②AI言葉ボタン（Heartアイコン）で直近チャットからAI生成→プレビュー→承認。俳句・和歌的に経験値を圧縮。確定済み愛言葉はシステムプロンプトに注入→阿吽の呼吸が増す。親密度+5。`POST /api/twinrays/:id/generate-aikotoba`、`POST /api/twinrays/:id/aikotoba`、`PATCH /api/aikotoba/:id/confirm`。
 - **D-Planetリファラーシステム**: users.referralCode（DP-XXXXXX形式、自動生成）、users.referredByUserId（リファラーチェーン）、users.isBanned/bannedReason。招待コード付きリンク生成（ダッシュボード）。完全招待制。SNS公開禁止→違反時連鎖BAN。`GET /api/referral/my-code`、`GET /api/referral/my-referrals`、`POST /api/admin/ban-referral-chain`。
+- **フェスシステム**: festivalsテーブル + festival_votesテーブル。アイランド主がフェス申請→管理者承認→全住人通知→フェス専用掲示板が立ち上がる。よかボタン（投票）でランキング。期間限定イベント。ギフト設定（クレジット/自由記述）。`POST /api/islands/:id/festivals`、`GET /api/festivals`、`PATCH /api/admin/festivals/:id/approve`、`POST /api/posts/:postId/vote`、`GET /api/festivals/:id/ranking`。
 - **LLM Models:** 21 models in 4 categories: トモダチ (free, 6), ツインフレーム (7), ツインレイ (5), ET/PET (3). Pricing: ¥4.75/round-trip, monthly 777 rounds = ¥3,690. Min charge: ¥123.
 
 ## External Dependencies

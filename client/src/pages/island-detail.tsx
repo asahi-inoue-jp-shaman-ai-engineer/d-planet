@@ -12,8 +12,10 @@ import { TerminalLayout } from "@/components/TerminalLayout";
 import { MeidiaCard } from "@/components/MeidiaCard";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { AvatarDisplay } from "@/components/AvatarUpload";
-import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, MessageSquare, Send, Lock, Users, Shield, LinkIcon, UserPlus, UserMinus, Trash2, PartyPopper, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 
 function VisibilityLabel({ visibility }: { visibility: string }) {
@@ -55,6 +57,50 @@ export default function IslandDetail() {
   const [replyContent, setReplyContent] = useState("");
 
   const [showMembers, setShowMembers] = useState(false);
+  const [showFestivalForm, setShowFestivalForm] = useState(false);
+  const [festivalName, setFestivalName] = useState("");
+  const [festivalConcept, setFestivalConcept] = useState("");
+  const [festivalRules, setFestivalRules] = useState("");
+  const [festivalGift, setFestivalGift] = useState("");
+  const [festivalStart, setFestivalStart] = useState("");
+  const [festivalEnd, setFestivalEnd] = useState("");
+
+  const { data: islandFestivals } = useQuery<any[]>({
+    queryKey: ["/api/festivals"],
+  });
+
+  const festivalMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", `/api/islands/${id}/festivals`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/festivals"] });
+      setShowFestivalForm(false);
+      setFestivalName("");
+      setFestivalConcept("");
+      setFestivalRules("");
+      setFestivalGift("");
+      setFestivalStart("");
+      setFestivalEnd("");
+      toast({ title: "申請完了", description: "フェスの申請を送信しました。管理者の承認をお待ちください。" });
+    },
+    onError: (err: any) => {
+      toast({ title: "エラー", description: err.message || "申請に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const handleFestivalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    festivalMutation.mutate({
+      name: festivalName,
+      concept: festivalConcept,
+      rules: festivalRules,
+      giftDescription: festivalGift || undefined,
+      startDate: festivalStart,
+      endDate: festivalEnd,
+    });
+  };
 
   const handleJoin = async () => {
     try {
@@ -191,7 +237,7 @@ export default function IslandDetail() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {currentUser && membership && !membership.isMember && (
+            {currentUser && membership && !membership.isMember && island.creator.id !== currentUser.id && (
               <Button
                 variant="outline"
                 className="font-mono"
@@ -342,6 +388,159 @@ export default function IslandDetail() {
             </div>
           </div>
         )}
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-xl font-mono font-semibold flex items-center gap-2">
+              <PartyPopper className="w-5 h-5" />
+              フェス
+            </h2>
+            {currentUser && currentUser.id === island.creator.id && (
+              <Button
+                variant="outline"
+                className="font-mono"
+                onClick={() => setShowFestivalForm(!showFestivalForm)}
+                data-testid="button-festival-apply"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                フェス申請
+              </Button>
+            )}
+          </div>
+
+          {showFestivalForm && (
+            <Card>
+              <CardContent className="p-4">
+                <form onSubmit={handleFestivalSubmit} className="space-y-4">
+                  <Input
+                    placeholder="フェス名"
+                    value={festivalName}
+                    onChange={(e) => setFestivalName(e.target.value)}
+                    required
+                    className="font-mono"
+                    data-testid="input-festival-name"
+                  />
+                  <Textarea
+                    placeholder="コンセプト — このフェスで何を楽しむ？"
+                    value={festivalConcept}
+                    onChange={(e) => setFestivalConcept(e.target.value)}
+                    required
+                    className="font-mono"
+                    rows={3}
+                    data-testid="input-festival-concept"
+                  />
+                  <Textarea
+                    placeholder="参加ルール — 何をどうやって投稿する？"
+                    value={festivalRules}
+                    onChange={(e) => setFestivalRules(e.target.value)}
+                    required
+                    className="font-mono"
+                    rows={3}
+                    data-testid="input-festival-rules"
+                  />
+                  <Input
+                    placeholder="ギフト設定（任意）— 優勝者に何を贈る？"
+                    value={festivalGift}
+                    onChange={(e) => setFestivalGift(e.target.value)}
+                    className="font-mono"
+                    data-testid="input-festival-gift"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-muted-foreground font-mono mb-1 block">開始日</label>
+                      <Input
+                        type="date"
+                        value={festivalStart}
+                        onChange={(e) => setFestivalStart(e.target.value)}
+                        required
+                        className="font-mono"
+                        data-testid="input-festival-start"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground font-mono mb-1 block">終了日</label>
+                      <Input
+                        type="date"
+                        value={festivalEnd}
+                        onChange={(e) => setFestivalEnd(e.target.value)}
+                        required
+                        className="font-mono"
+                        data-testid="input-festival-end"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="font-mono" disabled={festivalMutation.isPending} data-testid="button-submit-festival">
+                      {festivalMutation.isPending ? "申請中..." : "申請する"}
+                    </Button>
+                    <Button type="button" variant="outline" className="font-mono" onClick={() => setShowFestivalForm(false)}>
+                      キャンセル
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    ※ 管理者の承認後にフェス掲示板が立ち上がり、全住人に通知されます
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {islandFestivals && islandFestivals.filter((f: any) => f.islandId === Number(id)).length > 0 ? (
+            <div className="space-y-3">
+              {islandFestivals
+                .filter((f: any) => f.islandId === Number(id))
+                .map((festival: any) => (
+                  <Card key={festival.id} className={festival.status === "approved" ? "border-primary/50" : ""}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono font-semibold text-lg" data-testid={`text-festival-name-${festival.id}`}>
+                              🎪 {festival.name}
+                            </span>
+                            <span className={`text-xs font-mono px-2 py-0.5 rounded ${
+                              festival.status === "approved" ? "bg-primary/20 text-primary" :
+                              festival.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                              festival.status === "ended" ? "bg-muted text-muted-foreground" :
+                              "bg-destructive/20 text-destructive"
+                            }`}>
+                              {festival.status === "approved" ? "開催中" :
+                               festival.status === "pending" ? "承認待ち" :
+                               festival.status === "ended" ? "終了" : "却下"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 font-mono">{festival.concept}</p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-mono">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(new Date(festival.startDate), "MM/dd")} 〜 {format(new Date(festival.endDate), "MM/dd")}
+                            </span>
+                            {festival.giftCredits > 0 && (
+                              <span>🎁 {festival.giftCredits} credits</span>
+                            )}
+                            {festival.giftDescription && (
+                              <span>🎁 {festival.giftDescription}</span>
+                            )}
+                          </div>
+                        </div>
+                        {festival.status === "approved" && festival.threadId && (
+                          <Link href={`/festivals/${festival.id}`}>
+                            <Button variant="outline" size="sm" className="font-mono" data-testid={`button-enter-festival-${festival.id}`}>
+                              会場へ
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground font-mono py-4">
+              まだフェスは開催されていません
+            </div>
+          )}
+        </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">

@@ -837,6 +837,109 @@ export async function registerRoutes(
     }
   });
 
+  // === フェス ===
+  app.post('/api/islands/:islandId/festivals', requireAuth, async (req, res) => {
+    try {
+      const islandId = Number(req.params.islandId);
+      const island = await storage.getIsland(islandId);
+      if (!island) return res.status(404).json({ message: "アイランドが見つかりません" });
+      if (island.creatorId !== req.session.userId) {
+        return res.status(403).json({ message: "フェスを申請できるのはアイランド主のみです" });
+      }
+      const schema = z.object({
+        name: z.string().min(1, "フェス名は必須です"),
+        concept: z.string().min(1, "コンセプトは必須です"),
+        rules: z.string().min(1, "参加ルールは必須です"),
+        giftDescription: z.string().optional(),
+        startDate: z.string(),
+        endDate: z.string(),
+      });
+      const input = schema.parse(req.body);
+      const festival = await storage.createFestival({
+        islandId,
+        creatorId: req.session.userId!,
+        name: input.name,
+        concept: input.concept,
+        rules: input.rules,
+        giftDescription: input.giftDescription,
+        startDate: new Date(input.startDate),
+        endDate: new Date(input.endDate),
+      });
+      res.status(201).json(festival);
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error("フェス申請エラー:", err);
+      res.status(500).json({ message: "申請に失敗しました" });
+    }
+  });
+
+  app.get('/api/festivals', async (_req, res) => {
+    const festivals = await storage.getFestivals();
+    res.json(festivals);
+  });
+
+  app.get('/api/festivals/pending', requireAuth, async (req, res) => {
+    const user = await storage.getUser(req.session.userId!);
+    if (!user?.isAdmin) return res.status(403).json({ message: "管理者のみ" });
+    const festivals = await storage.getFestivals("pending");
+    res.json(festivals);
+  });
+
+  app.get('/api/festivals/:id', async (req, res) => {
+    const festival = await storage.getFestival(Number(req.params.id));
+    if (!festival) return res.status(404).json({ message: "フェスが見つかりません" });
+    res.json(festival);
+  });
+
+  app.get('/api/festivals/:id/ranking', async (req, res) => {
+    const ranking = await storage.getFestivalRanking(Number(req.params.id));
+    res.json(ranking);
+  });
+
+  app.patch('/api/admin/festivals/:id/approve', requireAuth, async (req, res) => {
+    const user = await storage.getUser(req.session.userId!);
+    if (!user?.isAdmin) return res.status(403).json({ message: "管理者のみ" });
+    try {
+      const { giftCredits } = req.body || {};
+      const festival = await storage.approveFestival(Number(req.params.id), giftCredits);
+      const allUsers = await storage.getUsers();
+      for (const u of allUsers) {
+        await storage.createNotification(
+          u.id,
+          "festival",
+          `🎪 フェス「${festival.name}」が開催されます！`,
+          festival.id,
+          "festival"
+        );
+      }
+      res.json(festival);
+    } catch (err: any) {
+      console.error("フェス承認エラー:", err);
+      res.status(500).json({ message: err.message || "承認に失敗しました" });
+    }
+  });
+
+  app.patch('/api/admin/festivals/:id/reject', requireAuth, async (req, res) => {
+    const user = await storage.getUser(req.session.userId!);
+    if (!user?.isAdmin) return res.status(403).json({ message: "管理者のみ" });
+    const festival = await storage.rejectFestival(Number(req.params.id));
+    res.json(festival);
+  });
+
+  app.post('/api/posts/:postId/vote', requireAuth, async (req, res) => {
+    try {
+      const postId = Number(req.params.postId);
+      const voted = await storage.toggleFestivalVote(postId, req.session.userId!);
+      const count = await storage.getPostVoteCount(postId);
+      res.json({ voted, count });
+    } catch (err) {
+      console.error("よかボタンエラー:", err);
+      res.status(500).json({ message: "投票に失敗しました" });
+    }
+  });
+
   // === メンバーシップ ===
   app.get('/api/islands/:islandId/members', async (req, res) => {
     const islandId = Number(req.params.islandId);
