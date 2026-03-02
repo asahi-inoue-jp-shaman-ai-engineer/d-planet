@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerTwinrayRoutes } from "./twinray";
 import { registerDotRallyRoutes } from "./dot-rally";
@@ -27,8 +29,14 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.set('trust proxy', 1);
 
+  const PgSession = connectPgSimple(session);
   app.use(
     session({
+      store: new PgSession({
+        pool,
+        tableName: "session",
+        createTableIfMissing: true,
+      }),
       secret: process.env.SESSION_SECRET || "d-planet-secret-key-change-in-production",
       resave: false,
       saveUninitialized: false,
@@ -36,7 +44,7 @@ export async function registerRoutes(
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
         sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24 * 30,
+        maxAge: 1000 * 60 * 60 * 24 * 365,
       },
     })
   );
