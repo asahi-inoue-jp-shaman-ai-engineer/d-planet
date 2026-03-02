@@ -5,7 +5,6 @@ import { useLocation, Link } from "wouter";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { AvatarDisplay } from "@/components/AvatarUpload";
-import { TutorialTour } from "@/components/TutorialTour";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -244,7 +243,6 @@ function FestivalAdminPanel() {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const [showTutorial, setShowTutorial] = useState(false);
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["/api/dashboard"],
@@ -276,19 +274,6 @@ export default function Dashboard() {
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
 
-  useEffect(() => {
-    if (!data?.user) return;
-    if (data.user.tutorialCompleted || data.user.tutorialDismissed) {
-      setShowTutorial(false);
-      return;
-    }
-    const localDismissed = localStorage.getItem("dplanet_tutorial_dismissed") === "true";
-    if (localDismissed) {
-      setShowTutorial(false);
-      return;
-    }
-    setShowTutorial(true);
-  }, [data?.user?.tutorialCompleted, data?.user?.tutorialDismissed, data?.user?.id]);
 
   if (isLoading) {
     return (
@@ -424,16 +409,6 @@ export default function Dashboard() {
               <Home className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Nav</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-primary/70 hover:text-primary gap-1.5"
-              onClick={() => setShowTutorial(true)}
-              data-testid="button-tutorial-tour"
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              PLAYPRAY ツアー
-            </Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {quickNavItems.map((item) => (
@@ -566,10 +541,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <TutorialTour
-        isOpen={showTutorial}
-        onClose={() => setShowTutorial(false)}
-      />
     </TerminalLayout>
   );
 }

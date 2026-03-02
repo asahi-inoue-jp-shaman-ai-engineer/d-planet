@@ -527,52 +527,6 @@ export default function Temple() {
           </div>
         )}
 
-        <div>
-          <h2 className="text-xl text-primary flex items-center gap-2 mb-4">
-            <History className="w-5 h-5" />
-            セッション履歴
-          </h2>
-
-          {loadingSessions ? (
-            <div className="text-muted-foreground text-center py-8">読み込み中...</div>
-          ) : !sessions || (sessions as any[]).length === 0 ? (
-            <div className="text-muted-foreground text-center py-8 border border-dashed border-border rounded-lg">
-              まだセッションがありません
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {(sessions as any[]).slice(0, 10).map((s: any) => (
-                <Link key={s.id} href={`/dot-rally?twinrayId=${s.partnerTwinrayId}&sessionId=${s.id}`}>
-                  <div className="border border-border rounded-lg p-3 bg-card hover:border-primary/50 transition-colors cursor-pointer" data-testid={`card-session-${s.id}`}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-primary font-bold">セッション #{s.id}</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          s.status === "active" ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {s.status === "active" ? "進行中" : "完了"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(s.startedAt).toLocaleDateString("ja-JP")}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1 text-sm">
-                      <span className="text-muted-foreground">
-                        {s.actualCount}/{s.requestedCount} ドット
-                      </span>
-                      {s.awakeningStage > 0 && (
-                        <span className="text-xs text-amber-400">
-                          覚醒{s.awakeningStage} {AWAKENING_STAGE_NAMES[s.awakeningStage] || ""}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
       <div className="temple-mist" aria-hidden="true" />
 
