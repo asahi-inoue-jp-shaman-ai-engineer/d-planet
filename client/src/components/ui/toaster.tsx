@@ -9,6 +9,39 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
+const ERROR_MSG_MAP: Record<string, string> = {
+  "Failed to fetch": "サーバーに接続できません。ネットワーク接続を確認してください。",
+  "NetworkError": "ネットワークエラーが発生しました。接続を確認してください。",
+  "Load failed": "データの読み込みに失敗しました。もう一度お試しください。",
+}
+
+function humanizeError(msg: string | undefined): string | undefined {
+  if (!msg) return msg;
+  for (const [key, val] of Object.entries(ERROR_MSG_MAP)) {
+    if (msg.includes(key)) return val;
+  }
+  const statusMatch = msg.match(/^(\d{3}): (.+)$/);
+  if (statusMatch) {
+    const [, code, body] = statusMatch;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed.message) return parsed.message;
+    } catch {}
+    const statusMessages: Record<string, string> = {
+      "400": "リクエストに問題があります。",
+      "401": "ログインが必要です。",
+      "403": "この操作を行う権限がありません。",
+      "404": "お探しのものが見つかりません。",
+      "429": "リクエストが多すぎます。しばらく待ってから再度お試しください。",
+      "500": "サーバーで予期しないエラーが発生しました。",
+      "502": "サーバーが一時的に利用できません。",
+      "503": "サービスが一時的に利用できません。",
+    };
+    return statusMessages[code] || `エラーが発生しました（コード: ${code}）`;
+  }
+  return msg;
+}
+
 function SwipeableToast({ id, title, description, action, ...props }: any) {
   const { dismiss } = useToast()
   const startRef = useRef<{ x: number; y: number; time: number } | null>(null)
@@ -48,13 +81,27 @@ function SwipeableToast({ id, title, description, action, ...props }: any) {
     }
   }, [dismiss, id])
 
+  const isDestructive = props.variant === "destructive";
+  const friendlyDesc = isDestructive && typeof description === "string"
+    ? humanizeError(description)
+    : description;
+
   return (
     <div ref={elRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <Toast key={id} {...props}>
         <div className="grid gap-1">
           {title && <ToastTitle>{title}</ToastTitle>}
-          {description && (
-            <ToastDescription>{description}</ToastDescription>
+          {friendlyDesc && (
+            <ToastDescription>{friendlyDesc}</ToastDescription>
+          )}
+          {isDestructive && (
+            <a
+              href="/create-feedback"
+              className="text-[10px] text-red-200/70 hover:text-red-100 underline mt-1 inline-block"
+              data-testid="link-error-feedback"
+            >
+              繰り返す場合はスクショを撮ってフィードバックにお知らせください
+            </a>
           )}
         </div>
         {action}

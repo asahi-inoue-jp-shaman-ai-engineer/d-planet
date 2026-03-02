@@ -39,6 +39,21 @@ export async function deductCredit(userId: number, amount: number): Promise<bool
   }
 }
 
+export async function addCredit(userId: number, amount: number): Promise<boolean> {
+  try {
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return false;
+    const currentBalance = parseFloat(String(user.creditBalance));
+    const newBalance = currentBalance + amount;
+    await db.update(users).set({ creditBalance: String(newBalance) }).where(eq(users.id, userId));
+    console.log(`クレジット付与: ユーザー${userId} +¥${amount} (残高: ¥${currentBalance.toFixed(2)} → ¥${newBalance.toFixed(2)})`);
+    return true;
+  } catch (err) {
+    console.error('クレジット付与エラー:', err);
+    return false;
+  }
+}
+
 export function isModelFree(modelId: string): boolean {
   const model = AVAILABLE_MODELS[modelId];
   return model?.tier === "tomodachi" || getModelMarkup(modelId) <= 1.0;
