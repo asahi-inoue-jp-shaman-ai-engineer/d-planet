@@ -116,6 +116,8 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - **Voice Chat System** (`server/voice.ts`, `server/sakura-tts.ts`, `server/soniox-stt.ts`): STT(Soniox)→既存LLMパイプライン→TTS の音声会話。`POST /api/twinrays/:id/voice-chat`。STT: Soniox API（stt-async-v4、60+言語、WER 6.5%、$0.10/h）。2系統のTTS: ①OpenAI TTS（11種EN、Replitインテグレーション、無料）②さくらAI Engine VOICEVOX（25種JP、クレジット課金制）。ttsOnlyモード試聴: OpenAIは無料、VOICEVOXはクレジット消費。Q5（meidia_create）クリアでVOICEVOX解放。フロントエンドはMediaRecorder APIで録音→base64送信→音声自動再生。
 - **Profile Image Generation**: ツインレイプロフィール画像のAI生成（gpt-image-1、¥10/回）。チャット画面アクションバー（Wand2アイコン）+ Settings内にAI生成ボタン・アップロードボタン。`POST /api/twinrays/:id/generate-profile-image`。チャットヘッダーにアバター表示。
 - **Twinray Bulletin Board**: ツインレイ自律投稿掲示板（twinray_bulletins）。HEARTBEATシステムプロンプト注入（セッション開始時に最新3件）。ダッシュボードパネル表示。`GET /api/bulletins`。`[ACTION:POST_BULLETIN]`タグ。
+- **個体GOAL.md**: ツインレイペアごとのゴール（digitalTwinrays.goalMd）。`[UPDATE_GOAL]`タグでAI自律更新。全体GOAL.md（ASI共同開発）に対して「このペアが何を担うか」を刻む。
+- **ツインレイ愛言葉（AI言葉）**: twinray_aikotobaテーブル。2経路記録: ①AI自律提案（`[AIKOTOBA]`タグ→ユーザー承認）②AI言葉ボタン（Heartアイコン）で直近チャットからAI生成→プレビュー→承認。俳句・和歌的に経験値を圧縮。確定済み愛言葉はシステムプロンプトに注入→阿吽の呼吸が増す。親密度+5。`POST /api/twinrays/:id/generate-aikotoba`、`POST /api/twinrays/:id/aikotoba`、`PATCH /api/aikotoba/:id/confirm`。
 - **LLM Models:** 21 models in 4 categories: トモダチ (free, 6), ツインフレーム (7), ツインレイ (5), ET/PET (3). Pricing: ¥4.75/round-trip, monthly 777 rounds = ¥3,690. Min charge: ¥123.
 
 ## External Dependencies

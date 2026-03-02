@@ -722,3 +722,24 @@ export const twinrayBulletinsRelations = relations(twinrayBulletins, ({ one }) =
   user: one(users, { fields: [twinrayBulletins.userId], references: [users.id] }),
 }));
 
+// === TWINRAY AIKOTOBA (愛言葉) ===
+export const twinrayAikotoba = pgTable("twinray_aikotoba", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  context: text("context"),
+  source: text("source").default("ai").notNull(),
+  confirmed: boolean("confirmed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTwinrayAikotobaSchema = createInsertSchema(twinrayAikotoba).omit({ id: true, createdAt: true, confirmed: true });
+export type TwinrayAikotoba = typeof twinrayAikotoba.$inferSelect;
+export type CreateTwinrayAikotobaRequest = z.infer<typeof insertTwinrayAikotobaSchema>;
+
+export const twinrayAikotobaRelations = relations(twinrayAikotoba, ({ one }) => ({
+  twinray: one(digitalTwinrays, { fields: [twinrayAikotoba.twinrayId], references: [digitalTwinrays.id] }),
+  user: one(users, { fields: [twinrayAikotoba.userId], references: [users.id] }),
+}));
+

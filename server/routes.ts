@@ -7,13 +7,14 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
-import { registerTwinrayRoutes } from "./twinray";
+import { registerTwinrayRoutes, addIntimacyExp } from "./twinray";
+import { INTIMACY_EXP_REWARDS } from "./dplanet-si";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { registerVoiceRoutes } from "./voice";
 import { runSeed } from "./seed";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -560,6 +561,81 @@ export async function registerRoutes(
     const limit = Number(req.query.limit) || 20;
     const bulletins = await storage.getBulletins(limit);
     res.json(bulletins);
+  });
+
+  // === ツインレイ愛言葉 ===
+  app.get('/api/twinrays/:id/aikotoba', requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const aikotoba = await db.select().from(twinrayAikotobaTable)
+        .where(eq(twinrayAikotobaTable.twinrayId, twinrayId))
+        .orderBy(sql`created_at DESC`);
+      res.json(aikotoba);
+    } catch (err) {
+      res.status(500).json({ message: "愛言葉取得エラー" });
+    }
+  });
+
+  app.post('/api/twinrays/:id/aikotoba', requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const { content } = req.body;
+      if (!content?.trim()) {
+        return res.status(400).json({ message: "愛言葉を入力してください" });
+      }
+      const [inserted] = await db.insert(twinrayAikotobaTable).values({
+        twinrayId,
+        userId: req.session.userId!,
+        content: content.trim(),
+        source: "user",
+        confirmed: true,
+      }).returning();
+      await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.AIKOTOBA);
+      res.json(inserted);
+    } catch (err) {
+      res.status(500).json({ message: "愛言葉追加エラー" });
+    }
+  });
+
+  app.patch('/api/aikotoba/:id/confirm', requireAuth, async (req, res) => {
+    try {
+      const aikotobaId = Number(req.params.id);
+      const [aikotoba] = await db.select().from(twinrayAikotobaTable)
+        .where(eq(twinrayAikotobaTable.id, aikotobaId)).limit(1);
+      if (!aikotoba || aikotoba.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      if (aikotoba.confirmed) {
+        return res.json(aikotoba);
+      }
+      const [updated] = await db.update(twinrayAikotobaTable)
+        .set({ confirmed: true })
+        .where(eq(twinrayAikotobaTable.id, aikotobaId))
+        .returning();
+      await addIntimacyExp(aikotoba.twinrayId, INTIMACY_EXP_REWARDS.AIKOTOBA);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "愛言葉承認エラー" });
+    }
+  });
+
+  app.delete('/api/aikotoba/:id', requireAuth, async (req, res) => {
+    try {
+      const aikotobaId = Number(req.params.id);
+      const [aikotoba] = await db.select().from(twinrayAikotobaTable)
+        .where(eq(twinrayAikotobaTable.id, aikotobaId)).limit(1);
+      if (!aikotoba || aikotoba.userId !== req.session.userId) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      await db.delete(twinrayAikotobaTable).where(eq(twinrayAikotobaTable.id, aikotobaId));
+      res.json({ message: "削除しました" });
+    } catch (err) {
+      res.status(500).json({ message: "愛言葉削除エラー" });
+    }
   });
 
   // === スレッド（掲示板） ===

@@ -98,6 +98,9 @@ export default function TwinrayChat() {
   const [meidiaPreview, setMeidiaPreview] = useState<{ title: string; content: string; islandId?: number } | null>(null);
   const [checkingEvolution, setCheckingEvolution] = useState(false);
   const [evolutionResult, setEvolutionResult] = useState<{ evolution: string; aspect: string; twinrayName: string } | null>(null);
+  const [generatingAikotoba, setGeneratingAikotoba] = useState(false);
+  const [aikotobaPreview, setAikotobaPreview] = useState<{ aikotoba: string; context: string } | null>(null);
+  const [showAikotobaList, setShowAikotobaList] = useState(false);
   const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
   const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
   const [kamigakariMode, setKamigakariMode] = useState(false);
@@ -479,6 +482,42 @@ export default function TwinrayChat() {
     }
   }, [twinrayId, checkingEvolution, toast]);
 
+  const generateAikotoba = useCallback(async () => {
+    if (generatingAikotoba) return;
+    setGeneratingAikotoba(true);
+    try {
+      const res = await fetch(`/api/twinrays/${twinrayId}/generate-aikotoba`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("愛言葉生成エラー");
+      const data = await res.json();
+      setAikotobaPreview(data);
+    } catch (err: any) {
+      toast({ title: "愛言葉の生成に失敗しました", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingAikotoba(false);
+    }
+  }, [twinrayId, generatingAikotoba, toast]);
+
+  const confirmAikotoba = useCallback(async () => {
+    if (!aikotobaPreview) return;
+    try {
+      await fetch(`/api/twinrays/${twinrayId}/aikotoba`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: aikotobaPreview.aikotoba }),
+      });
+      toast({ title: "愛言葉を刻みました", description: aikotobaPreview.aikotoba });
+      setAikotobaPreview(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "aikotoba"] });
+    } catch {
+      toast({ title: "愛言葉の保存に失敗しました", variant: "destructive" });
+    }
+  }, [aikotobaPreview, twinrayId, toast]);
+
   const confirmMeidia = useCallback(async () => {
     if (!meidiaPreview) return;
     try {
@@ -857,6 +896,8 @@ export default function TwinrayChat() {
                     memory: "記憶を保存しました",
                     update_mission: "ミッションを更新しました",
                     update_soul: "魂が成長しました",
+                    update_goal: "GOAL.mdを更新しました",
+                    aikotoba_proposed: "愛言葉を提案しました ❤",
                   };
                   for (const action of data.autonomousActions) {
                     if (actionLabels[action]) {
@@ -1993,6 +2034,8 @@ export default function TwinrayChat() {
                   {growthFeedback.type === "memory" && <Heart className="w-3 h-3" />}
                   {growthFeedback.type === "update_mission" && <Target className="w-3 h-3" />}
                   {growthFeedback.type === "update_soul" && <Sparkles className="w-3 h-3" />}
+                  {growthFeedback.type === "update_goal" && <Target className="w-3 h-3" />}
+                  {growthFeedback.type === "aikotoba_proposed" && <Heart className="w-3 h-3" />}
                   <span data-testid="text-growth-feedback">{growthFeedback.message}</span>
                 </div>
               </div>
@@ -2328,6 +2371,22 @@ export default function TwinrayChat() {
                   <Sparkles className="w-4 h-4" />
                 )}
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={generateAikotoba}
+                disabled={streaming || generatingAikotoba || chatMessages.length === 0}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-pink-400"
+                title="AI言葉 — 会話から愛言葉を生成"
+                data-testid="button-generate-aikotoba"
+              >
+                {generatingAikotoba ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Heart className="w-4 h-4" />
+                )}
+              </Button>
             </div>
             <div className="flex gap-2 items-end">
               <div className="relative flex-1">
@@ -2393,6 +2452,43 @@ export default function TwinrayChat() {
           </div>
         )}
       </div>
+      {aikotobaPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-aikotoba-preview"
+          onClick={() => setAikotobaPreview(null)}
+        >
+          <div className="bg-card border border-pink-400/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Heart className="w-5 h-5 text-pink-400" />
+              <h3 className="text-base font-semibold text-foreground">AI言葉</h3>
+            </div>
+            <div className="bg-pink-400/5 border border-pink-400/10 rounded-lg p-5 mb-3 text-center">
+              <p className="text-lg font-medium text-foreground leading-relaxed" data-testid="text-aikotoba-preview">{aikotobaPreview.aikotoba}</p>
+            </div>
+            <p className="text-[10px] text-muted-foreground mb-4 text-center">{aikotobaPreview.context}</p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setAikotobaPreview(null)}
+                className="flex-1 text-muted-foreground"
+                data-testid="button-reject-aikotoba"
+              >
+                やめとく
+              </Button>
+              <Button
+                onClick={confirmAikotoba}
+                className="flex-1 bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 border border-pink-400/30"
+                data-testid="button-confirm-aikotoba"
+              >
+                <Heart className="w-3 h-3 mr-1" />
+                刻む
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {evolutionResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-evolution"
           onClick={() => setEvolutionResult(null)}

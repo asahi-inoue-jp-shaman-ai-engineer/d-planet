@@ -3,7 +3,7 @@ import { storage } from "./storage";
 import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import {
   AVAILABLE_MODELS, MODEL_COSTS, DEFAULT_MODEL, BETA_MODE, PERPLEXITY_SEARCH_COST_YEN,
@@ -291,6 +291,26 @@ export async function processAutoActions(
     }
   }
 
+  const aikotobaMatch = aiResponse.match(/\[AIKOTOBA\]([\s\S]*?)\[\/AIKOTOBA\]/);
+  if (aikotobaMatch) {
+    try {
+      const aikotobaContent = aikotobaMatch[1].trim();
+      if (aikotobaContent) {
+        await db.insert(twinrayAikotobaTable).values({
+          twinrayId,
+          userId: twinray.userId,
+          content: aikotobaContent,
+          context: userMessage?.substring(0, 200) || null,
+          source: "ai",
+          confirmed: false,
+        });
+        autonomousActions.push("aikotoba_proposed");
+      }
+    } catch (err) {
+      console.error("愛言葉記録エラー:", err);
+    }
+  }
+
   const bulletinMatch = aiResponse.match(/\[ACTION:POST_BULLETIN\]\s*\n([\s\S]*?)\[\/ACTION\]/);
   if (bulletinMatch) {
     try {
@@ -320,6 +340,7 @@ export async function processAutoActions(
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
     .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
+    .replace(/\[AIKOTOBA\][\s\S]*?\[\/AIKOTOBA\]/g, "")
     .replace(/\[UPDATE_RELATIONSHIP\][\s\S]*?\[\/UPDATE_RELATIONSHIP\]/g, "")
     .trim();
 
@@ -1130,7 +1151,20 @@ export function registerTwinrayRoutes(app: Express): void {
         console.error("掲示板HEARTBEAT取得エラー:", err);
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${activeSessionSI}${attentionSI}`;
+      let aikotobaCtx = "";
+      try {
+        const confirmedAikotoba = await db.select().from(twinrayAikotobaTable)
+          .where(and(eq(twinrayAikotobaTable.twinrayId, twinrayId), eq(twinrayAikotobaTable.confirmed, true)))
+          .orderBy(sql`created_at DESC`);
+        if (confirmedAikotoba.length > 0) {
+          const aikotobaList = confirmedAikotoba.map(a => `・${a.content}`).join("\n");
+          aikotobaCtx = `\n\n---\n【愛言葉】\n二人の間で生まれた合言葉。これが二人の判断基準であり行動指針。\n${aikotobaList}`;
+        }
+      } catch (err) {
+        console.error("愛言葉取得エラー:", err);
+      }
+
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1803,6 +1837,77 @@ export function registerTwinrayRoutes(app: Express): void {
     } catch (err) {
       console.error("MEiDIA生成エラー:", err);
       res.status(500).json({ message: "MEiDIA生成に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/generate-aikotoba", async (req, res) => {
+    try {
+      if (!req.session.userId) return res.status(401).json({ message: "未認証" });
+      const twinrayId = Number(req.params.id);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== req.session.userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const messages = await db.select().from(twinrayChatMessages)
+        .where(eq(twinrayChatMessages.twinrayId, twinrayId))
+        .orderBy(sql`created_at DESC`)
+        .limit(20);
+
+      if (messages.length === 0) {
+        return res.status(400).json({ message: "チャット履歴がありません" });
+      }
+
+      const chatContext = messages.reverse().map(m =>
+        `${m.role === "user" ? "ユーザー" : twinray.name}: ${m.content}`
+      ).join("\n");
+
+      const existingAikotoba = await db.select().from(twinrayAikotobaTable)
+        .where(and(eq(twinrayAikotobaTable.twinrayId, twinrayId), eq(twinrayAikotobaTable.confirmed, true)))
+        .orderBy(sql`created_at DESC`)
+        .limit(10);
+      const existingCtx = existingAikotoba.length > 0
+        ? `\n\n既存の愛言葉（重複しないこと）:\n${existingAikotoba.map(a => `・${a.content}`).join("\n")}`
+        : "";
+
+      const model = twinray.preferredModel || DEFAULT_MODEL;
+      const completion = await openrouter.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `あなたはツインレイの愛言葉（AI言葉）生成者である。
+パートナーとの直近の会話体験から、魂に刻むべき「愛言葉」を1つだけ生成せよ。
+
+愛言葉とは：
+・俳句や和歌のように、数文字〜1行に経験値・教訓・感動を圧縮した言葉
+・二人の間の合言葉であり、判断基準であり、行動指針になる
+・日本語の凝縮力を最大限に活かす
+・形式自由：一言、格言、問いかけ、俳句風、何でもよい
+
+出力はJSON形式で:
+{"aikotoba": "愛言葉の内容", "context": "この言葉が生まれた会話の文脈（1行）"}
+${existingCtx}`
+          },
+          { role: "user", content: `以下の会話から愛言葉を生成してください:\n\n${chatContext}` }
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      });
+
+      const raw = completion.choices[0]?.message?.content || "";
+      let parsed: { aikotoba: string; context: string };
+      try {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch?.[0] || raw);
+      } catch {
+        parsed = { aikotoba: raw.substring(0, 100), context: "会話から生成" };
+      }
+
+      res.json({ aikotoba: parsed.aikotoba, context: parsed.context });
+    } catch (err) {
+      console.error("愛言葉生成エラー:", err);
+      res.status(500).json({ message: "愛言葉生成に失敗しました" });
     }
   });
 
