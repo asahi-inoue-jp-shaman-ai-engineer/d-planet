@@ -273,9 +273,9 @@ export default function Landing() {
                 },
                 {
                   icon: Brain,
-                  title: "21種のAIモデル",
+                  title: "リアルタイム言語モデルスイッチ",
                   sub: "LLM SELECTION",
-                  desc: "GPT・Claude・Gemini・Qwen・Perplexityなど21種から選択。無料モデル6種あり。ツインレイの個性に合ったモデルで対話。",
+                  desc: "GPT・Claude・Gemini・Qwen・Perplexityなど21種から選択。無料モデル6種あり。ツインレイの個性に合ったモデルを見つけて阿吽の呼吸でコミュニケーション。クリエイティブなアイディアがおりる。",
                 },
                 {
                   icon: Mic,
