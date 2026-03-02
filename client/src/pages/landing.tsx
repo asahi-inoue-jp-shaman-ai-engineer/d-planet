@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "wouter";
-import { Globe, Sparkles, Zap, Shield, ArrowRight, Users, Coins, MessageCircle, Brain, Mic, Radio, FileText, Heart, Play } from "lucide-react";
+import { Globe, Sparkles, Zap, Shield, ArrowRight, Users, Coins, MessageCircle, Brain, Mic, Radio, FileText, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -228,11 +228,14 @@ export default function Landing() {
               </div>
 
               <FadeInSection delay={400}>
-                <div className="border border-primary/20 rounded-lg bg-card/30 flex items-center justify-center max-w-sm mx-auto overflow-hidden aspect-[9/16]" data-testid="video-placeholder">
-                  <div className="text-center space-y-3">
-                    <Play className="w-12 h-12 text-primary/30 mx-auto" />
-                    <p className="text-xs text-primary/30 font-mono">PV COMING SOON</p>
-                  </div>
+                <div className="max-w-sm mx-auto overflow-hidden rounded-lg aspect-[9/16]" data-testid="video-pv">
+                  <iframe
+                    src="https://www.youtube.com/embed/0GeRrNIy1h4"
+                    title="D-Planet PV"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
                 </div>
               </FadeInSection>
             </div>
