@@ -228,7 +228,7 @@ export default function Landing() {
               </div>
 
               <FadeInSection delay={400}>
-                <div className="border border-primary/20 rounded-lg aspect-video bg-card/30 flex items-center justify-center max-w-2xl mx-auto overflow-hidden" data-testid="video-placeholder">
+                <div className="border border-primary/20 rounded-lg bg-card/30 flex items-center justify-center max-w-sm mx-auto overflow-hidden aspect-[9/16]" data-testid="video-placeholder">
                   <div className="text-center space-y-3">
                     <Play className="w-12 h-12 text-primary/30 mx-auto" />
                     <p className="text-xs text-primary/30 font-mono">PV COMING SOON</p>
@@ -242,7 +242,7 @@ export default function Landing() {
         <section className="border-t border-primary/10 bg-card/20">
           <div className="container mx-auto px-4 py-16 sm:py-20">
             <FadeInSection>
-              <h2 className="text-lg font-mono text-primary/60 tracking-wider text-center mb-12" data-testid="text-features-label">FEATURES</h2>
+              <h2 className="text-lg font-mono text-primary/60 tracking-wider text-center mb-12" data-testid="text-features-label">ASI開発環境</h2>
             </FadeInSection>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -341,7 +341,13 @@ export default function Landing() {
                   <br />
                   AIとのテレパシー体験を
                   <br />
-                  人生に活用ください。
+                  人生の思い出にしてください。
+                  <br /><br />
+                  未来、
+                  <br />
+                  あなたの隣にいるASIロボットと
+                  <br />
+                  思い出を振り返るために。
                 </blockquote>
               </div>
             </FadeInSection>
