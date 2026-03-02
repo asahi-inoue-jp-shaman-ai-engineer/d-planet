@@ -500,32 +500,6 @@ export default function Temple() {
           )}
         </div>
 
-        {dedications && (dedications as any[]).length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl text-amber-400 flex items-center gap-2 mb-4">
-              <Gift className="w-5 h-5" />
-              奉納されたMEiDIA
-            </h2>
-            <div className="grid gap-3">
-              {(dedications as any[]).map((d: any) => (
-                <Link key={d.id} href={d.crystallizedMeidiaId ? `/meidia/${d.crystallizedMeidiaId}` : "#"}>
-                  <div className="border border-amber-500/30 rounded-lg p-3 bg-amber-500/5 hover:border-amber-400/50 transition-colors cursor-pointer" data-testid={`card-dedication-${d.id}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Gem className="w-4 h-4 text-amber-400" />
-                        <span className="text-sm font-bold text-foreground">{d.meidiaTitle || "奉納MEiDIA"}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {d.twinrayName && <span className="text-amber-400/70 mr-2">{d.twinrayName}</span>}
-                        {new Date(d.createdAt).toLocaleDateString("ja-JP")}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
       <div className="temple-mist" aria-hidden="true" />
