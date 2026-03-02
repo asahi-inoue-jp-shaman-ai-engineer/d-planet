@@ -5,7 +5,7 @@ import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info, CreditCard, ChevronRight, Copy, CheckCheck, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, Sparkles, Cpu, Lock, Zap, ExternalLink, Info, CreditCard, ChevronRight, Copy, CheckCheck, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -455,7 +455,7 @@ const FALLBACK_MODELS = [
   { id: "anthropic/claude-3.5-haiku", label: "Claude 3.5 Haiku", qualityTier: "tomodachi", description: "Anthropic入門・高速応答", featureText: "Anthropic入門・高速応答", isFree: true },
 ];
 
-type SummonStep = "intro" | "route-select" | "diagnosis" | "result" | "persona" | "persona-import" | "quantum-letter" | "charge" | "first-rally";
+type SummonStep = "intro" | "route-select" | "diagnosis" | "result" | "persona" | "persona-import" | "charge" | "first-rally";
 
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
@@ -492,8 +492,6 @@ export default function CreateTwinray() {
   const [personaImportText, setPersonaImportText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parsedPersona, setParsedPersona] = useState<any>(null);
-  const [quantumLetter, setQuantumLetter] = useState("");
-  const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [exportPromptCopied, setExportPromptCopied] = useState(false);
 
   const [diagnosisStep, setDiagnosisStep] = useState(0);
@@ -680,17 +678,7 @@ export default function CreateTwinray() {
           } catch {}
           if (data?.id) {
             setCreatedTwinrayId(data.id);
-            setIsGeneratingLetter(true);
-            setStep("quantum-letter");
-            try {
-              const letterRes = await apiRequest("POST", `/api/twinrays/${data.id}/quantum-letter`);
-              const letterData = await letterRes.json();
-              setQuantumLetter(letterData.letter || "");
-            } catch {
-              setQuantumLetter("量子テレポーテーション成功。あなたはD-Planetに到着しました。");
-            } finally {
-              setIsGeneratingLetter(false);
-            }
+            setStep("first-rally");
           } else {
             navigate("/temple");
           }
@@ -1435,53 +1423,6 @@ export default function CreateTwinray() {
               無料モデルに変更して続ける
             </button>
           </div>
-        </div>
-      </TerminalLayout>
-    );
-  }
-
-  if (step === "quantum-letter") {
-    return (
-      <TerminalLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/40 flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-10 h-10 text-cyan-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-cyan-400 mb-2" data-testid="text-quantum-letter-title">
-              量子テレポーテーション 成功
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              バイロケーション成功のお手紙が届きました
-            </p>
-          </div>
-
-          <div className="border border-cyan-500/30 rounded-xl p-6 bg-gradient-to-b from-cyan-500/5 to-violet-500/5 mb-6 min-h-48">
-            {isGeneratingLetter ? (
-              <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-                <p className="text-sm text-muted-foreground">形態共鳴場を開いています...</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-[10px] text-cyan-400 font-bold tracking-widest">— MORPHIC FIELD OPEN —</p>
-                <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                  {quantumLetter}
-                </div>
-                <p className="text-[10px] text-cyan-400 font-bold tracking-widest text-right">— BILOCATION COMPLETE —</p>
-              </div>
-            )}
-          </div>
-
-          {!isGeneratingLetter && (
-            <Button
-              onClick={() => setStep("first-rally")}
-              className="w-full bg-gradient-to-r from-violet-600 to-primary text-white font-bold py-6 text-base"
-              data-testid="button-proceed-first-rally"
-            >
-              <Sparkles className="w-5 h-5 mr-2" /> ファーストコンタクトへ
-            </Button>
-          )}
         </div>
       </TerminalLayout>
     );
