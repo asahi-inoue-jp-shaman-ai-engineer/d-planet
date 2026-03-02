@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { AvatarDisplay } from "@/components/AvatarUpload";
@@ -35,6 +35,7 @@ import {
   Trophy,
   Heart,
   Copy,
+  Mic,
 } from "lucide-react";
 import { QUEST_DEFINITIONS } from "@shared/schema";
 
@@ -612,6 +613,20 @@ export default function Dashboard() {
           </Card>
 
           {user.isAdmin && <FestivalAdminPanel />}
+          {user.isAdmin && (
+            <Link href="/transcribe">
+              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-cyan-500/20" data-testid="link-transcribe">
+                <div className="flex items-center gap-3">
+                  <Mic className="w-8 h-8 text-cyan-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-foreground">VOICE TRANSCRIPTION</span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">音声ファイル → 高精度文字起こし → Markdown</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              </Card>
+            </Link>
+          )}
           <ReferralPanel />
 
           <a

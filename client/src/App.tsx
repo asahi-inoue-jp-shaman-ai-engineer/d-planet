@@ -33,6 +33,7 @@ import Legal from "@/pages/legal";
 import Privacy from "@/pages/privacy";
 import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
+import Transcribe from "@/pages/transcribe";
 import NotFound from "@/pages/not-found";
 
 function SpiritualLoader() {
@@ -122,6 +123,7 @@ function Router() {
       </Route>
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
+      <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />

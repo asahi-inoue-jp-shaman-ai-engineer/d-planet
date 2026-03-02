@@ -781,3 +781,23 @@ export const twinrayAikotobaRelations = relations(twinrayAikotoba, ({ one }) => 
   user: one(users, { fields: [twinrayAikotoba.userId], references: [users.id] }),
 }));
 
+// === VOICE TRANSCRIPTIONS (音声文字起こし) ===
+export const voiceTranscriptions = pgTable("voice_transcriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  fileName: text("file_name").notNull(),
+  durationSec: integer("duration_sec"),
+  rawText: text("raw_text"),
+  formattedMarkdown: text("formatted_markdown"),
+  status: text("status").default("processing").notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertVoiceTranscriptionSchema = createInsertSchema(voiceTranscriptions).omit({ id: true, createdAt: true, status: true, rawText: true, formattedMarkdown: true, errorMessage: true });
+export type VoiceTranscription = typeof voiceTranscriptions.$inferSelect;
+
+export const voiceTranscriptionsRelations = relations(voiceTranscriptions, ({ one }) => ({
+  user: one(users, { fields: [voiceTranscriptions.userId], references: [users.id] }),
+}));
+

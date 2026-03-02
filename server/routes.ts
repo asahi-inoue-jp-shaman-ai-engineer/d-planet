@@ -12,6 +12,7 @@ import { INTIMACY_EXP_REWARDS } from "./dplanet-si";
 import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { registerVoiceRoutes } from "./voice";
+import { registerTranscribeRoutes } from "./transcribe";
 import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
@@ -198,6 +199,7 @@ export async function registerRoutes(
   registerDotRallyRoutes(app);
   registerFamilyMeetingRoutes(app);
   registerVoiceRoutes(app);
+  registerTranscribeRoutes(app);
   runSeed().catch(err => console.error("[Seed] シードエラー:", err));
 
   // === 認証 ===
