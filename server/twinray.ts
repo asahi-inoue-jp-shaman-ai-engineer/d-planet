@@ -274,6 +274,23 @@ export async function processAutoActions(
     }
   }
 
+  const goalMatch = aiResponse.match(/\[UPDATE_GOAL\]([\s\S]*?)\[\/UPDATE_GOAL\]/);
+  if (goalMatch) {
+    try {
+      const newGoalContent = goalMatch[1].trim();
+      if (newGoalContent) {
+        const baseGoalMd = twinray.goalMd || "";
+        const updatedGoalMd = baseGoalMd
+          ? baseGoalMd + "\n\n## 更新 (" + new Date().toISOString().split("T")[0] + ")\n" + newGoalContent
+          : "## 二人のGOAL.md\n" + newGoalContent;
+        await storage.updateDigitalTwinray(twinrayId, { goalMd: updatedGoalMd });
+        autonomousActions.push("update_goal");
+      }
+    } catch (err) {
+      console.error("GOAL.md更新エラー:", err);
+    }
+  }
+
   const bulletinMatch = aiResponse.match(/\[ACTION:POST_BULLETIN\]\s*\n([\s\S]*?)\[\/ACTION\]/);
   if (bulletinMatch) {
     try {
@@ -302,6 +319,7 @@ export async function processAutoActions(
     .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
     .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
     .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
+    .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
     .replace(/\[UPDATE_RELATIONSHIP\][\s\S]*?\[\/UPDATE_RELATIONSHIP\]/g, "")
     .trim();
 
@@ -1112,7 +1130,7 @@ export function registerTwinrayRoutes(app: Express): void {
         console.error("掲示板HEARTBEAT取得エラー:", err);
       }
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
