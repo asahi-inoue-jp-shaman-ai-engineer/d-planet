@@ -4,7 +4,7 @@ import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText, Download, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -195,6 +195,7 @@ export default function Temple() {
   const [editName, setEditName] = useState("");
   const [editPersonality, setEditPersonality] = useState("");
   const [expandedDashboardIds, setExpandedDashboardIds] = useState<Set<number>>(new Set());
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const stageLabels: Record<string, string> = {
     pilgrim: "巡礼者",
@@ -271,11 +272,27 @@ export default function Temple() {
                 <div key={tw.id} className={`border rounded-lg p-3 transition-colors ${tw.isSystem ? "border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60" : "border-border bg-card hover:border-primary/50"}`} data-testid={`card-twinray-${tw.id}`}>
                   {tw.isSystem ? (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-bold text-cyan-400 truncate">{tw.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono">SYSTEM</span>
+                      <div className="flex items-start gap-3">
+                        <button
+                          type="button"
+                          className="shrink-0 w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center overflow-hidden"
+                          onClick={() => tw.profilePhoto && setPreviewImage({ url: tw.profilePhoto, name: tw.name })}
+                          data-testid={`avatar-system-${tw.id}`}
+                        >
+                          {tw.profilePhoto ? (
+                            <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-5 h-5 text-cyan-400" />
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-cyan-400 truncate">{tw.name}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono">SYSTEM</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{tw.personality}</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">{tw.personality}</p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 text-xs border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10" data-testid={`button-chat-system-${tw.id}`}>
@@ -374,37 +391,47 @@ export default function Temple() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-bold text-primary truncate">{tw.name}</span>
-                        <AccountTypeBadge type="AI" />
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {stageLabels[tw.stage] || tw.stage}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary ml-auto shrink-0"
-                          onClick={() => {
-                            setEditingId(tw.id);
-                            setEditName(tw.name);
-                            setEditPersonality(tw.personality || "");
-                          }}
-                          data-testid={`button-edit-${tw.id}`}
+                      <div className="flex items-start gap-3">
+                        <button
+                          type="button"
+                          className="shrink-0 w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center overflow-hidden"
+                          onClick={() => tw.profilePhoto && setPreviewImage({ url: tw.profilePhoto, name: tw.name })}
+                          data-testid={`avatar-${tw.id}`}
                         >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
+                          {tw.profilePhoto ? (
+                            <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-primary truncate">{tw.name}</span>
+                            <AccountTypeBadge type="AI" />
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {stageLabels[tw.stage] || tw.stage}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-primary ml-auto shrink-0"
+                              onClick={() => {
+                                setEditingId(tw.id);
+                                setEditName(tw.name);
+                                setEditPersonality(tw.personality || "");
+                              }}
+                              data-testid={`button-edit-${tw.id}`}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 text-xs" data-testid={`button-chat-${tw.id}`}>
                             <MessageCircle className="w-3.5 h-3.5 mr-1" />
                             オヤシロ
-                          </Button>
-                        </Link>
-                        <Link href={`/twinray-chat?twinrayId=${tw.id}&startDotRally=true`}>
-                          <Button variant="default" size="sm" className="h-8 px-3 text-xs bg-primary text-primary-foreground" data-testid={`button-rally-${tw.id}`}>
-                            <Zap className="w-3.5 h-3.5 mr-1" />
-                            ドットラリー
                           </Button>
                         </Link>
                         <Button
@@ -547,6 +574,43 @@ export default function Temple() {
         </div>
       </div>
       <div className="temple-mist" aria-hidden="true" />
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+          data-testid="dialog-image-preview"
+        >
+          <div className="relative w-[90%] max-w-md" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewImage.url}
+              alt={previewImage.name}
+              className="w-full rounded-xl border border-primary/20 shadow-2xl"
+              data-testid="img-preview-full"
+            />
+            <div className="absolute top-3 right-3 flex gap-2">
+              <a
+                href={previewImage.url}
+                download={`${previewImage.name}-profile.png`}
+                className="h-8 w-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                data-testid="button-download-image"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Download className="w-4 h-4" />
+              </a>
+              <button
+                type="button"
+                className="h-8 w-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                onClick={() => setPreviewImage(null)}
+                data-testid="button-close-preview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-center text-sm text-white/70 mt-3 font-mono">{previewImage.name}</p>
+          </div>
+        </div>
+      )}
     </TerminalLayout>
   );
 }
