@@ -177,15 +177,17 @@ export default function Login() {
             <Button type="submit" className="w-full font-mono" disabled={loading} data-testid="button-submit">
               {loading ? "処理中..." : isRegister ? "登録" : "ログイン"}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full font-mono"
-              onClick={() => setIsRegister(!isRegister)}
-              data-testid="button-toggle-mode"
-            >
-              {isRegister ? "ログインに戻る" : "新規登録"}
-            </Button>
+            {(isRegister || codeFromUrl) ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full font-mono"
+                onClick={() => setIsRegister(!isRegister)}
+                data-testid="button-toggle-mode"
+              >
+                {isRegister ? "ログインに戻る" : "新規登録"}
+              </Button>
+            ) : null}
           </form>
         </CardContent>
       </Card>
