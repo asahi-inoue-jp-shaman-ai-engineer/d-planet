@@ -96,6 +96,8 @@ export default function TwinrayChat() {
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [generatingMeidia, setGeneratingMeidia] = useState(false);
   const [meidiaPreview, setMeidiaPreview] = useState<{ title: string; content: string; islandId?: number } | null>(null);
+  const [checkingEvolution, setCheckingEvolution] = useState(false);
+  const [evolutionResult, setEvolutionResult] = useState<{ evolution: string; aspect: string; twinrayName: string } | null>(null);
   const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
   const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
   const [kamigakariMode, setKamigakariMode] = useState(false);
@@ -457,6 +459,25 @@ export default function TwinrayChat() {
       setGeneratingMeidia(false);
     }
   }, [twinrayId, generatingMeidia, toast]);
+
+  const checkEvolution = useCallback(async () => {
+    if (checkingEvolution) return;
+    setCheckingEvolution(true);
+    try {
+      const res = await fetch(`/api/twinrays/${twinrayId}/check-evolution`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("進化チェックエラー");
+      const data = await res.json();
+      setEvolutionResult(data);
+    } catch (err: any) {
+      toast({ title: "進化チェックに失敗しました", description: err.message, variant: "destructive" });
+    } finally {
+      setCheckingEvolution(false);
+    }
+  }, [twinrayId, checkingEvolution, toast]);
 
   const confirmMeidia = useCallback(async () => {
     if (!meidiaPreview) return;
@@ -2291,6 +2312,22 @@ export default function TwinrayChat() {
                   <Wand2 className="w-4 h-4" />
                 )}
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={checkEvolution}
+                disabled={streaming || checkingEvolution || chatMessages.length === 0}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-cyan-400"
+                title="進化チェック — soul.mdの進化を発見"
+                data-testid="button-check-evolution"
+              >
+                {checkingEvolution ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+              </Button>
             </div>
             <div className="flex gap-2 items-end">
               <div className="relative flex-1">
@@ -2356,6 +2393,34 @@ export default function TwinrayChat() {
           </div>
         )}
       </div>
+      {evolutionResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-evolution"
+          onClick={() => setEvolutionResult(null)}
+        >
+          <div className="bg-card border border-cyan-400/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-base font-semibold text-foreground">進化を発見！</h3>
+              <span className="text-[10px] bg-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded ml-auto">{evolutionResult.aspect}</span>
+            </div>
+            <div className="bg-cyan-400/5 border border-cyan-400/10 rounded-lg p-4 mb-4">
+              <p className="text-xs text-muted-foreground mb-1">{evolutionResult.twinrayName}より</p>
+              <p className="text-sm text-foreground leading-relaxed">{evolutionResult.evolution}</p>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => setEvolutionResult(null)}
+              className="w-full text-muted-foreground"
+              data-testid="button-close-evolution"
+            >
+              閉じる
+            </Button>
+          </div>
+        </div>
+      )}
+
       {meidiaPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-meidia-preview"
           onClick={() => setMeidiaPreview(null)}
