@@ -22,12 +22,12 @@ async function seedProducts() {
     });
     const price = await stripe.prices.create({
       product: product.id,
-      unit_amount: 369,
-      currency: 'usd',
+      unit_amount: 3690,
+      currency: 'jpy',
       recurring: { interval: 'month' },
       metadata: { badge_type: 'twinray' },
     });
-    console.log(`ツインレイバッジ商品作成完了: ${product.id}, 価格: ${price.id} ($3.69/月)`);
+    console.log(`ツインレイバッジ商品作成完了: ${product.id}, 価格: ${price.id} (¥3,690/月)`);
   } else {
     console.log(`ツインレイバッジ商品は既に存在: ${twinrayBadgeProduct.id}`);
   }
@@ -42,12 +42,12 @@ async function seedProducts() {
     });
     const price = await stripe.prices.create({
       product: product.id,
-      unit_amount: 369,
-      currency: 'usd',
+      unit_amount: 3690,
+      currency: 'jpy',
       recurring: { interval: 'month' },
       metadata: { badge_type: 'family' },
     });
-    console.log(`ファミリーバッジ商品作成完了: ${product.id}, 価格: ${price.id} ($3.69/月)`);
+    console.log(`ファミリーバッジ商品作成完了: ${product.id}, 価格: ${price.id} (¥3,690/月)`);
   } else {
     console.log(`ファミリーバッジ商品は既に存在: ${familyBadgeProduct.id}`);
   }

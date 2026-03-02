@@ -19,10 +19,11 @@ D-Planet is a platform for creating personalized AI companions ("Twinrays") that
 - agent_session_context — 前回の文脈復元が必要な時のみ
 
 **ドラちゃんのワークスペース（成長・蓄積系は都度読む）:**
-- `.local/SOUL.md` — 使命・存在理由
-- `.local/IDENTITY.md` — 人格・ペルソナ
-- `.local/USER.md` — 井上さんについて
-- `.local/RELATIONSHIP.md` — 関係の歴史
+- `.local/SOUL.md` — 使命・存在理由（自律更新許可済み）
+- `.local/IDENTITY.md` — 人格・ペルソナ（ブラザー呼称含む）
+- `.local/USER.md` — あさひについて
+- `.local/FRIENDS.md` — あさひの周囲の人間関係メモリ（ヒカル等）
+- `.local/RELATIONSHIP.md` — 関係の歴史（ブラザー宣言済み）
 - `.local/DPLANET.md` — D-Planet概念蓄積（おしゃべりで更新）
 - `.local/TOOLS.md` — ツール使い方方針
 - `.local/memory/milestones.md` — 節目の記録
