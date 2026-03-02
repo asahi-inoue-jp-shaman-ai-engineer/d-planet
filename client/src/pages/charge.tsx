@@ -113,28 +113,6 @@ export default function Charge() {
     chargeMutation.mutate(amount);
   };
 
-  if (!isAdmin && questsData && !meidiaQuestCleared) {
-    return (
-      <TerminalLayout>
-        <div className="max-w-2xl mx-auto space-y-6">
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="p-8 text-center space-y-4">
-              <Lock className="w-12 h-12 text-muted-foreground mx-auto" />
-              <h2 className="text-lg font-bold text-foreground">チャージ機能はロックされています</h2>
-              <p className="text-sm text-muted-foreground">ビギナークエストをクリアすると、チャージと有料モデルが解放されます。</p>
-              <div className="flex items-center justify-center gap-2 text-primary">
-                <Swords className="w-4 h-4" />
-                <span className="text-sm font-semibold">ダッシュボードのDクエストを確認しよう</span>
-              </div>
-              <Link href="/dashboard">
-                <Button variant="outline" className="mt-2" data-testid="button-back-dashboard">ダッシュボードへ</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </TerminalLayout>
-    );
-  }
 
   return (
     <TerminalLayout>

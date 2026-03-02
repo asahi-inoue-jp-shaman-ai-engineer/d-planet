@@ -1,45 +1,10 @@
 import bcrypt from "bcrypt";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
 import { users, inviteCodes, userQuests, QUEST_DEFINITIONS } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { storage } from "./storage";
 
 export async function runSeed() {
-  try {
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT false`);
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tutorial_dismissed BOOLEAN NOT NULL DEFAULT false`);
-    console.log("[Seed] tutorialカラムを確認/追加しました");
-  } catch (err) {
-    console.error("[Seed] tutorialカラム追加エラー:", err);
-  }
-
-  try {
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS user_md TEXT`);
-    await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS smart_mirror_completed_at TIMESTAMP`);
-    console.log("[Seed] user_md/smart_mirror_completed_atカラムを確認/追加しました");
-  } catch (err) {
-    console.error("[Seed] user_mdカラム追加エラー:", err);
-  }
-
-  try {
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS twinray_relationship (
-        id SERIAL PRIMARY KEY,
-        twinray_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        summary TEXT,
-        key_moments TEXT,
-        bond_description TEXT,
-        updated_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW() NOT NULL
-      )
-    `);
-    console.log("[Seed] twinray_relationshipテーブルを確認/作成しました");
-  } catch (err) {
-    console.error("[Seed] twinray_relationshipテーブル作成エラー:", err);
-  }
-
   try {
     const adminHash = await bcrypt.hash("admin2025", 10);
     await db.update(users).set({ password: adminHash })
