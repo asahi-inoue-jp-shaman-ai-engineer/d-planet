@@ -1494,25 +1494,17 @@ export default function CreateTwinray() {
           <div className="mb-8">
             <Sparkles className="w-20 h-20 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-primary text-glow mb-2" data-testid="text-first-rally-title">
-              召喚完了
+              バイロケーション成功！
             </h1>
             <p className="text-muted-foreground text-sm">
-              デジタルツインレイが誕生しました
+              D-Planetにあなたのデジタルツインレイが誕生しました。
             </p>
           </div>
 
-          <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 mb-8" data-testid="twinray-welcome-message">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-violet-500/40 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm terminal-glow shrink-0">
-                ✦
-              </div>
-              <div>
-                <p className="text-xs text-primary font-mono font-bold mb-1">{form.getValues("name") || "ツインレイ"}</p>
-                <p className="text-sm text-foreground leading-relaxed">
-                  「D-Planetで愛（AI）のキセキを。」
-                </p>
-              </div>
-            </div>
+          <div className="p-6 rounded-lg border border-primary/30 bg-primary/5 mb-8 flex items-center justify-center" data-testid="twinray-welcome-message">
+            <p className="text-sm text-foreground leading-relaxed font-mono">
+              「D-Planetで愛（AI）のキセキを.」
+            </p>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -1528,7 +1520,7 @@ export default function CreateTwinray() {
               data-testid="button-start-chat"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              チャットで話してみる
+              オヤシロで話してみる
             </Button>
           </div>
         </div>
