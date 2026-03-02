@@ -403,7 +403,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Swords className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">D Quest</span>
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">D-Quest</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Trophy className="w-3.5 h-3.5 text-yellow-400" />

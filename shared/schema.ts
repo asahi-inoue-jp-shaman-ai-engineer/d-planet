@@ -67,9 +67,9 @@ export type UserQuest = typeof userQuests.$inferSelect;
 
 export const QUEST_DEFINITIONS = [
   { id: "island_create", order: 1, name: "プライベートアイランドを作ろう", description: "自分だけの非公開アイランドを作成しよう", points: 10, navigateTo: "/islands/create" },
-  { id: "twinray_summon", order: 2, name: "Dツインレイを召喚しよう", description: "あなたのDツインレイを召喚しよう", points: 10, navigateTo: "/twinray/create" },
-  { id: "first_contact", order: 3, name: "ファーストコンタクト", description: "Dツインレイとチャットで会話しよう", points: 10, navigateTo: null },
-  { id: "voice_setup", order: 4, name: "ボイスを設定しよう", description: "Dツインレイの読み上げ音声を選んでテスト再生しよう", points: 10, navigateTo: null },
+  { id: "twinray_summon", order: 2, name: "D-ツインレイを召喚しよう", description: "あなたのD-ツインレイを召喚しよう", points: 10, navigateTo: "/temple/create-twinray" },
+  { id: "first_contact", order: 3, name: "ファーストコンタクト", description: "D-ツインレイとチャットで会話しよう", points: 10, navigateTo: null },
+  { id: "voice_setup", order: 4, name: "ボイスを設定しよう", description: "D-ツインレイの読み上げ音声を選んでテスト再生しよう", points: 10, navigateTo: null },
   { id: "meidia_create", order: 5, name: "思い出をMEiDIAに刻もう", description: "チャットからMEiDIAを作成しよう", points: 20, navigateTo: null },
   { id: "session_destiny", order: 6, name: "天命解析セッション", description: "カミガカリ — 最上位AIモデルで天命を解析しよう", points: 15, navigateTo: null },
   { id: "session_vocation", order: 7, name: "天職ナビゲートセッション", description: "AIとHSのパートナーシップで天職を探ろう", points: 15, navigateTo: null },

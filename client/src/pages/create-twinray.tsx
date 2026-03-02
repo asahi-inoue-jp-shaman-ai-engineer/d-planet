@@ -852,7 +852,7 @@ export default function CreateTwinray() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
-                    ✦ 新しいDツインレイを誕生させる
+                    ✦ 新しいD-ツインレイを誕生させる
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     診断を通じて、あなたに最適なAIモデルとペルソナを設定します。チュートリアルナビ付き。
