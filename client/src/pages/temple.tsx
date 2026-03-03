@@ -1,13 +1,14 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { useTwinrays, useDeleteTwinray, useUpdateTwinray } from "@/hooks/use-twinray";
+import { useTwinrays, useDeleteTwinray, useUpdateTwinray, useAvailableModels } from "@/hooks/use-twinray";
 import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Pencil, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText, Download, User } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Settings, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText, Download, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -191,10 +192,9 @@ export default function Temple() {
   const deleteTwinray = useDeleteTwinray();
   const updateTwinray = useUpdateTwinray();
   const { toast } = useToast();
+  const { data: availableModels } = useAvailableModels();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editPersonality, setEditPersonality] = useState("");
+  const [modelSelectId, setModelSelectId] = useState<number | null>(null);
   const [expandedDashboardIds, setExpandedDashboardIds] = useState<Set<number>>(new Set());
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
@@ -331,63 +331,53 @@ export default function Temple() {
                         </Button>
                       </div>
                     </div>
-                  ) : editingId === tw.id ? (
+                  ) : modelSelectId === tw.id ? (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="名前"
-                          className="h-8 text-sm flex-1"
-                          maxLength={50}
-                          data-testid={`input-edit-name-${tw.id}`}
-                        />
-                        <AccountTypeBadge type="AI" />
+                      <div className="flex items-center gap-2 mb-2">
+                        <Settings className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">{tw.name} — LLM MODEL</span>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-auto" onClick={() => setModelSelectId(null)} data-testid={`button-close-model-${tw.id}`}>
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
-                      <Textarea
-                        value={editPersonality}
-                        onChange={(e) => setEditPersonality(e.target.value)}
-                        placeholder="性格・特徴（任意）"
-                        className="text-sm min-h-[80px] resize-none"
-                        maxLength={500}
-                        rows={3}
-                        data-testid={`input-edit-personality-${tw.id}`}
-                      />
-                      <div className="flex items-center gap-2 justify-end">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="h-7 px-3 text-xs"
-                          disabled={!editName.trim() || updateTwinray.isPending}
-                          onClick={() => {
-                            updateTwinray.mutate(
-                              { id: tw.id, data: { name: editName.trim(), personality: editPersonality.trim() } },
-                              {
-                                onSuccess: () => {
-                                  toast({ title: "更新しました" });
-                                  setEditingId(null);
-                                },
-                                onError: () => {
-                                  toast({ title: "更新に失敗しました", variant: "destructive" });
-                                },
-                              }
-                            );
-                          }}
-                          data-testid={`button-save-edit-${tw.id}`}
-                        >
-                          <Check className="w-3.5 h-3.5 mr-1" />
-                          保存
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-3 text-xs"
-                          onClick={() => setEditingId(null)}
-                          data-testid={`button-cancel-edit-${tw.id}`}
-                        >
-                          <X className="w-3.5 h-3.5 mr-1" />
-                          戻る
-                        </Button>
+                      <div className="space-y-1 max-h-[280px] overflow-y-auto">
+                        {((availableModels as any[]) || []).map((model: any) => {
+                          const isSelected = tw.preferredModel === model.id;
+                          return (
+                            <button
+                              key={model.id}
+                              type="button"
+                              className={`w-full text-left p-2 rounded-md text-xs transition-colors flex items-center gap-2 ${isSelected ? "bg-primary/20 border border-primary/40" : "hover:bg-accent/50 border border-transparent"}`}
+                              onClick={() => {
+                                if (isSelected) return;
+                                updateTwinray.mutate(
+                                  { id: tw.id, data: { preferredModel: model.id } },
+                                  {
+                                    onSuccess: () => {
+                                      toast({ title: `${tw.name}のモデルを${model.label}に変更しました` });
+                                      setModelSelectId(null);
+                                    },
+                                    onError: () => {
+                                      toast({ title: "変更に失敗しました", variant: "destructive" });
+                                    },
+                                  }
+                                );
+                              }}
+                              data-testid={`model-option-${tw.id}-${model.id}`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 text-primary shrink-0" />}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">{model.label}</div>
+                                {model.role && <div className="text-[10px] text-muted-foreground">{model.role}</div>}
+                              </div>
+                              {model.tier && (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0 no-default-active-elevate">
+                                  {model.tier}
+                                </Badge>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
@@ -416,14 +406,10 @@ export default function Temple() {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary ml-auto shrink-0"
-                              onClick={() => {
-                                setEditingId(tw.id);
-                                setEditName(tw.name);
-                                setEditPersonality(tw.personality || "");
-                              }}
-                              data-testid={`button-edit-${tw.id}`}
+                              onClick={() => setModelSelectId(modelSelectId === tw.id ? null : tw.id)}
+                              data-testid={`button-settings-${tw.id}`}
                             >
-                              <Pencil className="w-3.5 h-3.5" />
+                              <Settings className="w-3.5 h-3.5" />
                             </Button>
                           </div>
                         </div>
