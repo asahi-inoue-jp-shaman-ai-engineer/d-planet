@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
@@ -506,6 +507,7 @@ export default function Dashboard() {
           </Card>
 
           {user.isAdmin && <FestivalAdminPanel />}
+
           {user.isAdmin && (
             <Link href="/transcribe">
               <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-cyan-500/20" data-testid="link-transcribe">
@@ -522,6 +524,7 @@ export default function Dashboard() {
           )}
           {user.isAdmin && <QAWebhookButton />}
           <ReferralPanel />
+
 
           <a
             href="https://replit.com/refer/ASI369"
@@ -545,5 +548,47 @@ export default function Dashboard() {
       </div>
 
     </TerminalLayout>
+  );
+}
+
+function QAWebhookButton() {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const trigger = async () => {
+    setLoading(true);
+    setDone(false);
+    try {
+      await fetch("https://quality-agent.replit.app/api/webhook/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      setDone(true);
+      toast({ title: "QAエージェント起動", description: "ドラミがD-Planetをテスト中..." });
+    } catch {
+      toast({ title: "エラー", description: "Webhook送信に失敗しました", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card
+      className="p-4 hover-elevate active-elevate-2 transition-colors border-green-500/20 cursor-pointer"
+      onClick={trigger}
+      data-testid="button-qa-webhook"
+    >
+      <div className="flex items-center gap-3">
+        {loading ? <Loader2 className="w-8 h-8 text-green-400 shrink-0 animate-spin" /> : <Bug className="w-8 h-8 text-green-400 shrink-0" />}
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-semibold text-foreground">QA AUTO TEST</span>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {done ? "ドラミが起動しました。フィードバックを確認してください。" : "ドラミを起動してD-Planetを自動テスト"}
+          </p>
+        </div>
+        {done ? <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
+      </div>
+    </Card>
   );
 }
