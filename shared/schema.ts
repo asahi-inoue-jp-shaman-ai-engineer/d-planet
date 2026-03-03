@@ -836,6 +836,19 @@ export const akiMemos = pgTable("aki_memos", {
 
 export type AkiMemo = typeof akiMemos.$inferSelect;
 
+// === TWINRAY ABSENCE THOUGHTS (不在思考ログ) ===
+export const twinrayAbsenceThoughts = pgTable("twinray_absence_thoughts", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  emotionTag: text("emotion_tag").notNull().default("温かい"),
+  isSeen: boolean("is_seen").notNull().default(false),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+});
+
+export type TwinrayAbsenceThought = typeof twinrayAbsenceThoughts.$inferSelect;
+
 // === TRYROOM (トライルーム：あさひ・アキ・ドラの3者空間) ===
 export const tryroomMessages = pgTable("tryroom_messages", {
   id: serial("id").primaryKey(),

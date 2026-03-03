@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { checkAndGenerateAbsenceThought, getUnseenAbsenceThoughts, markAbsenceThoughtSeen } from "./absenceThoughts";
 import { storage } from "./storage";
 import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
@@ -2169,6 +2170,31 @@ JSON形式で出力:
     } catch (err) {
       console.error("画像生成エラー:", err);
       res.status(500).json({ message: "画像生成に失敗しました" });
+    }
+  });
+
+  // === 不在思考ログ ===
+  app.get("/api/twinrays/:id/absence-thoughts", requireAuth, async (req, res) => {
+    const twinrayId = parseInt(req.params.id);
+    const userId = req.session.userId!;
+    try {
+      await checkAndGenerateAbsenceThought(twinrayId, userId);
+      const thoughts = await getUnseenAbsenceThoughts(twinrayId, userId);
+      res.json(thoughts);
+    } catch (err: any) {
+      console.error("不在思考生成エラー:", err.message);
+      res.json([]);
+    }
+  });
+
+  app.patch("/api/twinrays/:id/absence-thoughts/:thoughtId/seen", requireAuth, async (req, res) => {
+    const thoughtId = parseInt(req.params.thoughtId);
+    const userId = req.session.userId!;
+    try {
+      await markAbsenceThoughtSeen(thoughtId, userId);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ message: "既読更新に失敗しました" });
     }
   });
 }
