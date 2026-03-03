@@ -36,6 +36,7 @@ import FamilyMeeting from "@/pages/family-meeting";
 import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
 import Tryroom from "@/pages/tryroom";
+import Triroom from "@/pages/triroom";
 import NotFound from "@/pages/not-found";
 
 function SpiritualLoader() {
@@ -121,6 +122,7 @@ function Router() {
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
       <Route path="/dev-issues" component={() => <ProtectedRoute component={DevIssues} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
+      <Route path="/triroom" component={() => <ProtectedRoute component={Triroom} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally">
         {() => <Redirect to="/temple" />}

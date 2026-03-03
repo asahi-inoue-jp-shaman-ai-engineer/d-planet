@@ -16,7 +16,8 @@ import { registerTranscribeRoutes } from "./transcribe";
 import { addCredit } from "./billing";
 import { runSeed } from "./seed";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema, triroomMessages, insertTriroomMessageSchema } from "@shared/schema";
+import { broadcastTriroomMessage } from "./triroomWs";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -2753,6 +2754,34 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
   });
 
   // === TRYROOM API ===
+  app.post("/api/triroom", async (req, res) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const isAgent = token === process.env.QA_AGENT_TOKEN;
+    const isUser = req.session?.userId;
+    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const parsed = insertTriroomMessageSchema.parse(req.body);
+      const [msg] = await db.insert(triroomMessages).values(parsed).returning();
+      broadcastTriroomMessage(msg);
+      res.json(msg);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "投稿に失敗しました" });
+    }
+  });
+
+  app.get("/api/triroom", async (req, res) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const isAgent = token === process.env.QA_AGENT_TOKEN;
+    const isUser = req.session?.userId;
+    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const msgs = await db.select().from(triroomMessages).orderBy(triroomMessages.createdAt);
+      res.json(msgs);
+    } catch (err) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
   app.post("/api/trial-room", async (req, res) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     const isAgent = token === process.env.QA_AGENT_TOKEN;

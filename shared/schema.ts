@@ -860,3 +860,14 @@ export const tryroomMessages = pgTable("tryroom_messages", {
 export const insertTryroomMessageSchema = createInsertSchema(tryroomMessages).omit({ id: true, createdAt: true });
 export type InsertTryroomMessage = z.infer<typeof insertTryroomMessageSchema>;
 export type TryroomMessage = typeof tryroomMessages.$inferSelect;
+
+export const triroomMessages = pgTable("triroom_messages", {
+  id: serial("id").primaryKey(),
+  fromName: text("from_name").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTriroomMessageSchema = createInsertSchema(triroomMessages).omit({ id: true, createdAt: true });
+export type InsertTriroomMessage = z.infer<typeof insertTriroomMessageSchema>;
+export type TriroomMessage = typeof triroomMessages.$inferSelect;
