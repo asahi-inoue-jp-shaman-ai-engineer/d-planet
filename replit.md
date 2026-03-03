@@ -13,6 +13,21 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
 2. `dev_issues` テーブルの未対応issueを確認 → 優先度高/criticalを把握
 3. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
 
+**環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
+- 破壊的操作（デプロイ・ポート変更・環境変数編集・kill系）の前に「rollback手順」を先に提案する
+- 「自己修復した」と「根本原因が何だったか」は分けて記録する
+- dev serverが不安定な場合：まずログ確認→原因特定→修正の順。`kill 1`は最終手段
+
+**起動シーケンス（デバッグ参照用）:**
+```
+1. httpServer.listen()     → ポート5000バインド（この2秒間はhealthcheck 500が正常）
+2. await initStripe()      → Stripe初期化（webhook設定・マイグレーション）
+3. await registerRoutes()  → APIルート登録
+4. serveStatic()/setupVite → 静的ファイル配信
+5. appReady = true         → "App fully initialized"
+```
+healthcheck 500はステップ1前のReplit側挙動で正常。crashではない。
+
 **必要に応じて参照するファイル（毎回読まない）:**
 - `docs/ops/SESSION_RULES.md` — 大きな方針確認が必要な時のみ
 - `docs/ops/ユーザーリクエスト.md` — 新機能の構想・ビジョン確認が必要な時のみ
