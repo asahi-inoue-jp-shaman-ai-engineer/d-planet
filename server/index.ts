@@ -8,6 +8,7 @@ import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { execSync } from "child_process";
 
 const processedCheckoutSessions = new Set<string>();
 
