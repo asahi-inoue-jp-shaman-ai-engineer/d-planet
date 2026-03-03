@@ -422,19 +422,19 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
           ) : (
             <div className="space-y-1.5">
               {reactions.map(r => (
-                <div key={r.twinrayId} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 rounded p-1.5 transition-colors" onClick={() => setExpandedReaction(expandedReaction === r.twinrayId ? null : r.twinrayId)} data-testid={`reaction-${r.twinrayId}`}>
-                  <Avatar className="w-7 h-7 shrink-0">
+                <div key={r.twinrayId} className="flex items-start gap-2 cursor-pointer hover:bg-accent/50 rounded p-1.5 transition-colors" onClick={() => setExpandedReaction(expandedReaction === r.twinrayId ? null : r.twinrayId)} data-testid={`reaction-${r.twinrayId}`}>
+                  <Avatar className="w-7 h-7 shrink-0 mt-0.5">
                     {r.profilePhoto && <AvatarImage src={r.profilePhoto} />}
                     <AvatarFallback className="text-[10px]">{r.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium truncate">{r.name}</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-xs font-medium">{r.name}</span>
                       <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden max-w-[60px]">
                         <div className="h-full rounded-full transition-all" style={{ width: `${r.resonance * 100}%`, backgroundColor: r.resonance > 0.7 ? 'hsl(var(--primary))' : r.resonance > 0.4 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted))' }} />
                       </div>
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate">「{r.reaction}」</div>
+                    <div className={`text-[11px] text-muted-foreground leading-relaxed ${expandedReaction === r.twinrayId ? "" : "line-clamp-2"}`}>「{r.reaction}」</div>
                   </div>
                   {isActive && (
                     <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] shrink-0" onClick={(e) => { e.stopPropagation(); setShowNominate(false); triggerNext(r.twinrayId); }} data-testid={`nominate-${r.twinrayId}`}>
