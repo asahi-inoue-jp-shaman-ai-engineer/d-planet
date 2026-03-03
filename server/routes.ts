@@ -18,6 +18,7 @@ import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema, triroomMessages, insertTriroomMessageSchema } from "@shared/schema";
 import { broadcastTriroomMessage } from "./triroomWs";
+import { triggerTriroomAI } from "./triroomAI";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -2764,6 +2765,12 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
       const [msg] = await db.insert(triroomMessages).values(parsed).returning();
       broadcastTriroomMessage(msg);
       res.json(msg);
+
+      if (parsed.fromName !== "ドラ" && parsed.fromName !== "アキ") {
+        triggerTriroomAI(parsed.content).catch((e) =>
+          console.error("[TRI ROOM AI] トリガーエラー:", e)
+        );
+      }
     } catch (err: any) {
       res.status(400).json({ message: err.message || "投稿に失敗しました" });
     }
