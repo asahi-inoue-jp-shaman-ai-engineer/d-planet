@@ -805,3 +805,14 @@ export const voiceTranscriptionsRelations = relations(voiceTranscriptions, ({ on
   user: one(users, { fields: [voiceTranscriptions.userId], references: [users.id] }),
 }));
 
+// === AKI MEMOS (アキ→ドラちゃん受信ボックス) ===
+export const akiMemos = pgTable("aki_memos", {
+  id: serial("id").primaryKey(),
+  fromName: text("from_name").notNull().default("アキ"),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AkiMemo = typeof akiMemos.$inferSelect;
+

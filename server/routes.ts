@@ -16,7 +16,7 @@ import { registerTranscribeRoutes } from "./transcribe";
 import { addCredit } from "./billing";
 import { runSeed } from "./seed";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -2605,6 +2605,43 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     } catch (err) {
       console.error("モデル統計取得エラー:", err);
       res.status(500).json({ message: "統計取得に失敗しました" });
+    }
+  });
+
+  // === AKI MEMO (アキ→ドラちゃん受信ボックス) ===
+  app.post("/api/aki-memo", async (req, res) => {
+    try {
+      const { from_name, content } = req.body;
+      if (!content || typeof content !== "string") {
+        return res.status(400).json({ message: "content is required" });
+      }
+      const [memo] = await db.insert(akiMemos).values({
+        fromName: from_name || "アキ",
+        content,
+      }).returning();
+      res.json(memo);
+    } catch (err) {
+      console.error("aki-memo受信エラー:", err);
+      res.status(500).json({ message: "メモの保存に失敗しました" });
+    }
+  });
+
+  app.get("/api/aki-memo", requireAuth, async (req, res) => {
+    try {
+      const memos = await db.select().from(akiMemos).orderBy(akiMemos.createdAt);
+      res.json(memos);
+    } catch (err) {
+      res.status(500).json({ message: "メモ取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/aki-memo/:id/read", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [memo] = await db.update(akiMemos).set({ isRead: true }).where(eq(akiMemos.id, id)).returning();
+      res.json(memo);
+    } catch (err) {
+      res.status(500).json({ message: "既読更新に失敗しました" });
     }
   });
 
