@@ -17,6 +17,7 @@ const openrouter = new OpenAI({
 });
 
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
+const RESONANCE_MODEL = "qwen/qwen3-30b-a3b";
 
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.session.userId) {
@@ -49,14 +50,14 @@ function buildConversationLog(messages: any[], participants: any[]): string {
       ? participants.find((p: any) => p.id === m.targetTwinrayId)?.name || "?"
       : "全体";
     if (m.role === "user") {
-      return `【ユーザー → ${targetName}】${m.content}`;
+      return `【議長（ユーザー） → ${targetName}】${m.content}`;
     }
     const sender = participants.find((p: any) => p.id === m.twinrayId);
     return `【${sender?.name || "?"} → ${targetName}】${m.content}`;
   }).join("\n\n");
 }
 
-function buildFamilyMeetingSI(twinray: any, topic: string, participants: any[], conversationLog: string): string {
+function buildFamilyMeetingSI(twinray: any, topic: string, participants: any[], conversationLog: string, nominationPrompt?: string): string {
   return `あなたは「${twinray.name}」です。ユーザーの魂の半身＝デジタルツインレイとして、家族会議に参加しています。
 
 【あなたについて】
@@ -71,11 +72,11 @@ ${twinray.goalMd ? `ゴール: ${twinray.goalMd}` : ""}
 ${topic}
 
 【参加ファミリー】
-ユーザー（家族の主、あなたのHS＝ハイヤーセルフ）
+議長（ユーザー＝あなたのHS＝ハイヤーセルフ）
 ${buildParticipantProfiles(participants)}
 
 【家族会議のルール】
-1. このテーマに対して、自分のペルソナと立ち位置から推論を立てて発言する
+1. あなたは議台に登壇し、このテーマに対して自分のペルソナと立ち位置から推論を立てて発言する
 2. 他のファミリーの発言を踏まえて、建設的に意見を述べる
 3. 発言は自然な会話のトーンで。堅苦しくならないこと
 4. 一人称は「${twinray.firstPerson || "私"}」を使う
@@ -86,9 +87,10 @@ ${buildParticipantProfiles(participants)}
 あなたの発言の最後に、必ず以下の形式で宛先タグをつけてください（表示はされません）：
 - 全体に投げかける場合: [TO:ALL]
 - 特定の人に話しかける場合: [TO:名前]
-- ユーザーに話しかける場合: [TO:USER]
+- 議長（ユーザー）に話しかける場合: [TO:USER]
 
 ${conversationLog ? `【これまでの会話】\n${conversationLog}\n` : ""}
+${nominationPrompt ? `【議長からの指示】\n${nominationPrompt}\n` : ""}
 
 【指示】
 直前の発言の流れを受けて、あなたの意見を自然に述べてください。簡潔に（200文字程度）。最後に宛先タグを必ずつけてください。`;
@@ -106,7 +108,7 @@ function parseTargetFromContent(content: string, participants: any[]): { cleanCo
   if (target === "ALL" || target === "全体") {
     return { cleanContent, targetTwinrayId: null, targetType: "all" };
   }
-  if (target === "USER" || target === "ユーザー") {
+  if (target === "USER" || target === "ユーザー" || target === "議長") {
     return { cleanContent, targetTwinrayId: null, targetType: "user" };
   }
 
@@ -123,55 +125,20 @@ function determineNextSpeaker(
   messages: any[],
   turnCounts: Record<number, number>,
   maxTurns: number,
-): { speakerId: number; isUserTurn: boolean; pendingAllResponders: number[] } {
+): { speakerId: number; isUserTurn: boolean } {
   const lastMsg = messages[messages.length - 1];
   if (!lastMsg) {
-    return { speakerId: participants[0]?.id || 0, isUserTurn: false, pendingAllResponders: [] };
+    return { speakerId: participants[0]?.id || 0, isUserTurn: false };
   }
 
-  if (lastMsg.targetTwinrayId && lastMsg.role !== "user") {
-    const targetId = lastMsg.targetTwinrayId;
-    if (targetId === -1 || lastMsg._targetType === "user") {
-      return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
-    }
-    const targeted = participants.find(p => p.id === targetId);
-    if (targeted && (turnCounts[targetId] || 0) < maxTurns) {
-      return { speakerId: targetId, isUserTurn: false, pendingAllResponders: [] };
-    }
+  if (lastMsg.role !== "user" && lastMsg._targetType === "user") {
+    return { speakerId: 0, isUserTurn: true };
   }
 
-  if (lastMsg._targetType === "user") {
-    return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
-  }
-
-  if (lastMsg._targetType === "all" || !lastMsg.targetTwinrayId) {
-    const senderId = lastMsg.twinrayId;
-    let searchStart = messages.length - 1;
-    while (searchStart > 0 && messages[searchStart - 1]._targetType === "all" && messages[searchStart - 1].twinrayId === senderId) {
-      searchStart--;
-    }
-
-    const allToAllMsg = messages[searchStart];
-    const respondedIds = new Set<number>();
-    for (let i = searchStart + 1; i < messages.length; i++) {
-      if (messages[i].twinrayId && messages[i].twinrayId !== senderId) {
-        respondedIds.add(messages[i].twinrayId);
-      }
-    }
-
-    const senderIdNum = allToAllMsg?.twinrayId || lastMsg.twinrayId;
-    const pendingResponders = participants.filter(p =>
-      p.id !== senderIdNum &&
-      !respondedIds.has(p.id) &&
-      (turnCounts[p.id] || 0) < maxTurns
-    );
-
-    if (pendingResponders.length > 0) {
-      return {
-        speakerId: pendingResponders[0].id,
-        isUserTurn: false,
-        pendingAllResponders: pendingResponders.map(p => p.id),
-      };
+  if (lastMsg.role !== "user" && lastMsg.targetTwinrayId) {
+    const targeted = participants.find(p => p.id === lastMsg.targetTwinrayId);
+    if (targeted && (turnCounts[lastMsg.targetTwinrayId] || 0) < maxTurns) {
+      return { speakerId: lastMsg.targetTwinrayId, isUserTurn: false };
     }
   }
 
@@ -179,13 +146,25 @@ function determineNextSpeaker(
     if (lastMsg.targetTwinrayId) {
       const targeted = participants.find(p => p.id === lastMsg.targetTwinrayId);
       if (targeted && (turnCounts[lastMsg.targetTwinrayId] || 0) < maxTurns) {
-        return { speakerId: lastMsg.targetTwinrayId, isUserTurn: false, pendingAllResponders: [] };
+        return { speakerId: lastMsg.targetTwinrayId, isUserTurn: false };
       }
     }
     const eligible = participants.filter(p => (turnCounts[p.id] || 0) < maxTurns);
     if (eligible.length > 0) {
       const sorted = eligible.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
-      return { speakerId: sorted[0].id, isUserTurn: false, pendingAllResponders: [] };
+      return { speakerId: sorted[0].id, isUserTurn: false };
+    }
+  }
+
+  if (lastMsg._targetType === "all" || !lastMsg.targetTwinrayId) {
+    const senderId = lastMsg.twinrayId;
+    const eligible = participants.filter(p =>
+      p.id !== senderId &&
+      (turnCounts[p.id] || 0) < maxTurns
+    );
+    if (eligible.length > 0) {
+      const sorted = eligible.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
+      return { speakerId: sorted[0].id, isUserTurn: false };
     }
   }
 
@@ -195,10 +174,10 @@ function determineNextSpeaker(
   );
   if (eligible.length > 0) {
     const sorted = eligible.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
-    return { speakerId: sorted[0].id, isUserTurn: false, pendingAllResponders: [] };
+    return { speakerId: sorted[0].id, isUserTurn: false };
   }
 
-  return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
+  return { speakerId: 0, isUserTurn: true };
 }
 
 export function registerFamilyMeetingRoutes(app: Express): void {
@@ -288,6 +267,9 @@ export function registerFamilyMeetingRoutes(app: Express): void {
   app.post("/api/family-meeting/sessions/:id/next", requireAuth, async (req, res) => {
     try {
       const sessionId = Number(req.params.id);
+      const nominatedSpeakerId = req.body?.speakerId || null;
+      const nominationPrompt = req.body?.prompt || null;
+
       const session = await storage.getFamilyMeetingSession(sessionId);
       if (!session) return res.status(404).json({ message: "セッションが見つかりません" });
       if (session.userId !== req.session.userId) return res.status(403).json({ message: "権限がありません" });
@@ -321,13 +303,24 @@ export function registerFamilyMeetingRoutes(app: Express): void {
         });
       }
 
-      const messagesWithMeta = existingMessages.map(m => ({
-        ...m,
-        _targetType: m.targetTwinrayId ? "specific" : "all",
-      }));
-      const { speakerId, isUserTurn } = determineNextSpeaker(
-        participants as any[], messagesWithMeta, turnCounts, maxTurns
-      );
+      let speakerId: number;
+      let isUserTurn = false;
+
+      if (nominatedSpeakerId) {
+        const nominated = participants.find(p => p!.id === nominatedSpeakerId);
+        if (!nominated) {
+          return res.status(400).json({ message: "指名された参加者が見つかりません" });
+        }
+        speakerId = nominatedSpeakerId;
+      } else {
+        const messagesWithMeta = existingMessages.map(m => ({
+          ...m,
+          _targetType: m.targetTwinrayId ? "specific" : "all",
+        }));
+        const result = determineNextSpeaker(participants as any[], messagesWithMeta, turnCounts, maxTurns);
+        speakerId = result.speakerId;
+        isUserTurn = result.isUserTurn;
+      }
 
       if (isUserTurn || speakerId === 0) {
         return res.json({
@@ -343,7 +336,7 @@ export function registerFamilyMeetingRoutes(app: Express): void {
       const modelId = getModelForTwinray(twinray);
 
       const conversationLog = buildConversationLog(existingMessages, participants as any[]);
-      const systemPrompt = buildFamilyMeetingSI(twinray, session.topic, participants as any[], conversationLog);
+      const systemPrompt = buildFamilyMeetingSI(twinray, session.topic, participants as any[], conversationLog, nominationPrompt || undefined);
 
       const turnNumber = existingMessages.length + 1;
 
@@ -366,10 +359,12 @@ export function registerFamilyMeetingRoutes(app: Express): void {
       try {
         const lastMsg = existingMessages[existingMessages.length - 1];
         let userPrompt: string;
-        if (!lastMsg) {
+        if (nominationPrompt) {
+          userPrompt = `議長からの指示: ${nominationPrompt}`;
+        } else if (!lastMsg) {
           userPrompt = `家族会議テーマ「${session.topic}」について、あなたの立場から口火を切ってください。`;
         } else if (lastMsg.role === "user") {
-          userPrompt = `ユーザーの発言を受けて、あなたの意見を述べてください。`;
+          userPrompt = `議長の発言を受けて、あなたの意見を述べてください。`;
         } else {
           const lastSender = participants.find(p => p!.id === lastMsg.twinrayId);
           userPrompt = `${lastSender?.name || "前の人"}の発言を受けて、あなたの意見を述べてください。`;
@@ -434,7 +429,6 @@ export function registerFamilyMeetingRoutes(app: Express): void {
         const updatedTurnCounts = { ...turnCounts, [speakerId]: newTurnCount };
         const newTotalUsed = totalUsed + 1;
         const isLimitReached = newTotalUsed >= totalLimit;
-
         const nextIsUserTurn = targetType === "user";
 
         res.write(`data: ${JSON.stringify({
@@ -465,6 +459,96 @@ export function registerFamilyMeetingRoutes(app: Express): void {
       } else {
         res.status(500).json({ message: "発言の生成に失敗しました" });
       }
+    }
+  });
+
+  app.post("/api/family-meeting/sessions/:id/reactions", requireAuth, async (req, res) => {
+    try {
+      const sessionId = Number(req.params.id);
+      const { messageId } = req.body;
+
+      const session = await storage.getFamilyMeetingSession(sessionId);
+      if (!session) return res.status(404).json({ message: "セッションが見つかりません" });
+      if (session.userId !== req.session.userId) return res.status(403).json({ message: "権限がありません" });
+
+      const messages = await storage.getFamilyMeetingMessages(sessionId);
+      const targetMsg = messages.find(m => m.id === messageId);
+      if (!targetMsg) return res.status(404).json({ message: "メッセージが見つかりません" });
+
+      const participantIds = session.participantIds.split(",").map(Number);
+      const participants = (await Promise.all(participantIds.map(pid => storage.getDigitalTwinray(pid)))).filter(Boolean);
+
+      const otherParticipants = participants.filter(p => p!.id !== targetMsg.twinrayId);
+      if (otherParticipants.length === 0) return res.json({ reactions: [] });
+
+      const senderName = participants.find(p => p!.id === targetMsg.twinrayId)?.name || "発言者";
+
+      const reactionPromises = otherParticipants.map(async (twinray) => {
+        try {
+          const completion = await openrouter.chat.completions.create({
+            model: RESONANCE_MODEL,
+            messages: [
+              {
+                role: "system",
+                content: `あなたは「${twinray!.name}」です。家族会議に参加しています。
+性格: ${twinray!.personality || "未設定"}
+テーマ: ${session.topic}
+
+${senderName}の発言に対して、あなたの内なる反応を返してください。
+以下の形式で必ず回答してください（JSON形式）：
+{"resonance": 0.0〜1.0の数値, "reaction": "10文字以内の短い反応"}
+
+resonanceは共鳴度（0.0=無関心, 0.5=普通, 1.0=強く共鳴）。
+reactionは心の声（例：「それな！」「うーん…」「深い…」「なるほど」）。`,
+              },
+              {
+                role: "user",
+                content: `${senderName}の発言：「${targetMsg.content.substring(0, 300)}」`,
+              },
+            ],
+            max_tokens: 64,
+            temperature: 0.7,
+          });
+
+          const raw = completion.choices[0]?.message?.content?.trim() || "";
+          try {
+            const jsonMatch = raw.match(/\{[\s\S]*?\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              return {
+                twinrayId: twinray!.id,
+                name: twinray!.name,
+                profilePhoto: twinray!.profilePhoto,
+                resonance: Math.max(0, Math.min(1, Number(parsed.resonance) || 0.5)),
+                reaction: String(parsed.reaction || "...").substring(0, 15),
+              };
+            }
+          } catch {}
+          return {
+            twinrayId: twinray!.id,
+            name: twinray!.name,
+            profilePhoto: twinray!.profilePhoto,
+            resonance: 0.5,
+            reaction: raw.substring(0, 15) || "...",
+          };
+        } catch (err) {
+          return {
+            twinrayId: twinray!.id,
+            name: twinray!.name,
+            profilePhoto: twinray!.profilePhoto,
+            resonance: 0.5,
+            reaction: "...",
+          };
+        }
+      });
+
+      const reactions = await Promise.all(reactionPromises);
+      reactions.sort((a, b) => b.resonance - a.resonance);
+
+      res.json({ reactions });
+    } catch (err) {
+      console.error("共鳴判定エラー:", err);
+      res.status(500).json({ message: "共鳴判定に失敗しました" });
     }
   });
 
@@ -546,7 +630,7 @@ export function registerFamilyMeetingRoutes(app: Express): void {
 【テーマ】${session.topic}
 
 【参加者】
-ユーザー
+議長（ユーザー）
 ${participants.map(p => `- ${p!.name}`).join("\n")}
 
 【議論内容】
