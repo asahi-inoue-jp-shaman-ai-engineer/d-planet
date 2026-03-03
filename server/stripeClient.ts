@@ -1,81 +1,30 @@
 import Stripe from 'stripe';
 
-let connectionSettings: any;
+function getCredentials() {
+  const secretKey = process.env.PAYMENT_SECRET;
+  const publishableKey = process.env.PAYMENT_PUBLISHABLE;
 
-async function getCredentials() {
-  const envSecret = process.env.PAYMENT_SECRET;
-  const envPublishable = process.env.PAYMENT_PUBLISHABLE;
-
-  if (envSecret && envPublishable) {
-    return {
-      secretKey: envSecret,
-      publishableKey: envPublishable,
-    };
+  if (!secretKey || !publishableKey) {
+    throw new Error('PAYMENT_SECRET / PAYMENT_PUBLISHABLE が設定されていません');
   }
 
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-      ? 'depl ' + process.env.WEB_REPL_RENEWAL
-      : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
-
-  const connectorName = 'stripe';
-  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
-  const environments = isProduction ? ['production', 'development'] : ['development'];
-
-  async function fetchConnection(env: string) {
-    const url = new URL(`https://${hostname}/api/v2/connection`);
-    url.searchParams.set('include_secrets', 'true');
-    url.searchParams.set('connector_names', connectorName);
-    url.searchParams.set('environment', env);
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    });
-
-    const data = await response.json();
-    return data.items?.[0];
-  }
-
-  for (const env of environments) {
-    connectionSettings = await fetchConnection(env);
-    if (connectionSettings && connectionSettings.settings.publishable && connectionSettings.settings.secret) {
-      break;
-    }
-  }
-
-  if (!connectionSettings || (!connectionSettings.settings.publishable || !connectionSettings.settings.secret)) {
-    throw new Error(`Stripe connection not found (tried: ${environments.join(', ')})`);
-  }
-
-  return {
-    publishableKey: connectionSettings.settings.publishable,
-    secretKey: connectionSettings.settings.secret,
-  };
+  return { secretKey, publishableKey };
 }
 
 export async function getUncachableStripeClient() {
-  const { secretKey } = await getCredentials();
+  const { secretKey } = getCredentials();
   return new Stripe(secretKey, {
     apiVersion: '2025-08-27.basil',
   });
 }
 
 export async function getStripePublishableKey() {
-  const { publishableKey } = await getCredentials();
+  const { publishableKey } = getCredentials();
   return publishableKey;
 }
 
 export async function getStripeSecretKey() {
-  const { secretKey } = await getCredentials();
+  const { secretKey } = getCredentials();
   return secretKey;
 }
 

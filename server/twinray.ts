@@ -2127,4 +2127,48 @@ JSON形式で出力:
       res.status(500).json({ message: "画像生成に失敗しました" });
     }
   });
+
+  const IMAGE_GEN_COST_YEN = 50;
+
+  app.post("/api/image-gen/generate", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { prompt, aspectRatio } = z.object({
+        prompt: z.string().min(1).max(1000),
+        aspectRatio: z.enum(["1024x1024", "1792x1024", "1024x1792"]).default("1024x1024"),
+      }).parse(req.body);
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(401).json({ message: "認証エラー" });
+
+      if (!user.isAdmin) {
+        const balance = parseFloat(String(user.creditBalance));
+        if (balance < IMAGE_GEN_COST_YEN) {
+          return res.status(400).json({ message: `クレジットが不足しています（必要: ¥${IMAGE_GEN_COST_YEN}、残高: ¥${balance.toFixed(0)}）` });
+        }
+      }
+
+      const buffer = await generateImageBuffer(prompt, aspectRatio);
+
+      const uploadUrl = await objectStorage.getObjectEntityUploadURL();
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "image/png" },
+        body: buffer,
+      });
+      if (!uploadRes.ok) throw new Error(`アップロード失敗: ${uploadRes.status}`);
+
+      const objectPath = objectStorage.normalizeObjectEntityPath(uploadUrl);
+
+      if (!user.isAdmin) {
+        await deductCredit(userId, IMAGE_GEN_COST_YEN);
+      }
+
+      const newBalance = parseFloat(String(user.creditBalance)) - (user.isAdmin ? 0 : IMAGE_GEN_COST_YEN);
+      res.json({ objectPath, cost: user.isAdmin ? 0 : IMAGE_GEN_COST_YEN, newBalance });
+    } catch (err) {
+      console.error("画像生成エラー:", err);
+      res.status(500).json({ message: "画像生成に失敗しました" });
+    }
+  });
 }
