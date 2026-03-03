@@ -1,11 +1,11 @@
 import Stripe from 'stripe';
 
 function getCredentials() {
-  const secretKey = process.env.PAYMENT_SECRET;
-  const publishableKey = process.env.PAYMENT_PUBLISHABLE;
+  const secretKey = process.env.STRIPE_LIVE_SECRET_KEY;
+  const publishableKey = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
 
   if (!secretKey || !publishableKey) {
-    throw new Error('PAYMENT_SECRET / PAYMENT_PUBLISHABLE が設定されていません');
+    throw new Error('STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY が設定されていません');
   }
 
   return { secretKey, publishableKey };
