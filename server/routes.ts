@@ -1243,9 +1243,9 @@ export async function registerRoutes(
 
       const report = await storage.createFeedbackReport({
         title: `[QA Agent] ${input.title}`,
-        description: input.description,
-        category: input.category,
-        creatorId: null,
+        content: input.description,
+        type: input.category,
+        creatorId: 6,
       });
       res.status(201).json({ id: report.id, title: report.title });
     } catch (err) {
