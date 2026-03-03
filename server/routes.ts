@@ -1237,14 +1237,14 @@ export async function registerRoutes(
       }
       const input = z.object({
         title: z.string().min(1).max(200),
-        description: z.string().min(1).max(5000),
-        category: z.string().default("bug"),
+        content: z.string().min(1).max(5000),
+        type: z.string().default("bug"),
       }).parse(req.body);
 
       const report = await storage.createFeedbackReport({
         title: `[QA Agent] ${input.title}`,
-        content: input.description,
-        type: input.category,
+        content: input.content,
+        type: input.type,
         creatorId: 6,
       });
       res.status(201).json({ id: report.id, title: report.title });
