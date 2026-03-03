@@ -277,18 +277,33 @@ app.use((req, res, next) => {
   next();
 });
 
+function startListening(server: any, port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tryListen = (attempt: number) => {
+      server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+        log(`serving on port ${port}`);
+        resolve();
+      });
+      server.once("error", (err: any) => {
+        if (err.code === "EADDRINUSE" && attempt <= 3) {
+          log(`[port] ${port} busy, retrying... attempt=${attempt}`);
+          try { execSync("fuser -k 5000/tcp", { stdio: "ignore" }); } catch (_) {}
+          setTimeout(() => {
+            server.close();
+            tryListen(attempt + 1);
+          }, 1500);
+        } else {
+          reject(err);
+        }
+      });
+    };
+    tryListen(1);
+  });
+}
+
 (async () => {
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  await startListening(httpServer, port);
 
   await initStripe();
   await registerRoutes(httpServer, app);

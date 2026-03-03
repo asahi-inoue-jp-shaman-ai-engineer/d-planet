@@ -1,0 +1,55 @@
+一発で入らないの、たぶん **「前のプロセスが 5000 を掴んだまま死んでる」の検知とリトライ**がまだ甘いからだね。[1][2]
+
+### おすすめの直し方（Node/Express想定）
+
+1. まず `$PORT` を優先する（Replit は環境変数でポート投げてくる）。[3]
+
+```js
+const PORT = process.env.PORT || 5000;
+```
+
+2. `listen` エラーを拾って、`EADDRINUSE` のときだけ数秒待って再トライする。
+
+```js
+function startServer(port, attempt = 1) {
+  const server = app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && attempt <= 3) {
+      console.warn(`[port] ${port} busy, retrying... attempt=${attempt}`);
+      setTimeout(() => {
+        startServer(port, attempt + 1);
+      }, 1500);
+    } else {
+      console.error('[port] fatal error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(PORT);
+```
+
+こうすると「一回目は競合しても、同じ 5000 でもう一度トライ → だいたい入る」って挙動になる。[2][4]
+
+今の実装って、`app.listen(5000)` を素直に呼んでる感じ？
+
+情報源
+[1] How to fix Error: listen EADDRINUSE while using NodeJS? https://stackoverflow.com/questions/9898372/how-to-fix-error-listen-eaddrinuse-while-using-nodejs
+[2] How to Fix 'Error: listen EADDRINUSE' in Node.js - OneUptime https://oneuptime.com/blog/post/2026-01-25-fix-eaddrinuse-nodejs/view
+[3] We couldn't reach this Repl Make sure this Repl has a port open and is ready to receive HTTP traffic https://stackoverflow.com/questions/78649476/we-couldnt-reach-this-repl-make-sure-this-repl-has-a-port-open-and-is-ready-to
+[4] How to fix EADDRINUSE: address already in use :::5000? https://stackoverflow.com/questions/71198178/how-to-fix-eaddrinuse-address-already-in-use-5000/71198277
+[5] Persistent EADDRINUSE Errors on Replit with Node.js & PM2 Setup https://www.reddit.com/r/replit/comments/1i2kj1j/persistent_eaddrinuse_errors_on_replit_with/
+[6] node.js - how can I stop the process using the port? - Stack Overflow https://stackoverflow.com/questions/4075287/node-express-eaddrinuse-address-already-in-use-how-can-i-stop-the-process/68233994
+[7] Node / Express: EADDRINUSE, Address already in use - how can I stop the process using the port? https://stackoverflow.com/questions/4075287/node-express-eaddrinuse-address-already-in-use-how-can-i-stop-the-process
+[8] Chapter 31. Port Forwarding | OpenShift Container Platform | 3.11 https://docs.redhat.com/en/documentation/openshift_container_platform/3.11/html/developer_guide/dev-guide-port-forwarding
+[9] Error: listen EADDRINUSE: address already in use :::5000 #1849 https://github.com/remy/nodemon/issues/1849
+[10] How to Fix EADDRINUSE Error in Node.js and Express https://www.youtube.com/watch?v=j2GdJRhRy7Q
+[11] Node.js EADDRINUSE Error: How to Fix 'Address Already in Use ... https://www.w3tutorials.net/blog/nodejs-address-already-in-use-5000/
+[12] crash error code: 'EADDRINUSE' with different ports https://station.railway.com/questions/crash-error-code-eaddrinuse-with-diff-2887a804
+[13] ポート5000を利用しようとすると Address already in user が発生 ... https://qiita.com/NasuPanda/items/ac94c496d42aac4fcb6d
+[14] How does one get rid of this pesky error? - Replit Community Forum https://replit.discourse.group/t/how-does-one-get-rid-of-this-pesky-error/3908
+[15] Why do I keep getting EADDRINUSE? https://www.reddit.com/r/node/comments/r82jsc/why_do_i_keep_getting_eaddrinuse/
+[16] Passing `0.0.0.0` hostname argument on http | net .listen() prevents ... https://github.com/nodejs/node/issues/43908
