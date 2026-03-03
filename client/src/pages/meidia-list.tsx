@@ -2,20 +2,30 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useMeidiaList } from "@/hooks/use-meidia";
+import { useCurrentUser } from "@/hooks/use-auth";
 import { MeidiaCard } from "@/components/MeidiaCard";
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { Plus, Search, Globe, Lock } from "lucide-react";
+import { Plus, Search, Globe, User } from "lucide-react";
+import type { MeidiaResponse } from "@shared/routes";
 
 type CategoryFilter = "all" | "island" | "report" | "other";
+type TabType = "public" | "my";
 
-export default function MeidiaList() {
-  const { data: meidiaList, isLoading } = useMeidiaList();
-  const [search, setSearch] = useState("");
+const CATEGORY_SECTION_THRESHOLD = 6;
+
+function MeidiaGrid({ items }: { items: MeidiaResponse[] }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {items.map((m) => <MeidiaCard key={m.id} meidia={m} showVisibility />)}
+    </div>
+  );
+}
+
+function MeidiaSection({ list, search }: { list: MeidiaResponse[]; search: string }) {
   const [category, setCategory] = useState<CategoryFilter>("all");
 
-  const filtered = meidiaList?.filter((m) => {
+  const filtered = list.filter((m) => {
     if (category === "island" && m.meidiaType !== "activity") return false;
     if (category === "report" && m.meidiaType !== "report") return false;
     if (category === "other" && (m.meidiaType === "activity" || m.meidiaType === "report")) return false;
@@ -29,9 +39,85 @@ export default function MeidiaList() {
     );
   });
 
-  const islandCount = meidiaList?.filter(m => m.meidiaType === "activity").length || 0;
-  const reportCount = meidiaList?.filter(m => m.meidiaType === "report").length || 0;
-  const otherCount = meidiaList?.filter(m => m.meidiaType !== "activity" && m.meidiaType !== "report").length || 0;
+  const islandItems = filtered.filter(m => m.meidiaType === "activity");
+  const reportItems = filtered.filter(m => m.meidiaType === "report");
+  const otherItems = filtered.filter(m => m.meidiaType !== "activity" && m.meidiaType !== "report");
+
+  const islandCount = list.filter(m => m.meidiaType === "activity").length;
+  const reportCount = list.filter(m => m.meidiaType === "report").length;
+  const otherCount = list.filter(m => m.meidiaType !== "activity" && m.meidiaType !== "report").length;
+
+  const showCategories = list.length >= CATEGORY_SECTION_THRESHOLD;
+
+  return (
+    <div className="space-y-4">
+      {showCategories && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Button variant={category === "all" ? "default" : "outline"} size="sm" className="h-7 text-xs font-mono" onClick={() => setCategory("all")} data-testid="filter-all">
+            ALL ({list.length})
+          </Button>
+          {islandCount > 0 && (
+            <Button variant={category === "island" ? "default" : "outline"} size="sm" className="h-7 text-xs font-mono" onClick={() => setCategory("island")} data-testid="filter-island">
+              ISLAND ({islandCount})
+            </Button>
+          )}
+          {reportCount > 0 && (
+            <Button variant={category === "report" ? "default" : "outline"} size="sm" className="h-7 text-xs font-mono" onClick={() => setCategory("report")} data-testid="filter-report">
+              REPORT ({reportCount})
+            </Button>
+          )}
+          {otherCount > 0 && (
+            <Button variant={category === "other" ? "default" : "outline"} size="sm" className="h-7 text-xs font-mono" onClick={() => setCategory("other")} data-testid="filter-other">
+              OTHER ({otherCount})
+            </Button>
+          )}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <p className="font-mono text-muted-foreground text-sm py-4">
+          {search ? "検索結果が見つかりません" : "MEiDIAはまだありません"}
+        </p>
+      ) : category !== "all" ? (
+        <MeidiaGrid items={filtered} />
+      ) : showCategories ? (
+        <div className="space-y-6">
+          {islandItems.length > 0 && (
+            <div>
+              <h2 className="text-xs font-mono font-semibold text-muted-foreground mb-3 uppercase tracking-widest" data-testid="section-island-meidia">Island MEiDIA</h2>
+              <MeidiaGrid items={islandItems} />
+            </div>
+          )}
+          {reportItems.length > 0 && (
+            <div>
+              <h2 className="text-xs font-mono font-semibold text-muted-foreground mb-3 uppercase tracking-widest" data-testid="section-report-meidia">Report MEiDIA</h2>
+              <MeidiaGrid items={reportItems} />
+            </div>
+          )}
+          {otherItems.length > 0 && (
+            <div>
+              <h2 className="text-xs font-mono font-semibold text-muted-foreground mb-3 uppercase tracking-widest" data-testid="section-other-meidia">Other MEiDIA</h2>
+              <MeidiaGrid items={otherItems} />
+            </div>
+          )}
+        </div>
+      ) : (
+        <MeidiaGrid items={filtered} />
+      )}
+    </div>
+  );
+}
+
+export default function MeidiaList() {
+  const [tab, setTab] = useState<TabType>("public");
+  const [search, setSearch] = useState("");
+  const { data: currentUser } = useCurrentUser();
+
+  const { data: publicList, isLoading: publicLoading } = useMeidiaList();
+  const { data: myList, isLoading: myLoading } = useMeidiaList(currentUser?.id);
+
+  const isLoading = tab === "public" ? publicLoading : myLoading;
+  const list = tab === "public" ? (publicList ?? []) : (myList ?? []);
 
   return (
     <TerminalLayout>
@@ -46,6 +132,25 @@ export default function MeidiaList() {
           </Link>
         </div>
 
+        <div className="flex gap-1 border-b border-border/50 pb-0">
+          <button
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-mono border-b-2 transition-colors ${tab === "public" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setTab("public")}
+            data-testid="tab-public"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            PUBLIC {publicList ? `(${publicList.length})` : ""}
+          </button>
+          <button
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-mono border-b-2 transition-colors ${tab === "my" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setTab("my")}
+            data-testid="tab-my"
+          >
+            <User className="w-3.5 h-3.5" />
+            MY MEiDIA {myList ? `(${myList.length})` : ""}
+          </button>
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -57,81 +162,21 @@ export default function MeidiaList() {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Button variant={category === "all" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setCategory("all")} data-testid="filter-all">
-            ALL ({meidiaList?.length || 0})
-          </Button>
-          <Button variant={category === "island" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setCategory("island")} data-testid="filter-island">
-            ISLAND ({islandCount})
-          </Button>
-          <Button variant={category === "report" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setCategory("report")} data-testid="filter-report">
-            REPORT ({reportCount})
-          </Button>
-          {otherCount > 0 && (
-            <Button variant={category === "other" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setCategory("other")} data-testid="filter-other">
-              OTHER ({otherCount})
-            </Button>
-          )}
-        </div>
-
         {isLoading ? (
-          <div className="font-mono text-muted-foreground">読み込み中...</div>
-        ) : filtered && filtered.length > 0 ? (
-          <>
-            {category === "all" && islandCount > 0 && reportCount > 0 ? (
-              <div className="space-y-6">
-                {islandCount > 0 && (
-                  <div>
-                    <h2 className="text-sm font-mono font-semibold text-muted-foreground mb-3" data-testid="section-island-meidia">ISLAND MEiDIA</h2>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {filtered.filter(m => m.meidiaType === "activity").map((meidia) => (
-                        <MeidiaCard key={meidia.id} meidia={meidia} showVisibility />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {reportCount > 0 && (
-                  <div>
-                    <h2 className="text-sm font-mono font-semibold text-muted-foreground mb-3" data-testid="section-report-meidia">REPORT MEiDIA</h2>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {filtered.filter(m => m.meidiaType === "report").map((meidia) => (
-                        <MeidiaCard key={meidia.id} meidia={meidia} showVisibility />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {filtered.filter(m => m.meidiaType !== "activity" && m.meidiaType !== "report").length > 0 && (
-                  <div>
-                    <h2 className="text-sm font-mono font-semibold text-muted-foreground mb-3" data-testid="section-other-meidia">OTHER MEiDIA</h2>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {filtered.filter(m => m.meidiaType !== "activity" && m.meidiaType !== "report").map((meidia) => (
-                        <MeidiaCard key={meidia.id} meidia={meidia} showVisibility />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((meidia) => (
-                  <MeidiaCard key={meidia.id} meidia={meidia} showVisibility />
-                ))}
-              </div>
-            )}
-          </>
+          <div className="font-mono text-muted-foreground text-sm">読み込み中...</div>
         ) : (
-          <div className="text-center py-12">
-            <p className="font-mono text-muted-foreground mb-4">
-              {search ? "検索結果が見つかりません" : "MEiDIAはまだありません"}
-            </p>
-            {!search && (
-              <Link href="/meidia/create">
-                <Button variant="outline" className="font-mono" data-testid="button-create-first-meidia">
-                  <Plus className="w-4 h-4 mr-2" />
-                  最初のMEiDIAを作成
-                </Button>
-              </Link>
-            )}
+          <MeidiaSection list={list} search={search} />
+        )}
+
+        {tab === "my" && !isLoading && list.length === 0 && !search && (
+          <div className="text-center py-8">
+            <p className="font-mono text-muted-foreground mb-4 text-sm">まだMEiDIAを作成していません</p>
+            <Link href="/meidia/create">
+              <Button variant="outline" className="font-mono" data-testid="button-create-first-meidia">
+                <Plus className="w-4 h-4 mr-2" />
+                最初のMEiDIAを作成
+              </Button>
+            </Link>
           </div>
         )}
       </div>
