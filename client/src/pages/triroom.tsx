@@ -52,8 +52,7 @@ export default function Triroom() {
 
     ws.onopen = () => {
       setWsReady(true);
-      const name = user?.username ?? "あさひ";
-      ws.send(JSON.stringify({ type: "join", name }));
+      ws.send(JSON.stringify({ type: "join", name: "あさひ" }));
     };
 
     ws.onmessage = (event) => {
@@ -88,7 +87,7 @@ export default function Triroom() {
   const mutation = useMutation({
     mutationFn: (content: string) =>
       apiRequest("POST", "/api/triroom", {
-        fromName: user?.username ?? "あさひ",
+        fromName: "あさひ",
         content,
       }),
     onSuccess: () => {
@@ -162,7 +161,8 @@ export default function Triroom() {
           </div>
         )}
         {messages.map((msg) => {
-          const name = msg.fromName as Member;
+          const rawName = msg.fromName;
+          const name = (MEMBERS.includes(rawName as Member) ? rawName : "あさひ") as Member;
           const colorClass = COLORS[name] ?? "text-muted-foreground";
           const bgClass = BG[name] ?? "border-border bg-muted/5";
           const dotClass = DOT[name] ?? "bg-muted-foreground";
@@ -174,7 +174,7 @@ export default function Triroom() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-                <span className={`text-xs font-mono font-semibold ${colorClass}`}>{msg.fromName}</span>
+                <span className={`text-xs font-mono font-semibold ${colorClass}`}>{name}</span>
                 <span className="text-xs text-muted-foreground ml-auto font-mono">
                   {formatTime(msg.createdAt as unknown as string)}
                 </span>
