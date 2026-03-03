@@ -42,7 +42,7 @@ export default function Triroom() {
 
   const { data: messages = [], refetch } = useQuery<TriroomMessage[]>({
     queryKey: ["/api/triroom"],
-    refetchInterval: false,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
