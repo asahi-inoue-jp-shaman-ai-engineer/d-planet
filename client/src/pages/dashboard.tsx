@@ -24,6 +24,8 @@ import {
   Shield,
   BookOpen,
   Rocket,
+  Bug,
+  Loader2,
   ExternalLink,
   Cpu,
   GraduationCap,
@@ -518,6 +520,7 @@ export default function Dashboard() {
               </Card>
             </Link>
           )}
+          {user.isAdmin && <QAWebhookButton />}
           <ReferralPanel />
 
           <a
