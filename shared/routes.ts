@@ -178,6 +178,7 @@ export const api = {
           requiresTwinrayBadge: z.boolean(),
           requiresFamilyBadge: z.boolean(),
           allowedAccountTypes: z.string().nullable(),
+          coverImage: z.string().nullable().optional(),
           totalDownloads: z.number(),
           createdAt: z.string(),
           creator: z.object({
@@ -202,6 +203,7 @@ export const api = {
           requiresTwinrayBadge: z.boolean(),
           requiresFamilyBadge: z.boolean(),
           allowedAccountTypes: z.string().nullable(),
+          coverImage: z.string().nullable().optional(),
           totalDownloads: z.number(),
           createdAt: z.string(),
           creator: z.object({
@@ -291,6 +293,7 @@ export const api = {
           name: z.string(),
           description: z.string().nullable(),
           secretUrl: z.string().nullable(),
+          coverImage: z.string().nullable().optional(),
         }),
         400: errorSchemas.validation,
         401: errorSchemas.unauthorized,

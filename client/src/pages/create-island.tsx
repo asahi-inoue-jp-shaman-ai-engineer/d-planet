@@ -28,6 +28,7 @@ export default function CreateIsland() {
   const [visibility, setVisibility] = useState("public_open");
   const [requiresTwinray, setRequiresTwinray] = useState(false);
   const [requiresFamily, setRequiresFamily] = useState(false);
+  const [coverImage, setCoverImage] = useState("");
   const [accountTypes, setAccountTypes] = useState<string[]>([]);
   const createIsland = useCreateIsland();
   const { toast } = useToast();
@@ -42,6 +43,7 @@ export default function CreateIsland() {
         requiresTwinrayBadge: requiresTwinray,
         requiresFamilyBadge: requiresFamily,
         allowedAccountTypes: accountTypes.length > 0 ? accountTypes.join(',') : null,
+        coverImage: coverImage.trim() || null,
       });
 
       let successMessage = "アイランドを作成しました";
@@ -102,6 +104,23 @@ export default function CreateIsland() {
               rows={4}
               data-testid="input-description"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="coverImage" className="font-mono">カバー画像URL（任意）</Label>
+            <Input
+              id="coverImage"
+              value={coverImage}
+              onChange={(e) => setCoverImage(e.target.value)}
+              placeholder="https://..."
+              className="font-mono"
+              data-testid="input-cover-image"
+            />
+            {coverImage.trim() && (
+              <div className="w-20 h-20 rounded border border-border overflow-hidden">
+                <img src={coverImage} alt="プレビュー" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">

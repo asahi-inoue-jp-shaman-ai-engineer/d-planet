@@ -101,6 +101,7 @@ export const islands = pgTable("islands", {
   requiresTwinrayBadge: boolean("requires_twinray_badge").default(false).notNull(),
   requiresFamilyBadge: boolean("requires_family_badge").default(false).notNull(),
   allowedAccountTypes: text("allowed_account_types"),
+  coverImage: text("cover_image"),
   totalDownloads: integer("total_downloads").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

@@ -16,23 +16,32 @@ export function IslandCard({ island }: IslandCardProps) {
     : [];
 
   return (
-    <Card className="border-glow hover:border-primary/50 transition-all duration-300">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-primary/10 rounded border border-primary/30">
-            <Map className="w-6 h-6 text-primary" />
+    <Card className="border-glow hover:border-primary/50 transition-all duration-300 overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-primary/5 flex items-center justify-center overflow-hidden">
+            {(island as any).coverImage ? (
+              <img
+                src={(island as any).coverImage}
+                alt={island.name}
+                className="w-full h-full object-cover"
+                data-testid={`img-island-cover-${island.id}`}
+              />
+            ) : (
+              <Map className="w-8 h-8 text-primary/40" />
+            )}
           </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
+
+          <div className="flex-1 min-w-0 p-4">
+            <div className="flex items-start justify-between gap-2 mb-1">
               <Link 
                 href={`/islands/${island.id}`}
-                className="text-xl font-bold text-primary hover:text-primary/80 transition-colors"
+                className="text-lg font-bold text-primary hover:text-primary/80 transition-colors truncate"
               >
                 {island.name}
               </Link>
               
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 {island.requiresTwinrayBadge && (
                   <div className="p-1 bg-accent/20 rounded border border-accent/50" title="ツインレイ認証必須">
                     <BadgeIcon className="w-3 h-3 text-accent" />
@@ -52,7 +61,7 @@ export function IslandCard({ island }: IslandCardProps) {
             </div>
             
             {island.description && (
-              <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+              <p className="text-muted-foreground text-xs mb-2 line-clamp-2">
                 {island.description}
               </p>
             )}

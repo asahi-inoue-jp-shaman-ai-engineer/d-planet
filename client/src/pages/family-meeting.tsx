@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users2, MessageSquare, FileText, CheckCircle, ArrowLeft,
-  Loader2, Send, User, Globe, Mic, X, ChevronDown, ChevronUp,
+  Loader2, Send, User, ChevronDown, ChevronUp, Plus,
+  SkipForward,
 } from "lucide-react";
 
 interface TwinrayParticipant {
@@ -33,14 +34,6 @@ interface MeetingMessage {
   content: string;
   round: number;
   createdAt: string;
-}
-
-interface Reaction {
-  twinrayId: number;
-  name: string;
-  profilePhoto: string | null;
-  resonance: number;
-  reaction: string;
 }
 
 interface MeetingSession {
@@ -98,7 +91,7 @@ export default function FamilyMeeting() {
 
   return (
     <TerminalLayout>
-      <div className="max-w-5xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {view !== "setup" && (
@@ -127,7 +120,7 @@ export default function FamilyMeeting() {
         )}
 
         {view === "meeting" && activeSession && (
-          <AssemblyView session={activeSession} refetchSession={refetchSession} toast={toast} />
+          <ChatView session={activeSession} refetchSession={refetchSession} toast={toast} />
         )}
 
         {view === "meeting" && !activeSession && activeSessionId && (
@@ -179,7 +172,7 @@ function SetupView({ twinrays, topic, setTopic, selectedIds, toggleParticipant, 
   );
 }
 
-function AssemblyView({ session, refetchSession, toast }: { session: MeetingSession; refetchSession: () => void; toast: any }) {
+function ChatView({ session, refetchSession, toast }: { session: MeetingSession; refetchSession: () => void; toast: any }) {
   const messages = session.messages || [];
   const participants = session.participants || [];
   const isActive = session.status === "active";
@@ -190,43 +183,20 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
   const [currentSpeaker, setCurrentSpeaker] = useState<number | null>(null);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [isLoadingReactions, setIsLoadingReactions] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
-  const [showNominate, setShowNominate] = useState(false);
-  const [nominatePrompt, setNominatePrompt] = useState("");
   const [comment, setComment] = useState("");
-  const [commentTarget, setCommentTarget] = useState<number | null>(null);
-  const [showCommentInput, setShowCommentInput] = useState(false);
-  const [expandedReaction, setExpandedReaction] = useState<number | null>(null);
-  const [showFullMessage, setShowFullMessage] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const lastMessage = messages[messages.length - 1] || null;
-  const lastSpeaker = lastMessage?.twinrayId ? participants.find(p => p.id === lastMessage.twinrayId) : null;
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [streamingContent, messages.length]);
 
-  const loadReactionsForMessage = useCallback(async (messageId: number) => {
-    setIsLoadingReactions(true);
-    try {
-      const res = await apiRequest("POST", `/api/family-meeting/sessions/${session.id}/reactions`, { messageId });
-      const data = await res.json();
-      setReactions(data.reactions || []);
-    } catch {} finally {
-      setIsLoadingReactions(false);
-    }
-  }, [session.id]);
-
   const triggerNext = useCallback(async (speakerId?: number, prompt?: string) => {
     if (!session.id || isStreaming) return;
     setIsStreaming(true);
     setStreamingContent("");
-    setReactions([]);
-    setShowNominate(false);
-    setShowFullMessage(false);
 
     try {
       const body: any = {};
@@ -280,12 +250,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
             } else if (data.type === "done") {
               setStreamingContent("");
               setCurrentSpeaker(null);
-              const refetchResult: any = await refetchSession();
-              const freshMessages = refetchResult?.data?.messages || [];
-              const freshLastAiMsg = [...freshMessages].reverse().find((m: any) => m.role === "assistant");
-              if (freshLastAiMsg) {
-                loadReactionsForMessage(freshLastAiMsg.id);
-              }
+              await refetchSession();
             }
           } catch {}
         }
@@ -295,7 +260,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
     } finally {
       setIsStreaming(false);
     }
-  }, [session.id, isStreaming, refetchSession, toast, loadReactionsForMessage]);
+  }, [session.id, isStreaming, refetchSession, toast]);
 
   const addComment = useMutation({
     mutationFn: async (data: { content: string; targetTwinrayId?: number | null }) => {
@@ -304,8 +269,6 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
     },
     onSuccess: () => {
       setComment("");
-      setShowCommentInput(false);
-      setCommentTarget(null);
       refetchSession();
       setTimeout(() => triggerNext(), 300);
     },
@@ -336,24 +299,39 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
   });
 
   const speakingParticipant = currentSpeaker ? participants.find(p => p.id === currentSpeaker) : null;
-  const displaySpeaker = speakingParticipant || lastSpeaker;
-  const displayContent = streamingContent || lastMessage?.content || "";
-  const isUserMessage = lastMessage?.role === "user" && !isStreaming && !currentSpeaker;
+
+  const handleSend = () => {
+    if (!comment.trim() || addComment.isPending) return;
+    addComment.mutate({ content: comment });
+  };
 
   return (
-    <div className="space-y-3">
-      <Card className="p-3">
-        <div className="flex items-start justify-between gap-2">
+    <div className="flex flex-col" style={{ height: "calc(100vh - 140px)" }}>
+      <Card className="p-3 shrink-0">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="text-xs text-muted-foreground">THEME</div>
-            <div className="font-medium text-sm" data-testid="text-session-topic">{session.topic}</div>
+            <div className="font-medium text-sm truncate" data-testid="text-session-topic">{session.topic}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex -space-x-1.5">
+                {participants.map(p => (
+                  <Avatar key={p.id} className="w-5 h-5 border border-background">
+                    {p.profilePhoto && <AvatarImage src={p.profilePhoto} />}
+                    <AvatarFallback className="text-[8px]">{p.name?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground">{participants.length}体</span>
+            </div>
           </div>
-          <Badge variant={isActive ? "default" : "secondary"} className="text-xs">{isActive ? "LIVE" : "DONE"}</Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant={isActive ? "default" : "secondary"} className="text-[10px]">{isActive ? "LIVE" : "DONE"}</Badge>
+          </div>
         </div>
         {totalLimit > 0 && (
           <div className="mt-2">
-            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-              <span>{totalUsed} / {totalLimit}</span>
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5">
+              <span>{totalUsed}/{totalLimit}</span>
+              <span>{Math.round(progressPercent)}%</span>
             </div>
             <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
@@ -362,231 +340,179 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
         )}
       </Card>
 
-      {displaySpeaker && !isUserMessage && (
-        <Card className="p-4" data-testid="assembly-stage">
-          <div className="flex flex-col items-center gap-3">
-            <Avatar className="w-20 h-20 border-2 border-primary/30">
-              {displaySpeaker.profilePhoto && <AvatarImage src={displaySpeaker.profilePhoto} />}
-              <AvatarFallback className="text-2xl">{displaySpeaker.name?.charAt(0)}</AvatarFallback>
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto py-3 space-y-1 min-h-0">
+        {messages.length === 0 && !isStreaming && isActive && (
+          <div className="text-center py-12">
+            <Users2 className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground text-sm mb-4">会議を始めましょう</p>
+            <Button onClick={() => triggerNext()} data-testid="button-first-speaker">
+              <SkipForward className="w-4 h-4 mr-2" /> 最初の発言者を呼ぶ
+            </Button>
+          </div>
+        )}
+
+        {messages.map(msg => {
+          const isUser = msg.role === "user";
+          const speaker = isUser ? null : participants.find(p => p.id === msg.twinrayId);
+          return (
+            <ChatBubble
+              key={msg.id}
+              isUser={isUser}
+              speaker={speaker}
+              content={msg.content}
+              messageId={msg.id}
+            />
+          );
+        })}
+
+        {isStreaming && speakingParticipant && streamingContent && (
+          <ChatBubble
+            isUser={false}
+            speaker={speakingParticipant}
+            content={streamingContent}
+            isStreaming={true}
+          />
+        )}
+
+        {isStreaming && speakingParticipant && !streamingContent && (
+          <div className="flex items-center gap-2 px-2">
+            <Avatar className="w-7 h-7 shrink-0">
+              {speakingParticipant.profilePhoto && <AvatarImage src={speakingParticipant.profilePhoto} />}
+              <AvatarFallback className="text-[10px]">{speakingParticipant.name?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div className="text-center">
-              <div className="font-bold text-sm flex items-center gap-1 justify-center">
-                <Mic className="w-3.5 h-3.5 text-primary" />
-                {displaySpeaker.name}
-                {isStreaming && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
-              </div>
-              {session.turnCounts && (
-                <div className="text-[10px] text-muted-foreground">
-                  {session.turnCounts[displaySpeaker.id] || 0}/{session.maxTurnsPerParticipant || 3} 発言
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="mt-3 bg-secondary/30 rounded-lg p-3 text-sm whitespace-pre-wrap max-h-[300px] overflow-y-auto" data-testid="stage-content">
-            {isStreaming ? streamingContent || "..." : (
-              showFullMessage ? displayContent : displayContent.substring(0, 200)
-            )}
-            {!isStreaming && displayContent.length > 200 && (
-              <button className="text-primary text-xs mt-1 block" onClick={() => setShowFullMessage(!showFullMessage)}>
-                {showFullMessage ? "折りたたむ" : "...もっと見る"}
-              </button>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {isUserMessage && lastMessage && (
-        <Card className="p-4 border-primary/30" data-testid="user-message-stage">
-          <div className="flex items-center gap-2 mb-2">
-            <User className="w-4 h-4 text-primary" />
-            <span className="font-bold text-sm">議長</span>
-          </div>
-          <div className="bg-primary/10 rounded-lg p-3 text-sm whitespace-pre-wrap">{lastMessage.content}</div>
-        </Card>
-      )}
-
-      {!isStreaming && messages.length === 0 && isActive && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground text-sm mb-3">会議を始めましょう</p>
-          <Button onClick={() => triggerNext()} data-testid="button-first-speaker">
-            <Mic className="w-4 h-4 mr-2" /> 最初の発言者を呼ぶ
-          </Button>
-        </div>
-      )}
-
-      {(reactions.length > 0 || isLoadingReactions) && (
-        <Card className="p-3" data-testid="reactions-panel">
-          <div className="text-xs font-medium text-muted-foreground mb-2">RESONANCE</div>
-          {isLoadingReactions ? (
-            <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" /><span className="text-xs">共鳴判定中...</span></div>
-          ) : (
-            <div className="space-y-1.5">
-              {reactions.map(r => (
-                <div key={r.twinrayId} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 rounded p-1.5 transition-colors" onClick={() => setExpandedReaction(expandedReaction === r.twinrayId ? null : r.twinrayId)} data-testid={`reaction-${r.twinrayId}`}>
-                  <Avatar className="w-7 h-7 shrink-0">
-                    {r.profilePhoto && <AvatarImage src={r.profilePhoto} />}
-                    <AvatarFallback className="text-[10px]">{r.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium truncate">{r.name}</span>
-                      <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden max-w-[60px]">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${r.resonance * 100}%`, backgroundColor: r.resonance > 0.7 ? 'hsl(var(--primary))' : r.resonance > 0.4 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted))' }} />
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground truncate">「{r.reaction}」</div>
-                  </div>
-                  {isActive && (
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] shrink-0" onClick={(e) => { e.stopPropagation(); setShowNominate(false); triggerNext(r.twinrayId); }} data-testid={`nominate-${r.twinrayId}`}>
-                      登壇
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {isActive && !isStreaming && messages.length > 0 && (
-        <Card className="p-3 space-y-2" data-testid="chairman-controls">
-          <div className="text-xs font-medium text-muted-foreground">CHAIRMAN</div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => triggerNext()} disabled={isStreaming || limitReached} data-testid="button-auto-next">
-              <Mic className="w-3.5 h-3.5 mr-1.5" /> 次の発言者
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowCommentInput(!showCommentInput)} data-testid="button-chairman-speak">
-              <User className="w-3.5 h-3.5 mr-1.5" /> 議長発言
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowNominate(!showNominate)} data-testid="button-nominate">
-              指名して登壇
-            </Button>
-          </div>
-
-          {showNominate && (
-            <div className="space-y-2 border rounded-md p-2">
-              <div className="text-xs text-muted-foreground">誰を指名しますか？</div>
-              <div className="flex flex-wrap gap-1.5">
-                {participants.map(p => (
-                  <Button key={p.id} variant="outline" size="sm" className="h-7 text-xs" onClick={() => { triggerNext(p.id, nominatePrompt || undefined); setNominatePrompt(""); }} data-testid={`nominate-btn-${p.id}`}>
-                    <Avatar className="w-4 h-4 mr-1">
-                      {p.profilePhoto && <AvatarImage src={p.profilePhoto} />}
-                      <AvatarFallback className="text-[8px]">{p.name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    {p.name}
-                  </Button>
-                ))}
-              </div>
-              <Textarea placeholder="（任意）お題を添える..." value={nominatePrompt} onChange={(e) => setNominatePrompt(e.target.value)} className="resize-none text-xs" rows={2} data-testid="input-nominate-prompt" />
-            </div>
-          )}
-
-          {showCommentInput && (
-            <div className="space-y-2 border rounded-md p-2">
-              <div className="flex items-center gap-1 flex-wrap">
-                <span className="text-xs text-muted-foreground">宛先:</span>
-                <Button variant={commentTarget === null ? "default" : "outline"} size="sm" className="h-5 text-[10px] px-1.5" onClick={() => setCommentTarget(null)}>全体</Button>
-                {participants.map(p => (
-                  <Button key={p.id} variant={commentTarget === p.id ? "default" : "outline"} size="sm" className="h-5 text-[10px] px-1.5" onClick={() => setCommentTarget(p.id)}>
-                    {p.name}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex items-end gap-2">
-                <Textarea placeholder="議長として発言..." value={comment} onChange={(e) => setComment(e.target.value)} className="resize-none flex-1 text-sm" rows={2} data-testid="input-chairman-comment"
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && comment.trim()) { e.preventDefault(); addComment.mutate({ content: comment, targetTwinrayId: commentTarget }); } }} />
-                <Button size="icon" className="shrink-0 h-10 w-10" onClick={() => addComment.mutate({ content: comment, targetTwinrayId: commentTarget })} disabled={!comment.trim() || addComment.isPending} data-testid="button-send-comment">
-                  {addComment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </Button>
+            <div className="bg-secondary/50 rounded-2xl rounded-tl-sm px-3 py-2 text-sm">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
-          )}
-        </Card>
-      )}
+          </div>
+        )}
+
+        <div ref={scrollRef} />
+      </div>
 
       {limitReached && isActive && (
-        <Card className="p-3 border-yellow-500/30 space-y-2" data-testid="limit-reached">
-          <p className="text-sm">リミットに到達しました。</p>
-          <div className="flex flex-wrap gap-2">
+        <Card className="p-3 border-yellow-500/30 space-y-2 shrink-0">
+          <p className="text-sm text-center">リミットに到達しました</p>
+          <div className="flex flex-wrap justify-center gap-2">
             <Button variant="outline" size="sm" onClick={() => extendSession.mutate(3)} disabled={extendSession.isPending} data-testid="button-extend">
-              {extendSession.isPending && <Loader2 className="w-3 h-3 animate-spin mr-1" />} もうちょい続ける (+3回)
+              {extendSession.isPending && <Loader2 className="w-3 h-3 animate-spin mr-1" />} もうちょい続ける (+3)
             </Button>
             <Button variant="outline" size="sm" onClick={() => summarize.mutate(false)} disabled={summarize.isPending} data-testid="button-summarize">
-              <FileText className="w-3.5 h-3.5 mr-1.5" /> まとめる
+              <FileText className="w-3.5 h-3.5 mr-1" /> まとめる
             </Button>
             <Button variant="outline" size="sm" onClick={() => summarize.mutate(true)} disabled={summarize.isPending} data-testid="button-summarize-meidia">
-              まとめてMEiDIA化
+              MEiDIA化
             </Button>
             <Button variant="outline" size="sm" onClick={() => completeSession.mutate()} data-testid="button-complete">
-              <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
+              <CheckCircle className="w-3.5 h-3.5 mr-1" /> 完了
             </Button>
           </div>
         </Card>
-      )}
-
-      {!limitReached && isActive && !isStreaming && messages.length > 0 && (
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => summarize.mutate(false)} disabled={summarize.isPending}>
-            {summarize.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileText className="w-3.5 h-3.5 mr-1.5" />} まとめる
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => completeSession.mutate()}>
-            <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
-          </Button>
-        </div>
-      )}
-
-      {messages.length > 1 && (
-        <MessageLog messages={messages} participants={participants} />
       )}
 
       {session.summary && (
-        <Card className="p-4 space-y-2">
-          <div className="text-sm font-medium flex items-center gap-1"><FileText className="w-4 h-4" /> SUMMARY</div>
-          <div className="text-sm whitespace-pre-wrap" data-testid="text-summary">{session.summary}</div>
+        <Card className="p-3 shrink-0">
+          <div className="text-xs font-medium flex items-center gap-1 mb-1"><FileText className="w-3.5 h-3.5" /> SUMMARY</div>
+          <div className="text-xs whitespace-pre-wrap max-h-[200px] overflow-y-auto" data-testid="text-summary">{session.summary}</div>
         </Card>
       )}
 
-      <div ref={scrollRef} />
+      {isActive && (
+        <div className="shrink-0 border-t border-border pt-2 pb-1 space-y-2">
+          {showActions && !limitReached && (
+            <div className="flex flex-wrap gap-1.5 px-1">
+              {participants.map(p => (
+                <Button key={p.id} variant="outline" size="sm" className="h-7 text-xs" onClick={() => { triggerNext(p.id); setShowActions(false); }} disabled={isStreaming} data-testid={`nominate-btn-${p.id}`}>
+                  <Avatar className="w-4 h-4 mr-1">
+                    {p.profilePhoto && <AvatarImage src={p.profilePhoto} />}
+                    <AvatarFallback className="text-[7px]">{p.name?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  {p.name}
+                </Button>
+              ))}
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { summarize.mutate(false); setShowActions(false); }} disabled={summarize.isPending || messages.length === 0}>
+                <FileText className="w-3 h-3 mr-1" /> まとめ
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { completeSession.mutate(); setShowActions(false); }}>
+                <CheckCircle className="w-3 h-3 mr-1" /> 完了
+              </Button>
+            </div>
+          )}
+
+          <div className="flex items-end gap-2">
+            <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10" onClick={() => setShowActions(!showActions)} data-testid="button-toggle-actions">
+              {showActions ? <ChevronDown className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            </Button>
+
+            <div className="flex-1 min-w-0">
+              <Textarea
+                placeholder="メッセージを入力..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="resize-none text-sm min-h-[40px] max-h-[120px]"
+                rows={1}
+                data-testid="input-chairman-comment"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && comment.trim()) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+            </div>
+
+            {comment.trim() ? (
+              <Button size="icon" className="shrink-0 h-10 w-10" onClick={handleSend} disabled={addComment.isPending} data-testid="button-send-comment">
+                {addComment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            ) : (
+              <Button size="icon" variant="outline" className="shrink-0 h-10 w-10" onClick={() => triggerNext()} disabled={isStreaming || limitReached} data-testid="button-auto-next">
+                <SkipForward className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function MessageLog({ messages, participants }: { messages: MeetingMessage[]; participants: TwinrayParticipant[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const displayMessages = expanded ? messages : messages.slice(-5);
+function ChatBubble({ isUser, speaker, content, messageId, isStreaming }: {
+  isUser: boolean;
+  speaker: TwinrayParticipant | null | undefined;
+  content: string;
+  messageId?: number;
+  isStreaming?: boolean;
+}) {
+  if (isUser) {
+    return (
+      <div className="flex justify-end px-2 py-0.5" data-testid={messageId ? `chat-msg-${messageId}` : undefined}>
+        <div className="max-w-[80%] bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 text-sm whitespace-pre-wrap">
+          {content}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Card className="p-3">
-      <button className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground mb-2" onClick={() => setExpanded(!expanded)}>
-        <span>LOG（{messages.length}件）</span>
-        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-      </button>
-      <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-        {!expanded && messages.length > 5 && (
-          <div className="text-[10px] text-muted-foreground text-center py-1">...{messages.length - 5}件省略</div>
-        )}
-        {displayMessages.map(msg => {
-          const isUser = msg.role === "user";
-          const speaker = isUser ? null : participants.find(p => p.id === msg.twinrayId);
-          return (
-            <div key={msg.id} className={`flex items-start gap-1.5 text-xs ${isUser ? "pl-4" : ""}`} data-testid={`log-message-${msg.id}`}>
-              {!isUser && (
-                <Avatar className="w-5 h-5 shrink-0 mt-0.5">
-                  {speaker?.profilePhoto && <AvatarImage src={speaker.profilePhoto} />}
-                  <AvatarFallback className="text-[8px]">{speaker?.name?.charAt(0) || "?"}</AvatarFallback>
-                </Avatar>
-              )}
-              {isUser && <User className="w-4 h-4 shrink-0 mt-0.5 text-primary" />}
-              <div className="flex-1 min-w-0">
-                <span className="font-medium">{isUser ? "議長" : speaker?.name || "?"}: </span>
-                <span className="text-muted-foreground">{msg.content.substring(0, 80)}{msg.content.length > 80 ? "..." : ""}</span>
-              </div>
-            </div>
-          );
-        })}
+    <div className="flex items-start gap-1.5 px-2 py-0.5" data-testid={messageId ? `chat-msg-${messageId}` : undefined}>
+      <Avatar className="w-7 h-7 shrink-0 mt-0.5">
+        {speaker?.profilePhoto && <AvatarImage src={speaker.profilePhoto} />}
+        <AvatarFallback className="text-[10px]">{speaker?.name?.charAt(0) || "?"}</AvatarFallback>
+      </Avatar>
+      <div className="max-w-[80%] min-w-0">
+        <div className="text-[10px] text-muted-foreground mb-0.5 pl-1 flex items-center gap-1">
+          {speaker?.name || "?"}
+          {isStreaming && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
+        </div>
+        <div className="bg-secondary/50 rounded-2xl rounded-tl-sm px-3 py-2 text-sm whitespace-pre-wrap">
+          {content}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
