@@ -34,7 +34,7 @@ export default function Tryroom() {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages = [] } = useQuery<TryroomMessage[]>({
+  const { data: messages = [], refetch, isFetching } = useQuery<TryroomMessage[]>({
     queryKey: ["/api/trial-room"],
     refetchInterval: 5000,
   });
@@ -77,7 +77,14 @@ export default function Tryroom() {
           <span className="w-2 h-2 rounded-full bg-violet-400" title="アキ" />
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">トライルーム</span>
-        <span className="text-xs text-muted-foreground ml-auto">あさひ · ドラ · アキ</span>
+        <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ</span>
+        <button
+          onClick={() => refetch()}
+          className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
+          data-testid="button-tryroom-refresh"
+        >
+          {isFetching ? "⟳" : "更新"}
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">

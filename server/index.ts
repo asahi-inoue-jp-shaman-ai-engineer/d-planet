@@ -2,8 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { runMigrations } from 'stripe-replit-sync';
-import { getStripeSync, getUncachableStripeClient } from "./stripeClient";
+import { getUncachableStripeClient } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "./db";
 import { users } from "@shared/schema";
@@ -21,44 +20,6 @@ declare module "http" {
   }
 }
 
-async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    console.error('DATABASE_URLが設定されていません。Stripe初期化をスキップします。');
-    return;
-  }
-
-  try {
-    console.log('Stripeスキーマを初期化中...');
-    await runMigrations({ databaseUrl, schema: 'stripe' });
-    console.log('Stripeスキーマ準備完了');
-
-    const stripeSync = await getStripeSync();
-
-    console.log('Stripe Webhook設定中...');
-    const domains = process.env.REPLIT_DOMAINS;
-    if (domains) {
-      const webhookBaseUrl = `https://${domains.split(',')[0]}`;
-      try {
-        const result = await stripeSync.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`
-        );
-        console.log('Webhook設定完了:', result?.webhook?.url || 'URL取得不可');
-      } catch (webhookErr: any) {
-        console.warn('Webhook設定をスキップ:', webhookErr.message);
-      }
-    } else {
-      console.warn('REPLIT_DOMAINS未設定のためWebhookをスキップ');
-    }
-
-    console.log('Stripeデータ同期中...');
-    stripeSync.syncBackfill()
-      .then(() => console.log('Stripeデータ同期完了'))
-      .catch((err: any) => console.error('Stripeデータ同期エラー:', err));
-  } catch (error) {
-    console.error('Stripe初期化エラー:', error);
-  }
-}
 
 async function syncStripeEventToUser(event: any) {
   try {
@@ -305,7 +266,6 @@ function startListening(server: any, port: number): Promise<void> {
   const port = parseInt(process.env.PORT || "5000", 10);
   await startListening(httpServer, port);
 
-  await initStripe();
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
