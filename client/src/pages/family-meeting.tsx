@@ -119,7 +119,7 @@ export default function FamilyMeeting() {
         {view === "setup" && (
           <SetupView
             twinrays={twinrays || []} topic={topic} setTopic={setTopic}
-            selectedIds={selectedIds} toggleParticipant={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+            selectedIds={selectedIds} toggleParticipant={(id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
             maxTurns={maxTurns} setMaxTurns={setMaxTurns}
             onStart={() => createSession.mutate({ topic, participantIds: selectedIds, maxTurnsPerParticipant: maxTurns })}
             isPending={createSession.isPending}
@@ -280,8 +280,8 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
             } else if (data.type === "done") {
               setStreamingContent("");
               setCurrentSpeaker(null);
-              const refetchResult = await refetchSession();
-              const freshMessages = (refetchResult?.data as any)?.messages || [];
+              const refetchResult: any = await refetchSession();
+              const freshMessages = refetchResult?.data?.messages || [];
               const freshLastAiMsg = [...freshMessages].reverse().find((m: any) => m.role === "assistant");
               if (freshLastAiMsg) {
                 loadReactionsForMessage(freshLastAiMsg.id);

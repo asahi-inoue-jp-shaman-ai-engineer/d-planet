@@ -4,7 +4,7 @@ import { useDotRallySessions, useTempleDedications } from "@/hooks/use-dot-rally
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { Link } from "wouter";
-import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Settings, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText, Download, User } from "lucide-react";
+import { Sparkles, History, Zap, Gift, Gem, MessageCircle, Undo2, Settings, Pencil, Check, X, Globe, EyeOff, ChevronDown, ChevronUp, Heart, Save, FileText, Download, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
