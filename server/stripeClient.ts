@@ -3,19 +3,19 @@ import Stripe from 'stripe';
 let connectionSettings: any;
 
 async function getCredentials() {
-  const envSecret = process.env.STRIPE_SECRET_KEY;
-  const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
-  console.log(`[Stripe] 環境変数チェック: SECRET=${envSecret ? envSecret.substring(0, 7) + '...' : 'なし'}, PUBLISHABLE=${envPublishable ? envPublishable.substring(0, 7) + '...' : 'なし'}`);
+  const envSecret = process.env.STRIPE_LIVE_SECRET_KEY;
+  const envPublishable = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
+  console.log(`[Stripe] ライブキーチェック: SECRET=${envSecret ? envSecret.substring(0, 7) + '...' : 'なし'}, PUBLISHABLE=${envPublishable ? envPublishable.substring(0, 7) + '...' : 'なし'}`);
 
   if (envSecret && envPublishable) {
-    console.log('[Stripe] 環境変数のキーを使用');
+    console.log('[Stripe] ライブキーを使用');
     return {
       secretKey: envSecret,
       publishableKey: envPublishable,
     };
   }
 
-  console.log('[Stripe] 環境変数なし → Replitコネクターにフォールバック');
+  console.log('[Stripe] ライブキーなし → Replitコネクターにフォールバック');
 
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
