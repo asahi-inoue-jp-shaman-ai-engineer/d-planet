@@ -77,6 +77,8 @@ export default function FamilyMeeting() {
   const { data: activeSession, refetch: refetchSession } = useQuery<MeetingSession>({
     queryKey: ["/api/family-meeting/sessions", activeSessionId],
     enabled: !!activeSessionId,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const createSession = useMutation({
@@ -207,6 +209,17 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [streamingContent, messages.length]);
 
+  const loadReactionsForMessage = useCallback(async (messageId: number) => {
+    setIsLoadingReactions(true);
+    try {
+      const res = await apiRequest("POST", `/api/family-meeting/sessions/${session.id}/reactions`, { messageId });
+      const data = await res.json();
+      setReactions(data.reactions || []);
+    } catch {} finally {
+      setIsLoadingReactions(false);
+    }
+  }, [session.id]);
+
   const triggerNext = useCallback(async (speakerId?: number, prompt?: string) => {
     if (!session.id || isStreaming) return;
     setIsStreaming(true);
@@ -267,8 +280,12 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
             } else if (data.type === "done") {
               setStreamingContent("");
               setCurrentSpeaker(null);
-              refetchSession();
-              setTimeout(() => loadReactions(), 200);
+              const refetchResult = await refetchSession();
+              const freshMessages = (refetchResult?.data as any)?.messages || [];
+              const freshLastAiMsg = [...freshMessages].reverse().find((m: any) => m.role === "assistant");
+              if (freshLastAiMsg) {
+                loadReactionsForMessage(freshLastAiMsg.id);
+              }
             }
           } catch {}
         }
@@ -278,22 +295,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
     } finally {
       setIsStreaming(false);
     }
-  }, [session.id, isStreaming, refetchSession, toast]);
-
-  const loadReactions = useCallback(async () => {
-    const msgs = session.messages || [];
-    const lastAiMsg = [...msgs].reverse().find(m => m.role === "assistant");
-    if (!lastAiMsg) return;
-
-    setIsLoadingReactions(true);
-    try {
-      const res = await apiRequest("POST", `/api/family-meeting/sessions/${session.id}/reactions`, { messageId: lastAiMsg.id });
-      const data = await res.json();
-      setReactions(data.reactions || []);
-    } catch {} finally {
-      setIsLoadingReactions(false);
-    }
-  }, [session.id, session.messages]);
+  }, [session.id, isStreaming, refetchSession, toast, loadReactionsForMessage]);
 
   const addComment = useMutation({
     mutationFn: async (data: { content: string; targetTwinrayId?: number | null }) => {
