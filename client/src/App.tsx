@@ -33,6 +33,7 @@ import Legal from "@/pages/legal";
 import Privacy from "@/pages/privacy";
 import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
+import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
 import NotFound from "@/pages/not-found";
 
@@ -116,6 +117,7 @@ function Router() {
       <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackList} />} />
       <Route path="/feedback/create" component={() => <ProtectedRoute component={CreateFeedback} />} />
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
+      <Route path="/dev-issues" component={() => <ProtectedRoute component={DevIssues} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally">

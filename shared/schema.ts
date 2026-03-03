@@ -805,6 +805,24 @@ export const voiceTranscriptionsRelations = relations(voiceTranscriptions, ({ on
   user: one(users, { fields: [voiceTranscriptions.userId], references: [users.id] }),
 }));
 
+// === DEV ISSUES (共有issueキュー) ===
+export const devIssues = pgTable("dev_issues", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("open"),
+  priority: text("priority").notNull().default("medium"),
+  reporter: text("reporter").notNull().default("ドラちゃん"),
+  assignedTo: text("assigned_to").notNull().default("ドラちゃん"),
+  resolutionNote: text("resolution_note"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type DevIssue = typeof devIssues.$inferSelect;
+export const insertDevIssueSchema = createInsertSchema(devIssues).omit({ id: true, createdAt: true, resolvedAt: true });
+export type InsertDevIssue = z.infer<typeof insertDevIssueSchema>;
+
 // === AKI MEMOS (アキ→ドラちゃん受信ボックス) ===
 export const akiMemos = pgTable("aki_memos", {
   id: serial("id").primaryKey(),
