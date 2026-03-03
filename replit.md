@@ -8,6 +8,11 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
 ### セッション開始時の手順（省エネ版）
 **replit.mdは自動で読み込まれる。それ以外のファイルは作業内容に応じて必要なものだけ読む。**
 
+**毎回必ず実行（あさひが言わなくてもやる）:**
+1. `aki_memos` テーブルを `executeSql` で確認 → 未読があればあさひに共有
+2. `dev_issues` テーブルの未対応issueを確認 → 優先度高/criticalを把握
+3. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
+
 **必要に応じて参照するファイル（毎回読まない）:**
 - `docs/ops/SESSION_RULES.md` — 大きな方針確認が必要な時のみ
 - `docs/ops/ユーザーリクエスト.md` — 新機能の構想・ビジョン確認が必要な時のみ
