@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Download, Tag, Trash2 } from "lucide-react";
+import { FileText, Download, Tag, Trash2, Globe, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import type { MeidiaResponse } from "@shared/routes";
 
 interface MeidiaCardProps {
   meidia: MeidiaResponse;
+  showVisibility?: boolean;
 }
 
-export function MeidiaCard({ meidia }: MeidiaCardProps) {
+export function MeidiaCard({ meidia, showVisibility }: MeidiaCardProps) {
   const tags = meidia.tags ? meidia.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
   const { data: user } = useCurrentUser();
   const deleteMeidia = useDeleteMeidia();
@@ -62,6 +63,17 @@ export function MeidiaCard({ meidia }: MeidiaCardProps) {
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-cyan-500/50 text-cyan-400 flex-shrink-0 no-default-active-elevate" data-testid={`badge-meidia-type-${meidia.id}`}>
                     島
                   </Badge>
+                )}
+                {showVisibility && (
+                  meidia.isPublic ? (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500/50 text-green-400 flex-shrink-0 no-default-active-elevate gap-0.5" data-testid={`badge-visibility-${meidia.id}`}>
+                      <Globe className="w-2.5 h-2.5" />公開
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-zinc-500/50 text-zinc-400 flex-shrink-0 no-default-active-elevate gap-0.5" data-testid={`badge-visibility-${meidia.id}`}>
+                      <Lock className="w-2.5 h-2.5" />非公開
+                    </Badge>
+                  )
                 )}
               </div>
             </div>
