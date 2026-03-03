@@ -1228,6 +1228,35 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/feedback/external", async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace("Bearer ", "").trim();
+      const qaToken = process.env.QA_AGENT_TOKEN;
+      if (!qaToken || token !== qaToken) {
+        return res.status(401).json({ message: "無効なトークンです" });
+      }
+      const input = z.object({
+        title: z.string().min(1).max(200),
+        description: z.string().min(1).max(5000),
+        category: z.string().default("bug"),
+      }).parse(req.body);
+
+      const report = await storage.createFeedbackReport({
+        title: `[QA Agent] ${input.title}`,
+        description: input.description,
+        category: input.category,
+        creatorId: null,
+      });
+      res.status(201).json({ id: report.id, title: report.title });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error("外部フィードバック作成エラー:", err);
+      res.status(500).json({ message: "作成に失敗しました" });
+    }
+  });
+
   app.patch("/api/feedback/:id/resolve", requireAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);
