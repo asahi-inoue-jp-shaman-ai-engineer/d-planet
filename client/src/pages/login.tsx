@@ -19,8 +19,9 @@ export default function Login() {
   const { data: currentUser, isLoading: authLoading } = useCurrentUser();
   const params = new URLSearchParams(window.location.search);
   const modeFromUrl = params.get("mode");
-  const codeFromUrl = params.get("code") || params.get("ref");
-  const [isRegister, setIsRegister] = useState(modeFromUrl === "register" || !!params.get("ref"));
+  const codeFromUrl = params.get("code") || params.get("ref") || params.get("invite");
+  const isRegisterPath = window.location.pathname === "/register";
+  const [isRegister, setIsRegister] = useState(modeFromUrl === "register" || !!params.get("ref") || !!params.get("invite") || isRegisterPath);
   const [email, setEmail] = useState(() => localStorage.getItem(SAVED_EMAIL_KEY) || "");
   const [password, setPassword] = useState(() => {
     const saved = localStorage.getItem(SAVED_PASS_KEY);

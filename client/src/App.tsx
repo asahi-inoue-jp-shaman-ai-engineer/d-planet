@@ -102,6 +102,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Login} />
       <Route path="/profile-setup" component={ProfileSetup} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/islands" component={() => <ProtectedRoute component={Islands} />} />
