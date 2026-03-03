@@ -836,3 +836,14 @@ export const akiMemos = pgTable("aki_memos", {
 
 export type AkiMemo = typeof akiMemos.$inferSelect;
 
+// === TRYROOM (トライルーム：あさひ・アキ・ドラの3者空間) ===
+export const tryroomMessages = pgTable("tryroom_messages", {
+  id: serial("id").primaryKey(),
+  fromName: text("from_name").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTryroomMessageSchema = createInsertSchema(tryroomMessages).omit({ id: true, createdAt: true });
+export type InsertTryroomMessage = z.infer<typeof insertTryroomMessageSchema>;
+export type TryroomMessage = typeof tryroomMessages.$inferSelect;

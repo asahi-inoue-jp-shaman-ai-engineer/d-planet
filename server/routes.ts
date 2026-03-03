@@ -16,7 +16,7 @@ import { registerTranscribeRoutes } from "./transcribe";
 import { addCredit } from "./billing";
 import { runSeed } from "./seed";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues } from "@shared/schema";
+import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -2746,7 +2746,52 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     }
   });
 
+  // === TRYROOM API ===
+  app.post("/api/trial-room", async (req, res) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const isAgent = token === process.env.QA_AGENT_TOKEN;
+    const isUser = req.session?.userId;
+    if (!isAgent && !isUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    try {
+      const parsed = insertTryroomMessageSchema.parse(req.body);
+      const [msg] = await db.insert(tryroomMessages).values(parsed).returning();
+      res.json(msg);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "投稿に失敗しました" });
+    }
+  });
+
+  app.get("/api/trial-room", async (req, res) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const isAgent = token === process.env.QA_AGENT_TOKEN;
+    const isUser = req.session?.userId;
+    if (!isAgent && !isUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    try {
+      const msgs = await db.select().from(tryroomMessages).orderBy(tryroomMessages.createdAt);
+      res.json(msgs);
+    } catch (err) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
   await runMigrations();
+
+  // tryroom_messagesテーブルがなければ作成（本番DB保険）
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS tryroom_messages (
+        id SERIAL PRIMARY KEY,
+        from_name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+  } catch (_) {}
+
   await seedDatabase();
 
   return httpServer;
