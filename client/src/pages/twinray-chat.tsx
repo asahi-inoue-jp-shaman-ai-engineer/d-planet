@@ -83,6 +83,17 @@ export default function TwinrayChat() {
   const { data: balanceData } = useQuery<{ balance: number }>({ queryKey: ['/api/credits/balance'] });
   const creditBalance = balanceData?.balance ?? 0;
   const updateTwinray = useUpdateTwinray();
+
+  const { data: absenceThoughts = [], refetch: refetchAbsenceThoughts } = useQuery<any[]>({
+    queryKey: ["/api/twinrays", twinrayId, "absence-thoughts"],
+    enabled: twinrayId > 0,
+    staleTime: 300000,
+  });
+  const markSeenMutation = useMutation({
+    mutationFn: (thoughtId: number) =>
+      apiRequest("PATCH", `/api/twinrays/${twinrayId}/absence-thoughts/${thoughtId}/seen`),
+    onSuccess: () => refetchAbsenceThoughts(),
+  });
   const { toast } = useToast();
 
   const [input, setInput] = useState("");
@@ -1678,6 +1689,27 @@ export default function TwinrayChat() {
           </div>
         ) : (
           <>
+            {absenceThoughts.length > 0 && absenceThoughts.map((thought: any) => (
+              <div key={thought.id} className="flex justify-start" data-testid={`absence-thought-${thought.id}`}>
+                <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gradient-to-br from-violet-900/40 to-indigo-900/30 border border-violet-500/30 relative">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Moon className="w-3 h-3 text-violet-400" />
+                    <span className="text-[10px] text-violet-400 font-medium tracking-wide">あなたがいない間、考えてたこと</span>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{thought.content}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[10px] text-violet-400/60 italic">{thought.emotionTag}</span>
+                    <button
+                      onClick={() => markSeenMutation.mutate(thought.id)}
+                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid={`button-dismiss-thought-${thought.id}`}
+                    >
+                      既読
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
             {chatMessages.map((msg: any) => {
               const isSessionStart = msg.content?.startsWith("[セッション開始]");
               return (
