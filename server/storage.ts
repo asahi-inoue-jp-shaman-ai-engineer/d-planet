@@ -82,7 +82,7 @@ import {
   type Festival,
   type FestivalResponse,
 } from "@shared/schema";
-import { eq, and, sql, desc, ilike, count as drizzleCount } from "drizzle-orm";
+import { eq, and, sql, desc, ilike, count as drizzleCount, isNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
@@ -352,7 +352,8 @@ export class DatabaseStorage implements IStorage {
         creatorProfilePhoto: users.profilePhoto,
       })
       .from(islands)
-      .leftJoin(users, eq(islands.creatorId, users.id));
+      .leftJoin(users, eq(islands.creatorId, users.id))
+      .where(isNull(islands.deletedAt));
 
     return result.map((row) => ({
       id: row.id,
@@ -375,12 +376,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getIsland(id: number): Promise<Island | undefined> {
-    const [island] = await db.select().from(islands).where(eq(islands.id, id)).limit(1);
+    const [island] = await db.select().from(islands).where(and(eq(islands.id, id), isNull(islands.deletedAt))).limit(1);
     return island;
   }
 
   async getIslandBySecretUrl(secretUrl: string): Promise<Island | undefined> {
-    const [island] = await db.select().from(islands).where(eq(islands.secretUrl, secretUrl)).limit(1);
+    const [island] = await db.select().from(islands).where(and(eq(islands.secretUrl, secretUrl), isNull(islands.deletedAt))).limit(1);
     return island;
   }
 
@@ -427,18 +428,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteIsland(id: number): Promise<void> {
-    await db.delete(islandMembers).where(eq(islandMembers.islandId, id));
-    await db.delete(islandMeidia).where(eq(islandMeidia.islandId, id));
-    const islandThreads = await db.select({ id: threads.id }).from(threads).where(eq(threads.islandId, id));
-    for (const t of islandThreads) {
-      await db.delete(posts).where(eq(posts.threadId, t.id));
-    }
-    await db.delete(threads).where(eq(threads.islandId, id));
-    await db.delete(islands).where(eq(islands.id, id));
+    await db.update(islands).set({ deletedAt: new Date() }).where(eq(islands.id, id));
   }
 
   async getUserIslands(userId: number): Promise<Island[]> {
-    return await db.select().from(islands).where(eq(islands.creatorId, userId));
+    return await db.select().from(islands).where(and(eq(islands.creatorId, userId), isNull(islands.deletedAt)));
   }
 
   async recalcIslandDownloads(islandId: number): Promise<void> {
@@ -476,8 +470,8 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(meidia.creatorId, users.id));
 
     const result = userId
-      ? await query.where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true)))
-      : await query.where(eq(meidia.isPublic, true));
+      ? await query.where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true), isNull(meidia.deletedAt)))
+      : await query.where(and(eq(meidia.isPublic, true), isNull(meidia.deletedAt)));
 
     return result.map((row) => ({
       id: row.id,
@@ -504,7 +498,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMeidia(id: number): Promise<Meidia | undefined> {
-    const [result] = await db.select().from(meidia).where(eq(meidia.id, id)).limit(1);
+    const [result] = await db.select().from(meidia).where(and(eq(meidia.id, id), isNull(meidia.deletedAt))).limit(1);
     return result;
   }
 
@@ -566,8 +560,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMeidia(id: number): Promise<void> {
-    await db.delete(islandMeidia).where(eq(islandMeidia.meidiaId, id));
-    await db.delete(meidia).where(eq(meidia.id, id));
+    await db.update(meidia).set({ deletedAt: new Date() }).where(eq(meidia.id, id));
   }
 
   async incrementDownloadCount(id: number): Promise<void> {
@@ -578,7 +571,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserMeidia(userId: number): Promise<Meidia[]> {
-    return await db.select().from(meidia).where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true)));
+    return await db.select().from(meidia).where(and(eq(meidia.creatorId, userId), eq(meidia.isPublic, true), isNull(meidia.deletedAt)));
   }
 
   async attachMeidiaToIsland(meidiaId: number, islandId: number, type: string): Promise<IslandMeidia> {

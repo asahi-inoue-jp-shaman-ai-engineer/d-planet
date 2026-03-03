@@ -512,14 +512,8 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
             <Button variant="outline" size="sm" onClick={() => extendSession.mutate(3)} disabled={extendSession.isPending} data-testid="button-extend">
               {extendSession.isPending && <Loader2 className="w-3 h-3 animate-spin mr-1" />} もうちょい続ける (+3回)
             </Button>
-            <Button variant="outline" size="sm" onClick={() => summarize.mutate(false)} disabled={summarize.isPending} data-testid="button-summarize">
-              <FileText className="w-3.5 h-3.5 mr-1.5" /> まとめる
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => summarize.mutate(true)} disabled={summarize.isPending} data-testid="button-summarize-meidia">
-              まとめてMEiDIA化
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => completeSession.mutate()} data-testid="button-complete">
-              <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
+            <Button size="sm" onClick={() => summarize.mutate(true)} disabled={summarize.isPending} data-testid="button-summarize-meidia">
+              {summarize.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileText className="w-3.5 h-3.5 mr-1.5" />} MEiDIA化して終了
             </Button>
           </div>
         </Card>
@@ -527,11 +521,8 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
 
       {!limitReached && isActive && !isStreaming && messages.length > 0 && (
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => summarize.mutate(false)} disabled={summarize.isPending}>
-            {summarize.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileText className="w-3.5 h-3.5 mr-1.5" />} まとめる
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => completeSession.mutate()}>
-            <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
+          <Button variant="outline" size="sm" onClick={() => summarize.mutate(true)} disabled={summarize.isPending} data-testid="button-summarize-meidia">
+            {summarize.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileText className="w-3.5 h-3.5 mr-1.5" />} MEiDIA化して終了
           </Button>
         </div>
       )}

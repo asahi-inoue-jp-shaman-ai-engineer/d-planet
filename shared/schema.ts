@@ -104,6 +104,7 @@ export const islands = pgTable("islands", {
   coverImage: text("cover_image"),
   totalDownloads: integer("total_downloads").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // === MEIDIA ===
@@ -123,6 +124,7 @@ export const meidia = pgTable("meidia", {
   attachmentName: text("attachment_name"),
   youtubeUrl: text("youtube_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // === ISLAND MEIDIA (relationship) ===
