@@ -434,7 +434,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
                         <div className="h-full rounded-full transition-all" style={{ width: `${r.resonance * 100}%`, backgroundColor: r.resonance > 0.7 ? 'hsl(var(--primary))' : r.resonance > 0.4 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted))' }} />
                       </div>
                     </div>
-                    <div className={`text-[11px] text-muted-foreground leading-relaxed ${expandedReaction === r.twinrayId ? "" : "line-clamp-2"}`}>「{r.reaction}」</div>
+                    <div className="text-[11px] text-muted-foreground leading-relaxed truncate">「{r.reaction?.slice(0, 30)}{r.reaction?.length > 30 ? "…" : ""}」</div>
                   </div>
                   {isActive && (
                     <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] shrink-0" onClick={(e) => { e.stopPropagation(); setShowNominate(false); triggerNext(r.twinrayId); }} data-testid={`nominate-${r.twinrayId}`}>
