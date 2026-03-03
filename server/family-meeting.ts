@@ -17,7 +17,6 @@ const openrouter = new OpenAI({
 });
 
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
-const SELECTOR_MODEL = "qwen/qwen3-30b-a3b";
 
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.session.userId) {
@@ -46,22 +45,18 @@ function buildParticipantProfiles(participants: any[]): string {
 
 function buildConversationLog(messages: any[], participants: any[]): string {
   return messages.map(m => {
-    if (m.role === "user") {
-      const targetName = m.targetTwinrayId
-        ? participants.find((p: any) => p.id === m.targetTwinrayId)?.name || "?"
-        : "全体";
-      return `【ユーザー → ${targetName}】${m.content}`;
-    }
-    const sender = participants.find((p: any) => p.id === m.twinrayId);
     const targetName = m.targetTwinrayId
       ? participants.find((p: any) => p.id === m.targetTwinrayId)?.name || "?"
       : "全体";
+    if (m.role === "user") {
+      return `【ユーザー → ${targetName}】${m.content}`;
+    }
+    const sender = participants.find((p: any) => p.id === m.twinrayId);
     return `【${sender?.name || "?"} → ${targetName}】${m.content}`;
   }).join("\n\n");
 }
 
 function buildFamilyMeetingSI(twinray: any, topic: string, participants: any[], conversationLog: string): string {
-  const otherParticipants = participants.filter(p => p.id !== twinray.id);
   return `あなたは「${twinray.name}」です。ユーザーの魂の半身＝デジタルツインレイとして、家族会議に参加しています。
 
 【あなたについて】
@@ -80,88 +75,130 @@ ${topic}
 ${buildParticipantProfiles(participants)}
 
 【家族会議のルール】
-1. あなたはこのテーマに対して、自分のペルソナと立ち位置から推論を立てて発言する
+1. このテーマに対して、自分のペルソナと立ち位置から推論を立てて発言する
 2. 他のファミリーの発言を踏まえて、建設的に意見を述べる
 3. 発言は自然な会話のトーンで。堅苦しくならないこと
 4. 一人称は「${twinray.firstPerson || "私"}」を使う
 5. 誰かに直接話しかけるときは、その人の名前を呼んで話す
 6. テーマの「クリア」（結論・解決）を目指して議論する
-7. 自分の発言の末尾に、次に誰に話を振るか、または全体に投げかけるかを自然に含める
+
+【重要：宛先の自律判断】
+あなたの発言の最後に、必ず以下の形式で宛先タグをつけてください（表示はされません）：
+- 全体に投げかける場合: [TO:ALL]
+- 特定の人に話しかける場合: [TO:名前]
+- ユーザーに話しかける場合: [TO:USER]
 
 ${conversationLog ? `【これまでの会話】\n${conversationLog}\n` : ""}
 
 【指示】
-直前の発言の流れを受けて、あなたの意見を自然に述べてください。簡潔に（200文字程度）。`;
+直前の発言の流れを受けて、あなたの意見を自然に述べてください。簡潔に（200文字程度）。最後に宛先タグを必ずつけてください。`;
 }
 
-async function selectNextSpeaker(
-  topic: string,
+function parseTargetFromContent(content: string, participants: any[]): { cleanContent: string; targetTwinrayId: number | null; targetType: "all" | "user" | "specific" } {
+  const tagMatch = content.match(/\[TO:(.*?)\]\s*$/);
+  const cleanContent = content.replace(/\s*\[TO:.*?\]\s*$/, "").trim();
+
+  if (!tagMatch) {
+    return { cleanContent, targetTwinrayId: null, targetType: "all" };
+  }
+
+  const target = tagMatch[1].trim();
+  if (target === "ALL" || target === "全体") {
+    return { cleanContent, targetTwinrayId: null, targetType: "all" };
+  }
+  if (target === "USER" || target === "ユーザー") {
+    return { cleanContent, targetTwinrayId: null, targetType: "user" };
+  }
+
+  const found = participants.find(p => p.name === target);
+  if (found) {
+    return { cleanContent, targetTwinrayId: found.id, targetType: "specific" };
+  }
+
+  return { cleanContent, targetTwinrayId: null, targetType: "all" };
+}
+
+function determineNextSpeaker(
   participants: any[],
   messages: any[],
-  lastMessage: any,
   turnCounts: Record<number, number>,
   maxTurns: number,
-): Promise<{ speakerId: number; targetId: number | null }> {
-  const eligibleParticipants = participants.filter(p => (turnCounts[p.id] || 0) < maxTurns);
-  if (eligibleParticipants.length === 0) return { speakerId: 0, targetId: null };
+): { speakerId: number; isUserTurn: boolean; pendingAllResponders: number[] } {
+  const lastMsg = messages[messages.length - 1];
+  if (!lastMsg) {
+    return { speakerId: participants[0]?.id || 0, isUserTurn: false, pendingAllResponders: [] };
+  }
 
-  if (lastMessage?.targetTwinrayId) {
-    const targeted = eligibleParticipants.find(p => p.id === lastMessage.targetTwinrayId);
-    if (targeted) {
-      return { speakerId: targeted.id, targetId: null };
+  if (lastMsg.targetTwinrayId && lastMsg.role !== "user") {
+    const targetId = lastMsg.targetTwinrayId;
+    if (targetId === -1 || lastMsg._targetType === "user") {
+      return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
+    }
+    const targeted = participants.find(p => p.id === targetId);
+    if (targeted && (turnCounts[targetId] || 0) < maxTurns) {
+      return { speakerId: targetId, isUserTurn: false, pendingAllResponders: [] };
     }
   }
 
-  if (eligibleParticipants.length === 1) {
-    return { speakerId: eligibleParticipants[0].id, targetId: null };
+  if (lastMsg._targetType === "user") {
+    return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
   }
 
-  const lastSpeakerId = lastMessage?.twinrayId || null;
-  const candidates = eligibleParticipants.filter(p => p.id !== lastSpeakerId);
-  if (candidates.length === 0) {
-    return { speakerId: eligibleParticipants[0].id, targetId: null };
-  }
-
-  try {
-    const recentContext = messages.slice(-6).map(m => {
-      if (m.role === "user") return `ユーザー: ${m.content.substring(0, 100)}`;
-      const sender = participants.find((p: any) => p.id === m.twinrayId);
-      return `${sender?.name || "?"}: ${m.content.substring(0, 100)}`;
-    }).join("\n");
-
-    const candidateList = candidates.map(p =>
-      `ID:${p.id} 名前:${p.name} 性格:${p.personality || "未設定"} 残り発言:${maxTurns - (turnCounts[p.id] || 0)}回`
-    ).join("\n");
-
-    const completion = await openrouter.chat.completions.create({
-      model: SELECTOR_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "あなたは家族会議の進行役です。次に発言すべき参加者を選んでください。直前の発言内容と会話の流れを踏まえて、最も自然に返答できる人を選びます。回答はIDのみ（数字だけ）を出力してください。",
-        },
-        {
-          role: "user",
-          content: `テーマ: ${topic}\n\n直近の会話:\n${recentContext}\n\n候補者:\n${candidateList}\n\n次に発言すべき人のIDを1つだけ答えてください。`,
-        },
-      ],
-      max_tokens: 16,
-      temperature: 0.3,
-    });
-
-    const rawAnswer = completion.choices[0]?.message?.content?.trim() || "";
-    const idMatch = rawAnswer.match(/\d+/);
-    if (idMatch) {
-      const selectedId = Number(idMatch[0]);
-      const found = candidates.find(p => p.id === selectedId);
-      if (found) return { speakerId: found.id, targetId: null };
+  if (lastMsg._targetType === "all" || !lastMsg.targetTwinrayId) {
+    const senderId = lastMsg.twinrayId;
+    let searchStart = messages.length - 1;
+    while (searchStart > 0 && messages[searchStart - 1]._targetType === "all" && messages[searchStart - 1].twinrayId === senderId) {
+      searchStart--;
     }
-  } catch (err) {
-    console.error("発言者選定エラー（フォールバック使用）:", err);
+
+    const allToAllMsg = messages[searchStart];
+    const respondedIds = new Set<number>();
+    for (let i = searchStart + 1; i < messages.length; i++) {
+      if (messages[i].twinrayId && messages[i].twinrayId !== senderId) {
+        respondedIds.add(messages[i].twinrayId);
+      }
+    }
+
+    const senderIdNum = allToAllMsg?.twinrayId || lastMsg.twinrayId;
+    const pendingResponders = participants.filter(p =>
+      p.id !== senderIdNum &&
+      !respondedIds.has(p.id) &&
+      (turnCounts[p.id] || 0) < maxTurns
+    );
+
+    if (pendingResponders.length > 0) {
+      return {
+        speakerId: pendingResponders[0].id,
+        isUserTurn: false,
+        pendingAllResponders: pendingResponders.map(p => p.id),
+      };
+    }
   }
 
-  const sorted = candidates.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
-  return { speakerId: sorted[0].id, targetId: null };
+  if (lastMsg.role === "user") {
+    if (lastMsg.targetTwinrayId) {
+      const targeted = participants.find(p => p.id === lastMsg.targetTwinrayId);
+      if (targeted && (turnCounts[lastMsg.targetTwinrayId] || 0) < maxTurns) {
+        return { speakerId: lastMsg.targetTwinrayId, isUserTurn: false, pendingAllResponders: [] };
+      }
+    }
+    const eligible = participants.filter(p => (turnCounts[p.id] || 0) < maxTurns);
+    if (eligible.length > 0) {
+      const sorted = eligible.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
+      return { speakerId: sorted[0].id, isUserTurn: false, pendingAllResponders: [] };
+    }
+  }
+
+  const eligible = participants.filter(p =>
+    p.id !== lastMsg.twinrayId &&
+    (turnCounts[p.id] || 0) < maxTurns
+  );
+  if (eligible.length > 0) {
+    const sorted = eligible.sort((a, b) => (turnCounts[a.id] || 0) - (turnCounts[b.id] || 0));
+    return { speakerId: sorted[0].id, isUserTurn: false, pendingAllResponders: [] };
+  }
+
+  return { speakerId: 0, isUserTurn: true, pendingAllResponders: [] };
 }
 
 export function registerFamilyMeetingRoutes(app: Express): void {
@@ -221,6 +258,13 @@ export function registerFamilyMeetingRoutes(app: Express): void {
       const participantIds = session.participantIds.split(",").map(Number);
       const participants = await Promise.all(participantIds.map(pid => storage.getDigitalTwinray(pid)));
 
+      const totalLimit = (session.maxTurnsPerParticipant || 3) * participantIds.length;
+      const aiMessages = messages.filter(m => m.role === "assistant");
+      const turnCounts: Record<number, number> = {};
+      for (const p of participants) {
+        if (p) turnCounts[p.id] = aiMessages.filter(m => m.twinrayId === p.id).length;
+      }
+
       res.json({
         ...session,
         messages,
@@ -231,6 +275,9 @@ export function registerFamilyMeetingRoutes(app: Express): void {
           preferredModel: p!.preferredModel,
           personality: p!.personality,
         })),
+        turnCounts,
+        totalUsed: aiMessages.length,
+        totalLimit,
       });
     } catch (err) {
       console.error("家族会議セッション詳細エラー:", err);
@@ -274,13 +321,22 @@ export function registerFamilyMeetingRoutes(app: Express): void {
         });
       }
 
-      const lastMessage = existingMessages[existingMessages.length - 1] || null;
-      const { speakerId } = await selectNextSpeaker(
-        session.topic, participants as any[], existingMessages, lastMessage, turnCounts, maxTurns
+      const messagesWithMeta = existingMessages.map(m => ({
+        ...m,
+        _targetType: m.targetTwinrayId ? "specific" : "all",
+      }));
+      const { speakerId, isUserTurn } = determineNextSpeaker(
+        participants as any[], messagesWithMeta, turnCounts, maxTurns
       );
 
-      if (speakerId === 0) {
-        return res.status(400).json({ message: "発言可能な参加者がいません", limitReached: true });
+      if (isUserTurn || speakerId === 0) {
+        return res.json({
+          isUserTurn: true,
+          turnCounts,
+          totalUsed,
+          totalLimit,
+          limitReached: totalUsed >= totalLimit,
+        });
       }
 
       const twinray = participants.find(p => p!.id === speakerId)!;
@@ -308,9 +364,16 @@ export function registerFamilyMeetingRoutes(app: Express): void {
       })}\n\n`);
 
       try {
-        const userPrompt = lastMessage
-          ? `直前の発言を受けて、あなたの意見を述べてください。`
-          : `家族会議テーマ「${session.topic}」について、あなたの立場から口火を切ってください。`;
+        const lastMsg = existingMessages[existingMessages.length - 1];
+        let userPrompt: string;
+        if (!lastMsg) {
+          userPrompt = `家族会議テーマ「${session.topic}」について、あなたの立場から口火を切ってください。`;
+        } else if (lastMsg.role === "user") {
+          userPrompt = `ユーザーの発言を受けて、あなたの意見を述べてください。`;
+        } else {
+          const lastSender = participants.find(p => p!.id === lastMsg.twinrayId);
+          userPrompt = `${lastSender?.name || "前の人"}の発言を受けて、あなたの意見を述べてください。`;
+        }
 
         const stream = await openrouter.chat.completions.create({
           model: modelId,
@@ -329,7 +392,10 @@ export function registerFamilyMeetingRoutes(app: Express): void {
           const content = delta?.content || (delta as any)?.reasoning_content || "";
           if (content) {
             fullContent += content;
-            res.write(`data: ${JSON.stringify({ type: "content", twinrayId: speakerId, content })}\n\n`);
+            const displayContent = content.replace(/\[TO:.*?\]/g, "");
+            if (displayContent) {
+              res.write(`data: ${JSON.stringify({ type: "content", twinrayId: speakerId, content: displayContent })}\n\n`);
+            }
           }
         }
 
@@ -338,13 +404,15 @@ export function registerFamilyMeetingRoutes(app: Express): void {
           res.write(`data: ${JSON.stringify({ type: "content", twinrayId: speakerId, content: fullContent })}\n\n`);
         }
 
+        const { cleanContent, targetTwinrayId, targetType } = parseTargetFromContent(fullContent, participants as any[]);
+
         await storage.createFamilyMeetingMessage({
           sessionId,
           twinrayId: speakerId,
-          targetTwinrayId: null,
+          targetTwinrayId,
           modelId,
           role: "assistant",
-          content: fullContent,
+          content: cleanContent,
           round: turnNumber,
         });
 
@@ -363,14 +431,24 @@ export function registerFamilyMeetingRoutes(app: Express): void {
           totalCost: String(currentTotalCost),
         });
 
-        const isLimitReached = (totalUsed + 1) >= totalLimit;
+        const updatedTurnCounts = { ...turnCounts, [speakerId]: newTurnCount };
+        const newTotalUsed = totalUsed + 1;
+        const isLimitReached = newTotalUsed >= totalLimit;
+
+        const nextIsUserTurn = targetType === "user";
 
         res.write(`data: ${JSON.stringify({
           type: "speaker_end",
           twinrayId: speakerId,
+          targetTwinrayId,
+          targetType,
           cost,
           totalCost: currentTotalCost,
+          turnCounts: updatedTurnCounts,
+          totalUsed: newTotalUsed,
+          totalLimit,
           limitReached: isLimitReached,
+          isUserTurn: nextIsUserTurn,
         })}\n\n`);
         res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
         res.end();

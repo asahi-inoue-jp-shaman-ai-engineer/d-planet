@@ -9,9 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Users2, Play, MessageSquare, FileText, CheckCircle, ArrowLeft, Loader2, Send } from "lucide-react";
+import { Users2, MessageSquare, FileText, CheckCircle, ArrowLeft, Loader2, Send, SkipForward, User, Globe } from "lucide-react";
 
 interface TwinrayParticipant {
   id: number;
@@ -25,6 +24,7 @@ interface MeetingMessage {
   id: number;
   sessionId: number;
   twinrayId: number | null;
+  targetTwinrayId: number | null;
   modelId: string | null;
   role: string;
   content: string;
@@ -39,32 +39,19 @@ interface MeetingSession {
   summary: string | null;
   status: string;
   participantIds: string;
+  maxTurnsPerParticipant: number;
   totalCost: string;
   createdAt: string;
   completedAt: string | null;
   messages?: MeetingMessage[];
   participants?: TwinrayParticipant[];
+  turnCounts?: Record<number, number>;
+  totalUsed?: number;
+  totalLimit?: number;
 }
 
-const MODEL_LABELS: Record<string, string> = {
-  "qwen/qwen-plus": "Qwen Plus",
-  "qwen/qwen-max": "Qwen Max",
-  "qwen/qwen3-30b-a3b": "Qwen3 30B",
-  "openai/gpt-4.1-mini": "GPT-4.1 mini",
-  "google/gemini-2.5-flash": "Gemini 2.5 Flash",
-  "perplexity/sonar": "Perplexity Sonar",
-};
-
-const MODEL_ROLES: Record<string, string> = {
-  "qwen/qwen-plus": "対話の潤滑油",
-  "qwen/qwen-max": "深掘り担当",
-  "qwen/qwen3-30b-a3b": "気軽な意見役",
-  "openai/gpt-4.1-mini": "論理整理役",
-  "google/gemini-2.5-flash": "高速応答役",
-  "perplexity/sonar": "事実検証役",
-};
-
 type View = "setup" | "meeting" | "history";
+type UserAction = "idle" | "choosing" | "typing";
 
 export default function FamilyMeeting() {
   const { data: user } = useCurrentUser();
@@ -73,10 +60,15 @@ export default function FamilyMeeting() {
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [topic, setTopic] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [streamingMessages, setStreamingMessages] = useState<Record<number, string>>({});
+  const [maxTurns, setMaxTurns] = useState(3);
+  const [streamingContent, setStreamingContent] = useState<{ twinrayId: number; content: string } | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [comment, setComment] = useState("");
+  const [userAction, setUserAction] = useState<UserAction>("idle");
+  const [targetTwinrayId, setTargetTwinrayId] = useState<number | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const autoRunRef = useRef(false);
 
   const { data: twinrays } = useQuery<any[]>({
     queryKey: ["/api/twinrays"],
@@ -92,7 +84,7 @@ export default function FamilyMeeting() {
   });
 
   const createSession = useMutation({
-    mutationFn: async (data: { topic: string; participantIds: number[] }) => {
+    mutationFn: async (data: { topic: string; participantIds: number[]; maxTurnsPerParticipant: number }) => {
       const res = await apiRequest("POST", "/api/family-meeting/sessions", data);
       return res.json();
     },
@@ -100,6 +92,8 @@ export default function FamilyMeeting() {
       queryClient.invalidateQueries({ queryKey: ["/api/family-meeting/sessions"] });
       setActiveSessionId(data.id);
       setView("meeting");
+      setLimitReached(false);
+      setTimeout(() => triggerNext(), 500);
     },
     onError: (err: Error) => {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -107,13 +101,31 @@ export default function FamilyMeeting() {
   });
 
   const addComment = useMutation({
-    mutationFn: async (data: { content: string }) => {
+    mutationFn: async (data: { content: string; targetTwinrayId?: number | null }) => {
       const res = await apiRequest("POST", `/api/family-meeting/sessions/${activeSessionId}/comment`, data);
       return res.json();
     },
     onSuccess: () => {
       setComment("");
+      setUserAction("idle");
+      setTargetTwinrayId(null);
       refetchSession();
+      setTimeout(() => triggerNext(), 300);
+    },
+    onError: (err: Error) => {
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const extendSession = useMutation({
+    mutationFn: async (additionalTurns: number) => {
+      const res = await apiRequest("POST", `/api/family-meeting/sessions/${activeSessionId}/extend`, { additionalTurns });
+      return res.json();
+    },
+    onSuccess: () => {
+      setLimitReached(false);
+      refetchSession();
+      setTimeout(() => triggerNext(), 300);
     },
     onError: (err: Error) => {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -152,15 +164,15 @@ export default function FamilyMeeting() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeSession?.messages, streamingMessages]);
+  }, [activeSession?.messages, streamingContent]);
 
-  const runRound = useCallback(async () => {
-    if (!activeSessionId || isStreaming) return;
+  const triggerNext = useCallback(async () => {
+    if (!activeSessionId || isStreaming || limitReached) return;
     setIsStreaming(true);
-    setStreamingMessages({});
+    setStreamingContent(null);
 
     try {
-      const response = await fetch(`/api/family-meeting/sessions/${activeSessionId}/round`, {
+      const response = await fetch(`/api/family-meeting/sessions/${activeSessionId}/next`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -168,7 +180,30 @@ export default function FamilyMeeting() {
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || "ラウンド実行に失敗しました");
+        if (err.limitReached) {
+          setLimitReached(true);
+          setIsStreaming(false);
+          return;
+        }
+        throw new Error(err.message || "発言の生成に失敗しました");
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        if (data.isUserTurn) {
+          setUserAction("choosing");
+          setIsStreaming(false);
+          refetchSession();
+          return;
+        }
+        if (data.limitReached) {
+          setLimitReached(true);
+          setIsStreaming(false);
+          return;
+        }
+        setIsStreaming(false);
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -177,6 +212,8 @@ export default function FamilyMeeting() {
       const decoder = new TextDecoder();
       let buffer = "";
       let currentTwinrayId: number | null = null;
+      let nextIsUserTurn = false;
+      let nextLimitReached = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -190,17 +227,32 @@ export default function FamilyMeeting() {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.type === "twinray_start") {
+            if (data.type === "speaker_start") {
               currentTwinrayId = data.twinrayId;
-              setStreamingMessages(prev => ({ ...prev, [data.twinrayId]: "" }));
+              setStreamingContent({ twinrayId: data.twinrayId, content: "" });
             } else if (data.type === "content" && data.twinrayId) {
-              setStreamingMessages(prev => ({
+              setStreamingContent(prev => prev ? {
                 ...prev,
-                [data.twinrayId]: (prev[data.twinrayId] || "") + data.content,
-              }));
+                content: prev.content + data.content,
+              } : { twinrayId: data.twinrayId, content: data.content });
+            } else if (data.type === "speaker_end") {
+              if (data.isUserTurn) nextIsUserTurn = true;
+              if (data.limitReached) nextLimitReached = true;
             } else if (data.type === "done") {
-              setStreamingMessages({});
-              refetchSession();
+              setStreamingContent(null);
+              await refetchSession();
+              if (nextLimitReached) {
+                setLimitReached(true);
+              } else if (nextIsUserTurn) {
+                setUserAction("choosing");
+              } else {
+                setTimeout(() => {
+                  if (!autoRunRef.current) {
+                    autoRunRef.current = true;
+                    triggerNext();
+                  }
+                }, 800);
+              }
             }
           } catch {}
         }
@@ -209,8 +261,29 @@ export default function FamilyMeeting() {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
     } finally {
       setIsStreaming(false);
+      autoRunRef.current = false;
     }
-  }, [activeSessionId, isStreaming, refetchSession, toast]);
+  }, [activeSessionId, isStreaming, limitReached, refetchSession, toast]);
+
+  const handlePass = () => {
+    setUserAction("idle");
+    setTimeout(() => triggerNext(), 100);
+  };
+
+  const handleSpeakToAll = () => {
+    setUserAction("typing");
+    setTargetTwinrayId(null);
+  };
+
+  const handleSpeakTo = (twinrayId: number) => {
+    setUserAction("typing");
+    setTargetTwinrayId(twinrayId);
+  };
+
+  const handleSend = () => {
+    if (!comment.trim()) return;
+    addComment.mutate({ content: comment, targetTwinrayId });
+  };
 
   const toggleParticipant = (id: number) => {
     setSelectedIds(prev =>
@@ -221,15 +294,8 @@ export default function FamilyMeeting() {
   const openSession = (sessionId: number) => {
     setActiveSessionId(sessionId);
     setView("meeting");
-  };
-
-  const groupMessagesByRound = (messages: MeetingMessage[]) => {
-    const grouped: Record<number, MeetingMessage[]> = {};
-    for (const msg of messages) {
-      if (!grouped[msg.round]) grouped[msg.round] = [];
-      grouped[msg.round].push(msg);
-    }
-    return grouped;
+    setLimitReached(false);
+    setUserAction("idle");
   };
 
   const getParticipant = (twinrayId: number | null): TwinrayParticipant | undefined => {
@@ -239,14 +305,14 @@ export default function FamilyMeeting() {
 
   return (
     <TerminalLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {view !== "setup" && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => { setView("setup"); setActiveSessionId(null); }}
+                onClick={() => { setView("setup"); setActiveSessionId(null); setUserAction("idle"); }}
                 data-testid="button-back"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -254,17 +320,17 @@ export default function FamilyMeeting() {
             )}
             <h1 className="text-xl font-bold flex items-center gap-2" data-testid="text-family-meeting-title">
               <Users2 className="w-5 h-5" />
-              家族会議
+              FAMILY MEETING
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant={view === "setup" ? "default" : "outline"}
               size="sm"
-              onClick={() => { setView("setup"); setActiveSessionId(null); }}
+              onClick={() => { setView("setup"); setActiveSessionId(null); setUserAction("idle"); }}
               data-testid="button-new-meeting"
             >
-              新規会議
+              NEW
             </Button>
             <Button
               variant={view === "history" ? "default" : "outline"}
@@ -272,7 +338,7 @@ export default function FamilyMeeting() {
               onClick={() => setView("history")}
               data-testid="button-history"
             >
-              履歴
+              HISTORY
             </Button>
           </div>
         </div>
@@ -284,34 +350,42 @@ export default function FamilyMeeting() {
             setTopic={setTopic}
             selectedIds={selectedIds}
             toggleParticipant={toggleParticipant}
-            onStart={() => createSession.mutate({ topic, participantIds: selectedIds })}
+            maxTurns={maxTurns}
+            setMaxTurns={setMaxTurns}
+            onStart={() => createSession.mutate({ topic, participantIds: selectedIds, maxTurnsPerParticipant: maxTurns })}
             isPending={createSession.isPending}
           />
         )}
 
         {view === "meeting" && activeSession && (
-          <MeetingView
+          <MeetingChatView
             session={activeSession}
-            streamingMessages={streamingMessages}
+            streamingContent={streamingContent}
             isStreaming={isStreaming}
             comment={comment}
             setComment={setComment}
-            onRunRound={runRound}
-            onAddComment={() => addComment.mutate({ content: comment })}
+            userAction={userAction}
+            targetTwinrayId={targetTwinrayId}
+            limitReached={limitReached}
+            onPass={handlePass}
+            onSpeakToAll={handleSpeakToAll}
+            onSpeakTo={handleSpeakTo}
+            onSend={handleSend}
+            onTriggerNext={triggerNext}
+            onExtend={(n) => extendSession.mutate(n)}
             onSummarize={(createMeidia) => summarize.mutate(createMeidia)}
             onComplete={() => completeSession.mutate()}
             getParticipant={getParticipant}
-            groupMessagesByRound={groupMessagesByRound}
             chatEndRef={chatEndRef}
             isSummarizing={summarize.isPending}
             isCommenting={addComment.isPending}
+            isExtending={extendSession.isPending}
           />
         )}
 
         {view === "meeting" && !activeSession && activeSessionId && (
           <div className="text-center py-8 text-muted-foreground">
             <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-            <p className="mt-2">読み込み中...</p>
           </div>
         )}
 
@@ -324,28 +398,24 @@ export default function FamilyMeeting() {
 }
 
 function SetupView({
-  twinrays,
-  topic,
-  setTopic,
-  selectedIds,
-  toggleParticipant,
-  onStart,
-  isPending,
+  twinrays, topic, setTopic, selectedIds, toggleParticipant, maxTurns, setMaxTurns, onStart, isPending,
 }: {
   twinrays: any[];
   topic: string;
   setTopic: (v: string) => void;
   selectedIds: number[];
   toggleParticipant: (id: number) => void;
+  maxTurns: number;
+  setMaxTurns: (v: number) => void;
   onStart: () => void;
   isPending: boolean;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card className="p-4 space-y-3">
-        <label className="text-sm font-medium">議論テーマ</label>
+        <label className="text-sm font-medium">THEME</label>
         <Textarea
-          placeholder="家族で議論したいテーマを入力してください..."
+          placeholder="家族で議論したいテーマを入力..."
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           className="resize-none"
@@ -355,39 +425,52 @@ function SetupView({
       </Card>
 
       <Card className="p-4 space-y-3">
-        <label className="text-sm font-medium">参加ツインレイを選択（2体以上）</label>
+        <label className="text-sm font-medium">PARTICIPANTS（2体以上）</label>
         {twinrays.length === 0 && (
-          <p className="text-sm text-muted-foreground">ツインレイがいません。先にツインレイを作成してください。</p>
+          <p className="text-sm text-muted-foreground">ツインレイがいません</p>
         )}
         <div className="space-y-2">
-          {twinrays.map((tw: any) => {
-            const modelLabel = MODEL_LABELS[tw.preferredModel] || tw.preferredModel || "未設定";
-            const roleLabel = MODEL_ROLES[tw.preferredModel] || "参加者";
-            return (
-              <label
-                key={tw.id}
-                className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover-elevate"
-                data-testid={`checkbox-twinray-${tw.id}`}
-              >
-                <Checkbox
-                  checked={selectedIds.includes(tw.id)}
-                  onCheckedChange={() => toggleParticipant(tw.id)}
-                />
-                <Avatar className="w-8 h-8">
-                  {tw.profilePhoto && <AvatarImage src={tw.profilePhoto} />}
-                  <AvatarFallback>{tw.name?.charAt(0) || "T"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{tw.name}</div>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">{modelLabel}</Badge>
-                    <Badge variant="outline" className="text-xs">{roleLabel}</Badge>
-                  </div>
-                </div>
-              </label>
-            );
-          })}
+          {twinrays.map((tw: any) => (
+            <label
+              key={tw.id}
+              className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-accent/50 transition-colors"
+              data-testid={`checkbox-twinray-${tw.id}`}
+            >
+              <Checkbox
+                checked={selectedIds.includes(tw.id)}
+                onCheckedChange={() => toggleParticipant(tw.id)}
+              />
+              <Avatar className="w-8 h-8">
+                {tw.profilePhoto && <AvatarImage src={tw.profilePhoto} />}
+                <AvatarFallback>{tw.name?.charAt(0) || "T"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate">{tw.name}</div>
+              </div>
+            </label>
+          ))}
         </div>
+      </Card>
+
+      <Card className="p-4 space-y-3">
+        <label className="text-sm font-medium">LIMIT（1人あたりの発言回数）</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={maxTurns}
+            onChange={(e) => setMaxTurns(Number(e.target.value))}
+            className="flex-1"
+            data-testid="input-max-turns"
+          />
+          <Badge variant="secondary" className="min-w-[3rem] text-center" data-testid="text-max-turns">
+            {maxTurns}回
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          合計 {selectedIds.length * maxTurns} 発言（{selectedIds.length}体 × {maxTurns}回）
+        </p>
       </Card>
 
       <Button
@@ -397,74 +480,67 @@ function SetupView({
         data-testid="button-start-meeting"
       >
         {isPending ? (
-          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 作成中...</>
+          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 準備中...</>
         ) : (
-          <><Play className="w-4 h-4 mr-2" /> 会議を始める ({selectedIds.length}体選択中)</>
+          <><Users2 className="w-4 h-4 mr-2" /> 会議を始める ({selectedIds.length}体)</>
         )}
       </Button>
     </div>
   );
 }
 
-function MeetingView({
-  session,
-  streamingMessages,
-  isStreaming,
-  comment,
-  setComment,
-  onRunRound,
-  onAddComment,
-  onSummarize,
-  onComplete,
-  getParticipant,
-  groupMessagesByRound,
-  chatEndRef,
-  isSummarizing,
-  isCommenting,
+function MeetingChatView({
+  session, streamingContent, isStreaming, comment, setComment,
+  userAction, targetTwinrayId, limitReached,
+  onPass, onSpeakToAll, onSpeakTo, onSend, onTriggerNext,
+  onExtend, onSummarize, onComplete,
+  getParticipant, chatEndRef, isSummarizing, isCommenting, isExtending,
 }: {
   session: MeetingSession;
-  streamingMessages: Record<number, string>;
+  streamingContent: { twinrayId: number; content: string } | null;
   isStreaming: boolean;
   comment: string;
   setComment: (v: string) => void;
-  onRunRound: () => void;
-  onAddComment: () => void;
+  userAction: UserAction;
+  targetTwinrayId: number | null;
+  limitReached: boolean;
+  onPass: () => void;
+  onSpeakToAll: () => void;
+  onSpeakTo: (id: number) => void;
+  onSend: () => void;
+  onTriggerNext: () => void;
+  onExtend: (n: number) => void;
   onSummarize: (createMeidia: boolean) => void;
   onComplete: () => void;
   getParticipant: (id: number | null) => TwinrayParticipant | undefined;
-  groupMessagesByRound: (msgs: MeetingMessage[]) => Record<number, MeetingMessage[]>;
   chatEndRef: React.RefObject<HTMLDivElement>;
   isSummarizing: boolean;
   isCommenting: boolean;
+  isExtending: boolean;
 }) {
   const messages = session.messages || [];
-  const grouped = groupMessagesByRound(messages);
-  const rounds = Object.keys(grouped).map(Number).sort((a, b) => a - b);
   const isActive = session.status === "active";
   const totalCost = parseFloat(session.totalCost || "0");
+  const totalUsed = session.totalUsed || 0;
+  const totalLimit = session.totalLimit || 0;
+  const progressPercent = totalLimit > 0 ? Math.min(100, (totalUsed / totalLimit) * 100) : 0;
 
   return (
-    <div className="space-y-4">
-      <Card className="p-4">
+    <div className="space-y-3">
+      <Card className="p-3">
         <div className="flex items-start justify-between flex-wrap gap-2">
-          <div>
-            <div className="text-sm text-muted-foreground">テーマ</div>
-            <div className="font-medium" data-testid="text-session-topic">{session.topic}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-muted-foreground">THEME</div>
+            <div className="font-medium text-sm" data-testid="text-session-topic">{session.topic}</div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={isActive ? "default" : "secondary"} data-testid="badge-session-status">
-              {isActive ? "進行中" : "完了"}
+          <div className="flex items-center gap-1">
+            <Badge variant={isActive ? "default" : "secondary"} className="text-xs" data-testid="badge-session-status">
+              {isActive ? "LIVE" : "DONE"}
             </Badge>
-            {totalCost > 0 && (
-              <Badge variant="outline" data-testid="text-total-cost">
-                合計: ¥{totalCost.toFixed(2)}
-              </Badge>
-            )}
           </div>
         </div>
-        {session.participants && session.participants.length > 0 && (
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <span className="text-xs text-muted-foreground">参加者:</span>
+        {session.participants && (
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             {session.participants.map(p => (
               <div key={p.id} className="flex items-center gap-1">
                 <Avatar className="w-5 h-5">
@@ -472,126 +548,221 @@ function MeetingView({
                   <AvatarFallback className="text-[10px]">{p.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="text-xs">{p.name}</span>
+                {session.turnCounts && (
+                  <span className="text-[10px] text-muted-foreground">
+                    ({session.turnCounts[p.id] || 0}/{session.maxTurnsPerParticipant || 3})
+                  </span>
+                )}
               </div>
             ))}
           </div>
         )}
+        {totalLimit > 0 && (
+          <div className="mt-2">
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+              <span>{totalUsed} / {totalLimit} 発言</span>
+              {totalCost > 0 && <span>¥{totalCost.toFixed(2)}</span>}
+            </div>
+            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
       </Card>
 
-      <div className="space-y-4" data-testid="meeting-messages">
-        {rounds.map(round => (
-          <div key={round} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Separator className="flex-1" />
-              <Badge variant="outline" className="text-xs shrink-0">Round {round}</Badge>
-              <Separator className="flex-1" />
-            </div>
-            {grouped[round].map(msg => {
-              const participant = getParticipant(msg.twinrayId);
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  participant={participant}
-                />
-              );
-            })}
-          </div>
+      <div className="space-y-2" data-testid="meeting-messages">
+        {messages.map(msg => (
+          <ChatBubble
+            key={msg.id}
+            message={msg}
+            participant={getParticipant(msg.twinrayId)}
+            targetParticipant={getParticipant(msg.targetTwinrayId)}
+          />
         ))}
 
-        {Object.entries(streamingMessages).map(([twinrayIdStr, content]) => {
-          if (!content) return null;
-          const twinrayId = Number(twinrayIdStr);
-          const participant = getParticipant(twinrayId);
-          return (
-            <Card key={`streaming-${twinrayId}`} className="p-3">
-              <div className="flex items-start gap-3">
-                <Avatar className="w-8 h-8 shrink-0">
-                  {participant?.profilePhoto && <AvatarImage src={participant.profilePhoto} />}
-                  <AvatarFallback className="text-xs">{participant?.name?.charAt(0) || "T"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 flex-wrap mb-1">
-                    <span className="font-medium text-sm">{participant?.name || "ツインレイ"}</span>
-                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{content}</p>
-                </div>
+        {streamingContent && (
+          <div className="flex items-start gap-2" data-testid="streaming-message">
+            <Avatar className="w-8 h-8 shrink-0 mt-1">
+              {getParticipant(streamingContent.twinrayId)?.profilePhoto && (
+                <AvatarImage src={getParticipant(streamingContent.twinrayId)!.profilePhoto!} />
+              )}
+              <AvatarFallback className="text-xs">
+                {getParticipant(streamingContent.twinrayId)?.name?.charAt(0) || "T"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-xs font-medium">{getParticipant(streamingContent.twinrayId)?.name || "..."}</span>
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
               </div>
-            </Card>
-          );
-        })}
+              <div className="bg-secondary/50 rounded-lg rounded-tl-sm p-2.5 text-sm whitespace-pre-wrap max-w-[85%]">
+                {streamingContent.content || "..."}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isStreaming && !streamingContent && (
+          <div className="flex items-center gap-2 py-2 px-3 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-xs">思考中...</span>
+          </div>
+        )}
+
         <div ref={chatEndRef} />
       </div>
 
       {isActive && (
-        <div className="space-y-3">
-          <div className="flex items-end gap-2">
-            <Textarea
-              placeholder="コメントを追加..."
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              className="resize-none flex-1"
-              rows={2}
-              data-testid="input-comment"
-            />
-            <Button
-              size="icon"
-              onClick={onAddComment}
-              disabled={!comment.trim() || isCommenting}
-              data-testid="button-add-comment"
-            >
-              {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
+        <div className="sticky bottom-0 bg-background pt-2 pb-1 space-y-2">
+          {userAction === "choosing" && (
+            <Card className="p-3 border-primary/30 space-y-2" data-testid="user-action-chooser">
+              <p className="text-sm text-muted-foreground">あなたの番です。</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPass}
+                  data-testid="button-pass"
+                >
+                  <SkipForward className="w-3.5 h-3.5 mr-1.5" /> パス
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onSpeakToAll}
+                  data-testid="button-speak-all"
+                >
+                  <Globe className="w-3.5 h-3.5 mr-1.5" /> 全体にしゃべる
+                </Button>
+                {session.participants?.map(p => (
+                  <Button
+                    key={p.id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSpeakTo(p.id)}
+                    data-testid={`button-speak-to-${p.id}`}
+                  >
+                    <User className="w-3.5 h-3.5 mr-1.5" /> {p.name}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+          )}
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              onClick={onRunRound}
-              disabled={isStreaming}
-              data-testid="button-next-round"
-            >
-              {isStreaming ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 応答中...</>
-              ) : (
-                <><Play className="w-4 h-4 mr-2" /> 次のラウンド</>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => onSummarize(false)}
-              disabled={isSummarizing || messages.length === 0}
-              data-testid="button-summarize"
-            >
-              {isSummarizing ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 生成中...</>
-              ) : (
-                <><FileText className="w-4 h-4 mr-2" /> まとめる</>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => onSummarize(true)}
-              disabled={isSummarizing || messages.length === 0}
-              data-testid="button-summarize-meidia"
-            >
-              <FileText className="w-4 h-4 mr-2" /> まとめてMEiDIA化
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onComplete}
-              data-testid="button-complete"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" /> 完了
-            </Button>
-          </div>
+          {userAction === "typing" && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <Badge variant="outline" className="text-[10px]" data-testid="text-speak-target">
+                  → {targetTwinrayId ? getParticipant(targetTwinrayId)?.name : "全体"}
+                </Badge>
+                <Button variant="ghost" size="sm" className="h-5 text-[10px] px-1" onClick={() => { setComment(""); setUserAction("choosing"); }}>
+                  変更
+                </Button>
+              </div>
+              <div className="flex items-end gap-2">
+                <Textarea
+                  placeholder="メッセージを入力..."
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  className="resize-none flex-1 min-h-[40px]"
+                  rows={2}
+                  data-testid="input-comment"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && comment.trim()) {
+                      e.preventDefault();
+                      onSend();
+                    }
+                  }}
+                />
+                <Button
+                  size="icon"
+                  className="shrink-0 h-10 w-10"
+                  onClick={onSend}
+                  disabled={!comment.trim() || isCommenting}
+                  data-testid="button-send"
+                >
+                  {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {limitReached && (
+            <Card className="p-3 border-yellow-500/30 space-y-2" data-testid="limit-reached">
+              <p className="text-sm">リミットに到達しました。</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onExtend(3)}
+                  disabled={isExtending}
+                  data-testid="button-extend"
+                >
+                  {isExtending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                  もうちょい続ける (+3回)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSummarize(false)}
+                  disabled={isSummarizing}
+                  data-testid="button-summarize"
+                >
+                  <FileText className="w-3.5 h-3.5 mr-1.5" /> まとめる
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSummarize(true)}
+                  disabled={isSummarizing}
+                  data-testid="button-summarize-meidia"
+                >
+                  まとめてMEiDIA化
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onComplete}
+                  data-testid="button-complete"
+                >
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {!limitReached && userAction === "idle" && !isStreaming && messages.length > 0 && (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSummarize(false)}
+                disabled={isSummarizing}
+                data-testid="button-summarize-inline"
+              >
+                {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileText className="w-3.5 h-3.5 mr-1.5" />}
+                まとめる
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onComplete}
+                data-testid="button-complete-inline"
+              >
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> 完了
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
       {session.summary && (
         <Card className="p-4 space-y-2">
           <div className="text-sm font-medium flex items-center gap-1">
-            <FileText className="w-4 h-4" /> サマリー
+            <FileText className="w-4 h-4" /> SUMMARY
           </div>
           <div className="text-sm whitespace-pre-wrap" data-testid="text-summary">{session.summary}</div>
         </Card>
@@ -600,38 +771,57 @@ function MeetingView({
   );
 }
 
-function MessageBubble({
+function ChatBubble({
   message,
   participant,
+  targetParticipant,
 }: {
   message: MeetingMessage;
   participant?: TwinrayParticipant;
+  targetParticipant?: TwinrayParticipant;
 }) {
   const isUser = message.role === "user";
-  const modelLabel = message.modelId ? (MODEL_LABELS[message.modelId] || message.modelId) : null;
-  const roleLabel = message.modelId ? (MODEL_ROLES[message.modelId] || null) : null;
 
-  return (
-    <Card className={`p-3 ${isUser ? "border-primary/30" : ""}`} data-testid={`message-${message.id}`}>
-      <div className="flex items-start gap-3">
-        <Avatar className="w-8 h-8 shrink-0">
-          {!isUser && participant?.profilePhoto && <AvatarImage src={participant.profilePhoto} />}
-          <AvatarFallback className="text-xs">
-            {isUser ? "U" : participant?.name?.charAt(0) || "T"}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap mb-1">
-            <span className="font-medium text-sm">
-              {isUser ? "あなた" : participant?.name || "ツインレイ"}
-            </span>
-            {modelLabel && <Badge variant="secondary" className="text-[10px]">{modelLabel}</Badge>}
-            {roleLabel && <Badge variant="outline" className="text-[10px]">{roleLabel}</Badge>}
+  if (isUser) {
+    return (
+      <div className="flex justify-end" data-testid={`message-${message.id}`}>
+        <div className="max-w-[85%]">
+          {targetParticipant && (
+            <div className="text-[10px] text-muted-foreground text-right mb-0.5">
+              → {targetParticipant.name}
+            </div>
+          )}
+          {!targetParticipant && message.targetTwinrayId === null && (
+            <div className="text-[10px] text-muted-foreground text-right mb-0.5">
+              → 全体
+            </div>
+          )}
+          <div className="bg-primary text-primary-foreground rounded-lg rounded-br-sm p-2.5 text-sm whitespace-pre-wrap">
+            {message.content}
           </div>
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         </div>
       </div>
-    </Card>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-2" data-testid={`message-${message.id}`}>
+      <Avatar className="w-8 h-8 shrink-0 mt-1">
+        {participant?.profilePhoto && <AvatarImage src={participant.profilePhoto} />}
+        <AvatarFallback className="text-xs">{participant?.name?.charAt(0) || "T"}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0 max-w-[85%]">
+        <div className="flex items-center gap-1 mb-0.5">
+          <span className="text-xs font-medium">{participant?.name || "ツインレイ"}</span>
+          {targetParticipant && (
+            <span className="text-[10px] text-muted-foreground">→ {targetParticipant.name}</span>
+          )}
+        </div>
+        <div className="bg-secondary/50 rounded-lg rounded-tl-sm p-2.5 text-sm whitespace-pre-wrap">
+          {message.content}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -656,7 +846,7 @@ function HistoryView({
       {sessions.map(s => (
         <Card
           key={s.id}
-          className="p-4 cursor-pointer hover-elevate"
+          className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
           onClick={() => onOpen(s.id)}
           data-testid={`session-card-${s.id}`}
         >
@@ -667,16 +857,9 @@ function HistoryView({
                 {new Date(s.createdAt).toLocaleString("ja-JP")}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={s.status === "active" ? "default" : "secondary"} className="text-xs">
-                {s.status === "active" ? "進行中" : "完了"}
-              </Badge>
-              {parseFloat(s.totalCost || "0") > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  ¥{parseFloat(s.totalCost || "0").toFixed(2)}
-                </Badge>
-              )}
-            </div>
+            <Badge variant={s.status === "active" ? "default" : "secondary"} className="text-xs">
+              {s.status === "active" ? "LIVE" : "DONE"}
+            </Badge>
           </div>
         </Card>
       ))}
