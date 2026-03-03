@@ -247,11 +247,11 @@ export interface IStorage {
   getLatestAgentSessionContext(): Promise<AgentSessionContext | undefined>;
   getAgentSessionContextHistory(limit?: number): Promise<AgentSessionContext[]>;
 
-  createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string }): Promise<FamilyMeetingSession>;
+  createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string; maxTurnsPerParticipant?: number }): Promise<FamilyMeetingSession>;
   getFamilyMeetingSession(id: number): Promise<FamilyMeetingSession | undefined>;
   getFamilyMeetingSessions(userId: number): Promise<FamilyMeetingSession[]>;
   updateFamilyMeetingSession(id: number, updates: Partial<FamilyMeetingSession>): Promise<FamilyMeetingSession>;
-  createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage>;
+  createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; targetTwinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage>;
   getFamilyMeetingMessages(sessionId: number): Promise<FamilyMeetingMessage[]>;
 
   createTwinraySession(data: CreateTwinraySessionRequest): Promise<TwinraySession>;
@@ -1209,7 +1209,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(agentSessionContext).orderBy(desc(agentSessionContext.createdAt)).limit(limit);
   }
 
-  async createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string }): Promise<FamilyMeetingSession> {
+  async createFamilyMeetingSession(data: { userId: number; topic: string; participantIds: string; maxTurnsPerParticipant?: number }): Promise<FamilyMeetingSession> {
     const [session] = await db.insert(familyMeetingSessions).values(data).returning();
     return session;
   }
@@ -1228,10 +1228,11 @@ export class DatabaseStorage implements IStorage {
     return session;
   }
 
-  async createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage> {
+  async createFamilyMeetingMessage(data: { sessionId: number; twinrayId?: number | null; targetTwinrayId?: number | null; modelId?: string | null; role: string; content: string; round: number }): Promise<FamilyMeetingMessage> {
     const [msg] = await db.insert(familyMeetingMessages).values({
       sessionId: data.sessionId,
       twinrayId: data.twinrayId ?? null,
+      targetTwinrayId: data.targetTwinrayId ?? null,
       modelId: data.modelId ?? null,
       role: data.role,
       content: data.content,
