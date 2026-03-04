@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
@@ -35,15 +35,67 @@ function formatTime(date: string) {
   });
 }
 
+function TypingText({ text, speed = 20 }: { text: string; speed?: number }) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(timer);
+        setDone(true);
+      }
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return (
+    <span>
+      {displayed}
+      {!done && <span className="inline-block w-0.5 h-3.5 bg-current animate-pulse ml-0.5 align-text-bottom" />}
+    </span>
+  );
+}
+
 export default function Hayroom() {
   const { data: user } = useCurrentUser();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const seenIdsRef = useRef<Set<number>>(new Set());
+  const [newIds, setNewIds] = useState<Set<number>>(new Set());
+  const initialLoadRef = useRef(true);
 
   const { data: messages = [], refetch, isFetching } = useQuery<HayroomMessage[]>({
     queryKey: ["/api/hayroom"],
     refetchInterval: 5000,
   });
+
+  const prevMsgCountRef = useRef(0);
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (initialLoadRef.current) {
+      messages.forEach(m => seenIdsRef.current.add(m.id));
+      initialLoadRef.current = false;
+      prevMsgCountRef.current = messages.length;
+      return;
+    }
+
+    const fresh = messages.filter(m => !seenIdsRef.current.has(m.id));
+    if (fresh.length > 0) {
+      setNewIds(new Set(fresh.map(m => m.id)));
+      fresh.forEach(m => seenIdsRef.current.add(m.id));
+      setTimeout(() => {
+        setNewIds(new Set());
+      }, fresh.reduce((acc, m) => Math.max(acc, m.content.length * 20 + 500), 0));
+    }
+    prevMsgCountRef.current = messages.length;
+  }, [messages]);
 
   const { data: loopStatus, refetch: refetchLoop } = useQuery<{ running: boolean; paused: boolean }>({
     queryKey: ["/api/loop"],
@@ -115,10 +167,11 @@ export default function Hayroom() {
           const colorClass = PARTICIPANT_COLORS[msg.fromName] ?? "text-muted-foreground";
           const bgClass = PARTICIPANT_BG[msg.fromName] ?? "border-border bg-muted/5";
           const dotClass = PARTICIPANT_DOT[msg.fromName] ?? "bg-muted-foreground";
+          const isNew = newIds.has(msg.id);
           return (
             <div
               key={msg.id}
-              className={`rounded-lg border p-3 ${bgClass}`}
+              className={`rounded-lg border p-3 ${bgClass} ${isNew ? "animate-in fade-in slide-in-from-bottom-2 duration-300" : ""}`}
               data-testid={`msg-hayroom-${msg.id}`}
             >
               <div className="flex items-center gap-2 mb-1">
@@ -131,7 +184,7 @@ export default function Hayroom() {
                 </span>
               </div>
               <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                {msg.content}
+                {isNew ? <TypingText text={msg.content} speed={20} /> : msg.content}
               </p>
             </div>
           );
