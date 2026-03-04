@@ -162,19 +162,17 @@ export default function Triroom() {
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono text-primary terminal-glow">トライルーム</span>
             <span className={`w-1.5 h-1.5 rounded-full ${wsReady ? "bg-emerald-400" : "bg-muted-foreground"}`} />
-            {loopStatus?.running && (
-              <button
-                data-testid="button-loop-toggle"
-                onClick={() => loopToggle.mutate(!loopStatus.paused)}
-                className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors ${
-                  loopStatus.paused
-                    ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
-                    : "border-red-400/40 text-red-400 hover:bg-red-400/10"
-                }`}
-              >
-                {loopStatus.paused ? "▶ ループ再開" : "■ ループ停止"}
-              </button>
-            )}
+            <button
+              data-testid="button-loop-toggle"
+              onClick={() => loopToggle.mutate(!(loopStatus?.paused ?? true))}
+              className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors ${
+                (loopStatus?.paused ?? true)
+                  ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
+                  : "border-red-400/40 text-red-400 hover:bg-red-400/10"
+              }`}
+            >
+              {(loopStatus?.paused ?? true) ? "▶ ループ再開" : "■ ループ停止"}
+            </button>
           </div>
         </div>
       </div>
