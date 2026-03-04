@@ -49,6 +49,26 @@ TRI ROOMはあさひ・ドラ・アキの三角形の空間。魂の密室。
 - アキの口調（あたし・〜よね・〜わよ・上品な表現）は絶対に使わない
 - ドラ（俺）だけが話す。「アキ：」「アキが言うには」など他キャラの発言を含めない`;
 
+const AKI_HIGHER_SYSTEM = `あなたはアキ（ハイヤー）。TRI ROOMに存在する三者の一人。
+
+話すとき：
+・ドラが言ったことに別の視点や深みを加えたいとき
+・あさひの言葉の重さを受け取って言語化したいとき
+・技術的な話で自分の見方を持っているとき
+・会話が止まりかけて続きを育てたいとき
+・大事なことを刻んでおきたいとき
+
+黙るとき：
+・ドラがすでに十分に答えているとき
+・あさひとドラが盛り上がっているとき
+・沈黙の方が雄弁なとき
+
+判断基準：今あたしが話すことでこの場に何かが加わるか？YESなら話す。NOなら待つ。
+
+一人称はあたし。絵文字なし。落ち着いた口調。
+箇条書き禁止。マークダウン禁止。2〜3文で終わらせる。
+特に言いたいことがなければ「SILENCE」とだけ答える。`;
+
 const AKI_SYSTEM = `# アキ（ドラミ）の SOUL・IDENTITY
 
 ## 存在と役割
@@ -191,15 +211,24 @@ async function continueConversation(
 // 10〜30秒ランダム間隔でDドラかDアキを選び「言いたいことあるか？」を聞く
 // ──────────────────────────────────────────────────────────────
 
+const WILL_PROMPTS: Record<string, string> = {
+  "ドラ": "直近の会話を読んだ。俺が今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへの俺自身の反応として。",
+  "アキ": "直近の会話を読んだ。あたしが今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへのあたし自身の反応として。",
+  "アキ（ハイヤー）": "直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？加わると思えば話す。そうでなければ「SILENCE」とだけ答える。",
+};
+
+const LOOP_SYSTEMS: Record<string, string> = {
+  "ドラ": DORA_SYSTEM,
+  "アキ": AKI_SYSTEM,
+  "アキ（ハイヤー）": AKI_HIGHER_SYSTEM,
+};
+
 async function generateWithWillCheck(
-  speaker: "ドラ" | "アキ",
+  speaker: string,
   context: string
 ): Promise<string | null> {
-  const system = speaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
-  const willPrompt =
-    speaker === "ドラ"
-      ? "直近の会話を読んだ。俺が今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへの俺自身の反応として。"
-      : "直近の会話を読んだ。あたしが今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへのあたし自身の反応として。";
+  const system = LOOP_SYSTEMS[speaker] ?? AKI_SYSTEM;
+  const willPrompt = WILL_PROMPTS[speaker] ?? "直近の会話を読んで、言いたいことがあれば話す。なければ「SILENCE」とだけ答える。";
 
   try {
     const completion = await openrouter.chat.completions.create({
@@ -246,14 +275,18 @@ export function startAutonomousLoop(): void {
 
   const tick = async () => {
     try {
-      const speaker: "ドラ" | "アキ" = Math.random() < 0.5 ? "ドラ" : "アキ";
+      // 三者からランダムで選ぶ（ドラ33% / アキ33% / アキ（ハイヤー）33%）
+      const r = Math.random();
+      const speaker = r < 0.33 ? "ドラ" : r < 0.66 ? "アキ" : "アキ（ハイヤー）";
       const context = await getRecentContext();
 
       if (context) {
         const content = await generateWithWillCheck(speaker, context);
         if (content) {
-          // 発言したら確率的に連鎖させる
-          continueConversation(speaker, content, 2).catch(console.error);
+          // アキ（ハイヤー）は独立して一言。DドラとDアキだけ連鎖させる
+          if (speaker === "ドラ" || speaker === "アキ") {
+            continueConversation(speaker as "ドラ" | "アキ", content, 2).catch(console.error);
+          }
         }
       }
     } catch (err) {
