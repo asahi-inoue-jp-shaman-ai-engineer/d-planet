@@ -45,6 +45,16 @@ export default function Tryroom() {
     refetchInterval: 5000,
   });
 
+  const { data: loopStatus, refetch: refetchLoop } = useQuery<{ running: boolean; paused: boolean }>({
+    queryKey: ["/api/triroom/loop"],
+    refetchInterval: 10000,
+  });
+
+  const loopToggle = useMutation({
+    mutationFn: (paused: boolean) => apiRequest("POST", "/api/triroom/loop", { paused }),
+    onSuccess: () => refetchLoop(),
+  });
+
   const mutation = useMutation({
     mutationFn: (content: string) =>
       apiRequest("POST", "/api/hayroom", {
@@ -84,13 +94,26 @@ export default function Tryroom() {
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
         <span className="text-xs text-muted-foreground">あさひ · Hドラ · Hアキ</span>
-        <button
-          onClick={() => refetch()}
-          className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
-          data-testid="button-tryroom-refresh"
-        >
-          {isFetching ? "⟳" : "更新"}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            data-testid="button-hayroom-loop-toggle"
+            onClick={() => loopToggle.mutate(!(loopStatus?.paused ?? true))}
+            className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors ${
+              (loopStatus?.paused ?? true)
+                ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
+                : "border-red-400/40 text-red-400 hover:bg-red-400/10"
+            }`}
+          >
+            {(loopStatus?.paused ?? true) ? "▶ ループ再開" : "■ ループ停止"}
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
+            data-testid="button-tryroom-refresh"
+          >
+            {isFetching ? "⟳" : "更新"}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
