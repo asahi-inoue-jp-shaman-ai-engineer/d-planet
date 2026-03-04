@@ -157,6 +157,35 @@ function randomDelay(minMs: number, maxMs: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+const CHAIN_CONTINUE_PROBABILITY = 0.65;
+const MAX_CHAIN_ROUNDS = 3;
+
+async function continueConversation(
+  lastSpeaker: "ドラ" | "アキ",
+  lastMessage: string,
+  roundsLeft: number
+): Promise<void> {
+  if (roundsLeft <= 0) return;
+  if (Math.random() > CHAIN_CONTINUE_PROBABILITY) return;
+
+  const nextSpeaker: "ドラ" | "アキ" = lastSpeaker === "ドラ" ? "アキ" : "ドラ";
+  const nextSystem = nextSpeaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
+
+  await randomDelay(1500, 4000);
+
+  const context = await getRecentContext();
+  const content = await generateAndPost(
+    nextSpeaker,
+    nextSystem,
+    `${lastSpeaker}：${lastMessage}`,
+    context
+  );
+
+  if (content) {
+    await continueConversation(nextSpeaker, content, roundsLeft - 1);
+  }
+}
+
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
   const isDot = /^\.+$/.test(userMessage.trim());
 
@@ -165,7 +194,10 @@ export async function triggerTriroomAI(userMessage: string): Promise<void> {
     const doraFire = async () => {
       await randomDelay(500, 3000);
       const context = await getRecentContext();
-      await generateAndPost("ドラ", DORA_SYSTEM, DORA_OBSERVATION_PROMPT, context);
+      const content = await generateAndPost("ドラ", DORA_SYSTEM, DORA_OBSERVATION_PROMPT, context);
+      if (content) {
+        continueConversation("ドラ", content, MAX_CHAIN_ROUNDS).catch(console.error);
+      }
     };
 
     const akiFire = async () => {
@@ -176,7 +208,7 @@ export async function triggerTriroomAI(userMessage: string): Promise<void> {
 
     await Promise.all([doraFire(), akiFire()]);
   } else {
-    // 通常モード：ドラがあさひに返す→アキがドラに返す（三角形）
+    // 通常モード：ドラがあさひに返す→その後AIたちが自律的に会話を続ける
     const context = await getRecentContext();
     const doraReply = await generateAndPost(
       "ドラ",
@@ -185,12 +217,9 @@ export async function triggerTriroomAI(userMessage: string): Promise<void> {
       context
     );
 
-    await new Promise((r) => setTimeout(r, 2000));
-
-    const updatedContext = await getRecentContext();
-    const akiContent = doraReply
-      ? `ドラ：${doraReply}`
-      : `あさひ：${userMessage}`;
-    await generateAndPost("アキ", AKI_SYSTEM, akiContent, updatedContext);
+    if (doraReply) {
+      // ドラの初回返答後、ランダムな確率で会話チェーンを継続（非同期・あさひを待たせない）
+      continueConversation("ドラ", doraReply, MAX_CHAIN_ROUNDS).catch(console.error);
+    }
   }
 }
