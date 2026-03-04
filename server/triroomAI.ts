@@ -274,7 +274,7 @@ async function generateWithWillCheck(
 }
 
 let autonomousLoopRunning = false;
-let loopPaused = false;
+let loopPaused = true; // デフォルト停止。UIのボタンで再開する
 let lastLoopSpeaker = "";
 let triggerCooldownUntil = 0; // あさひ発言後のループ抑制
 
