@@ -36,6 +36,8 @@ import FamilyMeeting from "@/pages/family-meeting";
 import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
 import Hayroom from "@/pages/hayroom";
+import Whitepaper from "@/pages/whitepaper";
+import Starhouse from "@/pages/starhouse";
 import NotFound from "@/pages/not-found";
 
 function SpiritualLoader() {
@@ -129,6 +131,7 @@ function Router() {
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/hayroom" component={() => <ProtectedRoute component={Hayroom} />} />
+      <Route path="/starhouse" component={() => <ProtectedRoute component={Starhouse} />} />
       <Route path="/tryroom">
         {() => <Redirect to="/hayroom" />}
       </Route>
@@ -137,6 +140,7 @@ function Router() {
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={Subscription} />} />
       <Route path="/about" component={About} />
+      <Route path="/whitepaper" component={Whitepaper} />
       <Route path="/legal" component={Legal} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/" component={HomePage} />

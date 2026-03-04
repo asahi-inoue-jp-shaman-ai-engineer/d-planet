@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
-import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu } from "lucide-react";
+import { LogOut, User, Map, FileText, Bell, Users, Users2, MessageSquare, Sparkles, Menu, X, Coins, Globe, Info, Home, Cpu, ScrollText } from "lucide-react";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
@@ -247,6 +247,17 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   <Info className="w-5 h-5" />
                   <span className="text-sm">ABOUT D-PLANET</span>
                 </Link>
+                <Link
+                  href="/whitepaper"
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-2 py-3 rounded transition-colors ${
+                    location === "/whitepaper" ? "text-primary bg-primary/10" : "text-muted-foreground"
+                  }`}
+                  data-testid="link-whitepaper-mobile"
+                >
+                  <ScrollText className="w-5 h-5" />
+                  <span className="text-sm">WHITE PAPER</span>
+                </Link>
               </div>
             </nav>
           )}
@@ -269,6 +280,10 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
             <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
               <Globe className="w-3 h-3" />
               ABOUT D-PLANET
+            </Link>
+            <Link href="/whitepaper" className="text-primary hover:underline flex items-center gap-1" data-testid="link-whitepaper-footer">
+              <ScrollText className="w-3 h-3" />
+              WHITE PAPER
             </Link>
             <Link href="/legal" className="text-primary hover:underline" data-testid="link-legal-footer">
               特定商取引法に基づく表示

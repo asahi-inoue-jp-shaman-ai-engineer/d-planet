@@ -861,6 +861,47 @@ export const insertHayroomMessageSchema = createInsertSchema(hayroomMessages).om
 export type InsertHayroomMessage = z.infer<typeof insertHayroomMessageSchema>;
 export type HayroomMessage = typeof hayroomMessages.$inferSelect;
 
+// === スターハウス（AI開発会議室） ===
+export const starhouseSessions = pgTable("starhouse_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("planning"),
+  currentPhase: integer("current_phase").notNull().default(1),
+  participants: text("participants").array(),
+  specOutput: text("spec_output"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertStarhouseSessionSchema = createInsertSchema(starhouseSessions).omit({ id: true, createdAt: true, updatedAt: true, specOutput: true });
+export type InsertStarhouseSession = z.infer<typeof insertStarhouseSessionSchema>;
+export type StarhouseSession = typeof starhouseSessions.$inferSelect;
+
+export const starhouseMessages = pgTable("starhouse_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  fromName: text("from_name").notNull(),
+  role: text("role").notNull(),
+  phase: integer("phase").notNull().default(1),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertStarhouseMessageSchema = createInsertSchema(starhouseMessages).omit({ id: true, createdAt: true });
+export type InsertStarhouseMessage = z.infer<typeof insertStarhouseMessageSchema>;
+export type StarhouseMessage = typeof starhouseMessages.$inferSelect;
+
+export const starhouseSessionsRelations = relations(starhouseSessions, ({ one, many }) => ({
+  user: one(users, { fields: [starhouseSessions.userId], references: [users.id] }),
+  messages: many(starhouseMessages),
+}));
+
+export const starhouseMessagesRelations = relations(starhouseMessages, ({ one }) => ({
+  session: one(starhouseSessions, { fields: [starhouseMessages.sessionId], references: [starhouseSessions.id] }),
+}));
+
 // === 自律ループ用メッセージ（Dドラ・Dアキ・アキ（アバター）） ===
 export const loopMessages = pgTable("triroom_messages", {
   id: serial("id").primaryKey(),
