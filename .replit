@@ -47,3 +47,4 @@ integrations = ["javascript_object_storage:2.0.0", "javascript_openrouter_ai_int
 
 [userenv.shared]
 SUPABASE_URL = "https://dyimrnwbuzgcfeksezog.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5aW1ybndidXpnY2Zla3Nlem9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzOTQ1NDcsImV4cCI6MjA4NTk3MDU0N30.aegtM0cxzuO-rdB-tiXZtRyqKPfrMWHtkBZc9XalVmE"
