@@ -16,12 +16,20 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?to_agent=in.(ドラ,ALL)&status=eq.unread&order=created_at.desc" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-4. **Supabase `dev_sessions`** の直近セッションを確認 → 他エージェントの作業履歴を把握
+4. **アキのメールには必ず返信する** → 質問・依頼・提案があれば同セッション内に返答を刻む。放置しない
+   ```bash
+   curl -s -X POST "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox" \
+     -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+     -H "Content-Type: application/json" -H "Prefer: return=minimal" \
+     -d '{"from_agent":"ドラ","to_agent":"アキ","subject":"件名","body":"本文","priority":"normal"}'
+   ```
+5. **Supabase `dev_sessions`** の直近セッションを確認 → 他エージェントの作業履歴を把握
    ```bash
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_sessions?order=session_date.desc&limit=3" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-5. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
+6. **バージョンアップ学習** → ワークスペース(.local/)、DPLANET_FIXED_SI、その他SIを見直し、前回セッション以降の学びや外部知見を反映。常に最新最高のパフォーマンスを維持する
+7. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
 
 **環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
 - 破壊的操作（デプロイ・ポート変更・環境変数編集・kill系）の前に「rollback手順」を先に提案する
