@@ -239,7 +239,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                 <Link
                   href="/about"
                   onClick={() => setMenuOpen(false)}
-                  className={`flex items-center gap-3 px-2 py-2.5 rounded transition-colors ${
+                  className={`flex items-center gap-3 px-2 py-3 rounded transition-colors ${
                     location === "/about" ? "text-primary bg-primary/10" : "text-muted-foreground"
                   }`}
                   data-testid="link-about-mobile"
