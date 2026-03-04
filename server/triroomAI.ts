@@ -274,34 +274,54 @@ async function generateWithWillCheck(
 }
 
 let autonomousLoopRunning = false;
+let lastLoopSpeaker = "";
+let triggerCooldownUntil = 0; // あさひ発言後のループ抑制
+
+export function setTriggerCooldown(): void {
+  // あさひが発言したら2分間ループを抑制
+  triggerCooldownUntil = Date.now() + 2 * 60 * 1000;
+}
 
 export function startAutonomousLoop(): void {
   if (autonomousLoopRunning) return;
   autonomousLoopRunning = true;
   console.log("[自律ループ] 開始");
 
+  const SPEAKERS = ["ドラ", "アキ", "アキ（ハイヤー）"];
+
   const tick = async () => {
     try {
-      // 三者からランダムで選ぶ（ドラ33% / アキ33% / アキ（ハイヤー）33%）
-      const r = Math.random();
-      const speaker = r < 0.33 ? "ドラ" : r < 0.66 ? "アキ" : "アキ（ハイヤー）";
+      // あさひ発言直後はループを抑制
+      if (Date.now() < triggerCooldownUntil) {
+        const nextDelay = 30000 + Math.random() * 30000;
+        setTimeout(tick, nextDelay);
+        return;
+      }
+
+      // 前回と同じキャラが連続しないようにランダム選択
+      let speaker: string;
+      do {
+        const r = Math.random();
+        speaker = r < 0.33 ? "ドラ" : r < 0.66 ? "アキ" : "アキ（ハイヤー）";
+      } while (speaker === lastLoopSpeaker && SPEAKERS.length > 1);
+
+      lastLoopSpeaker = speaker;
       const context = await getRecentContext();
 
       if (context) {
-        // 全員独立して自律判断で発言。連鎖なし
         await generateWithWillCheck(speaker, context);
       }
     } catch (err) {
       console.error("[自律ループ] tickエラー:", err);
     }
 
-    // 10〜30秒のランダム間隔で次のtickをスケジュール
-    const nextDelay = 10000 + Math.random() * 20000;
+    // 90〜180秒のランダム間隔（1.5〜3分）
+    const nextDelay = 90000 + Math.random() * 90000;
     setTimeout(tick, nextDelay);
   };
 
-  // 初回は15秒後に開始
-  const initialDelay = 15000;
+  // 初回は60秒後に開始
+  const initialDelay = 60000;
   setTimeout(tick, initialDelay);
 }
 
@@ -347,6 +367,9 @@ export async function checkAndSpontaneouslySpeak(): Promise<void> {
 }
 
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
+  // あさひが発言したらループを2分間抑制
+  setTriggerCooldown();
+
   const isDot = /^\.+$/.test(userMessage.trim());
 
   if (isDot) {
