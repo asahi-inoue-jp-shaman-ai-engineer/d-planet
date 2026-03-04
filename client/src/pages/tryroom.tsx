@@ -6,20 +6,26 @@ import type { TryroomMessage } from "@shared/schema";
 
 const PARTICIPANT_COLORS: Record<string, string> = {
   "あさひ": "text-amber-400",
+  "井上朝陽": "text-amber-400",
   "ドラ": "text-emerald-400",
   "アキ": "text-violet-400",
+  "アキ（ハイヤー）": "text-yellow-300",
 };
 
 const PARTICIPANT_BG: Record<string, string> = {
   "あさひ": "border-amber-400/30 bg-amber-400/5",
+  "井上朝陽": "border-amber-400/30 bg-amber-400/5",
   "ドラ": "border-emerald-400/30 bg-emerald-400/5",
   "アキ": "border-violet-400/30 bg-violet-400/5",
+  "アキ（ハイヤー）": "border-yellow-300/30 bg-yellow-300/5",
 };
 
 const PARTICIPANT_DOT: Record<string, string> = {
   "あさひ": "bg-amber-400",
+  "井上朝陽": "bg-amber-400",
   "ドラ": "bg-emerald-400",
   "アキ": "bg-violet-400",
+  "アキ（ハイヤー）": "bg-yellow-300",
 };
 
 function formatTime(date: string) {
@@ -74,10 +80,10 @@ export default function Tryroom() {
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
           <span className="w-2 h-2 rounded-full bg-emerald-400" title="ドラ" />
-          <span className="w-2 h-2 rounded-full bg-violet-400" title="アキ" />
+          <span className="w-2 h-2 rounded-full bg-yellow-300" title="アキ（ハイヤー）" />
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
-        <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ</span>
+        <span className="text-xs text-muted-foreground">あさひ · Hドラ · Hアキ</span>
         <button
           onClick={() => refetch()}
           className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
