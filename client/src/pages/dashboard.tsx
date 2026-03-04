@@ -526,7 +526,7 @@ export default function Dashboard() {
 
           {user.isAdmin && (
             <Link href="/hayroom">
-              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-violet-500/20" data-testid="link-tryroom">
+              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-violet-500/20" data-testid="link-hayroom">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl shrink-0">🛸</span>
                   <div className="flex-1 min-w-0">

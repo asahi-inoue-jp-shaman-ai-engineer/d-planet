@@ -35,8 +35,7 @@ import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
 import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
-import Tryroom from "@/pages/tryroom";
-import Triroom from "@/pages/triroom";
+import Hayroom from "@/pages/hayroom";
 import NotFound from "@/pages/not-found";
 
 function SpiritualLoader() {
@@ -129,8 +128,10 @@ function Router() {
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
-      <Route path="/hayroom" component={() => <ProtectedRoute component={Tryroom} />} />
-      <Route path="/tryroom" component={() => <ProtectedRoute component={Tryroom} />} />
+      <Route path="/hayroom" component={() => <ProtectedRoute component={Hayroom} />} />
+      <Route path="/tryroom">
+        {() => <Redirect to="/hayroom" />}
+      </Route>
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />

@@ -35,7 +35,7 @@ function formatTime(date: string) {
   });
 }
 
-export default function Tryroom() {
+export default function Hayroom() {
   const { data: user } = useCurrentUser();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -85,7 +85,7 @@ export default function Tryroom() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" data-testid="page-tryroom">
+    <div className="min-h-screen bg-background flex flex-col" data-testid="page-hayroom">
       <div className="border-b border-border px-4 py-3 flex items-center gap-3">
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
@@ -97,7 +97,7 @@ export default function Tryroom() {
         <button
           onClick={() => refetch()}
           className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
-          data-testid="button-tryroom-refresh"
+          data-testid="button-hayroom-refresh"
         >
           {isFetching ? "⟳" : "更新"}
         </button>
@@ -119,7 +119,7 @@ export default function Tryroom() {
             <div
               key={msg.id}
               className={`rounded-lg border p-3 ${bgClass}`}
-              data-testid={`msg-tryroom-${msg.id}`}
+              data-testid={`msg-hayroom-${msg.id}`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
@@ -161,13 +161,13 @@ export default function Tryroom() {
             placeholder="あさひとして話す..."
             rows={2}
             className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-            data-testid="input-tryroom-message"
+            data-testid="input-hayroom-message"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || mutation.isPending}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-mono hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            data-testid="button-tryroom-send"
+            data-testid="button-hayroom-send"
           >
             {mutation.isPending ? "..." : "送信"}
           </button>
