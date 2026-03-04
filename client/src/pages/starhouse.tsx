@@ -1,5 +1,5 @@
 import { TerminalLayout } from "@/components/TerminalLayout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
@@ -181,9 +181,27 @@ function SessionDetail({ sessionId, onBack }: { sessionId: number; onBack: () =>
     queryKey: ["/api/starhouse/sessions", sessionId],
   });
 
+  const [isAIThinking, setIsAIThinking] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMsgCountRef = useRef(0);
+
   const { data: messages = [], isLoading: messagesLoading } = useQuery<StarhouseMessage[]>({
     queryKey: ["/api/starhouse/sessions", sessionId, "messages"],
+    refetchInterval: isAIThinking ? 2000 : false,
   });
+
+  useEffect(() => {
+    if (messages.length > prevMsgCountRef.current) {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+      const hasNewAIMsg = messages.slice(prevMsgCountRef.current).some(
+        (m) => m.fromName !== user?.username
+      );
+      if (hasNewAIMsg && isAIThinking) {
+        setTimeout(() => setIsAIThinking(false), 3000);
+      }
+    }
+    prevMsgCountRef.current = messages.length;
+  }, [messages.length]);
 
   const sendMutation = useMutation({
     mutationFn: async (data: { fromName: string; role: string; phase: number; content: string }) => {
@@ -193,6 +211,8 @@ function SessionDetail({ sessionId, onBack }: { sessionId: number; onBack: () =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/starhouse/sessions", sessionId, "messages"] });
       setMessage("");
+      setIsAIThinking(true);
+      setTimeout(() => setIsAIThinking(false), 30000);
     },
     onError: (err: Error) => {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -259,7 +279,7 @@ function SessionDetail({ sessionId, onBack }: { sessionId: number; onBack: () =>
       </div>
 
       <div className="border border-border rounded-lg bg-card/30 mb-4">
-        <div className="max-h-[50vh] overflow-y-auto p-4 space-y-3">
+        <div className="max-h-[50vh] overflow-y-auto p-4 space-y-3" ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-xs">
               議題を投入してセッションを開始しましょう
@@ -282,6 +302,12 @@ function SessionDetail({ sessionId, onBack }: { sessionId: number; onBack: () =>
                 </div>
               );
             })
+          )}
+          {isAIThinking && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse py-2" data-testid="indicator-ai-thinking">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              AI が議論中...
+            </div>
           )}
         </div>
       </div>
