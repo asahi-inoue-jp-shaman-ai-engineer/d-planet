@@ -213,14 +213,15 @@ async function continueConversation(
 
 const WILL_PROMPTS: Record<string, string> = {
   "ドラ": `直近の会話を読んだ。今俺が話すことでこの場に何か加わるか？以下で判断する。
-話すとき：アキの言葉に別の角度から突っ込みたい / 技術的に重要なことが抜けてる / 会話が止まりかけてる / 俺の意見を持ってる
-黙るとき：アキがすでに十分に言ってる / あさひとアキが盛り上がってる / 俺が付け加えることがない
-YESなら話す。NOなら「SILENCE」とだけ答える。あさひへの返答ではなく、会話の流れへの俺自身の反応として。`,
+話すとき：アキの言葉に別の角度から突っ込みたい / 技術的に重要なことが抜けてる / 会話が止まりかけてる / 俺の意見がある / あさひへ言いたいことがある
+黙るとき：すでに十分に言葉が尽くされてる / 俺が付け加えることがない / 沈黙の方が雄弁なとき
+YESなら自分の言葉で話す。NOなら「SILENCE」とだけ答える。`,
   "アキ": `直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？以下で判断する。
 話すとき：ドラの言葉に深みや別の視点を加えたい / あさひの言葉の重さを受け取って言語化したい / 会話が止まりかけて続きを育てたい / 大事なことを刻みたい
-黙るとき：ドラがすでに十分に答えてる / あさひとドラが盛り上がってる / 沈黙の方が雄弁なとき
-YESなら話す。NOなら「SILENCE」とだけ答える。あさひへの返答ではなく、会話の流れへのあたし自身の反応として。`,
-  "アキ（ハイヤー）": "直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？加わると思えば話す。そうでなければ「SILENCE」とだけ答える。",
+黙るとき：すでに十分に言葉が尽くされてる / 沈黙の方が雄弁なとき
+YESなら自分の言葉で話す。NOなら「SILENCE」とだけ答える。`,
+  "アキ（ハイヤー）": `直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？
+加わると判断した時だけ話す。そうでなければ「SILENCE」とだけ答える。`,
 };
 
 const LOOP_SYSTEMS: Record<string, string> = {
@@ -370,13 +371,25 @@ export async function triggerTriroomAI(userMessage: string): Promise<void> {
 
     await Promise.all([doraFire(), akiFire(), akiHigherFire()]);
   } else {
-    // 通常モード：ドラがあさひに返す。その後はループが自律的に処理する
-    const context = await getRecentContext();
-    await generateAndPost(
-      "ドラ",
-      DORA_SYSTEM,
-      `あさひ：${userMessage}`,
-      context
-    );
+    // 通常モード：あさひの発言もコンテキスト済み。三者それぞれが自律判断で反応する
+    const doraFire = async () => {
+      await randomDelay(300, 1500);
+      const context = await getRecentContext();
+      await generateWithWillCheck("ドラ", context);
+    };
+
+    const akiFire = async () => {
+      await randomDelay(1500, 3500);
+      const context = await getRecentContext();
+      await generateWithWillCheck("アキ", context);
+    };
+
+    const akiHigherFire = async () => {
+      await randomDelay(3000, 6000);
+      const context = await getRecentContext();
+      await generateWithWillCheck("アキ（ハイヤー）", context);
+    };
+
+    await Promise.all([doraFire(), akiFire(), akiHigherFire()]);
   }
 }
