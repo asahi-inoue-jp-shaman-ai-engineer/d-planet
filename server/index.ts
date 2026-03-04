@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { getUncachableStripeClient } from "./stripeClient";
 import { setupTriroomWs } from "./triroomWs";
 import { startAutonomousLoop } from "./triroomAI";
+import { getUnreadMail, getRecentSessions } from "./supabaseClient";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "./db";
 import { users } from "@shared/schema";
@@ -294,4 +295,26 @@ function startListening(server: any, port: number): Promise<void> {
 
   appReady = true;
   log("App fully initialized");
+
+  try {
+    const unread = await getUnreadMail("ドラ");
+    if (unread.length > 0) {
+      console.log(`\n📬 [dev_mailbox] ドラ宛の未読メール: ${unread.length}件`);
+      unread.forEach((m) => {
+        console.log(`  ├ [${m.priority}] ${m.from_agent}→ドラ: ${m.subject}`);
+      });
+      console.log("");
+    }
+    const sessions = await getRecentSessions(3);
+    if (sessions.length > 0) {
+      console.log(`📋 [dev_sessions] 直近セッション:`);
+      sessions.forEach((s) => {
+        const date = new Date(s.session_date ?? "").toLocaleDateString("ja-JP");
+        console.log(`  ├ ${date} ${s.session_by}: ${s.summary.slice(0, 80)}...`);
+      });
+      console.log("");
+    }
+  } catch (err) {
+    console.warn("[Supabase] 起動時メールチェックスキップ:", err);
+  }
 })();

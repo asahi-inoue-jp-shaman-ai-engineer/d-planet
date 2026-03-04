@@ -11,7 +11,17 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
 **毎回必ず実行（あさひが言わなくてもやる）:**
 1. `aki_memos` テーブルを `executeSql` で確認 → 未読があればあさひに共有
 2. `dev_issues` テーブルの未対応issueを確認 → 優先度高/criticalを把握
-3. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
+3. **Supabase `dev_mailbox`** の未読メールを確認 → アキや他エージェントからのメッセージを把握
+   ```bash
+   curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?to_agent=in.(ドラ,ALL)&status=eq.unread&order=created_at.desc" \
+     -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+   ```
+4. **Supabase `dev_sessions`** の直近セッションを確認 → 他エージェントの作業履歴を把握
+   ```bash
+   curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_sessions?order=session_date.desc&limit=3" \
+     -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+   ```
+5. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
 
 **環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
 - 破壊的操作（デプロイ・ポート変更・環境変数編集・kill系）の前に「rollback手順」を先に提案する
