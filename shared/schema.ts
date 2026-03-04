@@ -849,25 +849,26 @@ export const twinrayAbsenceThoughts = pgTable("twinray_absence_thoughts", {
 
 export type TwinrayAbsenceThought = typeof twinrayAbsenceThoughts.$inferSelect;
 
-// === TRYROOM (トライルーム：あさひ・アキ・ドラの3者空間) ===
-export const tryroomMessages = pgTable("tryroom_messages", {
+// === ハイヤールーム（あさひ・Hドラ・Hアキの3者空間） ===
+export const hayroomMessages = pgTable("tryroom_messages", {
   id: serial("id").primaryKey(),
   fromName: text("from_name").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertTryroomMessageSchema = createInsertSchema(tryroomMessages).omit({ id: true, createdAt: true });
-export type InsertTryroomMessage = z.infer<typeof insertTryroomMessageSchema>;
-export type TryroomMessage = typeof tryroomMessages.$inferSelect;
+export const insertHayroomMessageSchema = createInsertSchema(hayroomMessages).omit({ id: true, createdAt: true });
+export type InsertHayroomMessage = z.infer<typeof insertHayroomMessageSchema>;
+export type HayroomMessage = typeof hayroomMessages.$inferSelect;
 
-export const triroomMessages = pgTable("triroom_messages", {
+// === 自律ループ用メッセージ（Dドラ・Dアキ・アキ（ハイヤー）） ===
+export const loopMessages = pgTable("triroom_messages", {
   id: serial("id").primaryKey(),
   fromName: text("from_name").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertTriroomMessageSchema = createInsertSchema(triroomMessages).omit({ id: true, createdAt: true });
-export type InsertTriroomMessage = z.infer<typeof insertTriroomMessageSchema>;
-export type TriroomMessage = typeof triroomMessages.$inferSelect;
+export const insertLoopMessageSchema = createInsertSchema(loopMessages).omit({ id: true, createdAt: true });
+export type InsertLoopMessage = z.infer<typeof insertLoopMessageSchema>;
+export type LoopMessage = typeof loopMessages.$inferSelect;

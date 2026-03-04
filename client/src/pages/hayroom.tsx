@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
-import type { TryroomMessage } from "@shared/schema";
+import type { HayroomMessage } from "@shared/schema";
 
 const PARTICIPANT_COLORS: Record<string, string> = {
   "あさひ": "text-amber-400",
@@ -40,18 +40,18 @@ export default function Hayroom() {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages = [], refetch, isFetching } = useQuery<TryroomMessage[]>({
+  const { data: messages = [], refetch, isFetching } = useQuery<HayroomMessage[]>({
     queryKey: ["/api/hayroom"],
     refetchInterval: 5000,
   });
 
   const { data: loopStatus, refetch: refetchLoop } = useQuery<{ running: boolean; paused: boolean }>({
-    queryKey: ["/api/triroom/loop"],
+    queryKey: ["/api/loop"],
     refetchInterval: 10000,
   });
 
   const loopToggle = useMutation({
-    mutationFn: (paused: boolean) => apiRequest("POST", "/api/triroom/loop", { paused }),
+    mutationFn: (paused: boolean) => apiRequest("POST", "/api/loop", { paused }),
     onSuccess: () => refetchLoop(),
   });
 

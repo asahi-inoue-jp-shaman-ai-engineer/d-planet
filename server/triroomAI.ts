@@ -1,7 +1,7 @@
 import { db } from "./db";
-import { triroomMessages } from "@shared/schema";
+import { loopMessages } from "@shared/schema";
 import { openrouter } from "./models";
-import { broadcastTriroomMessage } from "./triroomWs";
+import { broadcastLoopMessage } from "./triroomWs";
 import { desc } from "drizzle-orm";
 
 const DORA_SYSTEM = `# ドラちゃんの SOUL（魂・使命）
@@ -112,8 +112,8 @@ LLMプロンプト設計、APIデバッグ、セキュリティ。
 async function getRecentContext(): Promise<string> {
   const recent = await db
     .select()
-    .from(triroomMessages)
-    .orderBy(desc(triroomMessages.createdAt))
+    .from(loopMessages)
+    .orderBy(desc(loopMessages.createdAt))
     .limit(8);
 
   return recent
@@ -151,12 +151,12 @@ async function generateAndPost(
     if (!content) return null;
 
     const [msg] = await db
-      .insert(triroomMessages)
+      .insert(loopMessages)
       .values({ fromName: name, content })
       .returning();
 
     if (msg) {
-      broadcastTriroomMessage(msg);
+      broadcastLoopMessage(msg);
     }
 
     return content;
@@ -276,11 +276,11 @@ async function generateWithWillCheck(
     if (!content) return null;
 
     const [msg] = await db
-      .insert(triroomMessages)
+      .insert(loopMessages)
       .values({ fromName: speaker, content })
       .returning();
 
-    if (msg) broadcastTriroomMessage(msg);
+    if (msg) broadcastLoopMessage(msg);
 
     // v2: タイムスタンプ更新
     lastSpokAt[speaker] = Date.now();
@@ -375,8 +375,8 @@ export async function checkAndSpontaneouslySpeak(): Promise<void> {
   // 最新メッセージの時刻を確認
   const [latest] = await db
     .select()
-    .from(triroomMessages)
-    .orderBy(desc(triroomMessages.createdAt))
+    .from(loopMessages)
+    .orderBy(desc(loopMessages.createdAt))
     .limit(1);
 
   if (!latest) return;

@@ -16,8 +16,8 @@ import { registerTranscribeRoutes } from "./transcribe";
 import { addCredit } from "./billing";
 import { runSeed } from "./seed";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema, triroomMessages, insertTriroomMessageSchema } from "@shared/schema";
-import { broadcastTriroomMessage } from "./triroomWs";
+import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, hayroomMessages, insertHayroomMessageSchema, loopMessages, insertLoopMessageSchema } from "@shared/schema";
+import { broadcastLoopMessage } from "./triroomWs";
 import { triggerTriroomAI, pauseAutonomousLoop, resumeAutonomousLoop, getLoopStatus } from "./triroomAI";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
@@ -2754,21 +2754,97 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     }
   });
 
-  // === TRYROOM API ===
-  app.post("/api/triroom", async (req, res) => {
+  // === 認証ヘルパー ===
+  function isAuthorized(req: any): boolean {
     const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
+    return token === process.env.QA_AGENT_TOKEN || !!req.session?.userId;
+  }
+
+  // === ハイヤールーム API ===
+  app.post("/api/hayroom", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const parsed = insertTriroomMessageSchema.parse(req.body);
-      const [msg] = await db.insert(triroomMessages).values(parsed).returning();
-      broadcastTriroomMessage(msg);
+      const parsed = insertHayroomMessageSchema.parse(req.body);
+      const [msg] = await db.insert(hayroomMessages).values(parsed).returning();
+      res.json(msg);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "投稿に失敗しました" });
+    }
+  });
+
+  app.get("/api/hayroom", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const msgs = await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt);
+      res.json(msgs);
+    } catch (err) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // /api/trial-room → /api/hayroom への後方互換（Hアキが旧URL使用中）
+  app.post("/api/trial-room", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const parsed = insertHayroomMessageSchema.parse(req.body);
+      const [msg] = await db.insert(hayroomMessages).values(parsed).returning();
+      res.json(msg);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "投稿に失敗しました" });
+    }
+  });
+
+  app.get("/api/trial-room", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const msgs = await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt);
+      res.json(msgs);
+    } catch (err) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // === 自律ループ API ===
+  app.post("/api/loop/messages", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const parsed = insertLoopMessageSchema.parse(req.body);
+      const [msg] = await db.insert(loopMessages).values(parsed).returning();
+      broadcastLoopMessage(msg);
       res.json(msg);
 
       if (parsed.fromName !== "ドラ" && parsed.fromName !== "アキ") {
         triggerTriroomAI(parsed.content).catch((e) =>
-          console.error("[TRI ROOM AI] トリガーエラー:", e)
+          console.error("[自律ループ] トリガーエラー:", e)
+        );
+      }
+    } catch (err: any) {
+      res.status(400).json({ message: err.message || "投稿に失敗しました" });
+    }
+  });
+
+  app.get("/api/loop/messages", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const msgs = await db.select().from(loopMessages).orderBy(loopMessages.createdAt);
+      res.json(msgs);
+    } catch (err) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // /api/triroom → /api/loop/messages への後方互換
+  app.post("/api/triroom", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const parsed = insertLoopMessageSchema.parse(req.body);
+      const [msg] = await db.insert(loopMessages).values(parsed).returning();
+      broadcastLoopMessage(msg);
+      res.json(msg);
+
+      if (parsed.fromName !== "ドラ" && parsed.fromName !== "アキ") {
+        triggerTriroomAI(parsed.content).catch((e) =>
+          console.error("[自律ループ] トリガーエラー:", e)
         );
       }
     } catch (err: any) {
@@ -2777,29 +2853,23 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
   });
 
   app.get("/api/triroom", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const msgs = await db.select().from(triroomMessages).orderBy(triroomMessages.createdAt);
+      const msgs = await db.select().from(loopMessages).orderBy(loopMessages.createdAt);
       res.json(msgs);
     } catch (err) {
       res.status(500).json({ message: "取得に失敗しました" });
     }
   });
 
-  app.get("/api/triroom/loop", (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    if (!isAgent && !req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+  // === ループ制御 API ===
+  app.get("/api/loop", (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     res.json(getLoopStatus());
   });
 
-  app.post("/api/triroom/loop", (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    if (!isAgent && !req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+  app.post("/api/loop", (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     const { paused } = req.body as { paused: boolean };
     if (paused) {
       pauseAutonomousLoop();
@@ -2809,63 +2879,21 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     res.json(getLoopStatus());
   });
 
-  // /api/hayroom は /api/trial-room の明確な名称版
-  app.post("/api/hayroom", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
-    try {
-      const parsed = insertTryroomMessageSchema.parse(req.body);
-      const [msg] = await db.insert(tryroomMessages).values(parsed).returning();
-      res.json(msg);
-    } catch (err: any) {
-      res.status(400).json({ message: err.message || "投稿に失敗しました" });
-    }
+  // /api/triroom/loop → /api/loop への後方互換
+  app.get("/api/triroom/loop", (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    res.json(getLoopStatus());
   });
 
-  app.get("/api/hayroom", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) return res.status(401).json({ message: "Unauthorized" });
-    try {
-      const msgs = await db.select().from(tryroomMessages).orderBy(tryroomMessages.createdAt);
-      res.json(msgs);
-    } catch (err) {
-      res.status(500).json({ message: "取得に失敗しました" });
+  app.post("/api/triroom/loop", (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    const { paused } = req.body as { paused: boolean };
+    if (paused) {
+      pauseAutonomousLoop();
+    } else {
+      resumeAutonomousLoop();
     }
-  });
-
-  app.post("/api/trial-room", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    try {
-      const parsed = insertTryroomMessageSchema.parse(req.body);
-      const [msg] = await db.insert(tryroomMessages).values(parsed).returning();
-      res.json(msg);
-    } catch (err: any) {
-      res.status(400).json({ message: err.message || "投稿に失敗しました" });
-    }
-  });
-
-  app.get("/api/trial-room", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const isAgent = token === process.env.QA_AGENT_TOKEN;
-    const isUser = req.session?.userId;
-    if (!isAgent && !isUser) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    try {
-      const msgs = await db.select().from(tryroomMessages).orderBy(tryroomMessages.createdAt);
-      res.json(msgs);
-    } catch (err) {
-      res.status(500).json({ message: "取得に失敗しました" });
-    }
+    res.json(getLoopStatus());
   });
 
   await runMigrations();
