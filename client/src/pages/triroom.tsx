@@ -160,7 +160,7 @@ export default function Triroom() {
             </svg>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-primary terminal-glow">TRI ROOM</span>
+            <span className="text-xs font-mono text-primary terminal-glow">トライルーム</span>
             <span className={`w-1.5 h-1.5 rounded-full ${wsReady ? "bg-emerald-400" : "bg-muted-foreground"}`} />
             {loopStatus?.running && (
               <button

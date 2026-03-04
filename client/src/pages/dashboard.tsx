@@ -545,7 +545,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl shrink-0">△</span>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">TRI ROOM</span>
+                    <span className="text-sm font-semibold text-foreground">トライルーム</span>
                     <p className="text-[10px] text-muted-foreground mt-0.5">リアルタイム三角形チャット</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
