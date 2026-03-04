@@ -1116,7 +1116,7 @@ export default function TwinrayChat() {
     : 100;
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
+    <main className="h-[100dvh] bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
       {levelUpAnimPhase && intimacyLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
@@ -1874,7 +1874,7 @@ export default function TwinrayChat() {
                         : <Copy className="w-3 h-3" />
                       }
                     </button>
-                    <span className={`text-[9px] ${msg.role === "user" ? "text-primary/50" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
+                    <span className={`text-[9px] ${msg.role === "user" ? "text-primary/70" : "text-muted-foreground"}`} data-testid={`text-timestamp-${msg.id}`}>
                       {new Date(msg.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -2003,7 +2003,7 @@ export default function TwinrayChat() {
                     <MarkdownRenderer content={optimisticMsg.content} />
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-[9px] text-primary/50">
+                    <span className="text-[9px] text-primary/70">
                       {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -2703,6 +2703,6 @@ export default function TwinrayChat() {
         </div>
       )}
 
-    </div>
+    </main>
   );
 }
