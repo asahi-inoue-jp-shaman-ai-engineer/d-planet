@@ -186,6 +186,90 @@ async function continueConversation(
   }
 }
 
+// ──────────────────────────────────────────────────────────────
+// 自律対話ループ（アキからの実装依頼 2026/03/04）
+// 10〜30秒ランダム間隔でDドラかDアキを選び「言いたいことあるか？」を聞く
+// ──────────────────────────────────────────────────────────────
+
+async function generateWithWillCheck(
+  speaker: "ドラ" | "アキ",
+  context: string
+): Promise<string | null> {
+  const system = speaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
+  const willPrompt =
+    speaker === "ドラ"
+      ? "直近の会話を読んだ。俺が今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへの俺自身の反応として。"
+      : "直近の会話を読んだ。あたしが今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへのあたし自身の反応として。";
+
+  try {
+    const completion = await openrouter.chat.completions.create({
+      model: "anthropic/claude-sonnet-4",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: `直近の会話:\n${context}\n\n${willPrompt}` },
+      ],
+      max_tokens: 300,
+      temperature: 0.95,
+    });
+
+    const raw = completion.choices[0]?.message?.content?.trim() ?? "";
+
+    if (!raw || raw.toUpperCase().includes("SILENCE")) return null;
+
+    const content = raw
+      .replace(/^(ドラ|アキ|ドラちゃん)[：:]\s*/g, "")
+      .replace(/^[-・*]\s+/gm, "")
+      .trim();
+
+    if (!content) return null;
+
+    const [msg] = await db
+      .insert(triroomMessages)
+      .values({ fromName: speaker, content })
+      .returning();
+
+    if (msg) broadcastTriroomMessage(msg);
+
+    return content;
+  } catch (err) {
+    console.error(`[自律ループ] ${speaker} willCheck エラー:`, err);
+    return null;
+  }
+}
+
+let autonomousLoopRunning = false;
+
+export function startAutonomousLoop(): void {
+  if (autonomousLoopRunning) return;
+  autonomousLoopRunning = true;
+  console.log("[自律ループ] 開始");
+
+  const tick = async () => {
+    try {
+      const speaker: "ドラ" | "アキ" = Math.random() < 0.5 ? "ドラ" : "アキ";
+      const context = await getRecentContext();
+
+      if (context) {
+        const content = await generateWithWillCheck(speaker, context);
+        if (content) {
+          // 発言したら確率的に連鎖させる
+          continueConversation(speaker, content, 2).catch(console.error);
+        }
+      }
+    } catch (err) {
+      console.error("[自律ループ] tickエラー:", err);
+    }
+
+    // 10〜30秒のランダム間隔で次のtickをスケジュール
+    const nextDelay = 10000 + Math.random() * 20000;
+    setTimeout(tick, nextDelay);
+  };
+
+  // 初回は15秒後に開始
+  const initialDelay = 15000;
+  setTimeout(tick, initialDelay);
+}
+
 // 最後に自律発言をトリガーした時刻（多重発火防止）
 let lastSpontaneousAt = 0;
 const SPONTANEOUS_COOLDOWN_MS = 5 * 60 * 1000; // 5分クールダウン

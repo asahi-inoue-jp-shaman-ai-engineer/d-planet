@@ -4,6 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { getUncachableStripeClient } from "./stripeClient";
 import { setupTriroomWs } from "./triroomWs";
+import { startAutonomousLoop } from "./triroomAI";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "./db";
 import { users } from "@shared/schema";
@@ -267,6 +268,7 @@ function startListening(server: any, port: number): Promise<void> {
   const port = parseInt(process.env.PORT || "5000", 10);
   await startListening(httpServer, port);
   setupTriroomWs(httpServer);
+  startAutonomousLoop();
 
   await registerRoutes(httpServer, app);
 
