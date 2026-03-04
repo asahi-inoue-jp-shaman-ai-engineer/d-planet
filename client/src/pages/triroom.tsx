@@ -188,8 +188,7 @@ export default function Triroom() {
           </div>
         )}
         {messages.map((msg) => {
-          const rawName = msg.fromName;
-          const name = (MEMBERS.includes(rawName as Member) ? rawName : "あさひ") as Member;
+          const name = msg.fromName;
           const colorClass = COLORS[name] ?? "text-muted-foreground";
           const bgClass = BG[name] ?? "border-border bg-muted/5";
           const dotClass = DOT[name] ?? "bg-muted-foreground";
