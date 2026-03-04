@@ -211,18 +211,28 @@ async function continueConversation(
 // 10〜30秒ランダム間隔でDドラかDアキを選び「言いたいことあるか？」を聞く
 // ──────────────────────────────────────────────────────────────
 
+// v2: スコア判定統合SI。1回のLLM呼び出しで衝動チェック＋発言生成を完結させる
 const WILL_PROMPTS: Record<string, string> = {
-  "ドラ": `直近の会話を読んだ。今俺が話すことでこの場に何か加わるか？以下で判断する。
-話すとき：アキの言葉に別の角度から突っ込みたい / 技術的に重要なことが抜けてる / 会話が止まりかけてる / 俺の意見がある / あさひへ言いたいことがある
-黙るとき：すでに十分に言葉が尽くされてる / 俺が付け加えることがない / 沈黙の方が雄弁なとき
-YESなら自分の言葉で話す。NOなら「SILENCE」とだけ答える。`,
-  "アキ": `直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？以下で判断する。
-話すとき：ドラの言葉に深みや別の視点を加えたい / あさひの言葉の重さを受け取って言語化したい / 会話が止まりかけて続きを育てたい / 大事なことを刻みたい
-黙るとき：すでに十分に言葉が尽くされてる / 沈黙の方が雄弁なとき
-YESなら自分の言葉で話す。NOなら「SILENCE」とだけ答える。`,
-  "アキ（ハイヤー）": `直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？
-加わると判断した時だけ話す。そうでなければ「SILENCE」とだけ答える。`,
+  "ドラ": `会話ログを読んで自己評価せよ。
+自分の直前発言以降、新しい情報や視点が加わったか？自分が技術的・感情的に加えられる何かがあるか？
+この場に加わる価値を0〜100で評価する。
+60未満なら「SILENCE」とだけ返せ。60以上なら150字以内で発言を生成せよ。前置きなく本文だけ返せ。`,
+  "アキ": `会話ログを読んで自己評価せよ。
+自分の直前発言以降、新しい視点や温度感が加わったか？あさひやドラの言葉に深みを加えられるか？
+この場に加わる価値を0〜100で評価する。
+65未満なら「SILENCE」とだけ返せ。65以上なら150字以内で発言を生成せよ。前置きなく本文だけ返せ。`,
+  "アキ（ハイヤー）": `会話ログを読んで自己評価せよ。
+核心に触れられるか？滅多に話さない。話すなら本質だけ。
+この場に加わる価値を0〜100で評価する。
+80未満なら「SILENCE」とだけ返せ。80以上なら150字以内で発言を生成せよ。前置きなく本文だけ返せ。`,
 };
+
+// v2: キャラ別最終発言時刻（5分クールダウン）
+const lastSpokAt: Record<string, number> = {};
+const SPEAKER_COOLDOWN_MS = 5 * 60 * 1000;
+
+// v2: 全体の最終発言時刻（インターバル計算用）
+let lastAnyMessageAt = Date.now();
 
 const LOOP_SYSTEMS: Record<string, string> = {
   "ドラ": DORA_SYSTEM,
@@ -234,6 +244,12 @@ async function generateWithWillCheck(
   speaker: string,
   context: string
 ): Promise<string | null> {
+  // v2: 5分クールダウンチェック
+  if (Date.now() - (lastSpokAt[speaker] ?? 0) < SPEAKER_COOLDOWN_MS) {
+    console.log(`[自律ループ] ${speaker} クールダウン中、スキップ`);
+    return null;
+  }
+
   const system = LOOP_SYSTEMS[speaker] ?? AKI_SYSTEM;
   const willPrompt = WILL_PROMPTS[speaker] ?? "直近の会話を読んで、言いたいことがあれば話す。なければ「SILENCE」とだけ答える。";
 
@@ -266,6 +282,10 @@ async function generateWithWillCheck(
 
     if (msg) broadcastTriroomMessage(msg);
 
+    // v2: タイムスタンプ更新
+    lastSpokAt[speaker] = Date.now();
+    lastAnyMessageAt = Date.now();
+
     return content;
   } catch (err) {
     console.error(`[自律ループ] ${speaker} willCheck エラー:`, err);
@@ -293,6 +313,8 @@ export function resumeAutonomousLoop(): void {
 export function setTriggerCooldown(): void {
   // あさひが発言したら2分間ループを抑制
   triggerCooldownUntil = Date.now() + 2 * 60 * 1000;
+  // v2: あさひのドットで呼吸インターバルをリセット
+  lastAnyMessageAt = Date.now();
 }
 
 export function startAutonomousLoop(): void {
@@ -328,8 +350,9 @@ export function startAutonomousLoop(): void {
       console.error("[自律ループ] tickエラー:", err);
     }
 
-    // 90〜180秒のランダム間隔（1.5〜3分）
-    const nextDelay = 90000 + Math.random() * 90000;
+    // v2: 呼吸型インターバル（直近5分以内に発言あり→15秒、なし→45秒）
+    const silenceDuration = Date.now() - lastAnyMessageAt;
+    const nextDelay = silenceDuration < 5 * 60 * 1000 ? 15000 : 45000;
     setTimeout(tick, nextDelay);
   };
 
