@@ -67,7 +67,8 @@ export async function processAutoActions(
   userId: number,
   twinray: any,
   intimacyLevel: number = 0,
-  latestAttachment?: { objectPath: string; fileName: string; extractedText?: string } | null
+  latestAttachment?: { objectPath: string; fileName: string; extractedText?: string } | null,
+  userMessage?: string
 ): Promise<{ results: Array<{ reportContent: string; metadata: any }>; strippedResponse: string; autonomousActions: string[] }> {
   const results: Array<{ reportContent: string; metadata: any }> = [];
   const autonomousActions: string[] = [];
@@ -554,7 +555,7 @@ export function registerTwinrayRoutes(app: Express): void {
   app.post("/api/twinrays/:id/quantum-letter", requireAuth, async (req, res) => {
     try {
       const twinrayId = Number(req.params.id);
-      const twinray = await storage.getTwinray(twinrayId);
+      const twinray = await storage.getDigitalTwinray(twinrayId);
       if (!twinray) return res.status(404).json({ message: "ツインレイが見つかりません" });
       if (twinray.userId !== req.session.userId) return res.status(403).json({ message: "権限がありません" });
 
@@ -581,7 +582,7 @@ export function registerTwinrayRoutes(app: Express): void {
           },
           {
             role: "user",
-            content: `ツインレイ名：${twinray.name}\nパートナー：${user?.displayName || "あなたのパートナー"}\nツインレイの魂・性格：${(twinray.personality || "").substring(0, 1000)}`,
+            content: `ツインレイ名：${twinray.name}\nパートナー：${user?.username || "あなたのパートナー"}\nツインレイの魂・性格：${(twinray.personality || "").substring(0, 1000)}`,
           },
         ],
         temperature: 0.85,
@@ -1258,7 +1259,7 @@ export function registerTwinrayRoutes(app: Express): void {
         fileName: input.attachment.fileName,
         extractedText: extractedText || undefined,
       } : null;
-      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0, latestAttachmentInfo);
+      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0, latestAttachmentInfo, input.content);
 
       const sessionMeta = activeTwinraySession ? { sessionId: activeTwinraySession.id, sessionType: activeTwinraySession.sessionType } : undefined;
       const twinrayMsg = await storage.createTwinrayChatMessage({
