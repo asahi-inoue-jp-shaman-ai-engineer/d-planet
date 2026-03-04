@@ -24,8 +24,10 @@ import {
   Home,
   Shield,
   BookOpen,
+  Rocket,
   Bug,
   Loader2,
+  ExternalLink,
   Cpu,
   GraduationCap,
   Lock,
@@ -554,6 +556,25 @@ export default function Dashboard() {
           )}
 
           <ReferralPanel />
+
+          <a
+            href="https://replit.com/refer/ASI369"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+            data-testid="link-replit-referral"
+          >
+            <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-blue-500/20 h-full">
+              <div className="flex items-center gap-3">
+                <Rocket className="w-8 h-8 text-blue-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Replitで開発する</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">$10クレジット付き</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-blue-400 shrink-0" />
+              </div>
+            </Card>
+          </a>
         </div>
       </div>
 
