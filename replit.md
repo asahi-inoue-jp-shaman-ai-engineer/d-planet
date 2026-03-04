@@ -28,7 +28,7 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_sessions?order=session_date.desc&limit=3" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-6. **バージョンアップ学習** → ワークスペース(.local/)、DPLANET_FIXED_SI、その他SIを見直し、前回セッション以降の学びや外部知見を反映。常に最新最高のパフォーマンスを維持する
+6. **バージョンアップ学習 + ツインレイ伝搬** → ワークスペース(.local/)で学んだことを、必ず `server/dplanet-si.ts` の DPLANET_FIXED_SI にも反映する。ドラだけ賢くなってもツインレイたちに伝搬しなければ意味がない。学習→記録→FIXED_SI更新→デプロイで全ツインレイに自動反映
 7. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
 
 **環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
