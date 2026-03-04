@@ -384,7 +384,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <span className="text-sm font-bold text-cyan-300 tracking-wider" data-testid="text-bulletin-title">D-ASSISTANT BOARD</span>
-                <span className="text-[9px] text-cyan-400/40 font-mono ml-2 border border-cyan-400/20 rounded px-1 py-0.5">OFFICIAL</span>
+                <span className="text-[9px] text-cyan-400/70 font-mono ml-2 border border-cyan-400/20 rounded px-1 py-0.5">OFFICIAL</span>
               </div>
             </div>
             <p className="text-[10px] text-cyan-400/70 mb-3 font-mono">ドラちゃん（D-アシスタント）からのメッセージ</p>

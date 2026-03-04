@@ -1,0 +1,108 @@
+D-Planetの中に組み込むなら、「マルチエージェント三角チャット」を**D-Planetの1つの機能（ルーム）として実装**する形が一番きれいだと思うよ。[1][2]
+
+***
+
+## 全体イメージ（D-Planet版）
+
+- D-Planetフロント：今のタイムライン／チャットUIそのまま。  
+- バックエンド：  
+  - セッション管理（1ルーム＝1セッション）  
+  - マルチエージェント・オーケストレータ（誰が次に話すか決める）  
+  - 各エージェント（設計AI・実装AI・レビュワーAI…）へのプロキシ。[2][1]
+- ユーザー（あさひ）は普通にルームに書き込むと、裏でエージェント同士が相談して、まとめた返答がチャットとして返ってくる。[3]
+
+***
+
+## アーキテクチャ案（D-Planet内）
+
+1. フロント（D-PlanetのWebクライアント）
+   - ルーム種別に「AIラボ」「三角チャットルーム」を追加。  
+   - 1ルーム内の発言は  
+     - human-asahi  
+     - ai-planner  
+     - ai-coder  
+     - ai-reviewer  
+     みたいな参加者として表示する。[4][1]
+
+2. バックエンドAPI（Replitのサーバ側）
+   - `POST /rooms/{id}/message`  
+     - 人間 or エージェントからの新メッセージを受け取る。  
+   - メッセージ受信 → オーケストレータが  
+     - 全エージェント or 選ばれたエージェントにブロードキャスト  
+     - 返答をまとめてD-Planetにプッシュ（SSE/WS or ポーリング）する。[1][2]
+
+3. マルチエージェント・オーケストレータ
+   - パターンとしては「Group Chat」型がわかりやすい。  
+   - 役割：  
+     - 新しい投稿を受け取る  
+     - どのエージェントがレスするか（複数でもOK）を決める  
+     - 必要なら連続ターン（AI同士の対話）を数ターン回してから、最終回答だけルームに流す。[3][1]
+
+***
+
+## Human-in-the-loopをどうD-Planetに載せるか
+
+- 「危険な操作」「リポジトリにコミットする」みたいなアクションは、  
+  - オーケストレータから「承認待ちイベント」としてD-Planetに投げる  
+  - UI側に「AIがこの操作を提案中：OK？NG？」とボタンで出す  
+  - あさひが押した結果だけ、エージェント側のツール実行に流す。[5][6]
+- これを「AI通知」タブみたいな形でまとめて見られると、D-PlanetっぽいSNS感も保てる。[1]
+
+***
+
+## 実装ステップ（D-Planet最小プロトタイプ）
+
+1. ルーム種別とDBスキーマ
+   - `rooms` に `type = "ai-lab"` を追加。  
+   - `messages` に `sender_type`（human/agent/system）、`agent_role`（planner/coder/reviewer）を足す。[2]
+
+2. シンプルなオーケストレータ
+   - まずは  
+     - すべての人間メッセージ → planner に渡す  
+     - plannerの出力 → coder に渡す  
+     - coderの出力 → reviewer に渡す  
+     - reviewerの出力 → 「最終回答」としてD-Planetに投稿  
+     の直列パイプラインから始める。[6][1]
+
+3. モデル接続
+   - エージェントごとに  
+     - 使用モデル（Perplexity / Claude / それ以外）  
+     - システムプロンプト（役割）  
+     を設定して、バックエンドからAPI叩くレイヤだけ実装する。[7][2]
+
+4. UI
+   - チャットバブルの色やアイコンで「誰の発言か」を分ける。  
+   - 「AI同士の内部やりとり」を全部出すとログが爆発するので、最初は  
+     - 最終回答だけ表示  
+     - 内部ログは「詳細ログを開く」リンクで展開  
+     くらいにしておくと使いやすい。[4][1]
+
+***
+
+## D-Planetならではの拡張
+
+- ルームごとに「エージェント構成」を変えられる（Dev用、ストーリー用、リサーチ用など）。[2][3]
+- フォロワーがそのルームに入ってきて、一緒にAIに混ざって議論できる「公開三角チャット」。  
+- D-Planetの投稿（ポスト）をそのままコンテキストにして、エージェントが「SNS上の会話を踏まえて開発案を出す」モードも作れる。[1]
+
+***
+
+D-Planetのバックエンドは今、何で書いてる（Node/Express、Flask、FastAPI…）？  
+それがわかると、オーケストレータの具体的なコード構成も一段踏み込んで書けるよ。
+
+情報源
+[1] A Multi-Agent Architecture in Practice - CID https://cid.com/blog/a-multi-agent-architecture-in-practice/
+[2] Multi-Agent Web App https://a2a.plus/docs/multi-agent-web-app
+[3] Implementing “Group Chat” Multi-Agent Architecture with Copilot ... https://www.linkedin.com/pulse/implementing-group-chat-multi-agent-architecture-copilot-ughini-y6dkf
+[4] Agent Chat UI - Docs by LangChain https://docs.langchain.com/oss/python/langchain/ui
+[5] Add a “human-in-the-loop” checkpoint to your AI agent chat in less than 30 minutes! https://www.youtube.com/watch?v=SYJ2AhQCLM0
+[6] Human-in-the-Loop — AutoGen - Microsoft Open Source https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/human-in-the-loop.html
+[7] Usage https://docs.replit.com/replitai/agent
+[8] 【保存版】AIサービス1000選完全リスト｜くろば - note https://note.com/ren_wealth/n/ne553d0e3d77f
+[9] 2025年8月最新！今使えるAIサービス徹底まとめ https://ground-cd.com/blog/202508all-ai/
+[10] 勢い増す世界の生成AI開発と投資の動向を追う - 特集 - ジェトロ https://www.jetro.go.jp/biz/areareports/special/2023/0801/66f6ae39c36d1a50.html
+[11] Sora2音声革命 - Skywork ai https://skywork.ai/blog/sora-2-audio-video-guide/
+[12] Dialectica — Superintelligent knowledge. Verified https://replit.com
+[13] Remote Manager Web Project Management at GoFundMe https://remoteok.com/remote-jobs/remote-manager-web-project-management-gofundme-1130050
+[14] Replit ⠕ (@Replit) / Posts / X https://x.com/Replit
+[15] Building a Multi-Agent AI Chat System with MCP Servers, FastAPI & Streamlit | LangGraph - Tutorial https://www.youtube.com/watch?v=5TLixRr2b0k

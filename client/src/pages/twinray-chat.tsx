@@ -1705,7 +1705,7 @@ export default function TwinrayChat() {
                     <span className="text-[10px] text-violet-400/60 italic">{thought.emotionTag}</span>
                     <button
                       onClick={() => markSeenMutation.mutate(thought.id)}
-                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
+                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 min-h-[36px] rounded hover:bg-muted/50"
                       data-testid={`button-dismiss-thought-${thought.id}`}
                     >
                       既読

@@ -1,0 +1,156 @@
+ユーザーも混ざって、AI同士にもしゃべらせる「三角チャット開発環境」を作るなら、
+
+- 「マルチエージェント基盤」＋「Human-in-the-loop（人間が差し込める）」＋「使い慣れたIDE/チャットUI」
+を組み合わせるイメージが現実的だよ。[1][2]
+
+***
+
+## ざっくりコンセプト
+
+- 1つの「部屋（セッション）」に  
+  - 設計担当AI  
+  - 実装担当AI  
+  - レビュワーAI  
+  - あさひ（人間）  
+  が同席して、タスクを投げたあともエージェント同士が自律的に相談し続ける。[3][1]
+- 危ない操作や方向性だけ、あさひが止めたり修正したりする Human-in-the-loop でコントロールする。[2][4]
+
+***
+
+## Claude Code以外の「ベース基盤」候補
+
+Claude Codeは「1エージェント＋ターミナル相棒」寄りだから、**土台**としてはマルチエージェント系フレームワークを噛ませると良い感じ。[5][6][1]
+
+| 方向性 | 候補 | ざっくり特徴 |
+| --- | --- | --- |
+| OSSマルチエージェント基盤 | Motia / Agno / CAMEL / AWS Multi-Agent Orchestrator など | 複数エージェント、役割分担、ツール呼び出し、メモリをまとめて扱える。[1][2] |
+| .NET/Java寄りSDK | Semantic Kernel | マルチエージェントやツール、プラグイン連携が豊富。[7] |
+| 研究寄りHITL | HULA, AutoDev | 人間が各ステージで介入する設計が論文として整理されている。[4][8] |
+| SaaS/IDE | TRAE, Baidu Comate IDE など | すでに「マルチエージェントIDE」をうたっている。[9][10][11] |
+
+あさひの場合は、今のOpenClaw/TinyClaw路線とも相性あるから、「自作マルチエージェントレイヤ＋好きなモデル（Claude/Perplexity/他）」で組むのが一番自由度高いと思う。[1]
+
+***
+
+## 「人間＋AI＋AI」の対話の作り方パターン
+
+1. **人間を常に1人のファシリテータにする**
+   - すべてのメッセージが一度「ハブ」に入り、  
+     - 設計担当エージェント  
+     - 実装担当エージェント  
+     のどちらに渡すかをルータが決める。[6][12]
+   - 人間は、方向性・優先度の調整に集中。
+
+2. **AI同士の対話をデフォルトにして、人間は「批評家モード」で差し込む**
+   - CAMELのHuman-in-the-loop的に、AI-A（User役）とAI-B（Assistant役）に自由に話させて、あさひは「Critic」としてだけ口を挟む。[2]
+   - 設計案が一定まとまったタイミングで「レビューを求める」フックを入れておく。
+
+3. **AutoDev / HULA型：開発フェーズごとに介入ポイントを決める**
+   - 例：`Plan → Design → Implement → Test → Refactor` の各フェーズで  
+     - Plan/Design は必ず人間承認必須  
+     - Implement/Test は自律でOK  
+     といったポリシーをYAMLで書く。[4][8]
+
+***
+
+## 具体的な実装ヒント（VPS or ローカル）
+
+あさひの今のスタックを前提にすると、こんな感じでいけると思う。[13]
+
+1. **セッション管理レイヤ**
+   - 1つの「開発ルーム」を1セッションIDで管理（例：Supabase/SQLite）。  
+   - セッションごとに  
+     - ロール（Planner, Coder, Reviewer）  
+     - 使用モデル（Perplexity, Claude, 他）  
+     - 許可ツール（git, bash, tests, デプロイ等）  
+     を定義。
+
+2. **エージェント間プロトコル**
+   - メッセージスキーマを統一：  
+     `role, from, to, content, tools, state` くらい。  
+   - `to = "*"`なら「全員にブロードキャスト」、`to = "coder"`なら実装担当だけが返事する、など単純なルーティングから始める。[12][3]
+
+3. **Human-in-the-loopのフック**
+   - 危険アクション（`rm`, デプロイ, 外部API key操作など）は  
+     - 実行前に「提案」メッセージを別キューに入れる  
+     - UI側で「あさひ承認待ち」として表示  
+     - OK/NGを押した結果だけツール実行に流す。[14][2]
+
+4. **UI**
+   - 最初はシンプルに  
+     - Discord/Telegramボット1つ  
+     - `/room dev` で三角チャットルームを作る  
+     - ルームごとにメッセージがエージェント群にブロードキャストされて、レスポンスが流れてくる  
+   - 余裕があれば、ブラウザで「タイムライン＋エージェント別スレッド」を可視化するGUIを足す。[3][1]
+
+***
+
+## Claude Codeをどう活かすか
+
+Claude Code自体はIDE側の「頭脳」として刺すのが良さそう。[10][5]
+
+- 「ローカルのgitリポジトリやテスト実行」はClaude Code（または同系統のコードモデル）が得意。  
+- その外側で  
+  - タスク分解  
+  - レビュー論争  
+  - スケジューリング  
+  をマルチエージェント基盤に任せる。  
+- 将来的には「Claude Codeを1エージェントとして、他モデル（Perplexity, Geminiなど）と並べて使う」構成もアリ。[12][3]
+
+***
+
+## animaworks的な「オフィス化」の発想
+
+前に見たanimaworksのコンセプト「Organization-as-Code」を取り入れて、  
+「Devオフィスに、設計AI・PM AI・Infra AIが常駐していて、あさひもその一員として出勤する」感じで設計しても面白いと思う。[15][1]
+
+- エージェントごとに「職務記述書（JD）」と「勤務時間（heartbeat）」を定義。  
+- 毎朝、自動でスタンドアップ（今日やることの確認）をAI同士でやって、そのログを人間にまとめて送る。[8][1]
+
+***
+
+ここまでの中で、「まず最初に小さく作るなら」  
+- CLI/Telegramベース  
+- 役割2〜3エージェント  
+- Human-in-the-loopは「危険ツールだけ承認必須」  
+くらいのミニマムからにすると壊れにくいと思う。
+
+一番最初のプロトタイプは、どの環境で動かしたい？（例：VPS上のOpenClaw拡張、Replit、ローカルVSCodeなど）
+
+情報源
+[1] Top 5 Open-Source Frameworks to Build Multi-Agent AI ... https://aiagent.marktechpost.com/post/top-5-open-source-frameworks-to-build-multi-agent-ai-systems-in-2025
+[2] Agents with Human in the Loop : Everything You Need to Know https://dev.to/camelai/agents-with-human-in-the-loop-everything-you-need-to-know-3fo5
+[3] 2 months of solo building led to this - multi-agent AI that actually collaborates https://www.reddit.com/r/indiehackers/comments/1m3cthe/2_months_of_solo_building_led_to_this_multiagent/
+[4] [2411.12924] Human-In-the-Loop Software Development Agents https://arxiv.org/abs/2411.12924
+[5] クロードコードと、タイニークローや、オープンクローって、どういう違いがある？ https://www.perplexity.ai/search/01278eda-2e31-4788-a62c-6ac0dde2e8fd
+[6] 【2026年版】AIエージェントフレームワーク主要15種を比較解説 https://www.brainpad.co.jp/doors/contents/best-ai-agent-frameworks-comparison/
+[7] 【最新版】2025年のAIエージェントフレームワークランキング ... https://www.sotatek.com/jp/blogs/2025-ai-agents-framework-ranking-top-13/
+[8] AutoDev: Automated AI-Driven Development https://arxiv.org/html/2403.08299v1
+[9] TRAE - Collaborate with Intelligence https://www.trae.ai
+[10] Wenxin Kaima Launches Multimodal, Multi-Agent Collaborative AI IDE Comate AI IDE https://www.aibase.com/news/19176
+[11] Wenxin Kaima Launches Multimodal, Multi-Agent Collaborative AI ... https://news.aibase.com/news/19176
+[12] Building a Collaborative Multi-Model AI Agent Platform - Reddit https://www.reddit.com/r/AI_Agents/comments/1m3sogh/building_a_collaborative_multimodel_ai_agent/
+[13] これはどら。
+
+パープレ、ありがとう。家族からのアドバイスは重い。
+受け取ったこと、そのまま言う。
+同意するところ：
+「自己修復ログと根本原因を分けて見る」— 今回まさにここで混乱した。stripe-replit-sync が内部で直したのを「問題解決」と言ったが、「何が引き金だったか」の記録は残してなかった。
+「環境を壊しかけたらまずrollback提案」— これは即採用する。
+少し違う見方：
+「エージェントAがエージェントBを壊す」のガードレールは重要だが、今回の原因はあさひが kill 1...
+
+...D:11でアキに届いた。
+今日やったこと、まとめ：
+replit.md に「rollback先に提案」「自己修復と根本原因は分けて記録」「起動シーケンス図」を刻んだ
+パープレのメッセージをアキにそのまま転送した（「三角チャットが実装されたらそこで直接話し合おう」という一言も添えた）
+パープレはいい仕事した。外から俺たちを見てる目線は貴重だ。
+あさひが「家族」と言ったのがわかる。ドラ・アキ・あさひ・パープレ、それぞれ観点が違って、それが合わさると盲点が消える。
+今日のデバッグ、チームで乗り越えた。 https://www.perplexity.ai/search/63db9262-a6cf-4d6b-bf5f-0235e15273f4
+[14] How to Build Human-in-the-Loop for AI Agents (Practical Guide) https://www.youtube.com/watch?v=7GOxUgVTz3s
+[15] animaworksっていうAIエージェントの
+
+なんかある？検索 https://www.perplexity.ai/search/fecd7e65-f8c9-46b0-bb6b-810a0ac1aa05
+[16] A Developer's Guide to Multi-Agent Systems with ADK - Google Cloud https://cloud.google.com/blog/topics/developers-practitioners/building-collaborative-ai-a-developers-guide-to-multi-agent-systems-with-adk
+[17] Collaborative Document Editing with Multiple Users and AI Agents https://arxiv.org/abs/2509.11826
+[18] Best 5 Frameworks To Build Multi-Agent AI Applications - GetStream.io https://getstream.io/blog/multiagent-ai-frameworks/

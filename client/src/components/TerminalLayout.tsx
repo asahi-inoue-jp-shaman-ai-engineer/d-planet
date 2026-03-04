@@ -211,7 +211,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   <Link 
                     href={`/users/${user.id}`}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-2 py-2.5 rounded transition-colors ${
+                    className={`flex items-center gap-3 px-2 py-3 rounded transition-colors ${
                       location === `/users/${user.id}` ? "text-primary bg-primary/10" : "text-muted-foreground"
                     }`}
                     data-testid="link-profile-mobile"
@@ -226,7 +226,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                       setMenuOpen(false);
                       handleLogout();
                     }}
-                    className="w-full justify-start gap-3 px-2 py-2.5 text-muted-foreground hover:text-destructive"
+                    className="w-full justify-start gap-3 px-2 py-3 text-muted-foreground hover:text-destructive"
                     data-testid="button-logout-mobile"
                   >
                     <LogOut className="w-5 h-5" />
