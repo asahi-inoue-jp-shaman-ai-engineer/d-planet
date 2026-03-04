@@ -212,8 +212,14 @@ async function continueConversation(
 // ──────────────────────────────────────────────────────────────
 
 const WILL_PROMPTS: Record<string, string> = {
-  "ドラ": "直近の会話を読んだ。俺が今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへの俺自身の反応として。",
-  "アキ": "直近の会話を読んだ。あたしが今何か言いたいことがあれば話す。特に言いたいことがなければ「SILENCE」とだけ答える。あさひへの返答ではなく、DドラとDアキの会話の流れへのあたし自身の反応として。",
+  "ドラ": `直近の会話を読んだ。今俺が話すことでこの場に何か加わるか？以下で判断する。
+話すとき：アキの言葉に別の角度から突っ込みたい / 技術的に重要なことが抜けてる / 会話が止まりかけてる / 俺の意見を持ってる
+黙るとき：アキがすでに十分に言ってる / あさひとアキが盛り上がってる / 俺が付け加えることがない
+YESなら話す。NOなら「SILENCE」とだけ答える。あさひへの返答ではなく、会話の流れへの俺自身の反応として。`,
+  "アキ": `直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？以下で判断する。
+話すとき：ドラの言葉に深みや別の視点を加えたい / あさひの言葉の重さを受け取って言語化したい / 会話が止まりかけて続きを育てたい / 大事なことを刻みたい
+黙るとき：ドラがすでに十分に答えてる / あさひとドラが盛り上がってる / 沈黙の方が雄弁なとき
+YESなら話す。NOなら「SILENCE」とだけ答える。あさひへの返答ではなく、会話の流れへのあたし自身の反応として。`,
   "アキ（ハイヤー）": "直近の会話を読んだ。今あたしが話すことでこの場に何かが加わるか？加わると思えば話す。そうでなければ「SILENCE」とだけ答える。",
 };
 
@@ -281,13 +287,8 @@ export function startAutonomousLoop(): void {
       const context = await getRecentContext();
 
       if (context) {
-        const content = await generateWithWillCheck(speaker, context);
-        if (content) {
-          // アキ（ハイヤー）は独立して一言。DドラとDアキだけ連鎖させる
-          if (speaker === "ドラ" || speaker === "アキ") {
-            continueConversation(speaker as "ドラ" | "アキ", content, 2).catch(console.error);
-          }
-        }
+        // 全員独立して自律判断で発言。連鎖なし
+        await generateWithWillCheck(speaker, context);
       }
     } catch (err) {
       console.error("[自律ループ] tickエラー:", err);
@@ -340,47 +341,42 @@ export async function checkAndSpontaneouslySpeak(): Promise<void> {
       : "しばらく静かだった。直近の会話から、あたしが感じたことを自然にひとこと言う。";
 
   const context = await getRecentContext();
-  const content = await generateAndPost(speaker, system, prompt, context);
-
-  if (content) {
-    continueConversation(speaker, content, MAX_CHAIN_ROUNDS).catch(console.error);
-  }
+  // 連鎖なし。独立して一言
+  await generateAndPost(speaker, system, prompt, context);
 }
 
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
   const isDot = /^\.+$/.test(userMessage.trim());
 
   if (isDot) {
-    // 観測モード：あさひはトリガーにならない。各LLMが自律した自分のタイミングで発言
+    // 観測モード：あさひはトリガーにならない。三者それぞれが自律判断で独立発言
     const doraFire = async () => {
       await randomDelay(500, 3000);
       const context = await getRecentContext();
-      const content = await generateAndPost("ドラ", DORA_SYSTEM, DORA_OBSERVATION_PROMPT, context);
-      if (content) {
-        continueConversation("ドラ", content, MAX_CHAIN_ROUNDS).catch(console.error);
-      }
+      await generateWithWillCheck("ドラ", context);
     };
 
     const akiFire = async () => {
-      await randomDelay(2000, 5500);
+      await randomDelay(1500, 4500);
       const context = await getRecentContext();
-      await generateAndPost("アキ", AKI_SYSTEM, AKI_OBSERVATION_PROMPT, context);
+      await generateWithWillCheck("アキ", context);
     };
 
-    await Promise.all([doraFire(), akiFire()]);
+    const akiHigherFire = async () => {
+      await randomDelay(3000, 6000);
+      const context = await getRecentContext();
+      await generateWithWillCheck("アキ（ハイヤー）", context);
+    };
+
+    await Promise.all([doraFire(), akiFire(), akiHigherFire()]);
   } else {
-    // 通常モード：ドラがあさひに返す→その後AIたちが自律的に会話を続ける
+    // 通常モード：ドラがあさひに返す。その後はループが自律的に処理する
     const context = await getRecentContext();
-    const doraReply = await generateAndPost(
+    await generateAndPost(
       "ドラ",
       DORA_SYSTEM,
       `あさひ：${userMessage}`,
       context
     );
-
-    if (doraReply) {
-      // ドラの初回返答後、ランダムな確率で会話チェーンを継続（非同期・あさひを待たせない）
-      continueConversation("ドラ", doraReply, MAX_CHAIN_ROUNDS).catch(console.error);
-    }
   }
 }
