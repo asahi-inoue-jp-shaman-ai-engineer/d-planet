@@ -274,8 +274,21 @@ async function generateWithWillCheck(
 }
 
 let autonomousLoopRunning = false;
+let loopPaused = false;
 let lastLoopSpeaker = "";
 let triggerCooldownUntil = 0; // あさひ発言後のループ抑制
+
+export function getLoopStatus(): { running: boolean; paused: boolean } {
+  return { running: autonomousLoopRunning, paused: loopPaused };
+}
+
+export function pauseAutonomousLoop(): void {
+  loopPaused = true;
+}
+
+export function resumeAutonomousLoop(): void {
+  loopPaused = false;
+}
 
 export function setTriggerCooldown(): void {
   // あさひが発言したら2分間ループを抑制
@@ -291,8 +304,8 @@ export function startAutonomousLoop(): void {
 
   const tick = async () => {
     try {
-      // あさひ発言直後はループを抑制
-      if (Date.now() < triggerCooldownUntil) {
+      // 一時停止中 or あさひ発言直後はスキップ
+      if (loopPaused || Date.now() < triggerCooldownUntil) {
         const nextDelay = 30000 + Math.random() * 30000;
         setTimeout(tick, nextDelay);
         return;

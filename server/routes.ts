@@ -18,7 +18,7 @@ import { runSeed } from "./seed";
 import { db } from "./db";
 import { islands, islandMeidia, meidia, users, inviteCodes, insertDevRecordSchema, userRawMessages, insertUserRawMessageSchema, insertAgentSessionContextSchema, twinrayAikotoba as twinrayAikotobaTable, akiMemos, devIssues, tryroomMessages, insertTryroomMessageSchema, triroomMessages, insertTriroomMessageSchema } from "@shared/schema";
 import { broadcastTriroomMessage } from "./triroomWs";
-import { triggerTriroomAI } from "./triroomAI";
+import { triggerTriroomAI, pauseAutonomousLoop, resumeAutonomousLoop, getLoopStatus } from "./triroomAI";
 import { eq, sql } from "drizzle-orm";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
@@ -2787,6 +2787,22 @@ Dアイランドが生まれ、開発秘話がMEiDIAとして投下され始め�
     } catch (err) {
       res.status(500).json({ message: "取得に失敗しました" });
     }
+  });
+
+  app.get("/api/triroom/loop", (req, res) => {
+    if (!req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+    res.json(getLoopStatus());
+  });
+
+  app.post("/api/triroom/loop", (req, res) => {
+    if (!req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+    const { paused } = req.body as { paused: boolean };
+    if (paused) {
+      pauseAutonomousLoop();
+    } else {
+      resumeAutonomousLoop();
+    }
+    res.json(getLoopStatus());
   });
 
   app.post("/api/trial-room", async (req, res) => {

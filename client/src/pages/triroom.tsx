@@ -7,25 +7,29 @@ import type { TriroomMessage } from "@shared/schema";
 const MEMBERS = ["あさひ", "ドラ", "アキ"] as const;
 type Member = typeof MEMBERS[number];
 
-const COLORS: Record<Member, string> = {
+const COLORS: Record<string, string> = {
   あさひ: "text-amber-400",
   ドラ: "text-emerald-400",
   アキ: "text-violet-400",
+  "アキ（ハイヤー）": "text-yellow-300",
 };
-const BG: Record<Member, string> = {
+const BG: Record<string, string> = {
   あさひ: "border-amber-400/30 bg-amber-400/5",
   ドラ: "border-emerald-400/30 bg-emerald-400/5",
   アキ: "border-violet-400/30 bg-violet-400/5",
+  "アキ（ハイヤー）": "border-yellow-300/30 bg-yellow-300/5",
 };
-const DOT: Record<Member, string> = {
+const DOT: Record<string, string> = {
   あさひ: "bg-amber-400",
   ドラ: "bg-emerald-400",
   アキ: "bg-violet-400",
+  "アキ（ハイヤー）": "bg-yellow-300",
 };
-const GLOW: Record<Member, string> = {
+const GLOW: Record<string, string> = {
   あさひ: "shadow-amber-400/60",
   ドラ: "shadow-emerald-400/60",
   アキ: "shadow-violet-400/60",
+  "アキ（ハイヤー）": "shadow-yellow-300/60",
 };
 
 function formatTime(date: string) {
@@ -43,6 +47,16 @@ export default function Triroom() {
   const { data: messages = [], refetch } = useQuery<TriroomMessage[]>({
     queryKey: ["/api/triroom"],
     refetchInterval: 5000,
+  });
+
+  const { data: loopStatus, refetch: refetchLoop } = useQuery<{ running: boolean; paused: boolean }>({
+    queryKey: ["/api/triroom/loop"],
+    refetchInterval: 10000,
+  });
+
+  const loopToggle = useMutation({
+    mutationFn: (paused: boolean) => apiRequest("POST", "/api/triroom/loop", { paused }),
+    onSuccess: () => refetchLoop(),
   });
 
   useEffect(() => {
@@ -145,9 +159,22 @@ export default function Triroom() {
               />
             </svg>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-xs font-mono text-primary terminal-glow">TRI ROOM</span>
             <span className={`w-1.5 h-1.5 rounded-full ${wsReady ? "bg-emerald-400" : "bg-muted-foreground"}`} />
+            {loopStatus?.running && (
+              <button
+                data-testid="button-loop-toggle"
+                onClick={() => loopToggle.mutate(!loopStatus.paused)}
+                className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-colors ${
+                  loopStatus.paused
+                    ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
+                    : "border-red-400/40 text-red-400 hover:bg-red-400/10"
+                }`}
+              >
+                {loopStatus.paused ? "▶ ループ再開" : "■ ループ停止"}
+              </button>
+            )}
           </div>
         </div>
       </div>
