@@ -150,7 +150,7 @@ export default function Tryroom() {
                 : "border-red-400/40 text-red-400 hover:bg-red-400/10"
             }`}
           >
-            {(loopStatus?.paused ?? true) ? "▶ トライルーム ループ再開" : "■ トライルーム ループ停止"}
+            {(loopStatus?.paused ?? true) ? "▶" : "■"}
           </button>
         </div>
         <div className="flex gap-2">
