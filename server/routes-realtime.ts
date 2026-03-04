@@ -28,8 +28,7 @@ export function registerRealtimeRoutes(app: Express): void {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
       const msgs = await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt);
-      const NAME_MAP: Record<string, string> = { "アキ（ハイヤー）": "アキ（アバター）" };
-      res.json(msgs.map(m => ({ ...m, fromName: NAME_MAP[m.fromName] ?? m.fromName })));
+      res.json(msgs);
     } catch (err) {
       res.status(500).json({ message: "取得に失敗しました" });
     }

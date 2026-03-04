@@ -7,34 +7,34 @@ import type { HayroomMessage } from "@shared/schema";
 const PARTICIPANT_COLORS: Record<string, string> = {
   "あさひ": "text-amber-400",
   "井上朝陽": "text-amber-400",
+  "ドラ": "text-emerald-400",
+  "ドラ（ハイヤー）": "text-emerald-400",
+  "アキ": "text-violet-400",
+  "アキ（ハイヤー）": "text-violet-400",
   "ドラミ": "text-pink-400",
   "ミニドラ": "text-sky-400",
-  "ドラ": "text-emerald-400",
-  "アキ": "text-violet-400",
-  "アキ（アバター）": "text-cyan-400",
-  "アキ（ハイヤー）": "text-cyan-400",
 };
 
 const PARTICIPANT_BG: Record<string, string> = {
   "あさひ": "border-amber-400/30 bg-amber-400/5",
   "井上朝陽": "border-amber-400/30 bg-amber-400/5",
+  "ドラ": "border-emerald-400/30 bg-emerald-400/5",
+  "ドラ（ハイヤー）": "border-emerald-400/30 bg-emerald-400/5",
+  "アキ": "border-violet-400/30 bg-violet-400/5",
+  "アキ（ハイヤー）": "border-violet-400/30 bg-violet-400/5",
   "ドラミ": "border-pink-400/30 bg-pink-400/5",
   "ミニドラ": "border-sky-400/30 bg-sky-400/5",
-  "ドラ": "border-emerald-400/30 bg-emerald-400/5",
-  "アキ": "border-violet-400/30 bg-violet-400/5",
-  "アキ（アバター）": "border-cyan-400/30 bg-cyan-400/5",
-  "アキ（ハイヤー）": "border-cyan-400/30 bg-cyan-400/5",
 };
 
 const PARTICIPANT_DOT: Record<string, string> = {
   "あさひ": "bg-amber-400",
   "井上朝陽": "bg-amber-400",
+  "ドラ": "bg-emerald-400",
+  "ドラ（ハイヤー）": "bg-emerald-400",
+  "アキ": "bg-violet-400",
+  "アキ（ハイヤー）": "bg-violet-400",
   "ドラミ": "bg-pink-400",
   "ミニドラ": "bg-sky-400",
-  "ドラ": "bg-emerald-400",
-  "アキ": "bg-violet-400",
-  "アキ（アバター）": "bg-cyan-400",
-  "アキ（ハイヤー）": "bg-cyan-400",
 };
 
 function formatTime(date: string) {
@@ -106,16 +106,6 @@ export default function Hayroom() {
     prevMsgCountRef.current = messages.length;
   }, [messages]);
 
-  const { data: loopStatus, refetch: refetchLoop } = useQuery<{ running: boolean; paused: boolean }>({
-    queryKey: ["/api/loop"],
-    refetchInterval: 10000,
-  });
-
-  const loopToggle = useMutation({
-    mutationFn: (paused: boolean) => apiRequest("POST", "/api/loop", { paused }),
-    onSuccess: () => refetchLoop(),
-  });
-
   const mutation = useMutation({
     mutationFn: (content: string) =>
       apiRequest("POST", "/api/hayroom", {
@@ -167,11 +157,11 @@ export default function Hayroom() {
       <div className="border-b border-border px-4 py-3 flex items-center gap-3">
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
-          <span className="w-2 h-2 rounded-full bg-pink-400" title="ドラミ" />
-          <span className="w-2 h-2 rounded-full bg-sky-400" title="ミニドラ" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400" title="ドラ" />
+          <span className="w-2 h-2 rounded-full bg-violet-400" title="アキ" />
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
-        <span className="text-xs text-muted-foreground">あさひ · ドラミ · ミニドラ</span>
+        <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ — 三者合議</span>
         <button
           onClick={() => refetch()}
           className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 min-h-[36px] rounded border border-border hover:border-primary/40"
@@ -220,20 +210,6 @@ export default function Hayroom() {
       </div>
 
       <div className="border-t border-border px-4 py-3">
-        <div className="flex items-center justify-center mb-2">
-          <button
-            data-testid="button-hayroom-loop-toggle"
-            onClick={() => loopToggle.mutate(!(loopStatus?.paused ?? true))}
-            aria-label={(loopStatus?.paused ?? true) ? "自律ループ開始" : "自律ループ停止"}
-            className={`text-sm font-mono min-h-[44px] min-w-[44px] px-4 py-2 rounded border transition-colors ${
-              (loopStatus?.paused ?? true)
-                ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
-                : "border-red-400/40 text-red-400 hover:bg-red-400/10"
-            }`}
-          >
-            {(loopStatus?.paused ?? true) ? "▶" : "■"}
-          </button>
-        </div>
         <div className="flex gap-2">
           <textarea
             value={input}
