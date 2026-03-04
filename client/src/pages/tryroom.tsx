@@ -35,18 +35,18 @@ export default function Tryroom() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], refetch, isFetching } = useQuery<TryroomMessage[]>({
-    queryKey: ["/api/trial-room"],
+    queryKey: ["/api/hayroom"],
     refetchInterval: 5000,
   });
 
   const mutation = useMutation({
     mutationFn: (content: string) =>
-      apiRequest("POST", "/api/trial-room", {
+      apiRequest("POST", "/api/hayroom", {
         fromName: user?.username ?? "あさひ",
         content,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trial-room"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hayroom"] });
       setInput("");
     },
   });
