@@ -122,8 +122,24 @@ export default function Hayroom() {
     },
   });
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef(false);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      userScrolledUp.current = scrollHeight - scrollTop - clientHeight > 80;
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const handleSend = () => {
@@ -140,7 +156,7 @@ export default function Hayroom() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" data-testid="page-hayroom">
+    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-hayroom">
       <div className="border-b border-border px-4 py-3 flex items-center gap-3">
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
@@ -158,7 +174,7 @@ export default function Hayroom() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-xs font-mono mt-16">
             <div className="mb-2 text-2xl">✦</div>
@@ -214,8 +230,14 @@ export default function Hayroom() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={() => {
+              setTimeout(() => {
+                window.scrollTo(0, 0);
+                document.body.scrollTop = 0;
+              }, 100);
+            }}
             placeholder="あさひとして話す..."
-            rows={2}
+            rows={1}
             className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-hayroom-message"
           />
