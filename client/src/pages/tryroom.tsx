@@ -9,7 +9,7 @@ const PARTICIPANT_COLORS: Record<string, string> = {
   "井上朝陽": "text-amber-400",
   "ドラ": "text-emerald-400",
   "アキ": "text-violet-400",
-  "アキ（ハイヤー）": "text-yellow-300",
+  "アキ（ハイヤー）": "text-cyan-400",
 };
 
 const PARTICIPANT_BG: Record<string, string> = {
@@ -17,7 +17,7 @@ const PARTICIPANT_BG: Record<string, string> = {
   "井上朝陽": "border-amber-400/30 bg-amber-400/5",
   "ドラ": "border-emerald-400/30 bg-emerald-400/5",
   "アキ": "border-violet-400/30 bg-violet-400/5",
-  "アキ（ハイヤー）": "border-yellow-300/30 bg-yellow-300/5",
+  "アキ（ハイヤー）": "border-cyan-400/30 bg-cyan-400/5",
 };
 
 const PARTICIPANT_DOT: Record<string, string> = {
@@ -25,7 +25,7 @@ const PARTICIPANT_DOT: Record<string, string> = {
   "井上朝陽": "bg-amber-400",
   "ドラ": "bg-emerald-400",
   "アキ": "bg-violet-400",
-  "アキ（ハイヤー）": "bg-yellow-300",
+  "アキ（ハイヤー）": "bg-cyan-400",
 };
 
 function formatTime(date: string) {
@@ -80,7 +80,7 @@ export default function Tryroom() {
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
           <span className="w-2 h-2 rounded-full bg-emerald-400" title="ドラ" />
-          <span className="w-2 h-2 rounded-full bg-yellow-300" title="アキ（ハイヤー）" />
+          <span className="w-2 h-2 rounded-full bg-cyan-400" title="アキ（ハイヤー）" />
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
         <span className="text-xs text-muted-foreground">あさひ · Hドラ · Hアキ</span>
