@@ -76,7 +76,7 @@ export default function Tryroom() {
           <span className="w-2 h-2 rounded-full bg-emerald-400" title="ドラ" />
           <span className="w-2 h-2 rounded-full bg-violet-400" title="アキ" />
         </div>
-        <span className="text-sm font-mono text-primary terminal-glow">トライルーム</span>
+        <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
         <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ</span>
         <button
           onClick={() => refetch()}

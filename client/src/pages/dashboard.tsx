@@ -525,12 +525,12 @@ export default function Dashboard() {
           {user.isAdmin && <QAWebhookButton />}
 
           {user.isAdmin && (
-            <Link href="/tryroom">
+            <Link href="/hayroom">
               <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-violet-500/20" data-testid="link-tryroom">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl shrink-0">🛸</span>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">TRYROOM</span>
+                    <span className="text-sm font-semibold text-foreground">ハイヤールーム</span>
                     <p className="text-[10px] text-muted-foreground mt-0.5">あさひ・ドラ・アキの3者空間</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

@@ -130,6 +130,7 @@ function Router() {
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
+      <Route path="/hayroom" component={() => <ProtectedRoute component={Tryroom} />} />
       <Route path="/tryroom" component={() => <ProtectedRoute component={Tryroom} />} />
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
