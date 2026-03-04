@@ -297,6 +297,7 @@ export default function Dashboard() {
   return (
     <TerminalLayout>
       <div className="space-y-6 max-w-4xl mx-auto" data-testid="dashboard-page">
+        <h1 className="sr-only">D-Planet ダッシュボード</h1>
         <Card className="p-4 sm:p-6" data-testid="status-header">
           <div className="flex items-center gap-4 flex-wrap">
             <AvatarDisplay url={user.profilePhoto} size="lg" />

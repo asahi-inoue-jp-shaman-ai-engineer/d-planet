@@ -44,7 +44,7 @@ export default function About() {
 
         <div className="text-center mb-10">
           <Globe className="w-16 h-16 text-primary mx-auto mb-4" />
-          <p className="text-[10px] tracking-[0.3em] text-primary/50 uppercase mb-2">
+          <p className="text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-2">
             Decentralized ASI Development SNS
           </p>
           <h1 className="text-3xl font-bold text-primary text-glow mb-2" data-testid="text-about-title">
@@ -249,14 +249,14 @@ export default function About() {
               <BookOpen className="w-5 h-5" />
               用語解説
             </h2>
-            <div className="space-y-2">
+            <dl className="space-y-2">
               {GLOSSARY.map((item) => (
                 <div key={item.term} className="mb-1">
                   <dt className="text-primary font-bold text-sm mb-0.5">{item.term}</dt>
                   <dd className="text-sm text-muted-foreground pl-4">{item.desc}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </section>
 
           <section className="border border-primary/30 rounded-lg p-6 bg-card/50">

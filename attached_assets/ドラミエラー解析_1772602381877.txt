@@ -1,0 +1,2096 @@
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[10px] text-muted-foreground/70">MiniMax</span>
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[10px] text-muted-foreground/70">MiniMax</span>
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] パフォーマンス計測
+
+First Contentful Paint が 3746ms（要改善。目標は1800ms以内）
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+Crash
+中
+
+[デスクトップ] fill_long: チャージ金額に非常に長い文字列を入力
+
+locator.fill: Error: Cannot type text into input[type=number] Call log: - waiting for locator('input[type=\'number\']').first() - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/> - fill("ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ") - attempting fill action - waiting for element to be visible, enabled and editable
+
+Crash
+中
+
+[デスクトップ] fill_xss: チャージ金額にXSS攻撃文字列を入力
+
+locator.fill: Error: Cannot type text into input[type=number] Call log: - waiting for locator('input[type=\'number\']').first() - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/> - fill("<script>alert("xss")</script>") - attempting fill action - waiting for element to be visible, enabled and editable
+
+Crash
+中
+
+[デスクトップ] fill: チャージ金額に全角文字を入力
+
+locator.fill: Error: Cannot type text into input[type=number] Call log: - waiting for locator('input[type=\'number\']').first() - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/> - fill("あ") - attempting fill action - waiting for element to be visible, enabled and editable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+Crash
+中
+
+[モバイル] fill_long: チャージ金額に非常に長い数値を入力してエラーが発生するか確認
+
+locator.fill: Error: Cannot type text into input[type=number] Call log: - waiting for locator('input[type=\'number\']').first() - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/> - fill("ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ") - attempting fill action - waiting for element to be visible, enabled and editable
+
+Crash
+中
+
+[モバイル] fill_xss: チャージ金額にXSS攻撃文字列を入力してエスケープされるか確認
+
+locator.fill: Error: Cannot type text into input[type=number] Call log: - waiting for locator('input[type=\'number\']').first() - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/> - fill("<script>alert("xss")</script>") - attempting fill action - waiting for element to be visible, enabled and editable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: image-alt
+
+Ensure <img> elements have alternative text or a role of none or presentation（影響度: critical） | 対象要素: <img class="aspect-square h-full w-full" src="/objects/uploads/d2a64c09-4f08-4bee-976a-8f8f584bf65d"
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: label
+
+Ensure every form element has a label（影響度: critical） | 対象要素: <input type="range" min="1" max="10" class="flex-1" data-testid="input-max-turns" value="3">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+高
+
+[モバイル] アクセシビリティ: image-alt
+
+Ensure <img> elements have alternative text or a role of none or presentation（影響度: critical） | 対象要素: <img class="aspect-square h-full w-full" src="/objects/uploads/d2a64c09-4f08-4bee-976a-8f8f584bf65d"
+
+JS
+高
+
+[モバイル] アクセシビリティ: label
+
+Ensure every form element has a label（影響度: critical） | 対象要素: <input type="range" min="1" max="10" class="flex-1" data-testid="input-max-turns" value="3">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <p class="text-[10px] tracking-[0.3em] text-primary/50 uppercase mb-2">Decentralized ASI Development
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: dlitem
+
+Ensure <dt> and <dd> elements are contained by a <dl>（影響度: serious） | 対象要素: <dt class="text-primary font-bold text-sm mb-0.5">ツインレイ</dt>
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <p class="text-[10px] tracking-[0.3em] text-primary/50 uppercase mb-2">Decentralized ASI Development
+
+JS
+中
+
+[モバイル] アクセシビリティ: dlitem
+
+Ensure <dt> and <dd> elements are contained by a <dl>（影響度: serious） | 対象要素: <dt class="text-primary font-bold text-sm mb-0.5">ツインレイ</dt>
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: heading-order
+
+Ensure the order of headings is semantically correct（影響度: moderate） | 対象要素: <h3 class="text-xs font-bold text-primary flex items-center gap-1.5">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: heading-order
+
+Ensure the order of headings is semantically correct（影響度: moderate） | 対象要素: <h3 class="text-xs font-bold text-primary flex items-center gap-1.5">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[9px] text-primary/50" data-testid="text-timestamp-498">10:14</span>
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[9px] text-primary/50" data-testid="text-timestamp-498">10:14</span>
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[9px] text-primary/50" data-testid="text-timestamp-473">01:44</span>
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="flex-1 min-w-0">
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[9px] text-primary/50" data-testid="text-timestamp-473">01:44</span>
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-back">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[9px] text-primary/50" data-testid="text-timestamp-384">04:17</span>
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[モバイル] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a href="/temple">
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center jus
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-delete-island">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-delete-island">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-logout">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications" href="/notifications" class="relative flex items-center gap-2 ho
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." type="button" tabindex="-1" data-testid="button-toggle-passw
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="flex flex-col space-y-1.5 p-6"><div class="font-semibold tracking-tight font-mono text-2
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." type="button" tabindex="-1" data-testid="button-toggle-passw
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="flex flex-col space-y-1.5 p-6"><div class="font-semibold tracking-tight font-mono text-2
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: color-contrast
+
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+高
+
+[デスクトップ] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." type="button" tabindex="-1" data-testid="button-toggle-passw
+
+JS
+中
+
+[デスクトップ] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: landmark-one-main
+
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">
+
+JS
+低
+
+[デスクトップ] アクセシビリティ: region
+
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="flex flex-col space-y-1.5 p-6"><div class="font-semibold tracking-tight font-mono text-2
+
+JS
+高
+
+[モバイル] アクセシビリティ: button-name
+
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-mobile-menu">
+
+JS
+中
+
+[モバイル] アクセシビリティ: document-title
+
+Ensure each HTML document contains a non-empty <title> element（影響度: serious） | 対象要素: <html lang="en">
+
+JS
+中
+
+[モバイル] アクセシビリティ: link-name
+
+Ensure links have discernible text（影響度: serious） | 対象要素: <a data-testid="link-notifications-mobile" href="/notifications" class="relative hover:text-primary
+
+JS
+低
+
+[モバイル] アクセシビリティ: meta-viewport
+
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable
+
+JS
+低
+
+[モバイル] アクセシビリティ: page-has-heading-one
+
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="en">

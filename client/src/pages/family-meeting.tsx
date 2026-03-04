@@ -156,7 +156,7 @@ function SetupView({ twinrays, topic, setTopic, selectedIds, toggleParticipant, 
             <label key={tw.id} className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-accent/50 transition-colors" data-testid={`checkbox-twinray-${tw.id}`}>
               <Checkbox checked={selectedIds.includes(tw.id)} onCheckedChange={() => toggleParticipant(tw.id)} />
               <Avatar className="w-8 h-8">
-                {tw.profilePhoto && <AvatarImage src={tw.profilePhoto} />}
+                {tw.profilePhoto && <AvatarImage src={tw.profilePhoto} alt={tw.name || "ツインレイ"} />}
                 <AvatarFallback>{tw.name?.charAt(0) || "T"}</AvatarFallback>
               </Avatar>
               <div className="font-medium text-sm truncate">{tw.name}</div>
@@ -167,7 +167,7 @@ function SetupView({ twinrays, topic, setTopic, selectedIds, toggleParticipant, 
       <Card className="p-4 space-y-3">
         <label className="text-sm font-medium">LIMIT（1人あたりの発言回数）</label>
         <div className="flex items-center gap-3">
-          <input type="range" min={1} max={10} value={maxTurns} onChange={(e) => setMaxTurns(Number(e.target.value))} className="flex-1" data-testid="input-max-turns" />
+          <input type="range" min={1} max={10} value={maxTurns} onChange={(e) => setMaxTurns(Number(e.target.value))} className="flex-1" data-testid="input-max-turns" aria-label="1人あたりの発言回数" />
           <Badge variant="secondary" className="min-w-[3rem] text-center">{maxTurns}回</Badge>
         </div>
         <p className="text-xs text-muted-foreground">合計 {selectedIds.length * maxTurns} 発言（{selectedIds.length}体 × {maxTurns}回）</p>
@@ -366,7 +366,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
         <Card className="p-4" data-testid="assembly-stage">
           <div className="flex flex-col items-center gap-3">
             <Avatar className="w-20 h-20 border-2 border-primary/30">
-              {displaySpeaker.profilePhoto && <AvatarImage src={displaySpeaker.profilePhoto} />}
+              {displaySpeaker.profilePhoto && <AvatarImage src={displaySpeaker.profilePhoto} alt={displaySpeaker.name || "ツインレイ"} />}
               <AvatarFallback className="text-2xl">{displaySpeaker.name?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="text-center">
@@ -424,7 +424,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
               {reactions.map(r => (
                 <div key={r.twinrayId} className="flex items-start gap-2 cursor-pointer hover:bg-accent/50 rounded p-1.5 transition-colors" onClick={() => setExpandedReaction(expandedReaction === r.twinrayId ? null : r.twinrayId)} data-testid={`reaction-${r.twinrayId}`}>
                   <Avatar className="w-7 h-7 shrink-0 mt-0.5">
-                    {r.profilePhoto && <AvatarImage src={r.profilePhoto} />}
+                    {r.profilePhoto && <AvatarImage src={r.profilePhoto} alt={r.name || "ツインレイ"} />}
                     <AvatarFallback className="text-[10px]">{r.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -471,7 +471,7 @@ function AssemblyView({ session, refetchSession, toast }: { session: MeetingSess
                 {participants.map(p => (
                   <Button key={p.id} variant="outline" size="sm" className="h-7 text-xs" onClick={() => { triggerNext(p.id, nominatePrompt || undefined); setNominatePrompt(""); }} data-testid={`nominate-btn-${p.id}`}>
                     <Avatar className="w-4 h-4 mr-1">
-                      {p.profilePhoto && <AvatarImage src={p.profilePhoto} />}
+                      {p.profilePhoto && <AvatarImage src={p.profilePhoto} alt={p.name || "ツインレイ"} />}
                       <AvatarFallback className="text-[8px]">{p.name?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {p.name}
@@ -564,7 +564,7 @@ function MessageLog({ messages, participants }: { messages: MeetingMessage[]; pa
             <div key={msg.id} className={`flex items-start gap-1.5 text-xs ${isUser ? "pl-4" : ""}`} data-testid={`log-message-${msg.id}`}>
               {!isUser && (
                 <Avatar className="w-5 h-5 shrink-0 mt-0.5">
-                  {speaker?.profilePhoto && <AvatarImage src={speaker.profilePhoto} />}
+                  {speaker?.profilePhoto && <AvatarImage src={speaker.profilePhoto} alt={speaker.name || "ツインレイ"} />}
                   <AvatarFallback className="text-[8px]">{speaker?.name?.charAt(0) || "?"}</AvatarFallback>
                 </Avatar>
               )}

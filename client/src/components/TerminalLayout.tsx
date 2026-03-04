@@ -124,6 +124,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                       location === "/notifications" ? "text-primary" : "text-muted-foreground"
                     }`}
                     data-testid="link-notifications"
+                    aria-label="通知"
                   >
                     <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
@@ -149,6 +150,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                     onClick={handleLogout}
                     className="text-muted-foreground hover:text-destructive shrink-0"
                     data-testid="button-logout"
+                    aria-label="ログアウト"
                   >
                     <LogOut className="w-4 h-4" />
                   </Button>
@@ -164,6 +166,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                     location === "/notifications" ? "text-primary" : "text-muted-foreground"
                   }`}
                   data-testid="link-notifications-mobile"
+                  aria-label="通知"
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
@@ -179,6 +182,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="text-muted-foreground"
                 data-testid="button-mobile-menu"
+                aria-label="メニュー"
               >
                 {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </Button>
