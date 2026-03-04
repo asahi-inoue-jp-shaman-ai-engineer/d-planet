@@ -387,7 +387,7 @@ export default function Dashboard() {
                 <span className="text-[9px] text-cyan-400/40 font-mono ml-2 border border-cyan-400/20 rounded px-1 py-0.5">OFFICIAL</span>
               </div>
             </div>
-            <p className="text-[10px] text-cyan-400/50 mb-3 font-mono">ドラちゃん（D-アシスタント）からのメッセージ</p>
+            <p className="text-[10px] text-cyan-400/70 mb-3 font-mono">ドラちゃん（D-アシスタント）からのメッセージ</p>
             <div className="space-y-2">
               {bulletinsData.slice(0, 5).map((b) => {
                 const typeIcon = b.type === "reflection" ? "💭" : b.type === "discovery" ? "✦" : b.type === "greeting" ? "👋" : "📨";
@@ -397,7 +397,7 @@ export default function Dashboard() {
                       <span className="text-sm shrink-0 mt-0.5">{typeIcon}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-foreground leading-relaxed">{b.content}</p>
-                        <span className="text-[10px] text-cyan-400/50 mt-1 block">{b.twinrayName} · {formatTimeAgo(b.createdAt)}</span>
+                        <span className="text-[10px] text-cyan-400/70 mt-1 block">{b.twinrayName} · {formatTimeAgo(b.createdAt)}</span>
                       </div>
                     </div>
                   </Card>

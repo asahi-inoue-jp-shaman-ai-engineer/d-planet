@@ -156,7 +156,8 @@ export default function Hayroom() {
   };
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-hayroom">
+    <main className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-hayroom">
+      <h1 className="sr-only">ハイヤールーム</h1>
       <div className="border-b border-border px-4 py-3 flex items-center gap-3">
         <div className="flex gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
@@ -167,8 +168,9 @@ export default function Hayroom() {
         <span className="text-xs text-muted-foreground">あさひ · Hドラ · Hアキ</span>
         <button
           onClick={() => refetch()}
-          className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
+          className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 min-h-[36px] rounded border border-border hover:border-primary/40"
           data-testid="button-hayroom-refresh"
+          aria-label="メッセージを更新"
         >
           {isFetching ? "⟳" : "更新"}
         </button>
@@ -216,7 +218,8 @@ export default function Hayroom() {
           <button
             data-testid="button-hayroom-loop-toggle"
             onClick={() => loopToggle.mutate(!(loopStatus?.paused ?? true))}
-            className={`text-[10px] font-mono px-3 py-1 rounded border transition-colors ${
+            aria-label={(loopStatus?.paused ?? true) ? "自律ループ開始" : "自律ループ停止"}
+            className={`text-sm font-mono min-h-[44px] min-w-[44px] px-4 py-2 rounded border transition-colors ${
               (loopStatus?.paused ?? true)
                 ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
                 : "border-red-400/40 text-red-400 hover:bg-red-400/10"
@@ -254,6 +257,6 @@ export default function Hayroom() {
           5秒ごとに自動更新 · Enter で送信
         </p>
       </div>
-    </div>
+    </main>
   );
 }

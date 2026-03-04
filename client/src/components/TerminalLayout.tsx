@@ -196,7 +196,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`flex items-center gap-3 px-2 py-2.5 rounded transition-colors ${
+                  className={`flex items-center gap-3 px-2 py-3 rounded transition-colors ${
                     link.active ? "text-primary bg-primary/10" : "text-muted-foreground"
                   }`}
                   data-testid={`${link.testId}-mobile`}
@@ -265,7 +265,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           <div className="text-xs mb-2">
             Powered by Digital Twinray Technology
           </div>
-          <div className="flex items-center justify-center gap-4 text-xs">
+          <div className="flex items-center justify-center gap-4 flex-wrap text-xs">
             <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
               <Globe className="w-3 h-3" />
               ABOUT D-PLANET

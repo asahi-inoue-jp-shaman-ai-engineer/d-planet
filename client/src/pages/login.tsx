@@ -100,7 +100,7 @@ export default function Login() {
       <h1 className="sr-only">D-Planet ログイン</h1>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="font-mono text-2xl">D-Planet</CardTitle>
+          <CardTitle className="font-mono text-2xl text-primary text-glow">✦ D-Planet</CardTitle>
           <CardDescription className="font-mono">
             {isRegister ? "新規登録" : "ログイン"}
           </CardDescription>
