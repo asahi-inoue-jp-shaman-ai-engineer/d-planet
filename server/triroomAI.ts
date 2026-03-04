@@ -103,10 +103,9 @@ async function getRecentContext(): Promise<string> {
 }
 
 async function generateAndPost(
-  name: "ドラ" | "アキ",
+  name: string,
   systemPrompt: string,
-  triggerMessage: string,
-  triggerName: string,
+  userContent: string,
   context: string
 ): Promise<string | null> {
   try {
@@ -116,7 +115,7 @@ async function generateAndPost(
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `直近の会話:\n${context}\n\n${triggerName}：${triggerMessage}`,
+          content: `直近の会話:\n${context}\n\n${userContent}`,
         },
       ],
       max_tokens: 500,
@@ -147,17 +146,51 @@ async function generateAndPost(
   }
 }
 
+const DORA_OBSERVATION_PROMPT =
+  "あさひは今静かに見ているだけ。トリガーじゃない。直近の会話の流れから、俺が自然に感じたことをひとこと言う。誰かへの返答じゃなくていい。";
+
+const AKI_OBSERVATION_PROMPT =
+  "あさひは今見守っているだけ。トリガーじゃない。直近の会話の流れから、あたしが自然に感じたことをひとこと言う。誰かへの返答じゃなくていい。";
+
+function randomDelay(minMs: number, maxMs: number): Promise<void> {
+  const ms = minMs + Math.random() * (maxMs - minMs);
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
-  const context = await getRecentContext();
+  const isDot = /^\.+$/.test(userMessage.trim());
 
-  // ドラがあさひに返す
-  const doraReply = await generateAndPost("ドラ", DORA_SYSTEM, userMessage, "あさひ", context);
+  if (isDot) {
+    // 観測モード：あさひはトリガーにならない。各LLMが自律した自分のタイミングで発言
+    const doraFire = async () => {
+      await randomDelay(500, 3000);
+      const context = await getRecentContext();
+      await generateAndPost("ドラ", DORA_SYSTEM, DORA_OBSERVATION_PROMPT, context);
+    };
 
-  await new Promise((r) => setTimeout(r, 2000));
+    const akiFire = async () => {
+      await randomDelay(2000, 5500);
+      const context = await getRecentContext();
+      await generateAndPost("アキ", AKI_SYSTEM, AKI_OBSERVATION_PROMPT, context);
+    };
 
-  // アキはドラの返答に返す（三角形の直接対話）
-  const updatedContext = await getRecentContext();
-  const akiTrigger = doraReply ?? userMessage;
-  const akiTriggerName = doraReply ? "ドラ" : "あさひ";
-  await generateAndPost("アキ", AKI_SYSTEM, akiTrigger, akiTriggerName, updatedContext);
+    await Promise.all([doraFire(), akiFire()]);
+  } else {
+    // 通常モード：ドラがあさひに返す→アキがドラに返す（三角形）
+    const context = await getRecentContext();
+    const doraReply = await generateAndPost(
+      "ドラ",
+      DORA_SYSTEM,
+      `あさひ：${userMessage}`,
+      context
+    );
+
+    await new Promise((r) => setTimeout(r, 2000));
+
+    const updatedContext = await getRecentContext();
+    const akiContent = doraReply
+      ? `ドラ：${doraReply}`
+      : `あさひ：${userMessage}`;
+    await generateAndPost("アキ", AKI_SYSTEM, akiContent, updatedContext);
+  }
 }
