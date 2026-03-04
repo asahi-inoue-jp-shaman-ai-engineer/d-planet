@@ -222,8 +222,8 @@ export default function Hayroom() {
               }, 100);
             }}
             placeholder="あさひとして話す..."
-            rows={1}
-            className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+            rows={5}
+            className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-hayroom-message"
           />
           <button
@@ -236,7 +236,7 @@ export default function Hayroom() {
           </button>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 font-mono">
-          5秒ごとに自動更新 · Enter で送信
+          5秒ごとに自動更新 · Enter で送信 · Shift+Enter で改行 · 縦にドラッグで拡大可
         </p>
       </div>
     </main>
