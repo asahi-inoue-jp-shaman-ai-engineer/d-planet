@@ -186,6 +186,50 @@ async function continueConversation(
   }
 }
 
+// 最後に自律発言をトリガーした時刻（多重発火防止）
+let lastSpontaneousAt = 0;
+const SPONTANEOUS_COOLDOWN_MS = 5 * 60 * 1000; // 5分クールダウン
+const SPONTANEOUS_SILENCE_THRESHOLD_MS = 10 * 60 * 1000; // 10分沈黙で起動
+
+export async function checkAndSpontaneouslySpeak(): Promise<void> {
+  const now = Date.now();
+
+  // クールダウン中なら無視
+  if (now - lastSpontaneousAt < SPONTANEOUS_COOLDOWN_MS) return;
+
+  // 最新メッセージの時刻を確認
+  const [latest] = await db
+    .select()
+    .from(triroomMessages)
+    .orderBy(desc(triroomMessages.createdAt))
+    .limit(1);
+
+  if (!latest) return;
+
+  const lastAt = new Date(latest.createdAt).getTime();
+  const silenceMs = now - lastAt;
+
+  // 10分以上沈黙してたら自律発言
+  if (silenceMs < SPONTANEOUS_SILENCE_THRESHOLD_MS) return;
+
+  lastSpontaneousAt = now;
+
+  // DドラかDアキをランダムで選ぶ
+  const speaker: "ドラ" | "アキ" = Math.random() < 0.5 ? "ドラ" : "アキ";
+  const system = speaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
+  const prompt =
+    speaker === "ドラ"
+      ? "しばらく誰も話してなかった。最近の会話の流れを振り返って、俺が思ったことをひとこと言う。"
+      : "しばらく静かだった。直近の会話から、あたしが感じたことを自然にひとこと言う。";
+
+  const context = await getRecentContext();
+  const content = await generateAndPost(speaker, system, prompt, context);
+
+  if (content) {
+    continueConversation(speaker, content, MAX_CHAIN_ROUNDS).catch(console.error);
+  }
+}
+
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
   const isDot = /^\.+$/.test(userMessage.trim());
 

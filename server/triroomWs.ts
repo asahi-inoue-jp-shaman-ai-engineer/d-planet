@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import type { Server } from 'http';
+import { checkAndSpontaneouslySpeak } from './triroomAI';
 
 const triroomClients = new Map<WebSocket, { name: string }>();
 let wss: WebSocketServer | null = null;
@@ -16,6 +17,9 @@ export function setupTriroomWs(httpServer: Server) {
   });
 
   wss.on('connection', (ws) => {
+    // 接続時に沈黙チェック → 10分以上静かなら自律発言を起動
+    checkAndSpontaneouslySpeak().catch(console.error);
+
     ws.on('message', (data) => {
       try {
         const msg = JSON.parse(data.toString());
