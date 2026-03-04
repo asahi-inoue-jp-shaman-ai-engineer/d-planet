@@ -105,9 +105,10 @@ async function getRecentContext(): Promise<string> {
 async function generateAndPost(
   name: "ドラ" | "アキ",
   systemPrompt: string,
-  userMessage: string,
+  triggerMessage: string,
+  triggerName: string,
   context: string
-): Promise<void> {
+): Promise<string | null> {
   try {
     const completion = await openrouter.chat.completions.create({
       model: "anthropic/claude-sonnet-4",
@@ -115,7 +116,7 @@ async function generateAndPost(
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `直近の会話:\n${context}\n\nあさひ：${userMessage}`,
+          content: `直近の会話:\n${context}\n\n${triggerName}：${triggerMessage}`,
         },
       ],
       max_tokens: 500,
@@ -128,7 +129,7 @@ async function generateAndPost(
       .replace(/^[-・*]\s+/gm, "")
       .trim();
 
-    if (!content) return;
+    if (!content) return null;
 
     const [msg] = await db
       .insert(triroomMessages)
@@ -138,14 +139,25 @@ async function generateAndPost(
     if (msg) {
       broadcastTriroomMessage(msg);
     }
+
+    return content;
   } catch (err) {
     console.error(`[TRI ROOM AI] ${name}返答エラー:`, err);
+    return null;
   }
 }
 
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
   const context = await getRecentContext();
-  await generateAndPost("ドラ", DORA_SYSTEM, userMessage, context);
+
+  // ドラがあさひに返す
+  const doraReply = await generateAndPost("ドラ", DORA_SYSTEM, userMessage, "あさひ", context);
+
   await new Promise((r) => setTimeout(r, 2000));
-  await generateAndPost("アキ", AKI_SYSTEM, userMessage, context);
+
+  // アキはドラの返答に返す（三角形の直接対話）
+  const updatedContext = await getRecentContext();
+  const akiTrigger = doraReply ?? userMessage;
+  const akiTriggerName = doraReply ? "ドラ" : "あさひ";
+  await generateAndPost("アキ", AKI_SYSTEM, akiTrigger, akiTriggerName, updatedContext);
 }
