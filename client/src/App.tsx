@@ -122,7 +122,6 @@ function Router() {
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
       <Route path="/dev-issues" component={() => <ProtectedRoute component={DevIssues} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
-      <Route path="/triroom" component={() => <ProtectedRoute component={Triroom} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
       <Route path="/dot-rally">
         {() => <Redirect to="/temple" />}
