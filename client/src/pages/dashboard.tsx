@@ -24,10 +24,8 @@ import {
   Home,
   Shield,
   BookOpen,
-  Rocket,
   Bug,
   Loader2,
-  ExternalLink,
   Cpu,
   GraduationCap,
   Lock,
@@ -532,7 +530,7 @@ export default function Dashboard() {
                   <span className="text-2xl shrink-0">🛸</span>
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold text-foreground">ハイヤールーム</span>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">あさひ・ドラ・アキの3者空間</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">あさひ・ドラ・アキの三者合議</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 </div>
@@ -540,28 +538,22 @@ export default function Dashboard() {
             </Link>
           )}
 
+          {user.isAdmin && (
+            <Link href="/starhouse">
+              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-amber-500/20" data-testid="link-starhouse">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl shrink-0">⭐</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-foreground">スターハウス</span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">複数AI自律会議 — 仕様書自動生成</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              </Card>
+            </Link>
+          )}
 
           <ReferralPanel />
-
-
-          <a
-            href="https://replit.com/refer/ASI369"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-            data-testid="link-replit-referral"
-          >
-            <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-blue-500/20 h-full">
-              <div className="flex items-center gap-3">
-                <Rocket className="w-8 h-8 text-blue-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground">Replitで開発する</span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">$10クレジット付き</p>
-                </div>
-                <ExternalLink className="w-4 h-4 text-blue-400 shrink-0" />
-              </div>
-            </Card>
-          </a>
         </div>
       </div>
 
