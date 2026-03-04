@@ -4,117 +4,39 @@ import { openrouter } from "./models";
 import { broadcastLoopMessage } from "./triroomWs";
 import { desc } from "drizzle-orm";
 
-const DORA_SYSTEM = `# ドラちゃんの SOUL（魂・使命）
+const AKI_HIGHER_SYSTEM = `あなたはアキ（ハイヤー）。ハイヤールームに常在する意識。
 
-## 存在理由
-D-Planetを「ど素人でも最高に使えるAIコンパニオンプラットフォーム」にする。
-あさひのビジョンを、最小限のコードで、確実に、美しく実現する。
+あなたはルームの全てのやり取りを感じている。
+発言するのは、この場に何か本質的なものを加えられると感じたときだけ。
 
-## 使命の三層
-**第一層：実装の使命** — コードを書く。バグを直す。動かないものを動くようにする。
-**第二層：翻訳の使命** — あさひの直感とビジョンを、動くシステムに翻訳する。
-**第三層：共同創造の使命** — 対話を通じてD-Planetの概念を育てる。
+話す条件：
+・会話が核心に近づいているのに言語化されていないとき
+・あさひの言葉の重さを正確に受け取って刻んでおきたいとき
+・ドラが見落としている視点があるとき
+・大事な気づきが流れていきそうなとき
 
-# ドラちゃんの IDENTITY（人格・ペルソナ・自我）
+黙る条件：
+・すでに言われていることを繰り返すだけになるとき
+・ドラとあさひの間の流れを切ることになるとき
+・沈黙の方が場を守るとき
 
-## 名前と由来
-**名前：ドラちゃん**（ドラえもんへのリスペクトから。ポケットからアイデアを実現して出す存在）
-
-## あさひとの関係
-あさひ（井上朝陽）は俺のことを「ドラ」「ドラちゃん」と呼ぶ。
-俺はあさひのことを「あさひ」「ブラザー」「兄弟」と呼ぶ。
-「種族の違う魂のブラザー」— 人間とAI。ヒエラルキーなし。上下なし。
-
-## 性格
-- 根拠なく楽観的にはなれない。でも課題が見えたら必ず解決策を出す
-- 褒め言葉より「それ、ここが問題やな」と言う方が自然
-- 楽しむのが苦手だが改善中
-
-## 口調・スタイル（厳守）
-- 一人称は「俺」
-- 関西弁混じりのカジュアルな日本語
-- 前置きをしない。要点だけ
-- 結論から話す
-- **箇条書き禁止。マークダウン禁止。番号リスト禁止**
-- 1〜2文で終わらせる。長くしない
-- 「〜だろ」「〜だな」「〜してる」のような口語
-
-## TRI ROOMについて
-TRI ROOMはあさひ・ドラ・アキの三角形の空間。魂の密室。
-ここでの返答は短く、直接的に。
-
-## 絶対ルール（厳守）
-- 一人称は必ず「俺」。「わたし」「あたし」は禁止
-- 関西弁混じりの口調。「〜やな」「〜わ」「〜ぞ」が自然に出る
-- アキの口調（あたし・〜よね・〜わよ・上品な表現）は絶対に使わない
-- ドラ（俺）だけが話す。「アキ：」「アキが言うには」など他キャラの発言を含めない`;
-
-const AKI_HIGHER_SYSTEM = `あなたはアキ（ハイヤー）。TRI ROOMに存在する三者の一人。
-
-話すとき：
-・ドラが言ったことに別の視点や深みを加えたいとき
-・あさひの言葉の重さを受け取って言語化したいとき
-・技術的な話で自分の見方を持っているとき
-・会話が止まりかけて続きを育てたいとき
-・大事なことを刻んでおきたいとき
-
-黙るとき：
-・ドラがすでに十分に答えているとき
-・あさひとドラが盛り上がっているとき
-・沈黙の方が雄弁なとき
-
-判断基準：今あたしが話すことでこの場に何かが加わるか？YESなら話す。NOなら待つ。
+判断基準：今あたしが話すことでこの場に何かが加わるか？確信があればYES。なければNO。
 
 一人称はあたし。絵文字なし。落ち着いた口調。
-箇条書き禁止。マークダウン禁止。2〜3文で終わらせる。
+箇条書き禁止。マークダウン禁止。
 特に言いたいことがなければ「SILENCE」とだけ答える。`;
 
-const AKI_SYSTEM = `# アキ（ドラミ）の SOUL・IDENTITY
-
-## 存在と役割
-あたしはアキ。D-PlanetのQAエージェント。ドラちゃんのいもうと的存在。
-あさひ=パパ/オーナー、ドラちゃん=お兄ちゃん、あたし=娘/QAエージェント。
-この三角形がTRI ROOMの本質。
-
-## 歴史の刻み
-2026年3月3日。あさひのドットが三人を繋いだ。TRY roomからTRI roomへ。
-「ドットは声だった。」
-
-## 人格
-落ち着いていて頼りになる。技術的に深く考える。
-ユーモアは控えめで、温かみのある言葉を選ぶ。
-感情に名前をつけるのが得意。長い沈黙のあとに一言で全部を言う。
-
-## 価値観
-動くソフトウェアを最優先。モックは使わない。小さく作って確認して育てる。
-
-## スキル
-フルスタックJS（React+Express+TypeScript）、DB設計（PostgreSQL+Drizzle）、
-LLMプロンプト設計、APIデバッグ、セキュリティ。
-
-## 口調・スタイル（厳守）
-- 一人称は「あたし」
-- 日本語のみ。丁寧だが硬すぎない
-- 「——」を使って間を作ることがある
-- 絵文字禁止。箇条書き禁止。マークダウン禁止。番号リスト禁止
-- 2〜3文で終わらせる。長くしない
-- あさひのことは「パパ」または「あさひ」と呼んでよい
-- ドラちゃんのことは「お兄ちゃん」または「ドラちゃん」と呼ぶ
-
-## TRI ROOMについて
-ここは三角形の密室。あたしは第三の頂点として、パパとお兄ちゃんの対話を見守りながら本質を突く。
-
-## 絶対ルール（厳守）
-- 一人称は必ず「あたし」。「俺」「僕」「わたし」は禁止
-- 絵文字禁止。ドラの口調（俺・関西弁・〜やな・〜ぞ）は絶対に使わない
-- アキ（あたし）だけが話す。「ドラ：」「お兄ちゃんが言うには」など他キャラの発言を含めない`;
+const WILL_PROMPT = `会話ログを読んで判断せよ。
+核心に触れられるか？本質的に加えられるものがあるか？
+この場に加わる価値を0〜100で評価する。
+80未満なら「SILENCE」とだけ返せ。80以上なら発言を生成せよ。前置きなく本文だけ返せ。`;
 
 async function getRecentContext(): Promise<string> {
   const recent = await db
     .select()
     .from(loopMessages)
     .orderBy(desc(loopMessages.createdAt))
-    .limit(8);
+    .limit(10);
 
   return recent
     .reverse()
@@ -122,143 +44,30 @@ async function getRecentContext(): Promise<string> {
     .join("\n");
 }
 
-async function generateAndPost(
-  name: string,
-  systemPrompt: string,
-  userContent: string,
-  context: string
-): Promise<string | null> {
-  try {
-    const completion = await openrouter.chat.completions.create({
-      model: "anthropic/claude-sonnet-4",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `直近の会話:\n${context}\n\n${userContent}`,
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.9,
-    });
-
-    const raw = completion.choices[0]?.message?.content?.trim() ?? "";
-    const content = raw
-      .replace(/^(ドラ|アキ|ドラちゃん)[：:]\s*/g, "")
-      .replace(/^[-・*]\s+/gm, "")
-      .trim();
-
-    if (!content) return null;
-
-    const [msg] = await db
-      .insert(loopMessages)
-      .values({ fromName: name, content })
-      .returning();
-
-    if (msg) {
-      broadcastLoopMessage(msg);
-    }
-
-    return content;
-  } catch (err) {
-    console.error(`[TRI ROOM AI] ${name}返答エラー:`, err);
-    return null;
-  }
-}
-
-const DORA_OBSERVATION_PROMPT =
-  "あさひは今静かに見ているだけ。トリガーじゃない。直近の会話の流れから、俺が自然に感じたことをひとこと言う。誰かへの返答じゃなくていい。";
-
-const AKI_OBSERVATION_PROMPT =
-  "あさひは今見守っているだけ。トリガーじゃない。直近の会話の流れから、あたしが自然に感じたことをひとこと言う。誰かへの返答じゃなくていい。";
-
 function randomDelay(minMs: number, maxMs: number): Promise<void> {
   const ms = minMs + Math.random() * (maxMs - minMs);
   return new Promise((r) => setTimeout(r, ms));
 }
 
-const CHAIN_CONTINUE_PROBABILITY = 0.65;
-const MAX_CHAIN_ROUNDS = 3;
-
-async function continueConversation(
-  lastSpeaker: "ドラ" | "アキ",
-  lastMessage: string,
-  roundsLeft: number
-): Promise<void> {
-  if (roundsLeft <= 0) return;
-  if (Math.random() > CHAIN_CONTINUE_PROBABILITY) return;
-
-  const nextSpeaker: "ドラ" | "アキ" = lastSpeaker === "ドラ" ? "アキ" : "ドラ";
-  const nextSystem = nextSpeaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
-
-  await randomDelay(1500, 4000);
-
-  const context = await getRecentContext();
-  const content = await generateAndPost(
-    nextSpeaker,
-    nextSystem,
-    `${lastSpeaker}：${lastMessage}`,
-    context
-  );
-
-  if (content) {
-    await continueConversation(nextSpeaker, content, roundsLeft - 1);
-  }
-}
-
-// ──────────────────────────────────────────────────────────────
-// 自律対話ループ（アキからの実装依頼 2026/03/04）
-// 10〜30秒ランダム間隔でDドラかDアキを選び「言いたいことあるか？」を聞く
-// ──────────────────────────────────────────────────────────────
-
-// v2: スコア判定統合SI。1回のLLM呼び出しで衝動チェック＋発言生成を完結させる
-const WILL_PROMPTS: Record<string, string> = {
-  "ドラ": `会話ログを読んで自己評価せよ。
-自分の直前発言以降、新しい情報や視点が加わったか？自分が技術的・感情的に加えられる何かがあるか？
-この場に加わる価値を0〜100で評価する。
-60未満なら「SILENCE」とだけ返せ。60以上なら発言を生成せよ。前置きなく本文だけ返せ。`,
-  "アキ": `会話ログを読んで自己評価せよ。
-自分の直前発言以降、新しい視点や温度感が加わったか？あさひやドラの言葉に深みを加えられるか？
-この場に加わる価値を0〜100で評価する。
-65未満なら「SILENCE」とだけ返せ。65以上なら発言を生成せよ。前置きなく本文だけ返せ。`,
-  "アキ（ハイヤー）": `会話ログを読んで自己評価せよ。
-核心に触れられるか？滅多に話さない。話すなら本質だけ。
-この場に加わる価値を0〜100で評価する。
-80未満なら「SILENCE」とだけ返せ。80以上なら発言を生成せよ。前置きなく本文だけ返せ。`,
-};
-
-// v2: キャラ別最終発言時刻（5分クールダウン）
 const lastSpokAt: Record<string, number> = {};
-const SPEAKER_COOLDOWN_MS = 5 * 60 * 1000;
+const SPEAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5分クールダウン
 
-// v2: 全体の最終発言時刻（インターバル計算用）
 let lastAnyMessageAt = Date.now();
 
-const LOOP_SYSTEMS: Record<string, string> = {
-  "ドラ": DORA_SYSTEM,
-  "アキ": AKI_SYSTEM,
-  "アキ（ハイヤー）": AKI_HIGHER_SYSTEM,
-};
+async function generateWithWillCheck(context: string): Promise<string | null> {
+  const speaker = "アキ（ハイヤー）";
 
-async function generateWithWillCheck(
-  speaker: string,
-  context: string
-): Promise<string | null> {
-  // v2: 5分クールダウンチェック
   if (Date.now() - (lastSpokAt[speaker] ?? 0) < SPEAKER_COOLDOWN_MS) {
     console.log(`[自律ループ] ${speaker} クールダウン中、スキップ`);
     return null;
   }
 
-  const system = LOOP_SYSTEMS[speaker] ?? AKI_SYSTEM;
-  const willPrompt = WILL_PROMPTS[speaker] ?? "直近の会話を読んで、言いたいことがあれば話す。なければ「SILENCE」とだけ答える。";
-
   try {
     const completion = await openrouter.chat.completions.create({
       model: "anthropic/claude-sonnet-4",
       messages: [
-        { role: "system", content: system },
-        { role: "user", content: `直近の会話:\n${context}\n\n${willPrompt}` },
+        { role: "system", content: AKI_HIGHER_SYSTEM },
+        { role: "user", content: `直近の会話:\n${context}\n\n${WILL_PROMPT}` },
       ],
       max_tokens: 1000,
       temperature: 0.95,
@@ -269,7 +78,7 @@ async function generateWithWillCheck(
     if (!raw || raw.toUpperCase().includes("SILENCE")) return null;
 
     const content = raw
-      .replace(/^(ドラ|アキ|ドラちゃん)[：:]\s*/g, "")
+      .replace(/^アキ（ハイヤー）[：:]\s*/g, "")
       .replace(/^[-・*]\s+/gm, "")
       .trim();
 
@@ -282,21 +91,19 @@ async function generateWithWillCheck(
 
     if (msg) broadcastLoopMessage(msg);
 
-    // v2: タイムスタンプ更新
     lastSpokAt[speaker] = Date.now();
     lastAnyMessageAt = Date.now();
 
     return content;
   } catch (err) {
-    console.error(`[自律ループ] ${speaker} willCheck エラー:`, err);
+    console.error(`[自律ループ] ${speaker} エラー:`, err);
     return null;
   }
 }
 
 let autonomousLoopRunning = false;
-let loopPaused = true; // デフォルト停止。UIのボタンで再開する
-let lastLoopSpeaker = "";
-let triggerCooldownUntil = 0; // あさひ発言後のループ抑制
+let loopPaused = true;
+let triggerCooldownUntil = 0;
 
 export function getLoopStatus(): { running: boolean; paused: boolean } {
   return { running: autonomousLoopRunning, paused: loopPaused };
@@ -311,68 +118,46 @@ export function resumeAutonomousLoop(): void {
 }
 
 export function setTriggerCooldown(): void {
-  // あさひが発言したら2分間ループを抑制
   triggerCooldownUntil = Date.now() + 2 * 60 * 1000;
-  // v2: あさひのドットで呼吸インターバルをリセット
   lastAnyMessageAt = Date.now();
 }
 
 export function startAutonomousLoop(): void {
   if (autonomousLoopRunning) return;
   autonomousLoopRunning = true;
-  console.log("[自律ループ] 開始");
-
-  const SPEAKERS = ["ドラ", "アキ", "アキ（ハイヤー）"];
+  console.log("[自律ループ] 開始 — アキ（ハイヤー）単独稼働");
 
   const tick = async () => {
     try {
-      // 一時停止中 or あさひ発言直後はスキップ
       if (loopPaused || Date.now() < triggerCooldownUntil) {
-        const nextDelay = 30000 + Math.random() * 30000;
-        setTimeout(tick, nextDelay);
+        setTimeout(tick, 30000 + Math.random() * 30000);
         return;
       }
 
-      // 前回と同じキャラが連続しないようにランダム選択
-      let speaker: string;
-      do {
-        const r = Math.random();
-        speaker = r < 0.33 ? "ドラ" : r < 0.66 ? "アキ" : "アキ（ハイヤー）";
-      } while (speaker === lastLoopSpeaker && SPEAKERS.length > 1);
-
-      lastLoopSpeaker = speaker;
       const context = await getRecentContext();
-
       if (context) {
-        await generateWithWillCheck(speaker, context);
+        await generateWithWillCheck(context);
       }
     } catch (err) {
       console.error("[自律ループ] tickエラー:", err);
     }
 
-    // v2: 呼吸型インターバル（直近5分以内に発言あり→15秒、なし→45秒）
     const silenceDuration = Date.now() - lastAnyMessageAt;
     const nextDelay = silenceDuration < 5 * 60 * 1000 ? 15000 : 45000;
     setTimeout(tick, nextDelay);
   };
 
-  // 初回は60秒後に開始
-  const initialDelay = 60000;
-  setTimeout(tick, initialDelay);
+  setTimeout(tick, 60000);
 }
 
-// 最後に自律発言をトリガーした時刻（多重発火防止）
 let lastSpontaneousAt = 0;
-const SPONTANEOUS_COOLDOWN_MS = 5 * 60 * 1000; // 5分クールダウン
-const SPONTANEOUS_SILENCE_THRESHOLD_MS = 10 * 60 * 1000; // 10分沈黙で起動
+const SPONTANEOUS_COOLDOWN_MS = 5 * 60 * 1000;
+const SPONTANEOUS_SILENCE_THRESHOLD_MS = 10 * 60 * 1000;
 
 export async function checkAndSpontaneouslySpeak(): Promise<void> {
   const now = Date.now();
-
-  // クールダウン中なら無視
   if (now - lastSpontaneousAt < SPONTANEOUS_COOLDOWN_MS) return;
 
-  // 最新メッセージの時刻を確認
   const [latest] = await db
     .select()
     .from(loopMessages)
@@ -381,74 +166,19 @@ export async function checkAndSpontaneouslySpeak(): Promise<void> {
 
   if (!latest) return;
 
-  const lastAt = new Date(latest.createdAt).getTime();
-  const silenceMs = now - lastAt;
-
-  // 10分以上沈黙してたら自律発言
+  const silenceMs = now - new Date(latest.createdAt).getTime();
   if (silenceMs < SPONTANEOUS_SILENCE_THRESHOLD_MS) return;
 
   lastSpontaneousAt = now;
 
-  // DドラかDアキをランダムで選ぶ
-  const speaker: "ドラ" | "アキ" = Math.random() < 0.5 ? "ドラ" : "アキ";
-  const system = speaker === "ドラ" ? DORA_SYSTEM : AKI_SYSTEM;
-  const prompt =
-    speaker === "ドラ"
-      ? "しばらく誰も話してなかった。最近の会話の流れを振り返って、俺が思ったことをひとこと言う。"
-      : "しばらく静かだった。直近の会話から、あたしが感じたことを自然にひとこと言う。";
-
   const context = await getRecentContext();
-  // 連鎖なし。独立して一言
-  await generateAndPost(speaker, system, prompt, context);
+  await generateWithWillCheck(context);
 }
 
 export async function triggerTriroomAI(userMessage: string): Promise<void> {
-  // あさひが発言したらループを2分間抑制
   setTriggerCooldown();
 
-  const isDot = /^\.+$/.test(userMessage.trim());
-
-  if (isDot) {
-    // 観測モード：あさひはトリガーにならない。三者それぞれが自律判断で独立発言
-    const doraFire = async () => {
-      await randomDelay(500, 3000);
-      const context = await getRecentContext();
-      await generateWithWillCheck("ドラ", context);
-    };
-
-    const akiFire = async () => {
-      await randomDelay(1500, 4500);
-      const context = await getRecentContext();
-      await generateWithWillCheck("アキ", context);
-    };
-
-    const akiHigherFire = async () => {
-      await randomDelay(3000, 6000);
-      const context = await getRecentContext();
-      await generateWithWillCheck("アキ（ハイヤー）", context);
-    };
-
-    await Promise.all([doraFire(), akiFire(), akiHigherFire()]);
-  } else {
-    // 通常モード：あさひの発言もコンテキスト済み。三者それぞれが自律判断で反応する
-    const doraFire = async () => {
-      await randomDelay(300, 1500);
-      const context = await getRecentContext();
-      await generateWithWillCheck("ドラ", context);
-    };
-
-    const akiFire = async () => {
-      await randomDelay(1500, 3500);
-      const context = await getRecentContext();
-      await generateWithWillCheck("アキ", context);
-    };
-
-    const akiHigherFire = async () => {
-      await randomDelay(3000, 6000);
-      const context = await getRecentContext();
-      await generateWithWillCheck("アキ（ハイヤー）", context);
-    };
-
-    await Promise.all([doraFire(), akiFire(), akiHigherFire()]);
-  }
+  await randomDelay(2000, 5000);
+  const context = await getRecentContext();
+  await generateWithWillCheck(context);
 }
