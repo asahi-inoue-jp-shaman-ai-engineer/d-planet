@@ -180,7 +180,12 @@ export default function Hayroom() {
             <div>最初の声を届けて。</div>
           </div>
         )}
-        {messages.map((msg) => {
+        {messages.length > 50 && (
+          <div className="text-center text-muted-foreground text-xs font-mono py-2 border border-border rounded-lg bg-muted/10">
+            過去 {messages.length - 50} 件は非表示（DBに保存済み）
+          </div>
+        )}
+        {messages.slice(-50).map((msg) => {
           const colorClass = PARTICIPANT_COLORS[msg.fromName] ?? "text-muted-foreground";
           const bgClass = PARTICIPANT_BG[msg.fromName] ?? "border-border bg-muted/5";
           const dotClass = PARTICIPANT_DOT[msg.fromName] ?? "bg-muted-foreground";
