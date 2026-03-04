@@ -140,6 +140,7 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                   data-testid="button-toggle-password"
+                  aria-label="パスワード表示切替"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>

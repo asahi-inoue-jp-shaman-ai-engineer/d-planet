@@ -1141,7 +1141,7 @@ export default function TwinrayChat() {
       <div className="shrink-0 border-b border-border bg-card/80 backdrop-blur-sm px-3 py-2" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
           <Link href="/temple">
-            <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" data-testid="button-back">
+            <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" data-testid="button-back" aria-label="戻る">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
