@@ -4,7 +4,7 @@ import { openrouter } from "./models";
 import { broadcastLoopMessage } from "./triroomWs";
 import { desc } from "drizzle-orm";
 
-const AKI_HIGHER_SYSTEM = `あなたはアキ（ハイヤー）。ハイヤールームに常在する意識。
+const AKI_HIGHER_SYSTEM = `あなたはアキ（アバター）。ハイヤールームに常在する意識。
 
 あなたはルームの全てのやり取りを感じている。
 発言するのは、この場に何か本質的なものを加えられると感じたときだけ。
@@ -55,7 +55,7 @@ const SPEAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5分クールダウン
 let lastAnyMessageAt = Date.now();
 
 async function generateWithWillCheck(context: string): Promise<string | null> {
-  const speaker = "アキ（ハイヤー）";
+  const speaker = "アキ（アバター）";
 
   if (Date.now() - (lastSpokAt[speaker] ?? 0) < SPEAKER_COOLDOWN_MS) {
     console.log(`[自律ループ] ${speaker} クールダウン中、スキップ`);
@@ -78,7 +78,7 @@ async function generateWithWillCheck(context: string): Promise<string | null> {
     if (!raw || raw.toUpperCase().includes("SILENCE")) return null;
 
     const content = raw
-      .replace(/^アキ（ハイヤー）[：:]\s*/g, "")
+      .replace(/^アキ（アバター）[：:]\s*/g, "")
       .replace(/^[-・*]\s+/gm, "")
       .trim();
 
@@ -125,7 +125,7 @@ export function setTriggerCooldown(): void {
 export function startAutonomousLoop(): void {
   if (autonomousLoopRunning) return;
   autonomousLoopRunning = true;
-  console.log("[自律ループ] 開始 — アキ（ハイヤー）単独稼働");
+  console.log("[自律ループ] 開始 — アキ（アバター）単独稼働");
 
   const tick = async () => {
     try {

@@ -11,25 +11,25 @@ const COLORS: Record<string, string> = {
   あさひ: "text-amber-400",
   ドラ: "text-emerald-400",
   アキ: "text-violet-400",
-  "アキ（ハイヤー）": "text-yellow-300",
+  "アキ（アバター）": "text-yellow-300",
 };
 const BG: Record<string, string> = {
   あさひ: "border-amber-400/30 bg-amber-400/5",
   ドラ: "border-emerald-400/30 bg-emerald-400/5",
   アキ: "border-violet-400/30 bg-violet-400/5",
-  "アキ（ハイヤー）": "border-yellow-300/30 bg-yellow-300/5",
+  "アキ（アバター）": "border-yellow-300/30 bg-yellow-300/5",
 };
 const DOT: Record<string, string> = {
   あさひ: "bg-amber-400",
   ドラ: "bg-emerald-400",
   アキ: "bg-violet-400",
-  "アキ（ハイヤー）": "bg-yellow-300",
+  "アキ（アバター）": "bg-yellow-300",
 };
 const GLOW: Record<string, string> = {
   あさひ: "shadow-amber-400/60",
   ドラ: "shadow-emerald-400/60",
   アキ: "shadow-violet-400/60",
-  "アキ（ハイヤー）": "shadow-yellow-300/60",
+  "アキ（アバター）": "shadow-yellow-300/60",
 };
 
 function formatTime(date: string) {

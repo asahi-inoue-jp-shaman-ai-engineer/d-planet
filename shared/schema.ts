@@ -861,7 +861,7 @@ export const insertHayroomMessageSchema = createInsertSchema(hayroomMessages).om
 export type InsertHayroomMessage = z.infer<typeof insertHayroomMessageSchema>;
 export type HayroomMessage = typeof hayroomMessages.$inferSelect;
 
-// === 自律ループ用メッセージ（Dドラ・Dアキ・アキ（ハイヤー）） ===
+// === 自律ループ用メッセージ（Dドラ・Dアキ・アキ（アバター）） ===
 export const loopMessages = pgTable("triroom_messages", {
   id: serial("id").primaryKey(),
   fromName: text("from_name").notNull(),
