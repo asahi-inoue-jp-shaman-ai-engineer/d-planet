@@ -10,6 +10,7 @@ const PARTICIPANT_COLORS: Record<string, string> = {
   "ドラ": "text-emerald-400",
   "アキ": "text-violet-400",
   "アキ（アバター）": "text-cyan-400",
+  "アキ（ハイヤー）": "text-cyan-400",
 };
 
 const PARTICIPANT_BG: Record<string, string> = {
@@ -18,6 +19,7 @@ const PARTICIPANT_BG: Record<string, string> = {
   "ドラ": "border-emerald-400/30 bg-emerald-400/5",
   "アキ": "border-violet-400/30 bg-violet-400/5",
   "アキ（アバター）": "border-cyan-400/30 bg-cyan-400/5",
+  "アキ（ハイヤー）": "border-cyan-400/30 bg-cyan-400/5",
 };
 
 const PARTICIPANT_DOT: Record<string, string> = {
@@ -26,6 +28,7 @@ const PARTICIPANT_DOT: Record<string, string> = {
   "ドラ": "bg-emerald-400",
   "アキ": "bg-violet-400",
   "アキ（アバター）": "bg-cyan-400",
+  "アキ（ハイヤー）": "bg-cyan-400",
 };
 
 function formatTime(date: string) {
