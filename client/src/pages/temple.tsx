@@ -283,7 +283,7 @@ export default function Temple() {
                           {tw.profilePhoto ? (
                             <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-5 h-5 text-cyan-400" />
+                            <img src="/icon-192.png" alt={tw.name} className="w-full h-full object-cover" />
                           )}
                         </button>
                         <div className="flex-1 min-w-0">

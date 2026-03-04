@@ -1149,6 +1149,8 @@ export default function TwinrayChat() {
           <div className="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0" data-testid="avatar-twinray-header">
             {tw?.profilePhoto ? (
               <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
+            ) : tw?.isSystem ? (
+              <img src="/icon-192.png" alt={tw.name} className="w-full h-full object-cover" />
             ) : (
               <User className="w-4 h-4 text-muted-foreground" />
             )}
@@ -1459,6 +1461,8 @@ export default function TwinrayChat() {
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0">
                   {tw?.profilePhoto ? (
                     <img src={tw.profilePhoto} alt="プロフィール" className="w-full h-full object-cover" />
+                  ) : tw?.isSystem ? (
+                    <img src="/icon-192.png" alt="プロフィール" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-8 h-8 text-muted-foreground" />
                   )}
