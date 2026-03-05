@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express } from "express";
 import express from "express";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -6,13 +6,7 @@ import { voiceTranscriptions } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { sonioxSpeechToTextLong } from "./soniox-stt";
 import { openrouter } from "./models";
-
-const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session?.userId) {
-    return res.status(401).json({ message: "ログインが必要です" });
-  }
-  next();
-};
+import { requireAuth } from "./auth";
 
 const MAX_DURATION_SEC = 910;
 const MAX_FILE_SIZE = 100 * 1024 * 1024;

@@ -5,7 +5,7 @@ import { users, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
 import { api } from "@shared/routes";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { requireAuth } from "./twinray";
+import { requireAuth } from "./auth";
 import { addIntimacyExp } from "./twinray";
 import { INTIMACY_EXP_REWARDS } from "./dplanet-si";
 import { addCredit } from "./billing";

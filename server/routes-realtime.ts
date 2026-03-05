@@ -6,11 +6,7 @@ import { broadcastLoopMessage } from "./triroomWs";
 import { triggerTriroomAI, pauseAutonomousLoop, resumeAutonomousLoop, getLoopStatus } from "./triroomAI";
 import { getUnreadMail, sendMail, markMailRead, getRecentSessions, saveSession, saveSpec, getSpecs } from "./supabaseClient";
 import { triggerStarhouseAI } from "./starhouseAI";
-
-function isAuthorized(req: any): boolean {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  return token === process.env.QA_AGENT_TOKEN || !!req.session?.userId;
-}
+import { isAuthorized } from "./auth";
 
 export function registerRealtimeRoutes(app: Express): void {
   app.post("/api/hayroom", async (req, res) => {

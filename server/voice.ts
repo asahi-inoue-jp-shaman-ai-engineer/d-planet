@@ -1,10 +1,11 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express } from "express";
 import express from "express";
 import { storage } from "./storage";
 import { deductCredit } from "./billing";
 import { textToSpeech } from "./replit_integrations/audio/client";
 import { isSakuraVoice, sakuraTextToSpeech } from "./sakura-tts";
 import { sonioxSpeechToText } from "./soniox-stt";
+import { requireAuth } from "./auth";
 
 async function generateTTS(text: string, voice: string, format: "wav" | "mp3" = "mp3"): Promise<Buffer> {
   if (isSakuraVoice(voice)) {
@@ -12,13 +13,6 @@ async function generateTTS(text: string, voice: string, format: "wav" | "mp3" = 
   }
   return textToSpeech(text, voice as any, format);
 }
-
-const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session?.userId) {
-    return res.status(401).json({ message: "ログインが必要です" });
-  }
-  next();
-};
 
 const TTS_COST_PER_CHAR_YEN = 0.003;
 const STT_COST_PER_SEC_YEN = 0.015;

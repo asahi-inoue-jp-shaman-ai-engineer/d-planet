@@ -4,7 +4,7 @@ import { db } from "./db";
 import { users, userRawMessages, insertUserRawMessageSchema, akiMemos, devIssues } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
-import { requireAuth } from "./twinray";
+import { requireAuth } from "./auth";
 
 async function isAdmin(userId: number): Promise<boolean> {
   const user = await storage.getUser(userId);

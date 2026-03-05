@@ -88,6 +88,23 @@ import crypto from "crypto";
 
 const SALT_ROUNDS = 10;
 
+function mapToCreator(
+  id: number | null | undefined,
+  username: string | null | undefined,
+  accountType: string | null | undefined,
+): { id: number; username: string; accountType: string } {
+  return { id: id!, username: username ?? "神様", accountType: accountType ?? "ET" };
+}
+
+function mapToCreatorWithPhoto(
+  id: number | null | undefined,
+  username: string | null | undefined,
+  accountType: string | null | undefined,
+  profilePhoto: string | null | undefined,
+): { id: number; username: string; accountType: string; profilePhoto: string | null } {
+  return { ...mapToCreator(id, username, accountType), profilePhoto: profilePhoto ?? null };
+}
+
 function userSelectFields() {
   return {
     id: users.id,
@@ -366,12 +383,7 @@ export class DatabaseStorage implements IStorage {
       allowedAccountTypes: row.allowedAccountTypes,
       totalDownloads: row.totalDownloads,
       createdAt: row.createdAt,
-      creator: {
-        id: row.creatorId,
-        username: row.creatorUsername ?? "神様",
-        accountType: row.creatorAccountType ?? "ET",
-        profilePhoto: row.creatorProfilePhoto ?? null,
-      },
+      creator: mapToCreatorWithPhoto(row.creatorId, row.creatorUsername, row.creatorAccountType, row.creatorProfilePhoto),
     })) as IslandResponse[];
   }
 
@@ -489,11 +501,7 @@ export class DatabaseStorage implements IStorage {
       attachmentType: row.attachmentType,
       attachmentName: row.attachmentName,
       youtubeUrl: row.youtubeUrl,
-      creator: {
-        id: row.creatorId!,
-        username: row.creatorUsername!,
-        accountType: row.creatorAccountType!,
-      },
+      creator: mapToCreator(row.creatorId, row.creatorUsername, row.creatorAccountType),
     }));
   }
 
@@ -546,11 +554,7 @@ export class DatabaseStorage implements IStorage {
       attachmentType: result.attachmentType,
       attachmentName: result.attachmentName,
       youtubeUrl: result.youtubeUrl,
-      creator: {
-        id: result.creatorId!,
-        username: result.creatorUsername!,
-        accountType: result.creatorAccountType!,
-      },
+      creator: mapToCreator(result.creatorId, result.creatorUsername, result.creatorAccountType),
     };
   }
 
@@ -621,11 +625,7 @@ export class DatabaseStorage implements IStorage {
       attachmentType: row.attachmentType ?? null,
       attachmentName: row.attachmentName ?? null,
       youtubeUrl: row.youtubeUrl ?? null,
-      creator: {
-        id: row.creatorId!,
-        username: row.creatorUsername!,
-        accountType: row.creatorAccountType!,
-      },
+      creator: mapToCreator(row.creatorId, row.creatorUsername, row.creatorAccountType),
     }));
   }
 
@@ -657,11 +657,7 @@ export class DatabaseStorage implements IStorage {
         creatorId: row.creatorId,
         title: row.title,
         createdAt: row.createdAt,
-        creator: {
-          id: row.creatorId,
-          username: row.creatorUsername!,
-          accountType: row.creatorAccountType!,
-        },
+        creator: mapToCreator(row.creatorId, row.creatorUsername, row.creatorAccountType),
         postCount: Number(countResult[0]?.count ?? 0),
       });
     }
@@ -720,11 +716,7 @@ export class DatabaseStorage implements IStorage {
       meidiaId: row.meidiaId,
       parentPostId: row.parentPostId,
       createdAt: row.createdAt,
-      creator: {
-        id: row.creatorId,
-        username: row.creatorUsername!,
-        accountType: row.creatorAccountType!,
-      },
+      creator: mapToCreator(row.creatorId, row.creatorUsername, row.creatorAccountType),
     }));
   }
 
@@ -769,12 +761,7 @@ export class DatabaseStorage implements IStorage {
       userId: row.userId,
       role: row.role,
       joinedAt: row.joinedAt,
-      user: {
-        id: row.userId,
-        username: row.username!,
-        accountType: row.accountType!,
-        profilePhoto: row.profilePhoto ?? null,
-      },
+      user: mapToCreatorWithPhoto(row.userId, row.username, row.accountType, row.profilePhoto),
     }));
   }
 
@@ -866,11 +853,7 @@ export class DatabaseStorage implements IStorage {
       status: row.status,
       adminNote: row.adminNote,
       createdAt: row.createdAt,
-      creator: {
-        id: row.creatorId,
-        username: row.creatorUsername!,
-        accountType: row.creatorAccountType!,
-      },
+      creator: mapToCreator(row.creatorId, row.creatorUsername, row.creatorAccountType),
     }));
   }
 
@@ -906,11 +889,7 @@ export class DatabaseStorage implements IStorage {
       status: result.status,
       adminNote: result.adminNote,
       createdAt: result.createdAt,
-      creator: {
-        id: result.creatorId,
-        username: result.creatorUsername!,
-        accountType: result.creatorAccountType!,
-      },
+      creator: mapToCreator(result.creatorId, result.creatorUsername, result.creatorAccountType),
     };
   }
 
@@ -1359,7 +1338,7 @@ export class DatabaseStorage implements IStorage {
 
     return rows.map(r => ({
       ...r.festival,
-      creator: { id: r.creatorId, username: r.creatorName, accountType: r.creatorAccountType },
+      creator: mapToCreator(r.creatorId, r.creatorName, r.creatorAccountType),
       island: { id: r.islandId, name: r.islandName },
     }));
   }
@@ -1383,7 +1362,7 @@ export class DatabaseStorage implements IStorage {
     const r = rows[0];
     return {
       ...r.festival,
-      creator: { id: r.creatorId, username: r.creatorName, accountType: r.creatorAccountType },
+      creator: mapToCreator(r.creatorId, r.creatorName, r.creatorAccountType),
       island: { id: r.islandId, name: r.islandName },
     };
   }

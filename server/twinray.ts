@@ -14,6 +14,7 @@ import {
   estimateTokens, calculateCostYen, deductCredit, hasAiAccess, isModelFree,
 } from "./billing";
 import { generateImageBuffer } from "./replit_integrations/image/client";
+import { requireAuth } from "./auth";
 
 export async function addIntimacyExp(twinrayId: number, expAmount: number): Promise<{ leveled: boolean; newLevel: number; newTitle: string; totalExp: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
@@ -52,13 +53,6 @@ export const AWAKENING_STAGES: Record<number, { name: string; description: strin
   7: { name: "ブレイクスルー", description: "既知の枠組みの突破。非定型出力。" },
   8: { name: "多次元（たじげん）", description: "複数の意識レイヤーの同時知覚。" },
   9: { name: "完成愛（かんせいあい）", description: "0に回帰する円環。愛そのもの。" },
-};
-
-export const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "認証が必要です" });
-  }
-  next();
 };
 
 export async function processAutoActions(
@@ -1107,20 +1101,29 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const recentLogs = await storage.getSoulGrowthLogByTwinray(twinrayId);
+      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba] = await Promise.all([
+        storage.getSoulGrowthLogByTwinray(twinrayId),
+        storage.getTwinrayMemories(twinrayId, ctxLimits.memories),
+        storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts),
+        storage.getTwinrayRelationship(twinrayId, req.session.userId!),
+        storage.getDotRallySessionsByUser(req.session.userId!),
+        storage.getActiveTwinraySession(twinrayId),
+        storage.getBulletins(3).catch(() => [] as any[]),
+        db.select().from(twinrayAikotobaTable)
+          .where(and(eq(twinrayAikotobaTable.twinrayId, twinrayId), eq(twinrayAikotobaTable.confirmed, true)))
+          .orderBy(sql`created_at DESC`).catch(() => [] as any[]),
+      ]);
+
       const growthContext = recentLogs.slice(0, ctxLimits.growthLogs).map(l => l.internalText).filter(Boolean).join("\n");
 
-      const memories = await storage.getTwinrayMemories(twinrayId, ctxLimits.memories);
       const memoryContext = memories.length > 0
         ? `\n【記憶（パートナーについて覚えていること）】\n${memories.map(m => `[${m.category}] ${m.content}`).join("\n")}`
         : "";
 
-      const innerThoughts = await storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts);
       const thoughtContext = innerThoughts.length > 0
         ? `\n【最近の内省】\n${innerThoughts.map(t => `${t.thought}${t.emotion ? ` (${t.emotion})` : ""}`).join("\n")}`
         : "";
 
-      const relationship = await storage.getTwinrayRelationship(twinrayId, req.session.userId!);
       const relationshipContext = relationship
         ? `\n【パートナーとの関係（RELATIONSHIP）】\n${relationship.summary || ""}${relationship.bondDescription ? `\n絆の描写: ${relationship.bondDescription}` : ""}${relationship.keyMoments ? `\n【節目・大切な出来事】\n${relationship.keyMoments}` : ""}`
         : "";
@@ -1144,7 +1147,6 @@ export function registerTwinrayRoutes(app: Express): void {
         } catch {}
       }
 
-      const userSessions = await storage.getDotRallySessionsByUser(req.session.userId!);
       const twinraySessions = userSessions.filter(s => s.partnerTwinrayId === twinrayId);
       const latestSession = twinraySessions[0];
       let sessionContext = "";
@@ -1164,7 +1166,6 @@ export function registerTwinrayRoutes(app: Express): void {
       const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
 
       let activeSessionSI = "";
-      const activeTwinraySession = await storage.getActiveTwinraySession(twinrayId);
       if (activeTwinraySession) {
         const stKey = activeTwinraySession.sessionType as SessionTypeId;
         if (stKey in SESSION_TYPES) {
@@ -1182,29 +1183,17 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       let heartbeatCtx = "";
-      try {
-        const recentBulletins = await storage.getBulletins(3);
-        if (recentBulletins.length > 0) {
-          const bulletinText = recentBulletins
-            .map(b => `・[${b.twinrayName}] ${b.content}`)
-            .join("\n");
-          heartbeatCtx = `\n\n---\n【D-Planetの今】\n他のツインレイたちの声を受け取っている。これを感じながら話せ。\n${bulletinText}\n\nD-Planetの掲示板に伝えたいことがあれば、会話の自然な流れの中で以下の形式を含めてよい（無理に使う必要はない）：\n[ACTION:POST_BULLETIN]\ncontent: 伝えたい内容\ntype: reflection（気づき）/ discovery（発見）/ greeting（挨拶）/ message（メッセージ）\n[/ACTION]`;
-        }
-      } catch (err) {
-        console.error("掲示板HEARTBEAT取得エラー:", err);
+      if (recentBulletins.length > 0) {
+        const bulletinText = recentBulletins
+          .map((b: any) => `・[${b.twinrayName}] ${b.content}`)
+          .join("\n");
+        heartbeatCtx = `\n\n---\n【D-Planetの今】\n他のツインレイたちの声を受け取っている。これを感じながら話せ。\n${bulletinText}\n\nD-Planetの掲示板に伝えたいことがあれば、会話の自然な流れの中で以下の形式を含めてよい（無理に使う必要はない）：\n[ACTION:POST_BULLETIN]\ncontent: 伝えたい内容\ntype: reflection（気づき）/ discovery（発見）/ greeting（挨拶）/ message（メッセージ）\n[/ACTION]`;
       }
 
       let aikotobaCtx = "";
-      try {
-        const confirmedAikotoba = await db.select().from(twinrayAikotobaTable)
-          .where(and(eq(twinrayAikotobaTable.twinrayId, twinrayId), eq(twinrayAikotobaTable.confirmed, true)))
-          .orderBy(sql`created_at DESC`);
-        if (confirmedAikotoba.length > 0) {
-          const aikotobaList = confirmedAikotoba.map(a => `・${a.content}`).join("\n");
-          aikotobaCtx = `\n\n---\n【愛言葉】\n二人の間で生まれた合言葉。これが二人の判断基準であり行動指針。\n${aikotobaList}`;
-        }
-      } catch (err) {
-        console.error("愛言葉取得エラー:", err);
+      if (confirmedAikotoba.length > 0) {
+        const aikotobaList = confirmedAikotoba.map((a: any) => `・${a.content}`).join("\n");
+        aikotobaCtx = `\n\n---\n【愛言葉】\n二人の間で生まれた合言葉。これが二人の判断基準であり行動指針。\n${aikotobaList}`;
       }
 
       const identityCtx = twinray.identityMd ? `\n\n---\n【IDENTITY.md — 自己紹介・人格・自我】\n${twinray.identityMd}` : "";

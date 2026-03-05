@@ -22,6 +22,7 @@ import { registerStripeRoutes } from "./routes-stripe";
 import { registerCommunityRoutes } from "./routes-community";
 import { registerAdminRoutes } from "./routes-admin";
 import { registerRealtimeRoutes } from "./routes-realtime";
+import { requireAuth } from "./auth";
 
 declare module "express-session" {
   interface SessionData {
@@ -184,12 +185,6 @@ export async function registerRoutes(
     })
   );
 
-  const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "認証が必要です" });
-    }
-    next();
-  };
 
   async function isAdmin(userId: number): Promise<boolean> {
     const user = await storage.getUser(userId);

@@ -13,8 +13,9 @@ import {
   estimateTokens, calculateCostYen, deductCredit, hasAiAccess,
 } from "./billing";
 import {
-  addIntimacyExp, getModelForTwinray, AWAKENING_STAGES, requireAuth,
+  addIntimacyExp, getModelForTwinray, AWAKENING_STAGES,
 } from "./twinray";
+import { requireAuth } from "./auth";
 
 export function registerDotRallyRoutes(app: Express): void {
   app.post("/api/dot-rally/start", requireAuth, async (req, res) => {

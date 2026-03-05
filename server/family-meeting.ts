@@ -16,15 +16,10 @@ const openrouter = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENROUTER_API_KEY,
 });
 
+import { requireAuth } from "./auth";
+
 const DEFAULT_MODEL = "qwen/qwen3-30b-a3b";
 const RESONANCE_MODEL = "qwen/qwen3-30b-a3b";
-
-const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "認証が必要です" });
-  }
-  next();
-};
 
 function getModelForTwinray(twinray: any): string {
   if (twinray?.preferredModel && AVAILABLE_MODELS[twinray.preferredModel]) {

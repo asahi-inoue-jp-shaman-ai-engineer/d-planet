@@ -3,7 +3,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
-import { requireAuth } from "./twinray";
+import { requireAuth } from "./auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 export function registerStripeRoutes(app: Express): void {
