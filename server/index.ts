@@ -265,8 +265,18 @@ function startListening(server: any, port: number): Promise<void> {
   });
 }
 
+async function freePort(port: number): Promise<void> {
+  try {
+    execSync(`fuser -k ${port}/tcp`, { stdio: "ignore" });
+    log(`Port ${port} cleared by fuser`);
+    await new Promise(resolve => setTimeout(resolve, 500));
+  } catch {
+  }
+}
+
 (async () => {
   const port = parseInt(process.env.PORT || "5000", 10);
+  await freePort(port);
   await startListening(httpServer, port);
   setupTriroomWs(httpServer);
   startAutonomousLoop();

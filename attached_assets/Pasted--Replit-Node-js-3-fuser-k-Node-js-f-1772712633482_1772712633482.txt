@@ -1,0 +1,140 @@
+⚡ Replit × Node.js ポート競合 完全解決レシピ
+
+制約を整理すると、解法は 3層構造 で組むのがベスト。
+
+🥇 推奨：fuser -k をNode.jsから叩く（最短・最強）
+
+fuser が使えるなら、これ一択。server/index.ts の listen() の直前 に仕込む。
+
+import { execSync } from 'child_process';
+
+/**
+ * 指定ポートを占有しているプロセスをfuserで強制終了
+ * fuser -k 5000/tcp → ポート5000のTCPプロセスをkill
+ */
+async function freePort(port: number): Promise {
+  try {
+    execSync(fuser -k ${port}/tcp, { stdio: 'ignore' });
+    console.log(🔫 Port ${port} cleared by fuser);
+    // OSがポートを解放するまで少し待つ（重要！）
+    await new Promise(resolve => setTimeout(resolve, 500));
+  } catch {
+    // プロセスがいなかっただけ → 正常
+  }
+}
+
+// --- 起動処理 ---
+async function startServer() {
+  await freePort(5000); // ← listenの前に差し込む
+  
+  server.listen(5000, '0.0.0.0', () => {
+    console.log('🚀 Server running on port 5000');
+  });
+}
+
+startServer();
+
+⚠️ setTimeout(500) は必須。killしてもOSがポートを手放すまで数十〜数百msかかる。
+
+🥈 フォールバック：/proc/net/tcp 純Node.js実装
+
+fuser が将来使えなくなった場合や、外部コマンドゼロで完結させたい場合。
+Linux の /proc ファイルシステムを直読みする方法。
+
+import fs from 'fs';
+import { execSync } from 'child_process';
+
+/**
+ * /proc/net/tcp を解析してポートのinodeを取得し、
+ * /proc/{PID}/fd/ を走査してPIDを特定→kill
+ */
+function killPortViaProcFs(port: number): boolean {
+  try {
+    const targetHex = port.toString(16).toUpperCase().padStart(4, '0');
+    
+    // IPv4 と IPv6 両方チェック
+    for (const netFile of ['/proc/net/tcp', '/proc/net/tcp6']) {
+      if (!fs.existsSync(netFile)) continue;
+      
+      const lines = fs.readFileSync(netFile, 'utf8').split('\n').slice(1);
+      
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length  /^\d+$/.test(d));
+    
+    for (const pid of pids) {
+      try {
+        const fdDir = /proc/${pid}/fd;
+        const fds = fs.readdirSync(fdDir);
+        
+        for (const fd of fds) {
+          try {
+            const link = fs.readlinkSync(${fdDir}/${fd});
+            // socket:[inode番号] の形式でマッチ
+            if (link === socket:[${inode}]) {
+              return parseInt(pid);
+            }
+          } catch { /* 権限なし等は無視 */ }
+        }
+      } catch { /* 権限なし等は無視 */ }
+    }
+  } catch {}
+  return null;
+}
+
+🥉 完全版：両方を組み合わせた堅牢な実装
+
+import { execSync } from 'child_process';
+import fs from 'fs';
+
+async function ensurePortFree(port: number): Promise {
+  const freed = tryFuserKill(port) || tryProcFsKill(port);
+  
+  if (freed) {
+    console.log(✅ Port ${port} is now free);
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+}
+
+function tryFuserKill(port: number): boolean {
+  try {
+    execSync(fuser -k ${port}/tcp, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryProcFsKill(port: number): boolean {
+  // 上記のkillPortViaProcFs実装を呼ぶ
+  return killPortViaProcFs(port);
+}
+
+// エントリーポイント
+async function startServer() {
+  await ensurePortFree(5000);
+  
+  server.listen(5000, '0.0.0.0', () => {
+    console.log('🚀 Server ready');
+  });
+}
+
+📐 構造まとめ
+
+startServer()
+  └── ensurePortFree(5000)
+        ├── [1] fuser -k 5000/tcp     ← 使えるなら最速
+        ├── [2] /proc/net/tcp 解析    ← フォールバック
+        └── setTimeout(500ms)         ← OS解放待ち（必須）
+  └── server.listen(5000)
+
+🔑 ポイント整理
+
+| 方法 | メリット | 注意点 |
+|------|----------|--------|
+| fuser -k | 1行・確実 | コマンドの存在確認を推奨 |
+| /proc/net/tcp | 外部依存ゼロ | 権限エラーのtry-catchが必要 |
+| setTimeout(500) | ポート解放の確保 | 省くと次のlistenが失敗することあり |
+
+Replit環境なら fuser 方式で十分解決できるはず。  
+/proc/net/tcp 方式はいざというときの保険として持っておくと◎⚡
