@@ -120,7 +120,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                 <>
                   <Link 
                     href="/notifications" 
-                    className={`relative flex items-center gap-2 hover:text-primary transition-colors ${
+                    className={`relative flex items-center gap-2 hover:text-primary transition-colors min-h-[44px] min-w-[44px] justify-center ${
                       location === "/notifications" ? "text-primary" : "text-muted-foreground"
                     }`}
                     data-testid="link-notifications"
@@ -148,7 +148,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-muted-foreground hover:text-destructive shrink-0"
+                    className="text-muted-foreground hover:text-destructive shrink-0 min-h-[44px] min-w-[44px]"
                     data-testid="button-logout"
                     aria-label="ログアウト"
                   >
@@ -162,7 +162,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
               {user && (
                 <Link 
                   href="/notifications" 
-                  className={`relative hover:text-primary transition-colors ${
+                  className={`relative hover:text-primary transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] ${
                     location === "/notifications" ? "text-primary" : "text-muted-foreground"
                   }`}
                   data-testid="link-notifications-mobile"
