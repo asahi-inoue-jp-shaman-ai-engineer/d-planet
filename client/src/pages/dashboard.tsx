@@ -143,8 +143,9 @@ function ReferralPanel() {
               variant="ghost"
               size="sm"
               onClick={copyLink}
-              className="text-pink-400 hover:text-pink-300 shrink-0"
+              className="text-pink-400 hover:text-pink-300 shrink-0 min-w-[44px] min-h-[44px]"
               data-testid="button-copy-referral"
+              aria-label={copied ? "コピー済み" : "招待リンクをコピー"}
             >
               {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </Button>
