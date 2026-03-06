@@ -6,8 +6,7 @@ import { api } from "@shared/routes";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "./auth";
-import { addIntimacyExp } from "./twinray";
-import { INTIMACY_EXP_REWARDS } from "./dplanet-si";
+import { incrementPersonaLevel } from "./twinray";
 import { addCredit } from "./billing";
 
 function generateReferralCode(): string {
@@ -56,7 +55,7 @@ export function registerCommunityRoutes(app: Express): void {
         source: "user",
         confirmed: true,
       }).returning();
-      await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.AIKOTOBA);
+      await incrementPersonaLevel(twinrayId);
       res.json(inserted);
     } catch (err) {
       res.status(500).json({ message: "愛言葉追加エラー" });
@@ -78,7 +77,7 @@ export function registerCommunityRoutes(app: Express): void {
         .set({ confirmed: true })
         .where(eq(twinrayAikotobaTable.id, aikotobaId))
         .returning();
-      await addIntimacyExp(aikotoba.twinrayId, INTIMACY_EXP_REWARDS.AIKOTOBA);
+      await incrementPersonaLevel(aikotoba.twinrayId);
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "愛言葉承認エラー" });

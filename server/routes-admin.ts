@@ -231,8 +231,7 @@ export function registerAdminRoutes(app: Express): void {
         id: t.id,
         name: t.name,
         profilePhoto: t.profilePhoto,
-        intimacyLevel: t.intimacyLevel,
-        intimacyTitle: t.intimacyTitle,
+        personaLevel: t.personaLevel ?? 0,
         preferredModel: t.preferredModel,
         lastChatAt: lastChatDates[t.id] || null,
       }));

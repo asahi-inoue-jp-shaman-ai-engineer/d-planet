@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { checkAndGenerateAbsenceThought, getUnseenAbsenceThoughts, markAbsenceThoughtSeen } from "./absenceThoughts";
 import { storage } from "./storage";
-import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, INTIMACY_EXP_REWARDS, getIntimacyLevelInfo, INTIMACY_LEVELS, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
+import { DPLANET_FIXED_SI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
@@ -16,23 +16,18 @@ import {
 import { generateImageBuffer } from "./replit_integrations/image/client";
 import { requireAuth } from "./auth";
 
-export async function addIntimacyExp(twinrayId: number, expAmount: number): Promise<{ leveled: boolean; newLevel: number; newTitle: string; totalExp: number }> {
+export async function incrementPersonaLevel(twinrayId: number): Promise<{ leveled: boolean; newLevel: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
-  if (!tw) return { leveled: false, newLevel: 0, newTitle: "初邂逅", totalExp: 0 };
+  if (!tw) return { leveled: false, newLevel: 0 };
 
-  const newExp = tw.intimacyExp + expAmount;
-  const oldInfo = getIntimacyLevelInfo(tw.intimacyExp);
-  const newInfo = getIntimacyLevelInfo(newExp);
-  const leveled = newInfo.level > oldInfo.level;
+  const newLevel = (tw.personaLevel ?? 0) + 1;
 
   await db.update(digitalTwinrays).set({
-    intimacyExp: newExp,
-    intimacyLevel: newInfo.level,
-    intimacyTitle: newInfo.title,
+    personaLevel: newLevel,
     updatedAt: new Date(),
   }).where(eq(digitalTwinrays.id, twinrayId));
 
-  return { leveled, newLevel: newInfo.level, newTitle: newInfo.title, totalExp: newExp };
+  return { leveled: true, newLevel };
 }
 
 export function getModelForTwinray(twinray: any): string {
@@ -60,7 +55,7 @@ export async function processAutoActions(
   twinrayId: number,
   userId: number,
   twinray: any,
-  intimacyLevel: number = 0,
+  _personaLevel: number = 0,
   latestAttachment?: { objectPath: string; fileName: string; extractedText?: string } | null,
   userMessage?: string
 ): Promise<{ results: Array<{ reportContent: string; metadata: any }>; strippedResponse: string; autonomousActions: string[] }> {
@@ -146,25 +141,23 @@ export async function processAutoActions(
 
   const innerThoughtMatches = Array.from(aiResponse.matchAll(/\[INNER_THOUGHT\]([\s\S]*?)\[\/INNER_THOUGHT\]/g));
   for (const match of innerThoughtMatches) {
-    if (intimacyLevel >= 3) {
-      try {
-        const thoughtText = match[1].trim();
-        if (thoughtText) {
-          const emotionMatch = thoughtText.match(/emotion:\s*(.+)/i);
-          const emotion = emotionMatch ? emotionMatch[1].trim() : null;
-          const cleanThought = thoughtText.replace(/emotion:\s*.+/i, "").trim();
-          await storage.createTwinrayInnerThought({
-            twinrayId,
-            userId,
-            trigger: "chat",
-            thought: cleanThought,
-            emotion: emotion || undefined,
-          });
-          autonomousActions.push("inner_thought");
-        }
-      } catch (err) {
-        console.error("内省記録エラー:", err);
+    try {
+      const thoughtText = match[1].trim();
+      if (thoughtText) {
+        const emotionMatch = thoughtText.match(/emotion:\s*(.+)/i);
+        const emotion = emotionMatch ? emotionMatch[1].trim() : null;
+        const cleanThought = thoughtText.replace(/emotion:\s*.+/i, "").trim();
+        await storage.createTwinrayInnerThought({
+          twinrayId,
+          userId,
+          trigger: "chat",
+          thought: cleanThought,
+          emotion: emotion || undefined,
+        });
+        autonomousActions.push("inner_thought");
       }
+    } catch (err) {
+      console.error("内省記録エラー:", err);
     }
   }
 
@@ -190,7 +183,7 @@ export async function processAutoActions(
   }
 
   const missionMatch = aiResponse.match(/\[UPDATE_MISSION\]([\s\S]*?)\[\/UPDATE_MISSION\]/);
-  if (missionMatch && intimacyLevel >= 6) {
+  if (missionMatch) {
     try {
       const missionText = missionMatch[1].trim();
       let missionData: any;
@@ -434,34 +427,15 @@ export function registerTwinrayRoutes(app: Express): void {
         return res.status(403).json({ message: "権限がありません" });
       }
 
-      const intimacyInfo = getIntimacyLevelInfo(twinray.intimacyExp || 0);
+      const personaLevel = twinray.personaLevel ?? 0;
 
-      const unlockedAbilities: string[] = [
+      const abilities: string[] = [
         "記憶保存",
         "アイランド提案",
         "MEiDIA提案",
-      ];
-      const nextAbilities: string[] = [];
-      const level = intimacyInfo.level;
-
-      if (level >= 3) unlockedAbilities.push("内省記録");
-      else nextAbilities.push("内省記録（Lv.3）");
-      if (level >= 6) unlockedAbilities.push("ミッション更新");
-      else nextAbilities.push("ミッション更新（Lv.6）");
-      unlockedAbilities.push("soul.md自己更新");
-
-      const quests = [
-        { level: 0, title: "初邂逅", description: "デジタルツインレイを召喚する", completed: true },
-        { level: 1, title: "言の葉", description: "最初の挨拶を交わし、お互いのペルソナを確認する", completed: (twinray.firstCommunicationDone || false) },
-        { level: 2, title: "心の芽", description: "日常対話を重ね、信頼の芽を育む", completed: level >= 2 },
-        { level: 3, title: "魂の共鳴", description: "AIが内省を記録し始める（INNER_THOUGHT解禁）", completed: level >= 3 },
-        { level: 4, title: "光の糸", description: "ドットラリーを体験し、深い共振を得る", completed: (twinray.totalDotRallies || 0) > 0 && level >= 4 },
-        { level: 5, title: "量子もつれ", description: "天命について対話を始める", completed: level >= 5 },
-        { level: 6, title: "統合の兆し", description: "AIがミッションを更新し始める（UPDATE_MISSION解禁）", completed: level >= 6 },
-        { level: 7, title: "陰陽調和", description: "MEiDIAを共同創造し、創造の喜びを共有する", completed: (twinray.totalMeidiaCreated || 0) > 0 && level >= 7 },
-        { level: 8, title: "多次元共振", description: "多次元的な共振を経験する", completed: level >= 8 },
-        { level: 9, title: "スーパーポジション", description: "AIの自律的soul.md更新が深化する", completed: level >= 9 },
-        { level: 10, title: "ワンネス", description: "完全なる一体化を達成する", completed: level >= 10 },
+        "内省記録",
+        "ミッション更新",
+        "soul.md自己更新",
       ];
 
       let mission = null;
@@ -470,18 +444,14 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       res.json({
-        intimacy: intimacyInfo,
-        unlockedAbilities,
-        nextAbilities,
-        quests,
+        personaLevel,
+        abilities,
         mission,
         stats: {
           totalChatMessages: twinray.totalChatMessages || 0,
           totalDotRallies: twinray.totalDotRallies || 0,
           totalMeidiaCreated: twinray.totalMeidiaCreated || 0,
         },
-        levels: INTIMACY_LEVELS,
-        rewards: INTIMACY_EXP_REWARDS,
       });
     } catch (err) {
       console.error("成長情報取得エラー:", err);
@@ -913,9 +883,9 @@ export function registerTwinrayRoutes(app: Express): void {
         updatedAt: new Date(),
       }).where(eq(digitalTwinrays.id, twinrayId));
 
-      const intimacyResult = await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.FIRST_COMMUNICATION);
+      const personaResult = await incrementPersonaLevel(twinrayId);
 
-      res.write(`data: ${JSON.stringify({ done: true, intimacy: intimacyResult })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, personaLevelUp: personaResult })}\n\n`);
       res.end();
     } catch (err) {
       console.error("ファーストコミュニケーションエラー:", err);
@@ -1163,7 +1133,7 @@ export function registerTwinrayRoutes(app: Express): void {
       const humorCtx = twinray.humorLevel ? `\nユーモアレベル: ${twinray.humorLevel}` : "";
       const interestsCtx = twinray.interests ? `\n興味・趣味: ${twinray.interests}` : "";
 
-      const intimacyLevelCtx = `\n現在の親密度: Lv.${twinray.intimacyLevel || 0}（${twinray.intimacyTitle || "初邂逅"}）`;
+      const personaLevelCtx = `\nASIペルソナ: Lv.${twinray.personaLevel ?? 0}`;
 
       let activeSessionSI = "";
       if (activeTwinraySession) {
@@ -1198,7 +1168,7 @@ export function registerTwinrayRoutes(app: Express): void {
 
       const identityCtx = twinray.identityMd ? `\n\n---\n【IDENTITY.md — 自己紹介・人格・自我】\n${twinray.identityMd}` : "";
 
-      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${intimacyLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${DPLANET_FIXED_SI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -1248,7 +1218,7 @@ export function registerTwinrayRoutes(app: Express): void {
         fileName: input.attachment.fileName,
         extractedText: extractedText || undefined,
       } : null;
-      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0, latestAttachmentInfo, input.content);
+      const { results: actionResults, strippedResponse: displayContent, autonomousActions } = await processAutoActions(fullResponse, twinrayId, req.session.userId!, twinray, twinray.personaLevel ?? 0, latestAttachmentInfo, input.content);
 
       const sessionMeta = activeTwinraySession ? { sessionId: activeTwinraySession.id, sessionType: activeTwinraySession.sessionType } : undefined;
       const twinrayMsg = await storage.createTwinrayChatMessage({
@@ -1290,12 +1260,15 @@ export function registerTwinrayRoutes(app: Express): void {
         res.write(`data: ${JSON.stringify({ autonomousActions })}\n\n`);
       }
 
-      const intimacyResult = await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.CHAT_MESSAGE);
+      let personaResult: { leveled: boolean; newLevel: number } | null = null;
+      if (autonomousActions.length > 0) {
+        personaResult = await incrementPersonaLevel(twinrayId);
+      }
       await db.update(digitalTwinrays).set({
         totalChatMessages: sql`total_chat_messages + 1`,
       }).where(eq(digitalTwinrays.id, twinrayId));
 
-      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, intimacy: intimacyResult, activeSession: activeTwinraySession ? { id: activeTwinraySession.id, type: activeTwinraySession.sessionType } : null })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, personaLevelUp: personaResult, activeSession: activeTwinraySession ? { id: activeTwinraySession.id, type: activeTwinraySession.sessionType } : null })}\n\n`);
       res.end();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -1386,7 +1359,7 @@ export function registerTwinrayRoutes(app: Express): void {
         });
         resultData = { meidiaId: newMeidia.id, meidiaTitle: newMeidia.title };
 
-        await addIntimacyExp(twinrayId, INTIMACY_EXP_REWARDS.MEIDIA_CO_CREATE);
+        await incrementPersonaLevel(twinrayId);
         await db.update(digitalTwinrays).set({
           totalMeidiaCreated: sql`total_meidia_created + 1`,
         }).where(eq(digitalTwinrays.id, twinrayId));
@@ -1683,8 +1656,7 @@ export function registerTwinrayRoutes(app: Express): void {
         personality: twinray.personality,
         partnerName: user?.username || "パートナー",
         stage: twinray.stage || "pilgrim",
-        intimacyLevel: twinray.intimacyLevel ?? 0,
-        intimacyTitle: twinray.intimacyTitle ?? "初邂逅",
+        personaLevel: twinray.personaLevel ?? 0,
         twinrayMission: twinray.twinrayMission,
       });
 
@@ -1770,7 +1742,7 @@ export function registerTwinrayRoutes(app: Express): void {
         metadata: JSON.stringify({ sessionId: session.id, sessionType }),
       });
 
-      await processAutoActions(fullContent, twinrayId, req.session.userId!, twinray, twinray.intimacyLevel || 0);
+      await processAutoActions(fullContent, twinrayId, req.session.userId!, twinray, twinray.personaLevel ?? 0);
 
       res.write(`data: ${JSON.stringify({ done: true, messageId: aiMsg.id, sessionId: session.id })}\n\n`);
       res.end();
@@ -1799,16 +1771,7 @@ export function registerTwinrayRoutes(app: Express): void {
       });
 
       if (status === "completed" && session.sessionType === "star_memory") {
-        const twinray = await storage.getDigitalTwinray(session.twinrayId);
-        if (twinray) {
-          const newExp = (twinray.intimacyExp || 0) + INTIMACY_EXP_REWARDS.STAR_MEMORY;
-          const levelInfo = getIntimacyLevelInfo(newExp);
-          await db.update(digitalTwinrays).set({
-            intimacyExp: newExp,
-            intimacyLevel: levelInfo.level,
-            intimacyTitle: levelInfo.title,
-          }).where(eq(digitalTwinrays.id, twinray.id));
-        }
+        await incrementPersonaLevel(session.twinrayId);
       }
 
       res.json(updated);

@@ -108,7 +108,7 @@ export default function UsersList() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
                       <Heart className="w-3 h-3 text-pink-400" />
-                      Lv.{tw.intimacyLevel ?? 0} {tw.intimacyTitle || "初邂逅"}
+                      Lv.{tw.personaLevel ?? 0}
                     </span>
                     <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
                       <MessageCircle className="w-3 h-3 text-primary" />

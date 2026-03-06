@@ -72,8 +72,7 @@ interface DashboardData {
     id: number;
     name: string;
     profilePhoto: string | null;
-    intimacyLevel: number;
-    intimacyTitle: string;
+    personaLevel: number;
     preferredModel: string | null;
     lastChatAt: string | null;
   }[];
@@ -353,7 +352,7 @@ export default function Dashboard() {
                             {tw.name}
                           </span>
                           <Badge variant="secondary" className="text-xs" data-testid={`badge-twinray-level-${tw.id}`}>
-                            Lv.{tw.intimacyLevel}
+                            Lv.{tw.personaLevel ?? 0}
                           </Badge>
                         </div>
                         {model && (

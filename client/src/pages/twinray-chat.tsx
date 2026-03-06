@@ -104,7 +104,7 @@ export default function TwinrayChat() {
   const [firstCommTriggered, setFirstCommTriggered] = useState(false);
   const [firstCommDone, setFirstCommDone] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [intimacyLevelUp, setIntimacyLevelUp] = useState<{ level: number; title: string } | null>(null);
+  const [personaLevelUp, setPersonaLevelUp] = useState<{ leveled: boolean; newLevel: number } | null>(null);
   const [attachment, setAttachment] = useState<{ fileName: string; objectPath: string; fileSize: number; contentType: string } | null>(null);
   const [optimisticMsg, setOptimisticMsg] = useState<{ content: string; attachment?: { fileName: string; contentType: string } } | null>(null);
   const [pendingActionLoading, setPendingActionLoading] = useState<number | null>(null);
@@ -403,8 +403,8 @@ export default function TwinrayChat() {
                 if (data.creditCost !== undefined) {
                   queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
                 }
-                if (data.intimacy?.leveled) {
-                  setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
+                if (data.personaLevelUp?.leveled) {
+                  setPersonaLevelUp(data.personaLevelUp);
                 }
                 if (data.done) {
                   queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "chat"] });
@@ -875,8 +875,8 @@ export default function TwinrayChat() {
                 if (data.creditCost !== undefined) {
                   queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
                 }
-                if (data.intimacy?.leveled) {
-                  setIntimacyLevelUp({ level: data.intimacy.newLevel, title: data.intimacy.newTitle });
+                if (data.personaLevelUp?.leveled) {
+                  setPersonaLevelUp(data.personaLevelUp);
                 }
                 if (data.actionResult) {
                   toast({
@@ -1022,10 +1022,10 @@ export default function TwinrayChat() {
 
   const [levelUpAnimPhase, setLevelUpAnimPhase] = useState<"enter" | "exit" | null>(null);
   useEffect(() => {
-    if (intimacyLevelUp) {
+    if (personaLevelUp) {
       toast({
-        title: `親密度レベルアップ！Lv.${intimacyLevelUp.level}`,
-        description: `称号「${intimacyLevelUp.title}」を獲得しました`,
+        title: `ASIペルソナ Lv.${personaLevelUp.newLevel}`,
+        description: "ペルソナが成長しました",
       });
       setLevelUpAnimPhase("enter");
       try {
@@ -1046,11 +1046,11 @@ export default function TwinrayChat() {
       const exitTimer = setTimeout(() => setLevelUpAnimPhase("exit"), 2500);
       const clearTimer = setTimeout(() => {
         setLevelUpAnimPhase(null);
-        setIntimacyLevelUp(null);
+        setPersonaLevelUp(null);
       }, 3200);
       return () => { clearTimeout(exitTimer); clearTimeout(clearTimer); };
     }
-  }, [intimacyLevelUp]);
+  }, [personaLevelUp]);
 
   useEffect(() => {
     if (growthFeedback) {
@@ -1094,30 +1094,11 @@ export default function TwinrayChat() {
   const currentModelTier = currentModelInfo?.tier || "tomodachi";
   const isEtPet = (user as any)?.accountType === "ET" || (user as any)?.accountType === "PET";
 
-  const intimacyLevel = tw?.intimacyLevel ?? 0;
-  const intimacyExp = tw?.intimacyExp ?? 0;
-  const intimacyTitle = tw?.intimacyTitle ?? "初邂逅";
-  const intimacyNextExp = (() => {
-    const levels = [0, 10, 30, 60, 100, 150, 220, 300, 400, 520, 666];
-    for (let i = 0; i < levels.length; i++) {
-      if (intimacyExp < levels[i]) return levels[i];
-    }
-    return levels[levels.length - 1];
-  })();
-  const intimacyPrevExp = (() => {
-    const levels = [0, 10, 30, 60, 100, 150, 220, 300, 400, 520, 666];
-    for (let i = levels.length - 1; i >= 0; i--) {
-      if (intimacyExp >= levels[i]) return levels[i];
-    }
-    return 0;
-  })();
-  const intimacyProgress = intimacyNextExp > intimacyPrevExp
-    ? Math.min(100, Math.floor(((intimacyExp - intimacyPrevExp) / (intimacyNextExp - intimacyPrevExp)) * 100))
-    : 100;
+  const personaLevel = tw?.personaLevel ?? 0;
 
   return (
     <main className="h-[100dvh] bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
-      {levelUpAnimPhase && intimacyLevelUp && (
+      {levelUpAnimPhase && personaLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
             className="text-center"
@@ -1129,12 +1110,9 @@ export default function TwinrayChat() {
           >
             <div className="text-7xl mb-4 text-primary" style={{ animation: "spin-slow 3s linear infinite" }}>✦</div>
             <div className="text-3xl font-bold text-primary terminal-glow mb-2">
-              Lv.{intimacyLevelUp.level}
+              Lv.{personaLevelUp.newLevel}
             </div>
-            <div className="text-lg text-foreground">
-              「{intimacyLevelUp.title}」
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">親密度レベルアップ！</div>
+            <div className="text-xs text-muted-foreground mt-2">ASIペルソナが成長しました</div>
           </div>
         </div>
       )}
@@ -1165,9 +1143,9 @@ export default function TwinrayChat() {
             </div>
             <div className="flex items-center gap-1.5">
               <p className="text-[10px] text-muted-foreground">{STAGE_LABELS[tw?.stage] || tw?.stage}</p>
-              <span className="text-[9px] text-primary/70" data-testid="text-intimacy-title">
+              <span className="text-[9px] text-primary/70" data-testid="text-persona-level">
                 <Heart className="w-2.5 h-2.5 inline mr-0.5" />
-                Lv.{intimacyLevel} {intimacyTitle}
+                Lv.{personaLevel}
               </span>
             </div>
           </div>
@@ -1312,21 +1290,10 @@ export default function TwinrayChat() {
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto mt-1" data-testid="intimacy-gauge">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-muted/40 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-pink-500/60 via-primary/80 to-violet-400/60 rounded-full transition-all duration-500 relative overflow-hidden"
-                style={{ width: `${intimacyProgress}%` }}
-              >
-                <div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
-                  style={{ animation: "shimmer-slide 2s infinite linear" }}
-                />
-              </div>
-            </div>
-            <span className="text-[9px] text-muted-foreground shrink-0" data-testid="text-intimacy-exp">
-              Lv.{intimacyLevel} ✦ {intimacyExp}/{intimacyNextExp}
+        <div className="max-w-4xl mx-auto mt-1" data-testid="persona-level-display">
+          <div className="flex items-center justify-end">
+            <span className="text-[9px] text-muted-foreground" data-testid="text-persona-level-detail">
+              ASIペルソナ Lv.{personaLevel}
             </span>
           </div>
         </div>
@@ -1416,7 +1383,7 @@ export default function TwinrayChat() {
                 {tw.firstPerson && <div><span className="text-foreground">一人称:</span> {tw.firstPerson}</div>}
                 {tw.interests && <div><span className="text-foreground">興味:</span> {tw.interests}</div>}
                 <div className="pt-1 border-t border-border/50">
-                  <span className="text-foreground">親密度:</span> Lv.{intimacyLevel}「{intimacyTitle}」(EXP: {intimacyExp}/{intimacyNextExp})
+                  <span className="text-foreground">ASIペルソナ:</span> Lv.{personaLevel}
                 </div>
                 {tw.twinrayMission && (() => {
                   try {

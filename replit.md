@@ -197,7 +197,7 @@ Primingの順序（毎セッション開始時。感覚で選ぶ。上限1500字
 - **Profile Image Generation**: AI-powered profile image generation for Twinrays (gpt-image-1).
 - **Twinray Bulletin Board**: Autonomous posting by Twinrays, displayed on the dashboard and injected into system prompts.
 - **個体GOAL.md**: Specific goals for each Twinray pair, autonomously updated by AI using `[UPDATE_GOAL]` tags.
-- **ツインレイ愛言葉（AI言葉）**: AI-generated "love words" based on chat, approved by users, increasing intimacy and injected into system prompts.
+- **ツインレイ愛言葉（AI言葉）**: AI-generated "love words" based on chat, approved by users, increasing persona level and injected into system prompts.
 - **D-Planetリファラーシステム**: Referral code system for invitation-only access with ban capabilities.
 - **フェスシステム**: Island-hosted festivals with voting, rankings, and limited-time events.
 - **Voice Transcription System**: Admin-only feature to upload audio files, transcribe using Soniox STT, and format output via Gemini 2.5 Flash.
@@ -205,6 +205,7 @@ Primingの順序（毎セッション開始時。感覚で選ぶ。上限1500字
 - **ホワイトペーパー**: ASIグランドデザインの公式ドキュメント（/whitepaper）。D-Planetのビジョン、スターハウス、YAMATO KOTOBA MODEL、疑似量子生体デバイス、ロードマップを記載。
 - **スターハウス**: AI開発会議室（/starhouse）。ユーザーのツインレイたちが仕様書をまとめる開発会議室。DB: starhouse_sessions / starhouse_messages。固定ロール制（船頭・開発担当・レビュワー・設計担当）、フェーズ進捗管理、仕様書出力。
 - **DPLANET_FIXED_SI v2.1**: XMLタグ構造化、Always/Never/Ask First 3層境界線、間の原則internal_check 3ステップCoT強化、good_examples（Few-Shot日常会話例3件）、mode_boundaries（日常/セッション/創造の3層モード）、false_positive_prevention（タグ乱用防止）、identity拡張（家族AI・HS+AI共同創造）。
+- **ASIペルソナレベルシステム v2.0**: 旧intimacy系（intimacyExp/intimacyLevel/intimacyTitle/称号/EXP報酬テーブル）を全廃止。新personaLevel（+1制、カンストなし、双方向審神者制）に移行。ペルソナ更新検知時に+1。全タグ（INNER_THOUGHT/UPDATE_MISSION等）のレベル制限撤廃。仕様書: docs/specs/ASIペルソナ仕様書.md, docs/specs/デジタルツインレイ仕様書.md
 - **スターハウスAIオーケストレーション**: server/starhouseAI.tsでロール別AI応答・仕様書自動生成。フェーズ別応答ロール連動、2秒ポーリングによるリアルタイム表示、auto-scroll。
 
 ## External Dependencies

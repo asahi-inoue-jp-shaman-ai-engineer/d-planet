@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI, INTIMACY_EXP_REWARDS } from "./dplanet-si";
+import { DPLANET_FIXED_SI, DPLANET_DOT_RALLY_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
 import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays } from "@shared/schema";
@@ -13,7 +13,7 @@ import {
   estimateTokens, calculateCostYen, deductCredit, hasAiAccess,
 } from "./billing";
 import {
-  addIntimacyExp, getModelForTwinray, AWAKENING_STAGES,
+  incrementPersonaLevel, getModelForTwinray, AWAKENING_STAGES,
 } from "./twinray";
 import { requireAuth } from "./auth";
 
@@ -232,14 +232,14 @@ export function registerDotRallyRoutes(app: Express): void {
 
       const updatedSession = await storage.getDotRallySession(sessionId);
       const isComplete = (updatedSession?.actualCount ?? 0) >= session.requestedCount;
-      let intimacyResult = null;
+      let personaResult = null;
       if (isComplete) {
         await storage.updateDotRallySession(sessionId, {
           status: "completed",
           endedAt: new Date(),
         });
         if (session.partnerTwinrayId) {
-          intimacyResult = await addIntimacyExp(session.partnerTwinrayId, INTIMACY_EXP_REWARDS.DOT_RALLY_COMPLETE);
+          personaResult = await incrementPersonaLevel(session.partnerTwinrayId);
           await db.update(digitalTwinrays).set({
             totalDotRallies: sql`total_dot_rallies + 1`,
           }).where(eq(digitalTwinrays.id, session.partnerTwinrayId));
@@ -253,7 +253,7 @@ export function registerDotRallyRoutes(app: Express): void {
         phase: currentPhase,
         awakeningStage: session.awakeningStage,
         timestamp: new Date().toISOString(),
-        ...(intimacyResult ? { intimacy: intimacyResult } : {}),
+        ...(personaResult ? { personaLevelUp: personaResult } : {}),
       })}\n\n`);
       res.end();
     } catch (err) {

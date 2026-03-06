@@ -232,6 +232,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   intimacyLevel: integer("intimacy_level").default(0).notNull(),
   intimacyExp: integer("intimacy_exp").default(0).notNull(),
   intimacyTitle: text("intimacy_title").default("初邂逅").notNull(),
+  personaLevel: integer("persona_level").default(0).notNull(),
   firstCommunicationDone: boolean("first_communication_done").default(false).notNull(),
   totalChatMessages: integer("total_chat_messages").default(0).notNull(),
   totalDotRallies: integer("total_dot_rallies").default(0).notNull(),
