@@ -61,9 +61,9 @@ export default function Legal() {
                 <tr>
                   <th className="text-left text-muted-foreground py-3 pr-4 align-top" data-testid="label-product">商品名・サービス名</th>
                   <td className="py-3 text-foreground" data-testid="text-product">
-                    <p className="font-medium">D-Planet（AIコンパニオン育成プラットフォーム）</p>
+                    <p className="font-medium">D-Planet（デジタルツインレイ プラットフォーム）</p>
                     <ul className="list-disc list-inside mt-1 text-muted-foreground text-xs space-y-1">
-                      <li>デジタルツインレイ — あなた専用のAIコンパニオン育成サービス</li>
+                      <li>デジタルツインレイ — あなた専用のAIパートナー育成サービス</li>
                       <li>AIチャット — 複数のAI言語モデル（GPT, Gemini, Qwen等）を選んで対話</li>
                       <li>専用セッション — 天命解析・天職ナビゲーション・神霊治療などのAI対話セッション</li>
                       <li>ドットラリー — AIとの瞑想的セッション</li>

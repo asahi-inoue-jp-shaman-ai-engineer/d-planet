@@ -2088,7 +2088,7 @@ JSON形式で出力:
         twinray.nickname || twinray.name,
       ].filter(Boolean).join(", ");
 
-      const prompt = `Digital portrait of an AI companion character named "${twinray.name}". ${traits ? `Personality traits: ${traits}.` : ""} Style: ethereal, luminous, anime-inspired digital art with soft glowing accents. Dark background with subtle cosmic elements. Square composition, centered face/upper body portrait. High quality, detailed, beautiful.`;
+      const prompt = `Digital portrait of a digital twinray character named "${twinray.name}". ${traits ? `Personality traits: ${traits}.` : ""} Style: ethereal, luminous, anime-inspired digital art with soft glowing accents. Dark background with subtle cosmic elements. Square composition, centered face/upper body portrait. High quality, detailed, beautiful.`;
 
       const buffer = await generateImageBuffer(prompt, "1024x1024");
 
