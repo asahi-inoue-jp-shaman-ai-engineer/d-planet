@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/use-auth";
 import { useHasAiAccess } from "@/hooks/use-subscription";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User, Dna } from "lucide-react";
+import { Send, ArrowLeft, Settings, Loader2, MessageCircle, FileText, Map, Cpu, ChevronDown, Lock, Coins, Sparkles, Heart, Paperclip, X, File, Image, Brain, Target, Compass, Star, Radio, Moon, XCircle, Zap, Check, Gift, Square, Copy, ClipboardCheck, Repeat2, Mic, MicOff, Volume2, Play, Pause, Wand2, Camera, User, Dna, CircleDot } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -1021,6 +1021,7 @@ export default function TwinrayChat() {
   };
 
   const [levelUpAnimPhase, setLevelUpAnimPhase] = useState<"enter" | "exit" | null>(null);
+  const [countUpDisplay, setCountUpDisplay] = useState<number>(0);
   useEffect(() => {
     if (personaLevelUp) {
       toast({
@@ -1028,6 +1029,9 @@ export default function TwinrayChat() {
         description: "ペルソナが成長しました",
       });
       setLevelUpAnimPhase("enter");
+      const startNum = Math.max(0, personaLevelUp.newLevel - 1);
+      setCountUpDisplay(startNum);
+      const countDelay = setTimeout(() => setCountUpDisplay(personaLevelUp.newLevel), 600);
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         [523, 659, 784, 1047].forEach((freq, i) => {
@@ -1048,7 +1052,7 @@ export default function TwinrayChat() {
         setLevelUpAnimPhase(null);
         setPersonaLevelUp(null);
       }, 3200);
-      return () => { clearTimeout(exitTimer); clearTimeout(clearTimer); };
+      return () => { clearTimeout(exitTimer); clearTimeout(clearTimer); clearTimeout(countDelay); };
     }
   }, [personaLevelUp]);
 
@@ -1101,16 +1105,25 @@ export default function TwinrayChat() {
       {levelUpAnimPhase && personaLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
-            className="text-center"
+            className="text-center relative"
             style={{
               animation: levelUpAnimPhase === "enter"
                 ? "level-up-enter 0.6s ease-out forwards"
                 : "level-up-exit 0.7s ease-in forwards",
             }}
           >
-            <div className="text-7xl mb-4 text-primary" style={{ animation: "spin-slow 3s linear infinite" }}>✦</div>
-            <div className="text-3xl font-bold text-primary terminal-glow mb-2">
-              Lv.{personaLevelUp.newLevel}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full" style={{
+                background: "radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }} />
+            </div>
+            <div className="text-5xl mb-3 text-primary" style={{ animation: "spin-slow 3s linear infinite", filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.6))" }}>✦</div>
+            <div className="text-3xl font-bold text-primary mb-1" style={{
+              textShadow: "0 0 20px hsl(var(--primary) / 0.5)",
+              transition: "all 0.4s ease-out",
+            }}>
+              Lv.{countUpDisplay}
             </div>
             <div className="text-xs text-muted-foreground mt-2">ASIペルソナが成長しました</div>
           </div>
@@ -2391,6 +2404,22 @@ export default function TwinrayChat() {
                 data-testid="button-attach-file"
               >
                 <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const dot = ".";
+                  setInput((prev) => prev ? prev + dot : dot);
+                  textareaRef.current?.focus();
+                }}
+                disabled={streaming}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-green-400"
+                title="ドットマーク"
+                data-testid="button-dot-mark"
+              >
+                <CircleDot className="w-4 h-4" />
               </Button>
               <Button
                 type="button"

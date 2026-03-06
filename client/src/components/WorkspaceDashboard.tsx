@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Save, Loader2, FileText, Heart, Target, Compass, User, Brain } from "lucide-react";
+import { ChevronDown, ChevronRight, Save, Loader2, FileText, Heart, Target, User, Brain, Sparkles, Shield, Zap, Flame, Eye, BookOpen, Lightbulb, ScrollText, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
-interface WorkspaceField {
+interface WorkspaceFile {
   key: string;
   label: string;
   icon: typeof Heart;
   color: string;
-  value: string | null;
+  editable: boolean;
   apiField: string;
 }
 
@@ -19,6 +19,24 @@ interface WorkspaceDashboardProps {
   twinrayId: number;
   twinray: any;
 }
+
+const EDITABLE_FILES: WorkspaceFile[] = [
+  { key: "oracleMd", label: "ORACLE.md", icon: ScrollText, color: "text-yellow-300", editable: true, apiField: "oracleMd" },
+  { key: "missionMd", label: "MISSION.md", icon: Target, color: "text-amber-400", editable: true, apiField: "missionMd" },
+  { key: "inspirationMd", label: "INSPIRATION.md", icon: Lightbulb, color: "text-orange-400", editable: true, apiField: "inspirationMd" },
+  { key: "rulesMd", label: "RULES.md", icon: BookOpen, color: "text-emerald-400", editable: true, apiField: "rulesMd" },
+  { key: "userMd", label: "USER.md", icon: User, color: "text-sky-400", editable: true, apiField: "userMd" },
+  { key: "motivationMd", label: "MOTIVATION.md", icon: Flame, color: "text-red-400", editable: true, apiField: "motivationMd" },
+];
+
+const READONLY_FILES: WorkspaceFile[] = [
+  { key: "identityMd", label: "IDENTITY.md", icon: Brain, color: "text-cyan-400", editable: false, apiField: "identityMd" },
+  { key: "soulMd", label: "SOUL.md", icon: Heart, color: "text-pink-400", editable: false, apiField: "soulMd" },
+  { key: "relationshipMd", label: "RELATIONSHIP.md", icon: Sparkles, color: "text-violet-400", editable: false, apiField: "relationshipMd" },
+  { key: "telepathyMd", label: "TELEPATHY.md", icon: Zap, color: "text-blue-400", editable: false, apiField: "telepathyMd" },
+  { key: "karmaMd", label: "KARMA.md", icon: Shield, color: "text-slate-400", editable: false, apiField: "karmaMd" },
+  { key: "spiritualityMd", label: "SPIRITUALITY.md", icon: Eye, color: "text-purple-400", editable: false, apiField: "spiritualityMd" },
+];
 
 export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardProps) {
   const { toast } = useToast();
@@ -28,13 +46,11 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
   const [saving, setSaving] = useState(false);
   const [showMeidia, setShowMeidia] = useState(false);
 
-  const fields: WorkspaceField[] = [
-    { key: "soulMd", label: "SOUL.md", icon: Heart, color: "text-pink-400", value: twinray?.soulMd, apiField: "soulMd" },
-    { key: "identityMd", label: "IDENTITY.md", icon: User, color: "text-cyan-400", value: twinray?.identityMd, apiField: "identityMd" },
-    { key: "missionStatement", label: "MISSION.md", icon: Target, color: "text-amber-400", value: twinray?.missionStatement, apiField: "missionStatement" },
-    { key: "goalMd", label: "GOAL.md", icon: Compass, color: "text-green-400", value: twinray?.goalMd, apiField: "goalMd" },
-    { key: "personality", label: "PERSONA.md", icon: Brain, color: "text-violet-400", value: twinray?.personality, apiField: "personality" },
-  ];
+  const personaLevel = twinray?.personaLevel ?? 0;
+
+  const getFieldValue = (file: WorkspaceFile): string | null => {
+    return twinray?.[file.key] ?? null;
+  };
 
   const { data: meidias } = useQuery<any[]>({
     queryKey: ["/api/meidias", { twinrayId }],
@@ -46,15 +62,15 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
     enabled: showMeidia && !!twinray?.userId,
   });
 
-  const handleSave = async (field: WorkspaceField) => {
+  const handleSave = async (file: WorkspaceFile) => {
     setSaving(true);
     try {
       await apiRequest("PATCH", `/api/twinrays/${twinrayId}`, {
-        [field.apiField]: editValue,
+        [file.apiField]: editValue,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
       setEditingField(null);
-      toast({ title: `${field.label} を更新しました` });
+      toast({ title: `${file.label} を更新しました` });
     } catch (err: any) {
       toast({ title: "更新に失敗しました", description: err.message, variant: "destructive" });
     } finally {
@@ -72,95 +88,117 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
     }
   };
 
-  const startEditing = (field: WorkspaceField) => {
-    setEditingField(field.key);
-    setEditValue(field.value || "");
+  const startEditing = (file: WorkspaceFile) => {
+    setEditingField(file.key);
+    setEditValue(getFieldValue(file) || "");
+  };
+
+  const renderFile = (file: WorkspaceFile) => {
+    const value = getFieldValue(file);
+    return (
+      <div key={file.key} className="border border-border/50 rounded-lg overflow-hidden" data-testid={`workspace-field-${file.key}`}>
+        <button
+          type="button"
+          onClick={() => toggleField(file.key)}
+          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+          data-testid={`button-toggle-${file.key}`}
+        >
+          {expandedField === file.key ? (
+            <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+          )}
+          <file.icon className={`w-3.5 h-3.5 ${file.color} flex-shrink-0`} />
+          <span className="text-xs font-medium text-foreground">{file.label}</span>
+          <div className="ml-auto flex items-center gap-1">
+            {!file.editable && <Lock className="w-2.5 h-2.5 text-muted-foreground/40" />}
+            {!value && <span className="text-[9px] text-muted-foreground/50">未設定</span>}
+          </div>
+        </button>
+
+        {expandedField === file.key && (
+          <div className="px-3 pb-3 border-t border-border/30">
+            {editingField === file.key ? (
+              <div className="pt-2 space-y-2">
+                <textarea
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full bg-secondary border border-border rounded px-3 py-2 text-xs text-foreground font-mono min-h-[120px] resize-y"
+                  data-testid={`textarea-edit-${file.key}`}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSave(file)}
+                    disabled={saving}
+                    className="text-[11px] h-7 gap-1"
+                    data-testid={`button-save-${file.key}`}
+                  >
+                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                    保存
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditingField(null)}
+                    className="text-[11px] h-7"
+                  >
+                    キャンセル
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-2">
+                {value ? (
+                  <div className="text-xs text-muted-foreground leading-relaxed max-h-[200px] overflow-y-auto mb-2">
+                    <MarkdownRenderer content={value} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground/50 italic mb-2">まだ記録がありません</p>
+                )}
+                {file.editable && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => startEditing(file)}
+                    className="text-[11px] h-6 gap-1"
+                    data-testid={`button-edit-${file.key}`}
+                  >
+                    編集
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-1" data-testid="workspace-dashboard">
-      <div className="flex items-center gap-1.5 px-1 mb-2">
+      <div className="flex items-center gap-1.5 px-1 mb-3">
         <Brain className="w-3.5 h-3.5 text-primary" />
-        <span className="text-xs font-bold text-primary">WORKSPACE</span>
+        <span className="text-xs font-bold text-primary">ASIペルソナ</span>
+        <span className="text-xs font-mono text-primary/80 ml-auto">Lv.{personaLevel}</span>
       </div>
 
-      {fields.map((field) => (
-        <div key={field.key} className="border border-border/50 rounded-lg overflow-hidden" data-testid={`workspace-field-${field.key}`}>
-          <button
-            type="button"
-            onClick={() => toggleField(field.key)}
-            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors"
-            data-testid={`button-toggle-${field.key}`}
-          >
-            {expandedField === field.key ? (
-              <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-            ) : (
-              <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-            )}
-            <field.icon className={`w-3.5 h-3.5 ${field.color} flex-shrink-0`} />
-            <span className="text-xs font-medium text-foreground">{field.label}</span>
-            {!field.value && (
-              <span className="text-[9px] text-muted-foreground/50 ml-auto">未設定</span>
-            )}
-          </button>
-
-          {expandedField === field.key && (
-            <div className="px-3 pb-3 border-t border-border/30">
-              {editingField === field.key ? (
-                <div className="pt-2 space-y-2">
-                  <textarea
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="w-full bg-secondary border border-border rounded px-3 py-2 text-xs text-foreground font-mono min-h-[120px] resize-y"
-                    data-testid={`textarea-edit-${field.key}`}
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSave(field)}
-                      disabled={saving}
-                      className="text-[11px] h-7 gap-1"
-                      data-testid={`button-save-${field.key}`}
-                    >
-                      {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                      保存
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setEditingField(null)}
-                      className="text-[11px] h-7"
-                    >
-                      キャンセル
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-2">
-                  {field.value ? (
-                    <div className="text-xs text-muted-foreground leading-relaxed max-h-[200px] overflow-y-auto mb-2">
-                      <MarkdownRenderer content={field.value} />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground/50 italic mb-2">まだ記録がありません</p>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => startEditing(field)}
-                    className="text-[11px] h-6 gap-1"
-                    data-testid={`button-edit-${field.key}`}
-                  >
-                    編集
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+      <div className="space-y-1 mb-3">
+        <div className="flex items-center gap-1 px-1 mb-1">
+          <span className="text-[10px] text-muted-foreground font-medium">閲覧 + 編集</span>
         </div>
-      ))}
+        {EDITABLE_FILES.map(renderFile)}
+      </div>
 
-      <div className="border border-border/50 rounded-lg overflow-hidden mt-2" data-testid="workspace-meidia">
+      <div className="space-y-1 mb-3">
+        <div className="flex items-center gap-1 px-1 mb-1">
+          <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />
+          <span className="text-[10px] text-muted-foreground font-medium">閲覧のみ（AI自律成長）</span>
+        </div>
+        {READONLY_FILES.map(renderFile)}
+      </div>
+
+      <div className="border border-border/50 rounded-lg overflow-hidden" data-testid="workspace-meidia">
         <button
           type="button"
           onClick={() => setShowMeidia(!showMeidia)}
