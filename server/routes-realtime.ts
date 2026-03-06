@@ -34,6 +34,16 @@ export function registerRealtimeRoutes(app: Express): void {
     }
   });
 
+  app.delete("/api/hayroom", async (req, res) => {
+    if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const deleted = await db.delete(hayroomMessages).returning();
+      res.json({ cleared: deleted.length });
+    } catch (err) {
+      res.status(500).json({ message: "クリアに失敗しました" });
+    }
+  });
+
   app.post("/api/trial-room", async (req, res) => {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {

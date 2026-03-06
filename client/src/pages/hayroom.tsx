@@ -118,6 +118,16 @@ export default function Hayroom() {
     },
   });
 
+  const clearMutation = useMutation({
+    mutationFn: () => apiRequest("DELETE", "/api/hayroom"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hayroom"] });
+      seenIdsRef.current.clear();
+      setNewIds(new Set());
+      initialLoadRef.current = true;
+    },
+  });
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
 
@@ -162,14 +172,31 @@ export default function Hayroom() {
         </div>
         <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
         <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ — 三者合議</span>
-        <button
-          onClick={() => refetch()}
-          className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 min-h-[36px] rounded border border-border hover:border-primary/40"
-          data-testid="button-hayroom-refresh"
-          aria-label="メッセージを更新"
-        >
-          {isFetching ? "⟳" : "更新"}
-        </button>
+        <div className="ml-auto flex gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm(`ハイヤールームの全メッセージ（${messages.length}件）を断捨離しますか？\n\nこの操作は取り消せません。`)) {
+                  clearMutation.mutate();
+                }
+              }}
+              disabled={clearMutation.isPending}
+              className="text-xs text-red-400/70 hover:text-red-400 transition-colors px-3 py-2 min-h-[36px] rounded border border-red-400/20 hover:border-red-400/50"
+              data-testid="button-hayroom-clear"
+              aria-label="全メッセージを断捨離"
+            >
+              {clearMutation.isPending ? "..." : "断捨離"}
+            </button>
+          )}
+          <button
+            onClick={() => refetch()}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 min-h-[36px] rounded border border-border hover:border-primary/40"
+            data-testid="button-hayroom-refresh"
+            aria-label="メッセージを更新"
+          >
+            {isFetching ? "⟳" : "更新"}
+          </button>
+        </div>
       </div>
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
