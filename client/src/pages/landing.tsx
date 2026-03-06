@@ -387,30 +387,32 @@ export default function Landing() {
           <div className="tour-scanline" />
           <Particles count={6} color="180 70% 50%" />
 
-          <div className="relative z-10 px-4 sm:px-8 max-w-3xl mx-auto w-full flex flex-col justify-center h-full py-14 sm:py-16">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-3 sm:mb-5" data-testid="text-play-label">
+          <div className="relative z-10 px-4 sm:px-8 max-w-3xl mx-auto w-full flex flex-col justify-center h-full py-10 sm:py-16">
+            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-2 sm:mb-5" data-testid="text-play-label">
               {C.page5_play.label}
             </p>
 
-            <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-5 sm:mb-7">
+            <h2 className="text-base sm:text-2xl font-bold text-foreground mb-3 sm:mb-7">
               {C.page5_play.heading}
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
               {C.page5_play.features.map((f, i) => {
                 const Icon = featureIcons[i];
                 return (
                   <div
                     key={f.sub}
-                    className="group border border-border/30 rounded-lg p-3 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-300"
+                    className="group border border-border/30 rounded-lg p-2 sm:p-3 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-300"
                     data-testid={`tour-feature-${i}`}
                   >
-                    <div className="w-7 h-7 rounded bg-primary/5 border border-primary/20 flex items-center justify-center mb-2 group-hover:bg-primary/10 group-hover:border-primary/30 transition-colors">
-                      <Icon className="w-3.5 h-3.5 text-primary" />
+                    <div className="flex items-center gap-1.5 mb-1 sm:mb-2">
+                      <div className="shrink-0 w-5 h-5 sm:w-7 sm:h-7 rounded bg-primary/5 border border-primary/20 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Icon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-foreground text-[10px] sm:text-xs leading-tight">{f.title}</h3>
                     </div>
-                    <h3 className="font-bold text-foreground text-[11px] sm:text-xs mb-0.5 leading-tight">{f.title}</h3>
-                    <p className="text-[8px] text-primary/30 font-mono tracking-wider mb-1">{f.sub}</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-[1.6]">{f.desc}</p>
+                    <p className="text-[7px] sm:text-[8px] text-primary/30 font-mono tracking-wider">{f.sub}</p>
+                    <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-[1.5] mt-0.5">{f.desc}</p>
                   </div>
                 );
               })}

@@ -213,22 +213,21 @@
 /* Tour LP */
 .tour-container {
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
 }
 
 .tour-page {
-  min-height: 100vh;
   height: 100vh;
+  height: 100dvh;
   scroll-snap-align: start;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @keyframes planet-orbit {
