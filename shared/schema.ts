@@ -325,6 +325,8 @@ export const feedbackReports = pgTable("feedback_reports", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   screenshotUrl: text("screenshot_url"),
+  attachmentUrl: text("attachment_url"),
+  attachmentName: text("attachment_name"),
   status: text("status").default("open").notNull(),
   adminNote: text("admin_note"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

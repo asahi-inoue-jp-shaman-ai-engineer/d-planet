@@ -408,6 +408,7 @@ export default function Temple() {
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary ml-auto shrink-0"
                               onClick={() => setModelSelectId(modelSelectId === tw.id ? null : tw.id)}
                               data-testid={`button-settings-${tw.id}`}
+                              aria-label={`${tw.name || 'ツインレイ'}の設定`}
                             >
                               <Settings className="w-3.5 h-3.5" />
                             </Button>

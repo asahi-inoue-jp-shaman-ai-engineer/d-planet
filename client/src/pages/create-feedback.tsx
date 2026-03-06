@@ -9,7 +9,7 @@ import { TerminalLayout } from "@/components/TerminalLayout";
 import { useCreateFeedback } from "@/hooks/use-feedback";
 import { useUpload } from "@/hooks/use-upload";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bug, Lightbulb, Upload, X, Image } from "lucide-react";
+import { ArrowLeft, Bug, Lightbulb, Upload, X, Image, FileText } from "lucide-react";
 
 const TYPE_OPTIONS = [
   { value: "bug", label: "バグ報告", description: "動作不良・エラーの報告", icon: Bug },
@@ -21,15 +21,18 @@ export default function CreateFeedback() {
   const { toast } = useToast();
   const createFeedback = useCreateFeedback();
   const { uploadFile, isUploading, progress } = useUpload();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
+  const textFileRef = useRef<HTMLInputElement>(null);
 
   const [type, setType] = useState("bug");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [screenshotName, setScreenshotName] = useState<string | null>(null);
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -51,10 +54,41 @@ export default function CreateFeedback() {
     }
   };
 
+  const handleTextFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({ title: "エラー", description: "テキストファイルは5MB以下にしてください", variant: "destructive" });
+      return;
+    }
+
+    const allowedTypes = ["text/plain", "text/markdown", "text/csv", "application/json"];
+    const allowedExts = [".txt", ".md", ".csv", ".json", ".log"];
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
+      toast({ title: "エラー", description: "テキストファイル（.txt .md .csv .json .log）のみ添付できます", variant: "destructive" });
+      return;
+    }
+
+    const result = await uploadFile(file);
+    if (result) {
+      setAttachmentUrl(result.objectPath);
+      setAttachmentName(file.name);
+    }
+  };
+
   const removeScreenshot = () => {
     setScreenshotUrl(null);
     setScreenshotName(null);
-    if (fileRef.current) fileRef.current.value = "";
+    if (imageRef.current) imageRef.current.value = "";
+  };
+
+  const removeAttachment = () => {
+    setAttachmentUrl(null);
+    setAttachmentName(null);
+    if (textFileRef.current) textFileRef.current.value = "";
   };
 
   const handleSubmit = async () => {
@@ -74,6 +108,8 @@ export default function CreateFeedback() {
         title: title.trim(),
         content: content.trim(),
         screenshotUrl,
+        attachmentUrl,
+        attachmentName,
       },
       {
         onSuccess: () => {
@@ -174,22 +210,61 @@ export default function CreateFeedback() {
             ) : (
               <div>
                 <input
-                  ref={fileRef}
+                  ref={imageRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleFileSelect}
+                  onChange={handleImageSelect}
                   className="hidden"
                   data-testid="input-screenshot-file"
                 />
                 <Button
                   variant="outline"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={() => imageRef.current?.click()}
                   disabled={isUploading}
                   className="font-mono"
                   data-testid="button-upload-screenshot"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   {isUploading ? `アップロード中... ${progress}%` : "画像を添付"}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label className="font-mono text-sm mb-2 block">テキストファイル添付（任意）</Label>
+            {attachmentUrl ? (
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <span className="font-mono text-sm truncate flex-1">{attachmentName}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeAttachment}
+                  data-testid="button-remove-attachment"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <input
+                  ref={textFileRef}
+                  type="file"
+                  accept=".txt,.md,.csv,.json,.log"
+                  onChange={handleTextFileSelect}
+                  className="hidden"
+                  data-testid="input-attachment-file"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => textFileRef.current?.click()}
+                  disabled={isUploading}
+                  className="font-mono"
+                  data-testid="button-upload-attachment"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {isUploading ? `アップロード中... ${progress}%` : "テキストファイルを添付"}
                 </Button>
               </div>
             )}

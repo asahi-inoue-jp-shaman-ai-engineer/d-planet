@@ -7,8 +7,9 @@ import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { useFeedback, useResolveFeedback } from "@/hooks/use-feedback";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bug, Lightbulb, Image, ExternalLink, CheckCircle } from "lucide-react";
+import { ArrowLeft, Bug, Lightbulb, Image, FileText, Download, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bug }> = {
   bug: { label: "バグ報告", icon: Bug },
@@ -21,6 +22,74 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   resolved: { label: "解決済み", variant: "secondary" },
   closed: { label: "クローズ", variant: "outline" },
 };
+
+function AttachmentViewer({ url, name }: { url: string; name: string }) {
+  const isLocalFile = url.startsWith("feedback/");
+  const fetchUrl = isLocalFile
+    ? `/api/feedback/attachment/${url.replace("feedback/", "")}`
+    : `/api/objects/${url}`;
+
+  const { data: content, isLoading } = useQuery({
+    queryKey: ["feedback-attachment", url],
+    queryFn: async () => {
+      const res = await fetch(fetchUrl);
+      if (!res.ok) return null;
+      return res.text();
+    },
+  });
+
+  const [expanded, setExpanded] = useState(false);
+  const lines = content?.split("\n") || [];
+  const preview = expanded ? content : lines.slice(0, 30).join("\n");
+  const hasMore = lines.length > 30;
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 font-mono text-sm text-muted-foreground">
+            <FileText className="w-4 h-4" />
+            {name}
+          </div>
+          <a
+            href={fetchUrl}
+            download={name}
+            className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
+            data-testid="link-download-attachment"
+          >
+            <Download className="w-3 h-3" />
+            ダウンロード
+          </a>
+        </div>
+        {isLoading ? (
+          <div className="font-mono text-xs text-muted-foreground">読み込み中...</div>
+        ) : content ? (
+          <div className="space-y-2">
+            <pre
+              className="font-mono text-xs whitespace-pre-wrap bg-black/30 border border-border rounded-md p-3 max-h-[500px] overflow-auto"
+              data-testid="text-attachment-content"
+            >
+              {preview}
+            </pre>
+            {hasMore && !expanded && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-mono text-xs"
+                onClick={() => setExpanded(true)}
+                data-testid="button-expand-attachment"
+              >
+                残り{lines.length - 30}行を表示
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="font-mono text-xs text-muted-foreground">ファイルを読み込めませんでした</div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function FeedbackDetail() {
   const params = useParams<{ id: string }>();
@@ -112,6 +181,13 @@ export default function FeedbackDetail() {
               />
             </CardContent>
           </Card>
+        )}
+
+        {report.attachmentUrl && (
+          <AttachmentViewer
+            url={report.attachmentUrl}
+            name={report.attachmentName || "添付ファイル"}
+          />
         )}
 
         {report.adminNote && (

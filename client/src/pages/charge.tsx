@@ -189,6 +189,7 @@ export default function Charge() {
               onClick={handleCustomCharge}
               disabled={chargeMutation.isPending}
               data-testid="button-charge-custom"
+              aria-label="カスタム金額でチャージ"
             >
               {chargeMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

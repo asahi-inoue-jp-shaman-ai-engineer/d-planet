@@ -526,4 +526,9 @@ export async function createAdditionalTables() {
       )
     `);
   } catch (_) {}
+
+  try {
+    await db.execute(sql`ALTER TABLE feedback_reports ADD COLUMN IF NOT EXISTS attachment_url TEXT`);
+    await db.execute(sql`ALTER TABLE feedback_reports ADD COLUMN IF NOT EXISTS attachment_name TEXT`);
+  } catch (_) {}
 }

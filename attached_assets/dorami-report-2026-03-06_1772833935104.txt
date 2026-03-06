@@ -1,0 +1,1893 @@
+D.O.R.A.M.I. エラーレポート
+対象: https://d-planet.replit.app
+生成日時: 2026/3/7 6:51:18
+エラー件数: 290件
+==================================================
+
+--- エラー #1 ---
+[js_error][medium] ページ読み込み（クロール）
+ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293)
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 1:28:54
+
+--- エラー #2 ---
+[js_error][medium] ページ読み込み（クロール）
+D-Planet ErrorBoundary: ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293) {componentStack: 
+    at DB (https://d-planet.replit.app/assets/ind…app/assets/index-CDYP5wSJ.js:156:55438)
+    at J7}
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 1:28:54
+
+--- エラー #3 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 16個の要素が44x44px未満
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:30:22
+
+--- エラー #4 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:30:22
+
+--- エラー #5 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:30:22
+
+--- エラー #6 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 7個の要素が44x44px未満
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:32:46
+
+--- エラー #7 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:32:46
+
+--- エラー #8 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app
+日時: 2026/3/7 1:32:46
+
+--- エラー #9 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 16個の要素が44x44px未満
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:34:26
+
+--- エラー #10 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:34:26
+
+--- エラー #11 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:34:26
+
+--- エラー #12 ---
+[crash][medium] [デスクトップ] click: NOTIFICATIONS リンクをクリックして、適切なページに遷移するか確認
+locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('a[href=\'/notifications\']').first()
+    - locator resolved to <a aria-label="通知" href="/notifications" data-testid="link-notifications" class="relative flex items-center gap-2 hover:text-primary transition-colors min-h-[44px] min-w-[44px] justify-center text-muted-foreground">…</a>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - performing click action
+
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:35:35
+
+--- エラー #13 ---
+[perf][medium] [モバイル] パフォーマンス計測
+First Contentful Paint が 4017ms（要改善。目標は1800ms以内）
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:36:36
+
+--- エラー #14 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 7個の要素が44x44px未満
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:36:52
+
+--- エラー #15 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:36:52
+
+--- エラー #16 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/dashboard
+日時: 2026/3/7 1:36:52
+
+--- エラー #17 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings-17">
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:38:48
+
+--- エラー #18 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 49個の要素が44x44px未満
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:38:48
+
+--- エラー #19 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h, div.temple-mist
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:38:48
+
+--- エラー #20 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:38:48
+
+--- エラー #21 ---
+[crash][medium] [デスクトップ] click: 「WHITE PAPER」リンクをクリックして、適切なページに遷移するか確認
+locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('a[href=\'/whitepaper\']').first()
+    - locator resolved to <a href="/whitepaper" data-testid="link-whitepaper-footer" class="text-primary hover:underline flex items-center gap-1">…</a>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - performing click action
+
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:39:51
+
+--- エラー #22 ---
+[a11y][high] [モバイル] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings-17">
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:40:58
+
+--- エラー #23 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 40個の要素が44x44px未満
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:40:58
+
+--- エラー #24 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h, div.temple-mist
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:40:58
+
+--- エラー #25 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/temple
+日時: 2026/3/7 1:40:58
+
+--- エラー #26 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[10px] text-muted-foreground/70">MiniMax</span>
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #27 ---
+[a11y][low] [デスクトップ] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #28 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 18個の要素が44x44px未満
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #29 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #30 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #31 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:42:52
+
+--- エラー #32 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="text-[10px] text-muted-foreground/70">MiniMax</span>
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #33 ---
+[a11y][low] [モバイル] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #34 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 9個の要素が44x44px未満
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #35 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #36 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #37 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/llm-models
+日時: 2026/3/7 1:44:56
+
+--- エラー #38 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-charge-custom">
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:45
+
+--- エラー #39 ---
+[a11y][low] [デスクトップ] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:45
+
+--- エラー #40 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 28個の要素が44x44px未満
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:46
+
+--- エラー #41 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:46
+
+--- エラー #42 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:46
+
+--- エラー #43 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:46
+
+--- エラー #44 ---
+[crash][medium] [デスクトップ] fill: クレジットチャージ入力欄に数値以外の文字を入力してエラーメッセージが表示されるか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("abc")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:46:58
+
+--- エラー #45 ---
+[crash][medium] [デスクトップ] fill_xss: クレジットチャージ入力欄にXSSペイロードを入力して無害化されるか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("<script>alert("xss")</script>")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:47:04
+
+--- エラー #46 ---
+[crash][medium] [デスクトップ] fill_long: クレジットチャージ入力欄に非常に長い文字列を入力して上限が設定されているか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:47:10
+
+--- エラー #47 ---
+[a11y][high] [モバイル] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-charge-custom">
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #48 ---
+[a11y][low] [モバイル] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #49 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 19個の要素が44x44px未満
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #50 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #51 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #52 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:04
+
+--- エラー #53 ---
+[crash][medium] [モバイル] fill: クレジットチャージ入力欄に数値以外の文字を入力してエラーメッセージが表示されるか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("abc")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:14
+
+--- エラー #54 ---
+[crash][medium] [モバイル] fill_xss: クレジットチャージ入力欄にXSSペイロードを入力して無害化されるか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("<script>alert("xss")</script>")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:18
+
+--- エラー #55 ---
+[crash][medium] [モバイル] fill_long: クレジットチャージ入力欄に非常に長い文字列を入力して上限が設定されているか確認
+locator.fill: Error: Cannot type text into input[type=number]
+Call log:
+  - waiting for locator('input[type=\'number\']').first()
+    - locator resolved to <input value="" min="123" max="9999" type="number" placeholder="任意の金額 (¥123〜¥9,999)" data-testid="input-custom-amount" class="flex-1 px-3 py-2 text-sm rounded border border-border bg-background"/>
+    - fill("ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ")
+  - attempting fill action
+    - waiting for element to be visible, enabled and editable
+
+URL: https://d-planet.replit.app/charge
+日時: 2026/3/7 1:48:22
+
+--- エラー #56 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:49:18
+
+--- エラー #57 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 22個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:49:18
+
+--- エラー #58 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:49:18
+
+--- エラー #59 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:49:18
+
+--- エラー #60 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:50:50
+
+--- エラー #61 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 13個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:50:50
+
+--- エラー #62 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:50:50
+
+--- エラー #63 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands
+日時: 2026/3/7 1:50:50
+
+--- エラー #64 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:22
+
+--- エラー #65 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 44個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:23
+
+--- エラー #66 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:23
+
+--- エラー #67 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:23
+
+--- エラー #68 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:46
+
+--- エラー #69 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 35個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:46
+
+--- エラー #70 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:46
+
+--- エラー #71 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia
+日時: 2026/3/7 1:52:46
+
+--- エラー #72 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 25個の要素が44x44px未満
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:05
+
+--- エラー #73 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:05
+
+--- エラー #74 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:05
+
+--- エラー #75 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 16個の要素が44x44px未満
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:58
+
+--- エラー #76 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:58
+
+--- エラー #77 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/family-meeting
+日時: 2026/3/7 1:53:58
+
+--- エラー #78 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 22個の要素が44x44px未満
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:54:56
+
+--- エラー #79 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:54:56
+
+--- エラー #80 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:54:56
+
+--- エラー #81 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 13個の要素が44x44px未満
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:55:12
+
+--- エラー #82 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:55:12
+
+--- エラー #83 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/feedback
+日時: 2026/3/7 1:55:12
+
+--- エラー #84 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:55:34
+
+--- エラー #85 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:55:34
+
+--- エラー #86 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:55:34
+
+--- エラー #87 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:55:34
+
+--- エラー #88 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:56:40
+
+--- エラー #89 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 12個の要素が44x44px未満
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:56:40
+
+--- エラー #90 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:56:40
+
+--- エラー #91 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users
+日時: 2026/3/7 1:56:40
+
+--- エラー #92 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 18個の要素が44x44px未満
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:57:24
+
+--- エラー #93 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:57:24
+
+--- エラー #94 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:57:24
+
+--- エラー #95 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 9個の要素が44x44px未満
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:58:54
+
+--- エラー #96 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:58:54
+
+--- エラー #97 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/notifications
+日時: 2026/3/7 1:58:54
+
+--- エラー #98 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:00:24
+
+--- エラー #99 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:00:24
+
+--- エラー #100 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:00:24
+
+--- エラー #101 ---
+[crash][medium] [デスクトップ] click: 'WHITE PAPER'リンクをクリックして、ホワイトペーパーページに正しく遷移するか確認
+locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('a[href=\'/whitepaper\']').first()
+    - locator resolved to <a href="/whitepaper" data-testid="link-whitepaper-footer" class="text-primary hover:underline flex items-center gap-1">…</a>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - performing click action
+
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:01:21
+
+--- エラー #102 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 12個の要素が44x44px未満
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:02:47
+
+--- エラー #103 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:02:47
+
+--- エラー #104 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users/6
+日時: 2026/3/7 2:02:47
+
+--- エラー #105 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 24個の要素が44x44px未満
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:04:26
+
+--- エラー #106 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:04:26
+
+--- エラー #107 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:04:26
+
+--- エラー #108 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 15個の要素が44x44px未満
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:06:18
+
+--- エラー #109 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:06:18
+
+--- エラー #110 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/about
+日時: 2026/3/7 2:06:18
+
+--- エラー #111 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <p class="text-[10px] text-muted-foreground/60 mt-2">ver 1.0 — 2026.03</p>
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:07:48
+
+--- エラー #112 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 24個の要素が44x44px未満
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:07:48
+
+--- エラー #113 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h, div.sticky top-0 z-10 bg-backgroun
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:07:48
+
+--- エラー #114 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:07:48
+
+--- エラー #115 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <p class="text-[10px] text-muted-foreground/60 mt-2">ver 1.0 — 2026.03</p>
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:09:53
+
+--- エラー #116 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 15個の要素が44x44px未満
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:09:53
+
+--- エラー #117 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h, div.sticky top-0 z-10 bg-backgroun
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:09:53
+
+--- エラー #118 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:09:53
+
+--- エラー #119 ---
+[ux_issue][medium] [モバイル] [UX] focus_check: D-PLANETのロゴリンクのフォーカス時の挙動を確認
+フォーカス時に画面が4240pxジャンプ（不自然なスクロール）
+URL: https://d-planet.replit.app/whitepaper
+日時: 2026/3/7 2:10:43
+
+--- エラー #120 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 4個の要素が44x44px未満
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:11:40
+
+--- エラー #121 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:11:40
+
+--- エラー #122 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:11:40
+
+--- エラー #123 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:11:40
+
+--- エラー #124 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 4個の要素が44x44px未満
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:12:26
+
+--- エラー #125 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:12:26
+
+--- エラー #126 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:12:26
+
+--- エラー #127 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/legal
+日時: 2026/3/7 2:12:26
+
+--- エラー #128 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 3個の要素が44x44px未満
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:12:58
+
+--- エラー #129 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:12:58
+
+--- エラー #130 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:12:58
+
+--- エラー #131 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:12:58
+
+--- エラー #132 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 3個の要素が44x44px未満
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:13:36
+
+--- エラー #133 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:13:36
+
+--- エラー #134 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:13:36
+
+--- エラー #135 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/privacy
+日時: 2026/3/7 2:13:36
+
+--- エラー #136 ---
+[a11y][low] [デスクトップ] アクセシビリティ: heading-order
+Ensure the order of headings is semantically correct（影響度: moderate） | 対象要素: <h3 class="text-xs font-bold text-primary flex items-center gap-1.5">
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:06
+
+--- エラー #137 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 20個の要素が44x44px未満
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:06
+
+--- エラー #138 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:06
+
+--- エラー #139 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:06
+
+--- エラー #140 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] H2を飛ばしてH3を使用（見出し階層の問題）
+H2を飛ばしてH3を使用（見出し階層の問題）
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:06
+
+--- エラー #141 ---
+[a11y][low] [モバイル] アクセシビリティ: heading-order
+Ensure the order of headings is semantically correct（影響度: moderate） | 対象要素: <h3 class="text-xs font-bold text-primary flex items-center gap-1.5">
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:24
+
+--- エラー #142 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 11個の要素が44x44px未満
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:24
+
+--- エラー #143 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:24
+
+--- エラー #144 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:24
+
+--- エラー #145 ---
+[ux_issue][medium] [モバイル] [UX自動検出] H2を飛ばしてH3を使用（見出し階層の問題）
+H2を飛ばしてH3を使用（見出し階層の問題）
+URL: https://d-planet.replit.app/temple/create-twinray
+日時: 2026/3/7 2:14:24
+
+--- エラー #146 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #147 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #148 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #149 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #150 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #151 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:14:40
+
+--- エラー #152 ---
+[a11y][high] [モバイル] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #153 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #154 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #155 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #156 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #157 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=24
+日時: 2026/3/7 2:15:18
+
+--- エラー #158 ---
+[js_error][medium] ページ読み込み [デスクトップ]
+ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293)
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:30
+
+--- エラー #159 ---
+[js_error][medium] ページ読み込み [デスクトップ]
+D-Planet ErrorBoundary: ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293) {componentStack: 
+    at DB (https://d-planet.replit.app/assets/ind…app/assets/index-CDYP5wSJ.js:156:55438)
+    at J7}
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:30
+
+--- エラー #160 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <div class="text-destructive">予期せぬエラーが発生しました</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #161 ---
+[a11y][low] [デスクトップ] アクセシビリティ: landmark-one-main
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #162 ---
+[a11y][low] [デスクトップ] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #163 ---
+[a11y][low] [デスクトップ] アクセシビリティ: region
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="text-xl text-primary">D-Planet</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #164 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 1個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #165 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #166 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #167 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] main要素なし（スクリーンリーダーのランドマーク不足）
+main要素なし（スクリーンリーダーのランドマーク不足）
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #168 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:15:33
+
+--- エラー #169 ---
+[js_error][medium] ページ読み込み [モバイル]
+ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293)
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:33
+
+--- エラー #170 ---
+[js_error][medium] ページ読み込み [モバイル]
+D-Planet ErrorBoundary: ReferenceError: Cannot access 'br' before initialization
+    at https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:630
+    at DB (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:140:755)
+    at np (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:6:17517)
+    at mp (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:3158)
+    at nb (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:45456)
+    at Xv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40277)
+    at YC (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40205)
+    at jd (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:40058)
+    at _p (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:36345)
+    at Kv (https://d-planet.replit.app/assets/index-CDYP5wSJ.js:8:35293) {componentStack: 
+    at DB (https://d-planet.replit.app/assets/ind…app/assets/index-CDYP5wSJ.js:156:55438)
+    at J7}
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:33
+
+--- エラー #171 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <div class="text-destructive">予期せぬエラーが発生しました</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #172 ---
+[a11y][low] [モバイル] アクセシビリティ: landmark-one-main
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #173 ---
+[a11y][low] [モバイル] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #174 ---
+[a11y][low] [モバイル] アクセシビリティ: region
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="text-xl text-primary">D-Planet</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #175 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 1個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #176 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #177 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #178 ---
+[ux_issue][medium] [モバイル] [UX自動検出] main要素なし（スクリーンリーダーのランドマーク不足）
+main要素なし（スクリーンリーダーのランドマーク不足）
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #179 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=17
+日時: 2026/3/7 2:16:40
+
+--- エラー #180 ---
+[perf][medium] [デスクトップ] パフォーマンス計測
+ページ完全読み込みに 6006ms かかっています（要改善）
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:34
+
+--- エラー #181 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #182 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 27個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #183 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #184 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #185 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #186 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:17:48
+
+--- エラー #187 ---
+[a11y][high] [モバイル] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #188 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 27個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #189 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #190 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #191 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #192 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=15
+日時: 2026/3/7 2:18:14
+
+--- エラー #193 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #194 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <div class="mt-1.5 text-[10px] text-muted-foreground/60" data-testid="approved-action-2">MEiDIA「スマホホ
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #195 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 60個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #196 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #197 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #198 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #199 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:19:42
+
+--- エラー #200 ---
+[a11y][high] [モバイル] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #201 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <div class="mt-1.5 text-[10px] text-muted-foreground/60" data-testid="approved-action-2">MEiDIA「スマホホ
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #202 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 60個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #203 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #204 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #205 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #206 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=14
+日時: 2026/3/7 2:21:10
+
+--- エラー #207 ---
+[a11y][high] [デスクトップ] アクセシビリティ: button-name
+Ensure buttons have discernible text（影響度: critical） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-settings">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:17
+
+--- エラー #208 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 1個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:18
+
+--- エラー #209 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:18
+
+--- エラー #210 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:18
+
+--- エラー #211 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] main要素なし（スクリーンリーダーのランドマーク不足）
+main要素なし（スクリーンリーダーのランドマーク不足）
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:18
+
+--- エラー #212 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:23:18
+
+--- エラー #213 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <div class="text-destructive">予期せぬエラーが発生しました</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #214 ---
+[a11y][low] [モバイル] アクセシビリティ: landmark-one-main
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #215 ---
+[a11y][low] [モバイル] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #216 ---
+[a11y][low] [モバイル] アクセシビリティ: region
+Ensure all page content is contained by landmarks（影響度: moderate） | 対象要素: <div class="text-xl text-primary">D-Planet</div>
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #217 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 1個の要素が44x44px未満
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #218 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #219 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #220 ---
+[ux_issue][medium] [モバイル] [UX自動検出] main要素なし（スクリーンリーダーのランドマーク不足）
+main要素なし（スクリーンリーダーのランドマーク不足）
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #221 ---
+[ux_issue][low] [モバイル] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app/twinray-chat?twinrayId=10
+日時: 2026/3/7 2:24:49
+
+--- エラー #222 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 31個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:28
+
+--- エラー #223 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox]
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:28
+
+--- エラー #224 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:28
+
+--- エラー #225 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:28
+
+--- エラー #226 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 22個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:50
+
+--- エラー #227 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox], INPUT[type=checkbox]
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:50
+
+--- エラー #228 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:50
+
+--- エラー #229 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/create
+日時: 2026/3/7 2:26:50
+
+--- エラー #230 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:27:06
+
+--- エラー #231 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 24個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:27:06
+
+--- エラー #232 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:27:06
+
+--- エラー #233 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:27:06
+
+--- エラー #234 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:28:12
+
+--- エラー #235 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 15個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:28:12
+
+--- エラー #236 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:28:12
+
+--- エラー #237 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/9
+日時: 2026/3/7 2:28:12
+
+--- エラー #238 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:29:24
+
+--- エラー #239 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 32個の要素が44x44px未満
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:29:24
+
+--- エラー #240 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:29:24
+
+--- エラー #241 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:29:24
+
+--- エラー #242 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:30:36
+
+--- エラー #243 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 20個の要素が44x44px未満
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:30:36
+
+--- エラー #244 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:30:36
+
+--- エラー #245 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/users/11
+日時: 2026/3/7 2:30:36
+
+--- エラー #246 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-delete-island">
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:31:50
+
+--- エラー #247 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 36個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:31:50
+
+--- エラー #248 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:31:50
+
+--- エラー #249 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:31:50
+
+--- エラー #250 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <button class="inline-flex items-ce..." data-testid="button-delete-island">
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:32:54
+
+--- エラー #251 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 27個の要素が44x44px未満
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:32:54
+
+--- エラー #252 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:32:54
+
+--- エラー #253 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:32:54
+
+--- エラー #254 ---
+[ux_issue][medium] [モバイル] [UX] focus_check: 「WHITE PAPER」リンクのヒットゾーンが44x44px以上か、視認性は十分か確認
+フォーカス時に画面が345pxジャンプ（不自然なスクロール）
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:33:33
+
+--- エラー #255 ---
+[ux_issue][medium] [モバイル] [UX] focus_check: 「プライバシーポリシー」リンクのヒットゾーンが44x44px以上か、視認性は十分か確認
+フォーカス時に画面が345pxジャンプ（不自然なスクロール）
+URL: https://d-planet.replit.app/islands/10
+日時: 2026/3/7 2:33:45
+
+--- エラー #256 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 25個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:14
+
+--- エラー #257 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:14
+
+--- エラー #258 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:14
+
+--- エラー #259 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:14
+
+--- エラー #260 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 16個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:30
+
+--- エラー #261 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ラベルなし入力欄
+ラベルなし入力欄: INPUT[type=file]
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:30
+
+--- エラー #262 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:30
+
+--- エラー #263 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/create
+日時: 2026/3/7 2:34:30
+
+--- エラー #264 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 23個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:34:49
+
+--- エラー #265 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:34:49
+
+--- エラー #266 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:34:49
+
+--- エラー #267 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 14個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:36:51
+
+--- エラー #268 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:36:51
+
+--- エラー #269 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:36:51
+
+--- エラー #270 ---
+[spiritual_ux][medium] [モバイル] click: ABOUT D-PLANETをクリックした際に、D-Planetの世界観に合致したページに遷移するか確認
+locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('a[href=\'/about\']').first()
+    - locator resolved to <a href="/about" data-testid="link-about-footer" class="text-primary hover:underline flex items-center gap-1">…</a>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - performing click action
+
+URL: https://d-planet.replit.app/meidia/7
+日時: 2026/3/7 2:38:19
+
+--- エラー #271 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:38:44
+
+--- エラー #272 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:38:44
+
+--- エラー #273 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:38:44
+
+--- エラー #274 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:38:44
+
+--- エラー #275 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1が2個（通常は1個）
+H1が2個（通常は1個）
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:38:44
+
+--- エラー #276 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:40:38
+
+--- エラー #277 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 12個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:40:38
+
+--- エラー #278 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:40:38
+
+--- エラー #279 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:40:38
+
+--- エラー #280 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1が2個（通常は1個）
+H1が2個（通常は1個）
+URL: https://d-planet.replit.app/meidia/6
+日時: 2026/3/7 2:40:38
+
+--- エラー #281 ---
+[a11y][medium] [デスクトップ] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:42:52
+
+--- エラー #282 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 21個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:42:52
+
+--- エラー #283 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:42:52
+
+--- エラー #284 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:42:52
+
+--- エラー #285 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1が2個（通常は1個）
+H1が2個（通常は1個）
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:42:52
+
+--- エラー #286 ---
+[a11y][medium] [モバイル] アクセシビリティ: color-contrast
+Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds（影響度: serious） | 対象要素: <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-w
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:44:57
+
+--- エラー #287 ---
+[ux_issue][medium] [モバイル] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 12個の要素が44x44px未満
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:44:57
+
+--- エラー #288 ---
+[ux_issue][low] [モバイル] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:44:57
+
+--- エラー #289 ---
+[ux_issue][low] [モバイル] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:44:57
+
+--- エラー #290 ---
+[ux_issue][low] [モバイル] [UX自動検出] H1が2個（通常は1個）
+H1が2個（通常は1個）
+URL: https://d-planet.replit.app/meidia/9
+日時: 2026/3/7 2:44:57

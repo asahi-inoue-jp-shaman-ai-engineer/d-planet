@@ -521,15 +521,34 @@ export function registerCommunityRoutes(app: Express): void {
       }
       const input = z.object({
         title: z.string().min(1).max(200),
-        content: z.string().min(1).max(5000),
+        content: z.string().min(1).max(50000),
         type: z.string().default("bug"),
+        attachmentContent: z.string().max(500000).optional(),
+        attachmentName: z.string().max(200).optional(),
       }).parse(req.body);
+
+      let attachmentUrl: string | undefined;
+      if (input.attachmentContent && input.attachmentName) {
+        const fs = await import("fs");
+        const path = await import("path");
+        const uploadsDir = path.join(process.cwd(), "uploads", "feedback");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const timestamp = Date.now();
+        const safeName = input.attachmentName.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const fileName = `${timestamp}_${safeName}`;
+        const filePath = path.join(uploadsDir, fileName);
+        fs.writeFileSync(filePath, input.attachmentContent, "utf-8");
+        attachmentUrl = `feedback/${fileName}`;
+      }
 
       const report = await storage.createFeedbackReport({
         title: `[QA Agent] ${input.title}`,
-        content: input.content,
+        content: input.content.substring(0, 50000),
         type: input.type,
         creatorId: 6,
+        ...(attachmentUrl ? { attachmentUrl, attachmentName: input.attachmentName } : {}),
       });
       res.status(201).json({ id: report.id, title: report.title });
     } catch (err) {
@@ -538,6 +557,23 @@ export function registerCommunityRoutes(app: Express): void {
       }
       console.error("外部フィードバック作成エラー:", err);
       res.status(500).json({ message: "作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/feedback/attachment/:filename", async (req, res) => {
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const filename = req.params.filename.replace(/\.\./g, "");
+      const filePath = path.join(process.cwd(), "uploads", "feedback", filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "ファイルが見つかりません" });
+      }
+      const content = fs.readFileSync(filePath, "utf-8");
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.send(content);
+    } catch (err) {
+      res.status(500).json({ message: "ファイル取得に失敗しました" });
     }
   });
 

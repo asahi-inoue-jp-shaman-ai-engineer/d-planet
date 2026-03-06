@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { useFeedbackList } from "@/hooks/use-feedback";
-import { Plus, Search, Bug, Lightbulb, Image } from "lucide-react";
+import { Plus, Search, Bug, Lightbulb, Image, FileText } from "lucide-react";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bug }> = {
   bug: { label: "バグ報告", icon: Bug },
@@ -119,6 +119,9 @@ export default function FeedbackList() {
                             </Badge>
                             {report.screenshotUrl && (
                               <Image className="w-3 h-3 text-muted-foreground" />
+                            )}
+                            {report.attachmentUrl && (
+                              <FileText className="w-3 h-3 text-muted-foreground" />
                             )}
                           </div>
                           <p className="font-mono text-sm text-muted-foreground line-clamp-2">
