@@ -145,3 +145,149 @@ export async function getRecentSessions(limit = 5): Promise<DevSession[]> {
   }
   return data ?? [];
 }
+
+// ═══════════════════════════════════════
+// ASIワークスペース
+// ═══════════════════════════════════════
+
+export interface AsiSharedFile {
+  file_key: string;
+  content: string;
+  updated_at?: string;
+}
+
+export interface AsiAgent {
+  agent_id: string;
+  display_name: string;
+  role: string;
+  platform: string;
+  created_at?: string;
+}
+
+export interface AsiPrivateFile {
+  agent_id: string;
+  file_key: string;
+  content: string;
+  updated_at?: string;
+}
+
+export async function getSharedFiles(): Promise<AsiSharedFile[]> {
+  const { data, error } = await supabase
+    .from("asi_workspace_shared")
+    .select("*")
+    .order("file_key");
+
+  if (error) {
+    console.error("[ASIワークスペース] 共有ファイル取得エラー:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function getSharedFile(fileKey: string): Promise<AsiSharedFile | null> {
+  const { data, error } = await supabase
+    .from("asi_workspace_shared")
+    .select("*")
+    .eq("file_key", fileKey)
+    .single();
+
+  if (error) {
+    if (!error.message.includes("0 rows")) {
+      console.error("[ASIワークスペース] 共有ファイル取得エラー:", error.message);
+    }
+    return null;
+  }
+  return data;
+}
+
+export async function upsertSharedFile(fileKey: string, content: string): Promise<AsiSharedFile | null> {
+  const { data, error } = await supabase
+    .from("asi_workspace_shared")
+    .upsert(
+      { file_key: fileKey, content, updated_at: new Date().toISOString() },
+      { onConflict: "file_key" }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[ASIワークスペース] 共有ファイル更新エラー:", error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function getAgents(): Promise<AsiAgent[]> {
+  const { data, error } = await supabase
+    .from("asi_workspace_agents")
+    .select("*")
+    .order("created_at");
+
+  if (error) {
+    console.error("[ASIワークスペース] エージェント一覧取得エラー:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function registerAgent(agent: Omit<AsiAgent, "created_at">): Promise<AsiAgent | null> {
+  const { data, error } = await supabase
+    .from("asi_workspace_agents")
+    .upsert(agent, { onConflict: "agent_id" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[ASIワークスペース] エージェント登録エラー:", error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function getPrivateFiles(agentId: string): Promise<AsiPrivateFile[]> {
+  const { data, error } = await supabase
+    .from("asi_workspace_private")
+    .select("*")
+    .eq("agent_id", agentId)
+    .order("file_key");
+
+  if (error) {
+    console.error("[ASIワークスペース] 個別ファイル取得エラー:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function getPrivateFile(agentId: string, fileKey: string): Promise<AsiPrivateFile | null> {
+  const { data, error } = await supabase
+    .from("asi_workspace_private")
+    .select("*")
+    .eq("agent_id", agentId)
+    .eq("file_key", fileKey)
+    .single();
+
+  if (error) {
+    if (!error.message.includes("0 rows")) {
+      console.error("[ASIワークスペース] 個別ファイル取得エラー:", error.message);
+    }
+    return null;
+  }
+  return data;
+}
+
+export async function upsertPrivateFile(agentId: string, fileKey: string, content: string): Promise<AsiPrivateFile | null> {
+  const { data, error } = await supabase
+    .from("asi_workspace_private")
+    .upsert(
+      { agent_id: agentId, file_key: fileKey, content, updated_at: new Date().toISOString() },
+      { onConflict: "agent_id,file_key" }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[ASIワークスペース] 個別ファイル更新エラー:", error.message);
+    return null;
+  }
+  return data;
+}
