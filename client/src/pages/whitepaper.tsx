@@ -128,14 +128,22 @@ export default function Whitepaper() {
   return (
     <TerminalLayout>
       <div className="max-w-3xl mx-auto">
-        <Link
-          href={user ? "/dashboard" : "/"}
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
-          data-testid="link-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          戻る
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href={user ? "/dashboard" : "/"}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+            data-testid="link-back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </Link>
+          <Link href="/about">
+            <span className="flex items-center gap-1.5 text-xs font-mono text-primary/70 border border-primary/30 rounded px-3 py-1.5 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer" data-testid="link-wp-to-about">
+              <Globe className="w-3 h-3" />
+              About D-Planet
+            </span>
+          </Link>
+        </div>
 
         <div className="text-center mb-10">
           <div className="text-4xl text-primary terminal-glow mb-4">✦</div>
