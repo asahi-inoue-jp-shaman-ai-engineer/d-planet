@@ -100,8 +100,47 @@ function ScrollHint() {
   );
 }
 
-function Divider() {
-  return <div className="w-12 h-px bg-primary/20 mx-auto my-4 sm:my-6" />;
+function FloatingPlanet() {
+  return (
+    <div className="tour-planet">
+      <div className="tour-planet-core" />
+      {[700, 550, 400, 280].map((size, i) => (
+        <div
+          key={i}
+          className="tour-planet-ring"
+          style={{
+            width: `${size}px`,
+            height: `${size}px`,
+            top: `calc(50% - ${size / 2}px)`,
+            left: `calc(50% - ${size / 2}px)`,
+            animation: `planet-orbit ${90 + i * 30}s linear infinite${i % 2 === 1 ? " reverse" : ""}`,
+            transformOrigin: "center center",
+          }}
+        >
+          <div
+            className="tour-planet-dot"
+            style={{
+              top: "0%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+          {i < 2 && (
+            <div
+              className="tour-planet-dot"
+              style={{
+                bottom: "10%",
+                right: "10%",
+                width: "2px",
+                height: "2px",
+                opacity: 0.6,
+              }}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function Landing() {
@@ -141,6 +180,8 @@ export default function Landing() {
           />
         ))}
       </div>
+
+      <FloatingPlanet />
 
       <div ref={containerRef} className="tour-container">
 

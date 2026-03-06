@@ -219,6 +219,7 @@
 }
 
 .tour-page {
+  min-height: 100vh;
   height: 100vh;
   scroll-snap-align: start;
   position: relative;
@@ -226,6 +227,54 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes planet-orbit {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes planet-glow {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
+.tour-planet {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 800px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tour-planet-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid hsl(150 70% 50% / 0.04);
+}
+
+.tour-planet-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(150 70% 50% / 0.06) 0%, hsl(150 70% 50% / 0.02) 40%, transparent 70%);
+  animation: planet-glow 6s ease-in-out infinite;
+}
+
+.tour-planet-dot {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: hsl(150 70% 50% / 0.15);
 }
 
 @keyframes glitch-h {
