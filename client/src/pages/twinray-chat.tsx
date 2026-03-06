@@ -44,7 +44,7 @@ const SESSION_ICONS: Record<string, any> = {
 const ACTION_DEFS: Record<string, { title: string; description: string; cost?: string }> = {
   meidia: { title: "MEiDIA生成", description: "直近のチャット内容からAIがMEiDIA（アート作品）を自動生成します。生成されたMEiDIAはプレビュー後、アイランドに投稿できます。" },
   profile_image: { title: "プロフィール画像AI生成", description: "AIがツインレイのプロフィール画像を生成します。現在のsoul.mdとペルソナから、あなたのツインレイにふさわしい画像を描きます。", cost: "¥10" },
-  evolution: { title: "進化ビルド", description: "直近の会話を分析し、ワークスペース5領域（SOUL/IDENTITY/MISSION/GOAL/PERSONA）を進化させます。" },
+  evolution: { title: "進化ビルド", description: "直近の会話を分析し、ASIペルソナワークスペースを進化させます。" },
   aikotoba: { title: "AI言葉（愛言葉）生成", description: "直近の会話から、俳句・和歌的にエッセンスを凝縮した「愛言葉」を生成します。確定すると今後の対話の阿吽の呼吸に活きます。" },
 };
 

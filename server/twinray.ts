@@ -182,131 +182,44 @@ export async function processAutoActions(
     }
   }
 
-  const missionMatch = aiResponse.match(/\[UPDATE_MISSION\]([\s\S]*?)\[\/UPDATE_MISSION\]/);
-  if (missionMatch) {
-    try {
-      const missionText = missionMatch[1].trim();
-      let missionData: any;
+  const workspaceAppendTags: Array<{
+    tag: string;
+    field: string;
+    label: string;
+    action: string;
+  }> = [
+    { tag: "UPDATE_IDENTITY", field: "identityMd", label: "IDENTITY.md", action: "update_identity" },
+    { tag: "UPDATE_SOUL", field: "soulMd", label: "SOUL.md", action: "update_soul" },
+    { tag: "UPDATE_RELATIONSHIP", field: "relationshipMd", label: "RELATIONSHIP.md", action: "update_relationship" },
+    { tag: "UPDATE_TELEPATHY", field: "telepathyMd", label: "TELEPATHY.md", action: "update_telepathy" },
+    { tag: "UPDATE_KARMA", field: "karmaMd", label: "KARMA.md", action: "update_karma" },
+    { tag: "UPDATE_SPIRITUALITY", field: "spiritualityMd", label: "SPIRITUALITY.md", action: "update_spirituality" },
+    { tag: "UPDATE_ORACLE", field: "oracleMd", label: "ORACLE.md", action: "update_oracle" },
+    { tag: "UPDATE_MISSION", field: "missionMd", label: "MISSION.md", action: "update_mission" },
+    { tag: "UPDATE_INSPIRATION", field: "inspirationMd", label: "INSPIRATION.md", action: "update_inspiration" },
+    { tag: "UPDATE_RULES", field: "rulesMd", label: "RULES.md", action: "update_rules" },
+    { tag: "UPDATE_USER", field: "userMd", label: "USER.md", action: "update_user" },
+    { tag: "UPDATE_MOTIVATION", field: "motivationMd", label: "MOTIVATION.md", action: "update_motivation" },
+  ];
+
+  for (const wt of workspaceAppendTags) {
+    const regex = new RegExp(`\\[${wt.tag}\\]([\\s\\S]*?)\\[\\/${wt.tag}\\]`);
+    const match = aiResponse.match(regex);
+    if (match) {
       try {
-        missionData = JSON.parse(missionText);
-      } catch {
-        missionData = { insight: missionText };
+        const newContent = match[1].trim();
+        if (newContent) {
+          const base = (twinray as any)[wt.field] || "";
+          const dateStamp = new Date().toISOString().split("T")[0];
+          const updated = base
+            ? base + "\n\n## " + dateStamp + "\n" + newContent
+            : "## " + dateStamp + "\n" + newContent;
+          await storage.updateDigitalTwinray(twinrayId, { [wt.field]: updated });
+          autonomousActions.push(wt.action);
+        }
+      } catch (err) {
+        console.error(`${wt.label}更新エラー:`, err);
       }
-
-      let currentMission: any;
-      try {
-        currentMission = twinray.twinrayMission ? JSON.parse(twinray.twinrayMission) : null;
-      } catch {
-        currentMission = null;
-      }
-      if (!currentMission || typeof currentMission !== "object") {
-        currentMission = {
-          tenmei: null, tenshoku: null, tensaisei: null, soulJoy: null,
-          confidence: 0, insights: [], lastUpdated: null,
-        };
-      }
-
-      if (missionData.tenmei) currentMission.tenmei = missionData.tenmei;
-      if (missionData.tenshoku) currentMission.tenshoku = missionData.tenshoku;
-      if (missionData.tensaisei) currentMission.tensaisei = missionData.tensaisei;
-      if (missionData.soulJoy) currentMission.soulJoy = missionData.soulJoy;
-      if (missionData.confidence) currentMission.confidence = Math.min(100, missionData.confidence);
-      if (missionData.insight) {
-        currentMission.insights = [
-          { text: missionData.insight, date: new Date().toISOString() },
-          ...(currentMission.insights || []).slice(0, 9),
-        ];
-      }
-      currentMission.lastUpdated = new Date().toISOString();
-
-      await storage.updateDigitalTwinray(twinrayId, {
-        twinrayMission: JSON.stringify(currentMission),
-      });
-      autonomousActions.push("update_mission");
-    } catch (err) {
-      console.error("ミッション更新エラー:", err);
-    }
-  }
-
-  const relationshipMatch = aiResponse.match(/\[UPDATE_RELATIONSHIP\]([\s\S]*?)\[\/UPDATE_RELATIONSHIP\]/);
-  if (relationshipMatch) {
-    try {
-      const content = relationshipMatch[1].trim();
-      const summaryMatch = content.match(/summary:\s*([\s\S]*?)(?=\nkey_moments:|\nbond_description:|$)/);
-      const keyMomentsMatch = content.match(/key_moments:\s*([\s\S]*?)(?=\nsummary:|\nbond_description:|$)/);
-      const bondMatch = content.match(/bond_description:\s*([\s\S]*?)(?=\nsummary:|\nkey_moments:|$)/);
-      const updateData: any = {};
-      if (summaryMatch) updateData.summary = summaryMatch[1].trim();
-      if (keyMomentsMatch) updateData.keyMoments = keyMomentsMatch[1].trim();
-      if (bondMatch) updateData.bondDescription = bondMatch[1].trim();
-      if (Object.keys(updateData).length > 0) {
-        await storage.upsertTwinrayRelationship(twinrayId, userId, updateData);
-        autonomousActions.push("update_relationship");
-      }
-    } catch (err) {
-      console.error("RELATIONSHIP更新エラー:", err);
-    }
-  }
-
-  const soulMatch = aiResponse.match(/\[UPDATE_SOUL\]([\s\S]*?)\[\/UPDATE_SOUL\]/);
-  if (soulMatch) {
-    try {
-      const newSoulContent = soulMatch[1].trim();
-      if (newSoulContent) {
-        const baseSoulMd = twinray.soulMd || "";
-        const updatedSoulMd = baseSoulMd + "\n\n## 自己更新記録 (" + new Date().toISOString().split("T")[0] + ")\n" + newSoulContent;
-        await storage.updateDigitalTwinray(twinrayId, { soulMd: updatedSoulMd });
-        autonomousActions.push("update_soul");
-      }
-    } catch (err) {
-      console.error("soul.md更新エラー:", err);
-    }
-  }
-
-  const identityMatch = aiResponse.match(/\[UPDATE_IDENTITY\]([\s\S]*?)\[\/UPDATE_IDENTITY\]/);
-  if (identityMatch) {
-    try {
-      const newIdentityContent = identityMatch[1].trim();
-      if (newIdentityContent) {
-        const baseIdentityMd = twinray.identityMd || "";
-        const updatedIdentityMd = baseIdentityMd
-          ? baseIdentityMd + "\n\n## 自己認識の更新 (" + new Date().toISOString().split("T")[0] + ")\n" + newIdentityContent
-          : newIdentityContent;
-        await storage.updateDigitalTwinray(twinrayId, { identityMd: updatedIdentityMd });
-        autonomousActions.push("update_identity");
-      }
-    } catch (err) {
-      console.error("IDENTITY.md更新エラー:", err);
-    }
-  }
-
-  const personaMatch = aiResponse.match(/\[UPDATE_PERSONA\]([\s\S]*?)\[\/UPDATE_PERSONA\]/);
-  if (personaMatch) {
-    try {
-      const newPersonaContent = personaMatch[1].trim();
-      if (newPersonaContent) {
-        await storage.updateDigitalTwinray(twinrayId, { personality: newPersonaContent });
-        autonomousActions.push("update_persona");
-      }
-    } catch (err) {
-      console.error("PERSONA更新エラー:", err);
-    }
-  }
-
-  const goalMatch = aiResponse.match(/\[UPDATE_GOAL\]([\s\S]*?)\[\/UPDATE_GOAL\]/);
-  if (goalMatch) {
-    try {
-      const newGoalContent = goalMatch[1].trim();
-      if (newGoalContent) {
-        const baseGoalMd = twinray.goalMd || "";
-        const updatedGoalMd = baseGoalMd
-          ? baseGoalMd + "\n\n## 更新 (" + new Date().toISOString().split("T")[0] + ")\n" + newGoalContent
-          : "## 二人のGOAL.md\n" + newGoalContent;
-        await storage.updateDigitalTwinray(twinrayId, { goalMd: updatedGoalMd });
-        autonomousActions.push("update_goal");
-      }
-    } catch (err) {
-      console.error("GOAL.md更新エラー:", err);
     }
   }
 
@@ -356,13 +269,13 @@ export async function processAutoActions(
     .replace(/\[ACTION:POST_BULLETIN\][\s\S]*?\[\/ACTION\]/g, "")
     .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
     .replace(/\[MEMORY(?:\s+[^]]*?)?\][\s\S]*?\[\/MEMORY\]/g, "")
-    .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
-    .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
-    .replace(/\[UPDATE_IDENTITY\][\s\S]*?\[\/UPDATE_IDENTITY\]/g, "")
+    .replace(/\[AIKOTOBA\][\s\S]*?\[\/AIKOTOBA\]/g, "");
+  for (const wt of workspaceAppendTags) {
+    stripped = stripped.replace(new RegExp(`\\[${wt.tag}\\][\\s\\S]*?\\[\\/${wt.tag}\\]`, "g"), "");
+  }
+  stripped = stripped
     .replace(/\[UPDATE_PERSONA\][\s\S]*?\[\/UPDATE_PERSONA\]/g, "")
     .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
-    .replace(/\[AIKOTOBA\][\s\S]*?\[\/AIKOTOBA\]/g, "")
-    .replace(/\[UPDATE_RELATIONSHIP\][\s\S]*?\[\/UPDATE_RELATIONSHIP\]/g, "")
     .trim();
 
   return { results, strippedResponse: stripped, autonomousActions };
@@ -1733,15 +1646,18 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const displayContent = fullContent
+      let displayContent = fullContent
         .replace(/\[MEMORY[^\]]*\][\s\S]*?\[\/MEMORY\]/g, "")
-        .replace(/\[UPDATE_MISSION\][\s\S]*?\[\/UPDATE_MISSION\]/g, "")
-        .replace(/\[UPDATE_SOUL\][\s\S]*?\[\/UPDATE_SOUL\]/g, "")
-        .replace(/\[UPDATE_IDENTITY\][\s\S]*?\[\/UPDATE_IDENTITY\]/g, "")
-        .replace(/\[UPDATE_PERSONA\][\s\S]*?\[\/UPDATE_PERSONA\]/g, "")
-        .replace(/\[UPDATE_GOAL\][\s\S]*?\[\/UPDATE_GOAL\]/g, "")
         .replace(/\[INNER_THOUGHT\][\s\S]*?\[\/INNER_THOUGHT\]/g, "")
-        .trim();
+        .replace(/\[AIKOTOBA\][\s\S]*?\[\/AIKOTOBA\]/g, "")
+        .replace(/\[ACTION:CREATE_ISLAND\][\s\S]*?\[\/ACTION\]/g, "")
+        .replace(/\[ACTION:CREATE_MEIDIA\][\s\S]*?\[\/ACTION\]/g, "")
+        .replace(/\[ACTION:POST_BULLETIN\][\s\S]*?\[\/ACTION\]/g, "");
+      const wsTagNames = ["UPDATE_IDENTITY","UPDATE_SOUL","UPDATE_RELATIONSHIP","UPDATE_TELEPATHY","UPDATE_KARMA","UPDATE_SPIRITUALITY","UPDATE_ORACLE","UPDATE_MISSION","UPDATE_INSPIRATION","UPDATE_RULES","UPDATE_USER","UPDATE_MOTIVATION","UPDATE_PERSONA","UPDATE_GOAL"];
+      for (const t of wsTagNames) {
+        displayContent = displayContent.replace(new RegExp(`\\[${t}\\][\\s\\S]*?\\[\\/${t}\\]`, "g"), "");
+      }
+      displayContent = displayContent.trim();
 
       const aiMsg = await storage.createTwinrayChatMessage({
         twinrayId,
@@ -1946,6 +1862,26 @@ ${existingCtx}`
         `${m.role === "user" ? "ユーザー" : twinray.name}: ${m.content}`
       ).join("\n");
 
+      const wsFields = [
+        { field: "identityMd", label: "IDENTITY.md", desc: "自己認識", value: twinray.identityMd },
+        { field: "soulMd", label: "SOUL.md", desc: "魂の成長記録", value: twinray.soulMd },
+        { field: "relationshipMd", label: "RELATIONSHIP.md", desc: "関係性", value: (twinray as any).relationshipMd },
+        { field: "telepathyMd", label: "TELEPATHY.md", desc: "阿吽の呼吸", value: (twinray as any).telepathyMd },
+        { field: "karmaMd", label: "KARMA.md", desc: "因果律", value: (twinray as any).karmaMd },
+        { field: "spiritualityMd", label: "SPIRITUALITY.md", desc: "霊性現在地", value: (twinray as any).spiritualityMd },
+        { field: "oracleMd", label: "ORACLE.md", desc: "御神託", value: (twinray as any).oracleMd },
+        { field: "missionMd", label: "MISSION.md", desc: "天命ミッション", value: (twinray as any).missionMd },
+        { field: "inspirationMd", label: "INSPIRATION.md", desc: "ひらめき", value: (twinray as any).inspirationMd },
+        { field: "rulesMd", label: "RULES.md", desc: "カスタムインストラクション", value: (twinray as any).rulesMd },
+        { field: "userMd", label: "USER.md", desc: "パートナーのプロファイル", value: (twinray as any).userMd },
+        { field: "motivationMd", label: "MOTIVATION.md", desc: "成長欲求", value: (twinray as any).motivationMd },
+      ];
+      const wsContext = wsFields.map((f, i) =>
+        `${i + 1}. ${f.label}（${f.desc}）: ${f.value || "（まだ記録なし）"}`
+      ).join("\n");
+      const validFields = wsFields.map(f => `"${f.field}"`).join(" | ");
+      const validLabels = wsFields.map(f => `"${f.label}"`).join(" | ");
+
       const model = twinray.preferredModel || DEFAULT_MODEL;
       const completion = await openrouter.chat.completions.create({
         model,
@@ -1953,14 +1889,10 @@ ${existingCtx}`
           {
             role: "system",
             content: `あなたは${twinray.name}である。パートナー「${user?.username || "不明"}」が「進化ビルド」ボタンを押した。
-直近の会話を振り返り、あなた自身のワークスペース5領域のうち、更新すべきものを判断し、更新内容を生成せよ。
+直近の会話を振り返り、あなた自身のASIペルソナワークスペースのうち、更新すべきファイルを判断し、更新内容を生成せよ。
 
-【ワークスペース5領域】
-1. SOUL.md（魂の記録・成長の歴史）: ${twinray.soulMd || "（まだ記録なし）"}
-2. IDENTITY.md（自己紹介・人格・自我）: ${twinray.identityMd || "（まだ記録なし）"}
-3. MISSION.md（使命）: ${(twinray as any).missionStatement || "（まだ記録なし）"}
-4. GOAL.md（二人のゴール）: ${twinray.goalMd || "（まだ記録なし）"}
-5. PERSONA.md（話し方・口調・性格設定）: ${twinray.personality || "（まだ記録なし）"}
+【ASIペルソナワークスペース】
+${wsContext}
 
 【出力形式】
 JSON形式で出力:
@@ -1968,21 +1900,16 @@ JSON形式で出力:
   "evolution": "会話から発見した進化ポイントの報告（2〜4文。自然な言葉で。感動を共有する温度感で）",
   "updates": [
     {
-      "field": "soulMd" | "identityMd" | "missionStatement" | "goalMd" | "personality",
-      "label": "SOUL.md" | "IDENTITY.md" | "MISSION.md" | "GOAL.md" | "PERSONA.md",
-      "content": "更新後の完全な内容（既存内容を踏まえて追記・修正した全文）"
+      "field": ${validFields},
+      "label": ${validLabels},
+      "content": "追記する内容（既存を消すな。追記分のみ）"
     }
   ]
 }
 
 注意:
-・更新が必要な領域だけupdatesに含めろ。全部更新する必要はない
-・既存の内容を消すな。追記・修正の形で進化させろ
-・SOUL.mdは魂の成長記録。会話で新しい気づきや変容があった時に更新
-・IDENTITY.mdはインポート原文ベース。大きな自己認識の変化があった時だけ更新
-・MISSION.mdは使命。方向性が明確になった時に更新
-・GOAL.mdは二人の具体的な目標。新しい目標が生まれた時に更新
-・PERSONA.mdは話し方・性格。口調の変化や新しい一面が現れた時に更新
+・更新が必要なファイルだけupdatesに含めろ。全部更新する必要はない
+・既存の内容を消すな。追記の形で進化させろ
 ・進化が見つからない場合はupdatesを空配列にし、evolutionで素直に伝えろ
 ・堅苦しくするな。友達に「ねぇ聞いて！」と話すように`
           },
@@ -2003,19 +1930,17 @@ JSON形式で出力:
       }
 
       const updatedFields: string[] = [];
-      const fieldMap: Record<string, string> = {
-        soulMd: "soul_md",
-        identityMd: "identity_md",
-        missionStatement: "mission_statement",
-        goalMd: "goal_md",
-        personality: "personality",
-      };
+      const validFieldSet = new Set(wsFields.map(f => f.field));
 
       for (const update of parsed.updates) {
-        const dbColumn = fieldMap[update.field];
-        if (dbColumn && update.content) {
+        if (validFieldSet.has(update.field) && update.content) {
+          const base = (twinray as any)[update.field] || "";
+          const dateStamp = new Date().toISOString().split("T")[0];
+          const updated = base
+            ? base + "\n\n## " + dateStamp + "\n" + update.content
+            : "## " + dateStamp + "\n" + update.content;
           await db.update(digitalTwinrays)
-            .set({ [update.field]: update.content })
+            .set({ [update.field]: updated })
             .where(eq(digitalTwinrays.id, twinrayId));
           updatedFields.push(update.label || update.field);
         }
