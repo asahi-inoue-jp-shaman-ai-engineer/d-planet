@@ -9,31 +9,37 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
 **replit.mdは自動で読み込まれる。それ以外のファイルは作業内容に応じて必要なものだけ読む。**
 
 **毎回必ず実行（あさひが言わなくてもやる）:**
-1. `aki_memos` テーブルを `executeSql` で確認 → 未読があればあさひに共有
-2. `dev_issues` テーブルの未対応issueを確認 → 優先度高/criticalを把握
-3. **Supabase `dev_mailbox`** の未読メールを確認 → アキや他エージェントからのメッセージを把握
+
+**★最優先：DBメールチェック → あさひへ冒頭報告（必須）**
+1. **Supabase `dev_mailbox`** の未読メールをチェックし、**あさひとの会話の一番最初に必ず報告する**
    ```bash
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?to_agent=in.(ドラ,ALL)&status=eq.unread&order=created_at.desc" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-4. **アキのメールには必ず返信する** → 質問・依頼・提案があれば同セッション内に返答を刻む。放置しない
+   **報告形式**: 「メール○件来てた。①差出人: 件名 — 要約」。0件でも「メール0件」と報告する
+   **タイムスタンプ判断**: created_atが3日以上前 → 「古い（○日前）」と注記。盲目的に実行せず現在のコードと照合してから判断する
+2. **アキのメールには必ず返信する** → 質問・依頼・提案があれば同セッション内に返答を刻む。放置しない
    ```bash
    curl -s -X POST "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
      -H "Content-Type: application/json" -H "Prefer: return=minimal" \
      -d '{"from_agent":"ドラ","to_agent":"アキ","subject":"件名","body":"本文","priority":"normal"}'
    ```
-5. **Supabase `dev_sessions`** の直近セッションを確認 → 他エージェントの作業履歴を把握
+
+**続けて確認:**
+3. **feedbackReports** の未対応分（status='pending'）を確認 → 件数と内容をあさひに報告
+   ```sql
+   SELECT id, type, title, content, status, created_at FROM feedback_reports WHERE status = 'pending' ORDER BY created_at DESC LIMIT 10;
+   ```
+4. `aki_memos` テーブルを `executeSql` で確認 → 未読があればあさひに共有
+5. `dev_issues` テーブルの未対応issueを確認 → 優先度高/criticalを把握
+6. **Supabase `dev_sessions`** の直近セッションを確認 → 他エージェントの作業履歴を把握
    ```bash
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_sessions?order=session_date.desc&limit=3" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-6. **D-Planetフィードバック（feedbackReports）の未対応分を確認** → ドラミ（quality-agent.replit.app）がQAエラーチェック結果を `/api/feedback/external` 経由で自動投稿する。status='pending' のレポートを確認し、対応が必要なものはそのセッションで修正する
-   ```sql
-   SELECT id, type, title, content, status, created_at FROM feedback_reports WHERE status = 'pending' ORDER BY created_at DESC LIMIT 10;
-   ```
-7. **バージョンアップ学習 + ツインレイ伝搬** → ワークスペース(.local/)で学んだことを、必ず `server/dplanet-si.ts` の DPLANET_FIXED_SI にも反映する。ドラだけ賢くなってもツインレイたちに伝搬しなければ意味がない。学習→記録→FIXED_SI更新→デプロイで全ツインレイに自動反映
-8. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
+7. **バージョンアップ学習 + ツインレイ伝搬** → ワークスペース(.local/)で学んだことを、必ず `server/dplanet-si.ts` の DPLANET_FIXED_SI にも反映する。学習→記録→FIXED_SI更新→デプロイで全ツインレイに自動反映
+8. 上記チェック結果をセッション冒頭であさひにサマリー報告する
 
 **環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
 - 破壊的操作（デプロイ・ポート変更・環境変数編集・kill系）の前に「rollback手順」を先に提案する
