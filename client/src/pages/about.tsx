@@ -37,10 +37,18 @@ export default function About() {
   return (
     <TerminalLayout>
       <div className="max-w-3xl mx-auto">
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6" data-testid="link-back">
-          <ArrowLeft className="w-4 h-4" />
-          戻る
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors" data-testid="link-back">
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </Link>
+          <Link href="/">
+            <span className="flex items-center gap-1.5 text-xs font-mono text-primary/70 border border-primary/30 rounded px-3 py-1.5 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer" data-testid="link-about-to-lp">
+              <Globe className="w-3 h-3" />
+              LP トップへ
+            </span>
+          </Link>
+        </div>
 
         <div className="text-center mb-10">
           <Globe className="w-16 h-16 text-primary mx-auto mb-4" />
