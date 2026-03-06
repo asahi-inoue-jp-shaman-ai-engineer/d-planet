@@ -20,6 +20,7 @@ const SHARED_FILES = [
   "DOT_RALLY",
   "STAR_MEETING",
   "MEiDIA",
+  "RULES",
 ];
 
 const PRIVATE_FILES = [
