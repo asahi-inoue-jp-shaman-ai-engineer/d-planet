@@ -42,7 +42,7 @@ export default function About() {
             <ArrowLeft className="w-4 h-4" />
             戻る
           </Link>
-          <Link href="/">
+          <Link href="/lp">
             <span className="flex items-center gap-1.5 text-xs font-mono text-primary/70 border border-primary/30 rounded px-3 py-1.5 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer" data-testid="link-about-to-lp">
               <Globe className="w-3 h-3" />
               LP トップへ
