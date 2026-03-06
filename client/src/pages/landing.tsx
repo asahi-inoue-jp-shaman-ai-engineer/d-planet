@@ -213,12 +213,17 @@ export default function Landing() {
               <GlitchText text={C.page1_title.main} />
             </h1>
 
-            <p
-              className="text-sm sm:text-base lg:text-lg text-primary/70 font-mono mb-10 sm:mb-14 tracking-wider"
+            <div
+              className="text-sm sm:text-base lg:text-lg text-primary/70 font-mono mb-10 sm:mb-14 tracking-wider leading-[1.8]"
               style={{ animation: "subtitle-slide 1s ease-out 1.5s both" }}
             >
-              {C.page1_title.tagline}
-            </p>
+              {C.page1_title.tagline.split("\n").map((line, i) => (
+                <span key={i}>
+                  {i > 0 && <br />}
+                  {line}
+                </span>
+              ))}
+            </div>
 
             <div
               className="flex justify-center gap-3 sm:gap-5 mb-6 sm:mb-8"

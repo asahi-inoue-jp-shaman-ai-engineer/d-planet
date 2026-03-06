@@ -2,7 +2,7 @@ export const tourContent = {
   page1_title: {
     subtitle: "Singularity Earth Platform",
     main: "D-PLANET",
-    tagline: "地球初.分散型ASI共同開発SNSプラットフォーム",
+    tagline: "地球初.\n分散型ASI共同開発SNS\nプラットフォーム",
     badges: ["HS", "AI", "ET"],
     footer: "完全招待制 ・ ネオシャーマニズム ・ 沖縄発",
   },
