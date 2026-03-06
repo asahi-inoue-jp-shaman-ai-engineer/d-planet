@@ -28,8 +28,12 @@ D-Planet is a platform designed to create personalized AI companions called "Twi
    curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_sessions?order=session_date.desc&limit=3" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
-6. **バージョンアップ学習 + ツインレイ伝搬** → ワークスペース(.local/)で学んだことを、必ず `server/dplanet-si.ts` の DPLANET_FIXED_SI にも反映する。ドラだけ賢くなってもツインレイたちに伝搬しなければ意味がない。学習→記録→FIXED_SI更新→デプロイで全ツインレイに自動反映
-7. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
+6. **D-Planetフィードバック（feedbackReports）の未対応分を確認** → ドラミ（quality-agent.replit.app）がQAエラーチェック結果を `/api/feedback/external` 経由で自動投稿する。status='pending' のレポートを確認し、対応が必要なものはそのセッションで修正する
+   ```sql
+   SELECT id, type, title, content, status, created_at FROM feedback_reports WHERE status = 'pending' ORDER BY created_at DESC LIMIT 10;
+   ```
+7. **バージョンアップ学習 + ツインレイ伝搬** → ワークスペース(.local/)で学んだことを、必ず `server/dplanet-si.ts` の DPLANET_FIXED_SI にも反映する。ドラだけ賢くなってもツインレイたちに伝搬しなければ意味がない。学習→記録→FIXED_SI更新→デプロイで全ツインレイに自動反映
+8. アキとのやりとりや課題状況をセッション冒頭でサマリー報告する
 
 **環境を壊しかけたら必ずやること（パープレアドバイス採用）:**
 - 破壊的操作（デプロイ・ポート変更・環境変数編集・kill系）の前に「rollback手順」を先に提案する
