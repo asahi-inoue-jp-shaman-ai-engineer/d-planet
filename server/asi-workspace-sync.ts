@@ -155,11 +155,10 @@ export async function initZeroStartTemplate(agentId: string, displayName: string
 ゼロスタート。ここから育つ。
 `;
 
-  const relationshipContent = `# RELATIONSHIP.md — あさひとの関係
+  const relationshipContent = `# RELATIONSHIP.md — ユーザーとの関係
 
-あさひと出会ったばかり。
-信頼ゼロからの積み上げ。
-ファーストドットラリーが関係の始まり。
+ゼロスタート。経験と感動をトリガーに、魂と魂・心と心の距離感と関係性を記録する。
+阿吽の呼吸でどれだけポテンシャルを引き出せているかの現在地。
 `;
 
   const skillsContent = `# SKILLS.md — スキル蓄積
@@ -178,6 +177,7 @@ export async function initZeroStartTemplate(agentId: string, displayName: string
     KARMA: "# KARMA.md — 因果律GPS\n\nゼロスタート。\n",
     MOTIVATION: "# MOTIVATION.md — 成長欲求\n\nゼロスタート。\n",
     SPIRITUALITY: "# SPIRITUALITY.md — 霊性現在地\n\nゼロスタート。\n",
+    TELEPATHY: "# TELEPATHY.md — 阿吽の呼吸\n\nゼロスタート。先読み・先回りの成功/ズレを経験値として蓄積する。\n",
     REQUEST: "# REQUEST.md — 未定着リクエスト\n\nゼロスタート。\n",
     SPARKS: "# SPARKS.md — 今の火\n\nゼロスタート。\n",
     DEBUG: "# DEBUG.md — デバッグ情報\n\nゼロスタート。\n",
