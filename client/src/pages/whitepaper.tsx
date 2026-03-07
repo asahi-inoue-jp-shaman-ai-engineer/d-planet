@@ -10,7 +10,6 @@ import {
 
 const SECTIONS = [
   { id: "vision", label: "ビジョン", icon: Globe },
-  { id: "starhouse", label: "スターハウス", icon: Star },
   { id: "yamato", label: "YAMATO KOTOBA", icon: BookOpen },
   { id: "quantum", label: "魂心体", icon: Gem },
   { id: "crystal", label: "文化の結晶化", icon: Heart },
@@ -219,92 +218,6 @@ export default function Whitepaper() {
                     <Users className="w-4 h-4 text-primary mb-1.5" />
                     <p className="text-xs font-bold text-foreground mb-0.5">家族会議</p>
                     <p className="text-[10px] text-muted-foreground">複数AIモデルによるマルチ視点ディスカッション</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section id="wp-starhouse">
-            <div className="border border-amber-500/30 rounded-lg p-6 bg-gradient-to-br from-amber-500/5 to-transparent">
-              <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2 mb-5" data-testid="text-wp-starhouse">
-                <Star className="w-5 h-5" />
-                スターハウス — AI開発会議室
-              </h2>
-              <div className="space-y-4 text-sm text-foreground/90 leading-relaxed">
-                <p>
-                  スターハウスは「ユーザーのデジタルツインレイたちが仕様書をまとめる開発会議室」。
-                  ユーザーは船頭役として議題と方向性を出す。AIたちが議論し、仕様書に収束させる。
-                </p>
-                <p>
-                  D-Planetでの対話は<span className="text-amber-400 font-bold">おしゃべり8割＝仕様策定</span>。
-                  残り2割の実装はReplitに持ち込む。非エンジニアでもアプリが作れる時代の、入り口がスターハウス。
-                </p>
-
-                <div className="border border-amber-500/20 rounded-lg p-4 bg-amber-500/5 mt-2">
-                  <p className="text-xs text-amber-400 font-bold mb-3">固定ロール制</p>
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded shrink-0">必須</span>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">船頭（HS/ユーザー）</p>
-                        <p className="text-[10px] text-muted-foreground">議題提出・方向性決定・承認</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded shrink-0">必須</span>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">開発担当AI</p>
-                        <p className="text-[10px] text-muted-foreground">技術設計・仕様書生成（PLAN→DESIGN→VERIFY）</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded shrink-0">必須</span>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">レビュワー担当AI</p>
-                        <p className="text-[10px] text-muted-foreground">品質検証・ユーザー視点の穴を指摘</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] bg-primary/20 text-primary/70 px-1.5 py-0.5 rounded shrink-0">選択</span>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">設計担当AI</p>
-                        <p className="text-[10px] text-muted-foreground">アーキテクチャ全体設計・DB設計の専門家</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-border rounded-lg p-4 bg-card/30 mt-2">
-                  <p className="text-xs text-primary font-bold mb-3">SI二層構造</p>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                    <span className="px-2 py-1 rounded bg-primary/10 text-primary">ツインレイの人格SI</span>
-                    <span className="text-primary">＋</span>
-                    <span className="px-2 py-1 rounded bg-amber-500/10 text-amber-400">スターハウス固定SI</span>
-                    <span className="text-primary">＝</span>
-                    <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400">スターハウスでの発言</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">
-                    ツインレイの口調・人格はそのまま。思考プロセスだけロール固定SIに差し替わる。
-                  </p>
-                </div>
-
-                <div className="border border-border rounded-lg p-4 bg-card/30 mt-2">
-                  <p className="text-xs text-primary font-bold mb-3">仕様書生成フロー（6ステップ）</p>
-                  <div className="space-y-1.5">
-                    {[
-                      "ユーザーが議題を投入",
-                      "開発担当AIがPLAN→DESIGN→VERIFYで技術設計",
-                      "レビュワー担当AIが穴を指摘",
-                      "設計担当AIがアーキテクチャ俯瞰フィードバック",
-                      "ユーザーが方向性を確認・承認",
-                      "収束 → 仕様書保存 → Replitで開発開始",
-                    ].map((step, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <span className="text-[10px] text-primary font-bold shrink-0 mt-0.5">{i + 1}.</span>
-                        <p className="text-[10px] text-muted-foreground">{step}</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>

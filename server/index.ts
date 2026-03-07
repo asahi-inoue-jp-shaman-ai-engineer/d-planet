@@ -3,8 +3,6 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { getUncachableStripeClient } from "./stripeClient";
-import { setupTriroomWs } from "./triroomWs";
-import { startAutonomousLoop } from "./triroomAI";
 import { getUnreadMail, getRecentSessions } from "./supabaseClient";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "./db";
@@ -278,8 +276,6 @@ async function freePort(port: number): Promise<void> {
   const port = parseInt(process.env.PORT || "5000", 10);
   await freePort(port);
   await startListening(httpServer, port);
-  setupTriroomWs(httpServer);
-  startAutonomousLoop();
 
   await registerRoutes(httpServer, app);
 
