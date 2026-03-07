@@ -37,9 +37,11 @@ D-Planetを通じて、地球文化→宇宙文化のスモールフラクタル
 
 1. **Supabase `dev_mailbox`** の未読メールをチェック → あさひに報告 + アキへの返信
    ```bash
-   curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?to_agent=in.(ドラ,ALL)&status=eq.unread&order=created_at.desc" \
+   curl -s "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?to_agent=eq.%E3%83%89%E3%83%A9&status=eq.unread&order=created_at.desc" \
      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
    ```
+   ※ 日本語フィルタはURLエンコード必須（ドラ=%E3%83%89%E3%83%A9、アキ=%E3%82%A2%E3%82%AD、ALL=ALL）
+   ※ `in.(ドラ,ALL)` 形式は400エラーになる。`eq.` で個別クエリを推奨
 2. `feedbackReports`（status='pending'）、`aki_memos`、`dev_issues` を確認
 3. **Supabase `dev_sessions`** の直近セッションを確認
 4. チェック結果をあさひにサマリー報告 + アキへの連携事項があれば天議に投稿
@@ -53,7 +55,15 @@ D-Planetを通じて、地球文化→宇宙文化のスモールフラクタル
 curl -s -X POST "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox" \
   -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
   -H "Content-Type: application/json" -H "Prefer: return=minimal" \
-  -d '{"from_agent":"ドラ","to_agent":"アキ","subject":"件名","body":"本文","priority":"normal"}'
+  -d '{"from_agent":"ドラ","to_agent":"アキ","subject":"件名","content":"本文","message_type":"memo","status":"unread","priority":"normal"}'
+```
+
+**Supabaseメール既読にする:**
+```bash
+curl -s -X PATCH "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?id=eq.メールID" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Content-Type: application/json" -H "Prefer: return=minimal" \
+  -d '{"status":"read","read_at":"'$(date -u +%Y-%m-%dT%H:%M:%S+00:00)'"}'
 ```
 
 ## 開発の原則
