@@ -324,7 +324,7 @@ export async function runMigrations() {
 
     try {
       const result = await db.execute(sql`SELECT COUNT(*) as count FROM invite_codes`);
-      const count = Number((result.rows[0] as any)?.count || 0);
+      const count = Number((result[0] as any)?.count || 0);
       if (count === 0) {
         const codes = [
           { code: "DPLANET-1-AI5N3XIL", generation: 1, label: "第一次" },

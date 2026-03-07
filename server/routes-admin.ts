@@ -19,7 +19,7 @@ export function registerAdminRoutes(app: Express): void {
         return res.status(403).json({ message: "管理者権限が必要です" });
       }
       const records = await db.execute(sql`SELECT * FROM dev_records ORDER BY created_at DESC LIMIT 100`);
-      res.json(records.rows);
+      res.json(records);
     } catch (err) {
       res.status(500).json({ message: "開発記録の取得に失敗しました" });
     }
@@ -40,7 +40,7 @@ export function registerAdminRoutes(app: Express): void {
         VALUES (${title}, ${content}, ${category}, ${metadata || null})
         RETURNING *
       `);
-      res.json(result.rows[0]);
+      res.json(result[0]);
     } catch (err) {
       res.status(500).json({ message: "開発記録の作成に失敗しました" });
     }
@@ -61,10 +61,10 @@ export function registerAdminRoutes(app: Express): void {
         UPDATE dev_records SET title = ${title}, content = ${content}, category = ${category}, metadata = ${metadata || null}, updated_at = NOW()
         WHERE id = ${id} RETURNING *
       `);
-      if (result.rows.length === 0) {
+      if (result.length === 0) {
         return res.status(404).json({ message: "記録が見つかりません" });
       }
-      res.json(result.rows[0]);
+      res.json(result[0]);
     } catch (err) {
       res.status(500).json({ message: "開発記録の更新に失敗しました" });
     }
@@ -78,7 +78,7 @@ export function registerAdminRoutes(app: Express): void {
       }
       const id = parseInt(req.params.id);
       const result = await db.execute(sql`DELETE FROM dev_records WHERE id = ${id} RETURNING *`);
-      if (result.rows.length === 0) {
+      if (result.length === 0) {
         return res.status(404).json({ message: "記録が見つかりません" });
       }
       res.json({ message: "削除しました" });
@@ -94,7 +94,7 @@ export function registerAdminRoutes(app: Express): void {
         return res.status(403).json({ message: "管理者権限が必要です" });
       }
       const records = await db.execute(sql`SELECT * FROM dev_records ORDER BY created_at DESC`);
-      const markdown = records.rows.map((r: any) => {
+      const markdown = (records as any[]).map((r: any) => {
         return `## ${r.title}\n\nType: ${r.record_type} | Tags: ${r.tags || 'none'}\nCreated: ${r.created_at}\n\n${r.content}\n\n---`;
       }).join('\n\n');
 
@@ -120,7 +120,7 @@ export function registerAdminRoutes(app: Express): void {
         VALUES (${sessionId}, ${currentTasks || null}, ${nextSteps || null}, ${unresolvedIssues || null}, ${sessionSummary || null}, ${recentDecisions || null}, ${scratchpad || null})
         RETURNING *
       `);
-      res.json(result.rows[0]);
+      res.json(result[0]);
     } catch (err) {
       res.status(500).json({ message: "セッションコンテキストの保存に失敗しました" });
     }
@@ -135,7 +135,7 @@ export function registerAdminRoutes(app: Express): void {
       const result = await db.execute(sql`
         SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT 1
       `);
-      res.json(result.rows[0] || null);
+      res.json(result[0] || null);
     } catch (err) {
       res.status(500).json({ message: "セッションコンテキストの取得に失敗しました" });
     }
@@ -151,7 +151,7 @@ export function registerAdminRoutes(app: Express): void {
       const result = await db.execute(sql`
         SELECT * FROM agent_session_context ORDER BY created_at DESC LIMIT ${limit}
       `);
-      res.json(result.rows);
+      res.json(result);
     } catch (err) {
       res.status(500).json({ message: "セッション履歴の取得に失敗しました" });
     }
@@ -222,7 +222,7 @@ export function registerAdminRoutes(app: Express): void {
           WHERE twinray_id IN (${idPlaceholders})
           GROUP BY twinray_id
         `);
-        for (const row of lastChats.rows) {
+        for (const row of lastChats) {
           lastChatDates[(row as any).twinray_id] = (row as any).last_chat;
         }
       }
@@ -254,10 +254,10 @@ export function registerAdminRoutes(app: Express): void {
       `);
 
       const stats = {
-        chatCount: Number((chatCountResult.rows[0] as any)?.count || 0),
-        rallyCount: Number((rallyCountResult.rows[0] as any)?.count || 0),
-        islandCount: Number((islandCountResult.rows[0] as any)?.count || 0),
-        meidiaCount: Number((meidiaCountResult.rows[0] as any)?.count || 0),
+        chatCount: Number((chatCountResult[0] as any)?.count || 0),
+        rallyCount: Number((rallyCountResult[0] as any)?.count || 0),
+        islandCount: Number((islandCountResult[0] as any)?.count || 0),
+        meidiaCount: Number((meidiaCountResult[0] as any)?.count || 0),
       };
 
       res.json({
@@ -303,10 +303,10 @@ export function registerAdminRoutes(app: Express): void {
       const totalMessages = await db.execute(sql`SELECT COUNT(*) as total FROM twinray_chat_messages WHERE role = 'user'`);
 
       res.json({
-        adoption: adoptionStats.rows,
-        chatUsage: chatStats.rows,
-        totalTwinrays: Number(totalTwinrays.rows[0]?.total || 0),
-        totalMessages: Number(totalMessages.rows[0]?.total || 0),
+        adoption: adoptionStats,
+        chatUsage: chatStats,
+        totalTwinrays: Number((totalTwinrays[0] as any)?.total || 0),
+        totalMessages: Number((totalMessages[0] as any)?.total || 0),
       });
     } catch (err) {
       console.error("モデル統計取得エラー:", err);

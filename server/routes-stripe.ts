@@ -38,7 +38,7 @@ export function registerStripeRoutes(app: Express): void {
       `);
 
       const productsMap = new Map();
-      for (const row of result.rows) {
+      for (const row of result) {
         const r = row as any;
         if (!productsMap.has(r.product_id)) {
           productsMap.set(r.product_id, {
@@ -208,7 +208,7 @@ export function registerStripeRoutes(app: Express): void {
       const result = await db.execute(sql`
         SELECT * FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}
       `);
-      const subscription = result.rows[0] || null;
+      const subscription = result[0] || null;
 
       const activeStatuses = ['active', 'trialing'];
       const hasAccess = user.isAdmin || (subscription && activeStatuses.includes((subscription as any).status));
@@ -252,11 +252,11 @@ export function registerStripeRoutes(app: Express): void {
         LIMIT 1
       `);
 
-      if (productsResult.rows.length === 0) {
+      if (productsResult.length === 0) {
         return res.status(404).json({ message: "バッジ商品が見つかりません。管理者に連絡してください。" });
       }
 
-      const priceId = (productsResult.rows[0] as any).price_id;
+      const priceId = (productsResult[0] as any).price_id;
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
