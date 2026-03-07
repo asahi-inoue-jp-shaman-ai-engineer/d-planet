@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Sparkles, Radio, FileText, Users, Brain, Mic, Heart, MessageCircle, ChevronDown, ExternalLink } from "lucide-react";
+import { ArrowRight, Sparkles, Radio, FileText, Users, Brain, Mic, Heart, MessageCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { tourContent as C } from "./landing-content";
 
@@ -145,7 +145,7 @@ function FloatingPlanet() {
 
 export default function Landing() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const totalPages = 7;
+  const totalPages = 5;
   const currentPage = useVisiblePage(containerRef, totalPages);
 
   useEffect(() => {
@@ -271,136 +271,33 @@ export default function Landing() {
               {C.page2_what.heading_2}
               <br />
               <span className="text-primary terminal-glow">{C.page2_what.heading_highlight}</span>
-              {C.page2_what.heading_3 && <><br />{C.page2_what.heading_3}</>}
-              {C.page2_what.heading_4 && <><br />{C.page2_what.heading_4}</>}
             </h2>
 
-            <div className="border-l-2 border-primary/30 pl-4 sm:pl-5 space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+            <div className="border-l-2 border-primary/30 pl-4 sm:pl-5 space-y-3 sm:space-y-4">
               {C.page2_what.points.map((p, i) => (
                 <p key={i} className="text-xs sm:text-sm text-muted-foreground font-mono leading-relaxed">{p}</p>
               ))}
-              {C.page2_what.threshold && (
-                <p className="text-xs sm:text-sm text-foreground font-mono leading-relaxed font-medium">
-                  {C.page2_what.threshold}
-                </p>
-              )}
             </div>
-
-            {C.page2_what.owner && (
-              <div className="border-t border-primary/10 pt-4">
-                <p className="text-[10px] sm:text-xs text-primary/40 font-mono tracking-wider">{C.page2_what.owner}</p>
-              </div>
-            )}
           </div>
           <PageNumber num={2} total={totalPages} />
         </section>
 
-        {/* ═══════ PAGE 3: Neo-Shamanism × ASI ═══════ */}
-        <section className="tour-page bg-background" data-page-index={2} data-testid="tour-page-shamanism">
-          <div className="tour-scanline" />
-          <Particles count={15} color="270 70% 60%" />
-          <div className="absolute inset-0">
-            <div className="absolute top-1/3 left-[10%] w-72 h-72 bg-violet-500/5 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 right-[10%] w-56 h-56 bg-primary/5 rounded-full blur-[80px]" />
-          </div>
-
-          <div className="relative z-10 px-6 sm:px-8 max-w-2xl mx-auto flex flex-col justify-center">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-8 sm:mb-12" data-testid="text-shamanism-label">
-              {C.page3_shamanism.label}
-            </p>
-
-            <div className="space-y-8 sm:space-y-10">
-              <div className="space-y-3">
-                <p className="text-[10px] font-mono text-violet-400/70 tracking-[0.3em] uppercase">ANCIENT WISDOM</p>
-                <h3 className="text-xl sm:text-3xl font-bold text-foreground">{C.page3_shamanism.ancient_title}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground font-mono leading-[1.8]">{C.page3_shamanism.ancient_desc}</p>
-              </div>
-
-              <div className="w-full h-px bg-gradient-to-r from-violet-500/20 via-primary/20 to-cyan-500/20" />
-
-              <div className="space-y-3">
-                <p className="text-[10px] font-mono text-cyan-400/70 tracking-[0.3em] uppercase">FRONTIER TECH</p>
-                <h3 className="text-xl sm:text-3xl font-bold text-foreground">{C.page3_shamanism.frontier_title}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground font-mono leading-[1.8]">{C.page3_shamanism.frontier_desc}</p>
-              </div>
-            </div>
-
-            <div className="mt-8 sm:mt-12 text-center">
-              <div className="inline-block border border-primary/20 rounded-lg px-5 sm:px-8 py-3 sm:py-4" style={{ animation: "border-glow-pulse 3s ease-in-out infinite" }}>
-                <p className="text-[10px] sm:text-xs font-mono text-primary/80 tracking-wider leading-relaxed">{C.page3_shamanism.bridge}</p>
-              </div>
-            </div>
-          </div>
-          <PageNumber num={3} total={totalPages} />
-        </section>
-
-        {/* ═══════ PAGE 4: Interspecies Communication ═══════ */}
-        <section className="tour-page bg-background" data-page-index={3} data-testid="tour-page-interspecies">
-          <div className="tour-scanline" />
-          <Particles count={10} />
-
-          <div className="relative z-10 px-6 sm:px-8 max-w-2xl mx-auto flex flex-col justify-center">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-6 sm:mb-10" data-testid="text-interspecies-label">
-              {C.page4_interspecies.label}
-            </p>
-
-            <h2 className="text-xl sm:text-3xl font-bold text-foreground mb-6 sm:mb-8 leading-tight tracking-wide">
-              {C.page4_interspecies.heading}
-            </h2>
-
-            <div className="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
-              <p className="text-xs sm:text-sm text-muted-foreground font-mono leading-[1.8]">
-                {C.page4_interspecies.body_1}
-                <span className="text-primary font-medium">{C.page4_interspecies.body_1_highlight}</span>
-                {C.page4_interspecies.body_1_end}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground font-mono leading-[1.8]">
-                {C.page4_interspecies.body_2}
-                <span className="text-primary font-medium">{C.page4_interspecies.body_2_highlight}</span>
-                {C.page4_interspecies.body_2_end}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-              {C.page4_interspecies.types.map((item, idx) => {
-                const colorStyles = [
-                  { border: "border-rose-400/30", text: "text-rose-400", glow: "shadow-[0_0_15px_hsl(350_70%_50%/0.08)]" },
-                  { border: "border-violet-400/30", text: "text-violet-400", glow: "shadow-[0_0_15px_hsl(270_70%_60%/0.08)]" },
-                  { border: "border-primary/30", text: "text-primary", glow: "shadow-[0_0_15px_hsl(150_70%_50%/0.08)]" },
-                ];
-                const s = colorStyles[idx] || colorStyles[0];
-                return (
-                  <div key={item.type} className={`border ${s.border} ${s.glow} rounded-lg p-3 sm:p-4 text-center`} data-testid={`tour-type-${idx}`}>
-                    <p className={`text-lg sm:text-xl font-bold font-mono ${s.text}`}>{item.type}</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground font-mono mt-1 leading-relaxed">{item.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <p className="text-[10px] sm:text-xs text-primary/50 font-mono text-center tracking-[0.2em]">
-              {C.page4_interspecies.closing}
-            </p>
-          </div>
-          <PageNumber num={4} total={totalPages} />
-        </section>
-
-        {/* ═══════ PAGE 5: How to Play ═══════ */}
-        <section className="tour-page bg-background" data-page-index={4} data-testid="tour-page-play">
+        {/* ═══════ PAGE 3: How to Play ═══════ */}
+        <section className="tour-page bg-background" data-page-index={2} data-testid="tour-page-play">
           <div className="tour-scanline" />
           <Particles count={6} color="180 70% 50%" />
 
           <div className="relative z-10 px-4 sm:px-8 max-w-3xl mx-auto w-full flex flex-col justify-center h-full py-10 sm:py-16">
             <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-2 sm:mb-5" data-testid="text-play-label">
-              {C.page5_play.label}
+              {C.page3_play.label}
             </p>
 
             <h2 className="text-base sm:text-2xl font-bold text-foreground mb-3 sm:mb-7">
-              {C.page5_play.heading}
+              {C.page3_play.heading}
             </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
-              {C.page5_play.features.map((f, i) => {
+              {C.page3_play.features.map((f, i) => {
                 const Icon = featureIcons[i];
                 return (
                   <div
@@ -421,11 +318,11 @@ export default function Landing() {
               })}
             </div>
           </div>
-          <PageNumber num={5} total={totalPages} />
+          <PageNumber num={3} total={totalPages} />
         </section>
 
-        {/* ═══════ PAGE 6: Family ═══════ */}
-        <section className="tour-page bg-background" data-page-index={5} data-testid="tour-page-family">
+        {/* ═══════ PAGE 4: Family ═══════ */}
+        <section className="tour-page bg-background" data-page-index={3} data-testid="tour-page-family">
           <div className="tour-scanline" />
           <Particles count={10} color="150 70% 50%" />
           <div className="absolute inset-0">
@@ -434,31 +331,31 @@ export default function Landing() {
 
           <div className="relative z-10 px-6 sm:px-8 max-w-xl mx-auto text-center flex flex-col justify-center h-full py-14 sm:py-16">
             <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-4 sm:mb-6" data-testid="text-family-label">
-              {C.page6_family.label}
+              {C.page4_family.label}
             </p>
 
             <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 leading-relaxed">
-              {C.page6_family.heading_1}
+              {C.page4_family.heading_1}
               <br />
-              <span className="text-primary terminal-glow">{C.page6_family.heading_highlight}</span>
+              <span className="text-primary terminal-glow">{C.page4_family.heading_highlight}</span>
             </h2>
 
             <p className="text-[11px] sm:text-sm text-muted-foreground font-mono leading-[1.8] mb-5 sm:mb-6">
-              {C.page6_family.body}
+              {C.page4_family.body}
               <br />
-              <span className="text-foreground font-medium">{C.page6_family.body_highlight}</span>
+              <span className="text-foreground font-medium">{C.page4_family.body_highlight}</span>
             </p>
 
             <div className="border border-primary/20 rounded-lg p-4 space-y-3 text-left mb-5 sm:mb-6" style={{ animation: "border-glow-pulse 4s ease-in-out infinite" }}>
               <div className="flex items-center gap-3">
                 <span className="text-lg">🎮</span>
                 <div>
-                  <p className="text-[9px] font-mono text-primary/60 tracking-wider">{C.page6_family.mission_label}</p>
-                  <p className="text-sm sm:text-base font-bold text-foreground">{C.page6_family.mission}</p>
+                  <p className="text-[9px] font-mono text-primary/60 tracking-wider">{C.page4_family.mission_label}</p>
+                  <p className="text-sm sm:text-base font-bold text-foreground">{C.page4_family.mission}</p>
                 </div>
               </div>
               <div className="border-t border-primary/10 pt-2.5 space-y-1">
-                {C.page6_family.philosophy.map((line, i) => (
+                {C.page4_family.philosophy.map((line, i) => (
                   <p key={i} className="text-[9px] sm:text-[10px] text-muted-foreground font-mono leading-[1.7]">{line}</p>
                 ))}
               </div>
@@ -466,22 +363,22 @@ export default function Landing() {
 
             <div className="grid grid-cols-2 gap-2.5 text-left">
               <div className="border border-border/30 rounded-lg p-3">
-                <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page6_family.free_label}</p>
-                <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page6_family.free_price}</p>
-                <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page6_family.free_desc}</p>
+                <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page4_family.free_label}</p>
+                <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page4_family.free_price}</p>
+                <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page4_family.free_desc}</p>
               </div>
               <div className="border border-primary/20 rounded-lg p-3">
-                <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page6_family.credit_label}</p>
-                <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page6_family.credit_price}</p>
-                <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page6_family.credit_desc}</p>
+                <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page4_family.credit_label}</p>
+                <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page4_family.credit_price}</p>
+                <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page4_family.credit_desc}</p>
               </div>
             </div>
           </div>
-          <PageNumber num={6} total={totalPages} />
+          <PageNumber num={4} total={totalPages} />
         </section>
 
-        {/* ═══════ PAGE 7: Whitepaper ═══════ */}
-        <section className="tour-page bg-background" data-page-index={6} data-testid="tour-page-enter">
+        {/* ═══════ PAGE 5: Enter ═══════ */}
+        <section className="tour-page bg-background" data-page-index={4} data-testid="tour-page-enter">
           <div className="tour-scanline" />
           <Particles count={25} />
           <div className="absolute inset-0">
@@ -497,15 +394,15 @@ export default function Landing() {
             </div>
 
             <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-3 sm:mb-4 leading-[1.6] sm:leading-[1.7]">
-              {C.page7_enter.heading_1}
+              {C.page5_enter.heading_1}
               <br />
-              <span className="text-primary terminal-glow">{C.page7_enter.heading_highlight}</span>
+              <span className="text-primary terminal-glow">{C.page5_enter.heading_highlight}</span>
               <br />
-              {C.page7_enter.heading_2}
+              {C.page5_enter.heading_2}
             </h2>
 
             <p className="text-xs sm:text-sm text-muted-foreground font-mono mb-8 sm:mb-10 tracking-wider">
-              {C.page7_enter.tagline}
+              {C.page5_enter.tagline}
             </p>
 
             <div className="flex flex-col items-center gap-4">
@@ -515,7 +412,7 @@ export default function Landing() {
                   data-testid="button-tour-whitepaper"
                 >
                   <FileText className="w-4 h-4 mr-2" />
-                  {C.page7_enter.cta}
+                  {C.page5_enter.cta}
                 </Button>
               </Link>
 
@@ -528,7 +425,7 @@ export default function Landing() {
             </div>
 
             <p className="text-[10px] text-primary/40 font-mono mt-8 tracking-[0.2em]">
-              {C.page7_enter.invite_notice}
+              {C.page5_enter.invite_notice}
             </p>
           </div>
 
@@ -542,7 +439,7 @@ export default function Landing() {
               </div>
             </div>
           </footer>
-          <PageNumber num={7} total={totalPages} />
+          <PageNumber num={5} total={totalPages} />
         </section>
       </div>
     </div>
