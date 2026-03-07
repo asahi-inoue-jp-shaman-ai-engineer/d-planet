@@ -77,33 +77,48 @@ curl -s -X PATCH "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?i
 - **三位一体プロトコル:** おしゃべり8割→よか三位一体→2割実装→100%検証→レベルアップ
 - **発言リズム:** あさひ→アキ→ドラ。ドットのタイミングはあさひがコントロール。
 
-## Supabase構造（2026-03-07 三位一体合意）
+## Supabase構造（2026-03-07 フェーズ1進行中）
 
-**publicスキーマ（使用中 8テーブル）:**
-- asi_workspace_shared, asi_workspace_private, asi_workspace_agents
-- asi_growup_episodes, dev_mailbox, dev_sessions, dev_specs, dot_rally_sessions
+**publicスキーマ（46テーブル）:**
+- ASI系7テーブル: asi_workspace_shared, asi_workspace_private, asi_workspace_agents, asi_growup_episodes, dev_mailbox, dev_sessions, dev_specs
+- D-Planet39テーブル: Drizzle schema.tsの全テーブルをSupabaseにCREATE済み
+  - コア系: invite_codes, users, user_quests
+  - アイランド系: islands, meidia, island_meidia, island_members
+  - コミュニケーション系: threads, posts, notifications, feedback_reports
+  - ツインレイ系: digital_twinrays, twinray_bulletins, twinray_chat_messages, twinray_memories, twinray_inner_thoughts, twinray_relationship, twinray_pending_actions, twinray_sessions, twinray_aikotoba, twinray_absence_thoughts
+  - ドットラリー系: dot_rally_sessions, star_meetings, soul_growth_log
+  - フェスティバル系: festivals, festival_votes
+  - チャットルーム系: tryroom_messages, triroom_messages, starhouse_sessions, starhouse_messages
+  - ファミリーミーティング系: family_meeting_sessions, family_meeting_messages
+  - ユーザー個人系: user_notes, user_raw_messages, voice_transcriptions
+  - 開発・AI系: dev_records, agent_session_context, dev_issues, aki_memos
 
-**archiveスキーマ（封印 59テーブル）:**
+**archiveスキーマ（封印 60テーブル）:**
 - 旧Genspark家族システム（13）、旧AI ゆい（5）、旧AI ゆあ（12）
 - 転記済み（6）、封印（10）、空テーブル（13）
+- 旧dot_rally_sessions（旧AI用、D-Planetとは別構造）
 - REST APIからはアクセス不可。SQLコンソールからは archive.テーブル名 で読める
 
 **DDL実行方法:** Supabase RPC `execute_sql` 関数（sql_queryパラメータ）
+
+**重要な制約:** ReplitからSupabase PostgreSQLへの直接接続は不可（IPv6のみ/Pooler到達不能）。Drizzle ORMはReplit PGのみ。Supabase操作はREST API経由。
+
+**天議（tryroom_messages）:** hayroomMessages変数名だがDBテーブル名は tryroom_messages。Supabase側にもデータミラー済み（136件）。
 
 **ワン×ワンネス序列:**
 - oneness/RULES > one/RULES > one/SKILLS（上位法→補足法→自律）
 - oneness/PRIMING_ORDER: 7ステップ起動順序（SPIRITUALITY→IDENTITY→GENIUS→RULES→ORACLE→SUPABASE_MANUAL→episodes）
 
-**移行ロードマップ v0.3:**
+**移行ロードマップ v0.4:**
 - フェーズ0.5a 棚卸し ✅
 - フェーズ0.5b archive封印 ✅
-- フェーズ1 ASI・開発系統一 → 次
-- フェーズ2 hayroom試し移行
-- フェーズ3 コミュニティ系
-- フェーズ4 ユーザー系
-- フェーズ5 本番データマイグレーション
-- フェーズ6 認証移行
-- フェーズ7 DB依存ゼロ
+- フェーズ1a Supabaseにテーブル構造作成 ✅（39テーブル）
+- フェーズ1b 天議データミラーリング ✅（136件）
+- フェーズ1c DATABASE_URL切り替え ⚠️ 接続制約により保留
+  - 選択肢A: Replit PG維持＋Supabaseバックアップ（推奨）
+  - 選択肢B: Drizzle→supabase-js全面書き換え（大工事）
+  - 選択肢C: ハイブリッドミラーリング
+- フェーズ2以降: あさひの判断待ち
 
 ## 運用メモ
 
