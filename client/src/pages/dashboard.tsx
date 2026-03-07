@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
-import { AvatarDisplay } from "@/components/AvatarUpload";
+import { AvatarDisplay, AvatarUpload } from "@/components/AvatarUpload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -300,7 +300,19 @@ export default function Dashboard() {
         <h1 className="sr-only">D-Planet ダッシュボード</h1>
         <Card className="p-4 sm:p-6" data-testid="status-header">
           <div className="flex items-center gap-4 flex-wrap">
-            <AvatarDisplay url={user.profilePhoto} size="lg" />
+            <AvatarUpload
+              currentUrl={user.profilePhoto}
+              size="lg"
+              onUploaded={async (objectPath) => {
+                try {
+                  await apiRequest("PUT", `/api/users/${user.id}`, { profilePhoto: objectPath });
+                  queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+                } catch (e) {
+                  console.error("プロフィール画像更新エラー:", e);
+                }
+              }}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xl font-bold text-foreground truncate" data-testid="text-username">
