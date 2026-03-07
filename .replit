@@ -51,3 +51,4 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 ADMIN_SEED_PASSWORD = "dplanet-admin-369"
 XENO_SEED_PASSWORD = "dplanet-xeno-369"
 SYSTEM_SEED_PASSWORD = "system-password-not-for-login"
+SUPABASE_DATABASE_URL = "postgresql://postgres.dyimrnwbuzgcfeksezog:PsXfijGGp2hdp4Ze@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
