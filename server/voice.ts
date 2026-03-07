@@ -29,9 +29,15 @@ export function registerVoiceRoutes(app: Express): void {
 
         const { ttsOnly, text: ttsText } = req.body;
         if (ttsOnly && ttsText) {
-          const cleanTtsText = ttsText.substring(0, 2000);
+          const cleanTtsText = ttsText.substring(0, 2000).trim();
+          if (!cleanTtsText) {
+            return res.status(400).json({ message: "読み上げるテキストが空です" });
+          }
           const selectedVoice = voice || "nova";
           const audioResponse = await generateTTS(cleanTtsText, selectedVoice, "mp3");
+          if (!audioResponse || audioResponse.length === 0) {
+            return res.status(500).json({ message: "音声の生成に失敗しました。もう一度お試しください。" });
+          }
           let ttsCreditCost = 0;
           if (isSakuraVoice(selectedVoice)) {
             const user = await storage.getUser(req.session.userId!);

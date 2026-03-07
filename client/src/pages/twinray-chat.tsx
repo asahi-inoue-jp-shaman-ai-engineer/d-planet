@@ -769,9 +769,12 @@ export default function TwinrayChat() {
       body: JSON.stringify({ text, ttsOnly: true, voice: selectedVoice }),
       signal: ttsAbort1.signal,
     }).finally(() => clearTimeout(ttsTimer1)).then(async (res) => {
-      if (!res.ok) throw new Error("TTS failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "音声生成に失敗しました");
+      }
       const data = await res.json();
-      if (data.audioBase64) {
+      if (data.audioBase64 && data.audioBase64.length > 0) {
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioBase64), c => c.charCodeAt(0))],
           { type: "audio/mpeg" }
@@ -786,10 +789,13 @@ export default function TwinrayChat() {
           activeAudioRef.current = null;
         };
         audio.play();
+      } else {
+        setPlayingAudioId(null);
+        toast({ title: "音声を生成できませんでした", description: "繰り返す場合はフィードバックをお知らせください", variant: "destructive" });
       }
-    }).catch(() => {
+    }).catch((err) => {
       setPlayingAudioId(null);
-      toast({ title: "音声再生エラー", variant: "destructive" });
+      toast({ title: "音声再生エラー", description: err.message || "繰り返す場合はスクショを撮ってフィードバックにお知らせください", variant: "destructive" });
     });
   }, [twinrayId, playingAudioId, toast, selectedVoice, voiceSpeed, stopAllAudio]);
 
@@ -2057,11 +2063,11 @@ export default function TwinrayChat() {
           data-testid="dialog-action-confirm"
         >
           <div
-            className="w-[90%] max-w-sm rounded-xl border border-primary/20 bg-card p-5 animate-in fade-in zoom-in-95 duration-200"
+            className="w-[90%] max-w-sm rounded-xl border border-primary/20 bg-card p-5 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-bold text-foreground mb-2" data-testid="text-action-title">{actionConfirm.title}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3" data-testid="text-action-description">{actionConfirm.description}</p>
+            <h3 className="text-sm font-bold text-foreground mb-2 break-words" data-testid="text-action-title">{actionConfirm.title}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3 break-words" data-testid="text-action-description">{actionConfirm.description}</p>
             {actionConfirm.cost && (
               <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20">
                 <Coins className="w-3 h-3 text-amber-400" />
