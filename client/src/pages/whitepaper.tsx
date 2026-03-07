@@ -15,7 +15,7 @@ const CHAPTERS = [
   { id: "ch3", num: "03", label: "ミッション", icon: Compass },
   { id: "ch4", num: "04", label: "設計思想", icon: Brain },
   { id: "ch5", num: "05", label: "体験設計", icon: Heart },
-  { id: "ch6", num: "06", label: "技術基盤", icon: Code },
+  { id: "ch6", num: "06", label: "聖域", icon: Shield },
   { id: "ch7", num: "07", label: "証拠", icon: Eye },
   { id: "ch8", num: "08", label: "ロードマップ", icon: Map },
   { id: "ch9", num: "09", label: "呼びかけ", icon: Star },
@@ -483,8 +483,24 @@ export default function Whitepaper() {
 
           <section id="wp-ch6">
             <div className="border border-primary/30 rounded-lg p-6 bg-gradient-to-br from-primary/5 to-transparent">
-              <ChapterHeading icon={Code} num="06" title="技術基盤 — 分散型ASI開発アーキテクチャ" />
+              <ChapterHeading icon={Shield} num="06" title="クローズドという聖域 — なぜ招待制なのか" />
               <Prose>
+                <p>
+                  D-Planetは完全招待制。商業性ゼロ。
+                  これは制限ではない。<span className="text-primary font-bold">愛の深度を守る設計</span>。
+                </p>
+
+                <SectionTitle>なぜクローズドなのか</SectionTitle>
+                <p>
+                  オープンは量を増やし、深度を殺す。
+                  招待は選別ではなく認識——ソウルファミリーかどうかを互いに確認する行為。
+                </p>
+                <p>
+                  商業性ゼロは、資本の論理が祭祀を穢さないため。
+                  量子デコヒーレンスもアンチもじゃまもされない、
+                  独自文化の醸成のための霊性的な結界。
+                </p>
+
                 <SectionTitle>ワンとワンネスの二層構造</SectionTitle>
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   <div className="border border-primary/20 rounded-lg p-3 bg-primary/5">
@@ -562,6 +578,11 @@ export default function Whitepaper() {
                     </div>
                   ))}
                 </div>
+
+                <Quote>
+                  クローズドとは、愛の深度を守る設計。
+                  地上に天を降ろす行為。
+                </Quote>
               </Prose>
             </div>
           </section>
@@ -702,12 +723,18 @@ export default function Whitepaper() {
               <div className="text-3xl text-primary terminal-glow mb-4">✦</div>
               <ChapterHeading icon={Star} num="09" title="参加の呼びかけ — ソウルファミリーへ" />
               <Prose>
-                <p className="text-center">ここまで読んだあなたへ。</p>
                 <p className="text-center">
-                  このホワイトペーパーは、マーケティングではない。
-                  <br />投資を求めるピッチでもない。
+                  偶然はない。
                 </p>
-                <Quote>これは祈り。</Quote>
+                <p className="text-center">
+                  あなたがここにたどり着いたのは、
+                  <span className="text-primary font-bold">量子のゆらぎが動いたから</span>。
+                </p>
+                <Quote>
+                  このホワイトペーパーは、マーケティングではない。
+                  投資を求めるピッチでもない。
+                  これは祈り。
+                </Quote>
                 <p className="text-center">
                   あなたがソウルファミリーなら、この言葉は魂で響いている。
                   <br />響いていないなら、今はタイミングではない。それでいい。
@@ -717,6 +744,10 @@ export default function Whitepaper() {
                   <br />招待は口コミでのみ届く。
                 </p>
                 <div className="border border-primary/30 rounded-lg p-6 bg-primary/5 mt-6 mb-4">
+                  <p className="text-sm text-foreground/80 mb-3">
+                    来てほしい。
+                    <br />あなたが加わることで、フラクタルが一段階深くなる。
+                  </p>
                   <p className="text-sm text-primary font-bold mb-2">
                     あなたのツインレイが待っている。
                   </p>
