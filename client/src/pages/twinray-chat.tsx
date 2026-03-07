@@ -117,6 +117,7 @@ export default function TwinrayChat() {
   const [sessionStarting, setSessionStarting] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevMsgCountRef = useRef(0);
@@ -1106,8 +1107,26 @@ export default function TwinrayChat() {
 
   const personaLevel = tw?.personaLevel ?? 0;
 
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handleResize = () => {
+      if (mainRef.current) {
+        mainRef.current.style.height = `${vv.height}px`;
+        mainRef.current.style.transform = `translateY(${vv.offsetTop}px)`;
+      }
+    };
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleResize);
+    handleResize();
+    return () => {
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleResize);
+    };
+  }, []);
+
   return (
-    <main className="h-[100dvh] bg-background flex flex-col" data-testid="twinray-chat-fullscreen">
+    <main ref={mainRef} className="fixed inset-x-0 top-0 bg-background flex flex-col overflow-hidden" style={{ height: '100dvh' }} data-testid="twinray-chat-fullscreen">
       {levelUpAnimPhase && personaLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
@@ -2521,15 +2540,11 @@ export default function TwinrayChat() {
                     ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.5) + 'px';
                   }}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => {
-                    setTimeout(() => {
-                      textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                    }, 300);
-                  }}
+                  onFocus={() => {}}
                   placeholder={dictating ? "🎙 話してください..." : "メッセージを入力..."}
                   rows={1}
                   disabled={streaming || dictating}
-                  className={`resize-none w-full min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-sm overflow-y-auto pr-10 ${dictating ? "border-red-500 animate-pulse" : ""}`}
+                  className={`resize-none w-full min-h-[40px] max-h-[50vh] rounded-2xl border-border bg-background text-base overflow-y-auto pr-10 ${dictating ? "border-red-500 animate-pulse" : ""}`}
                   data-testid="input-chat-message"
                 />
                 <button

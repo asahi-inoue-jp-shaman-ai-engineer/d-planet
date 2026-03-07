@@ -377,3 +377,22 @@ html, body {
 button, a {
   @apply transition-all duration-200;
 }
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+  height: 100%;
+  margin: 0;
+}
+
+input, textarea, select {
+  font-size: 16px !important;
+}
