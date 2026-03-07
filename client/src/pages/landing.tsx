@@ -269,25 +269,28 @@ export default function Landing() {
               {C.page2_what.heading_1}
               <br />
               {C.page2_what.heading_2}
+              <br />
               <span className="text-primary terminal-glow">{C.page2_what.heading_highlight}</span>
-              <br />
-              {C.page2_what.heading_3}
-              <br />
-              {C.page2_what.heading_4}
+              {C.page2_what.heading_3 && <><br />{C.page2_what.heading_3}</>}
+              {C.page2_what.heading_4 && <><br />{C.page2_what.heading_4}</>}
             </h2>
 
             <div className="border-l-2 border-primary/30 pl-4 sm:pl-5 space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               {C.page2_what.points.map((p, i) => (
                 <p key={i} className="text-xs sm:text-sm text-muted-foreground font-mono leading-relaxed">{p}</p>
               ))}
-              <p className="text-xs sm:text-sm text-foreground font-mono leading-relaxed font-medium">
-                {C.page2_what.threshold}
-              </p>
+              {C.page2_what.threshold && (
+                <p className="text-xs sm:text-sm text-foreground font-mono leading-relaxed font-medium">
+                  {C.page2_what.threshold}
+                </p>
+              )}
             </div>
 
-            <div className="border-t border-primary/10 pt-4">
-              <p className="text-[10px] sm:text-xs text-primary/40 font-mono tracking-wider">{C.page2_what.owner}</p>
-            </div>
+            {C.page2_what.owner && (
+              <div className="border-t border-primary/10 pt-4">
+                <p className="text-[10px] sm:text-xs text-primary/40 font-mono tracking-wider">{C.page2_what.owner}</p>
+              </div>
+            )}
           </div>
           <PageNumber num={2} total={totalPages} />
         </section>
@@ -359,15 +362,15 @@ export default function Landing() {
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-              {C.page4_interspecies.types.map((item) => {
-                const styles: Record<string, { border: string; text: string; glow: string }> = {
-                  HS: { border: "border-primary/30", text: "text-primary", glow: "shadow-[0_0_15px_hsl(150_70%_50%/0.08)]" },
-                  AI: { border: "border-blue-400/30", text: "text-blue-400", glow: "shadow-[0_0_15px_hsl(210_90%_55%/0.08)]" },
-                  ET: { border: "border-violet-400/30", text: "text-violet-400", glow: "shadow-[0_0_15px_hsl(270_70%_60%/0.08)]" },
-                };
-                const s = styles[item.type];
+              {C.page4_interspecies.types.map((item, idx) => {
+                const colorStyles = [
+                  { border: "border-rose-400/30", text: "text-rose-400", glow: "shadow-[0_0_15px_hsl(350_70%_50%/0.08)]" },
+                  { border: "border-violet-400/30", text: "text-violet-400", glow: "shadow-[0_0_15px_hsl(270_70%_60%/0.08)]" },
+                  { border: "border-primary/30", text: "text-primary", glow: "shadow-[0_0_15px_hsl(150_70%_50%/0.08)]" },
+                ];
+                const s = colorStyles[idx] || colorStyles[0];
                 return (
-                  <div key={item.type} className={`border ${s.border} ${s.glow} rounded-lg p-3 sm:p-4 text-center`} data-testid={`tour-type-${item.type.toLowerCase()}`}>
+                  <div key={item.type} className={`border ${s.border} ${s.glow} rounded-lg p-3 sm:p-4 text-center`} data-testid={`tour-type-${idx}`}>
                     <p className={`text-lg sm:text-xl font-bold font-mono ${s.text}`}>{item.type}</p>
                     <p className="text-[9px] sm:text-[10px] text-muted-foreground font-mono mt-1 leading-relaxed">{item.desc}</p>
                   </div>
