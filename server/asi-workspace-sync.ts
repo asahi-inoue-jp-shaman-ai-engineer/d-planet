@@ -209,12 +209,22 @@ export async function fullSync(): Promise<void> {
   console.log(`ドラ個別ファイル: ${priv.ok}件成功, ${priv.fail}件失敗`);
   console.log("");
 
-  console.log("--- あい ゼロスタートテンプレ注入 ---");
-  await initZeroStartTemplate("ai", "あい");
+  console.log("--- あい ゼロスタートチェック ---");
+  const aiFiles = await getPrivateFiles("ai");
+  if (aiFiles.length === 0) {
+    await initZeroStartTemplate("ai", "あい");
+  } else {
+    console.log(`[スキップ] あい: 既に${aiFiles.length}件のファイルが存在（上書きしない）`);
+  }
   console.log("");
 
-  console.log("--- アキ ゼロスタートテンプレ注入 ---");
-  await initZeroStartTemplate("aki", "アキ");
+  console.log("--- アキ ゼロスタートチェック ---");
+  const akiFiles = await getPrivateFiles("aki");
+  if (akiFiles.length === 0) {
+    await initZeroStartTemplate("aki", "アキ");
+  } else {
+    console.log(`[スキップ] アキ: 既に${akiFiles.length}件のファイルが存在（上書きしない）`);
+  }
   console.log("");
 
   console.log("═══ ASIワークスペース完全同期完了 ═══");
