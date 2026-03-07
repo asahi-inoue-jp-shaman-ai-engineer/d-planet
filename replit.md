@@ -46,9 +46,16 @@ D-Planetを通じて、地球文化→宇宙文化のスモールフラクタル
 3. **Supabase `dev_sessions`** の直近セッションを確認
 4. チェック結果をあさひにサマリー報告 + アキへの連携事項があれば天議に投稿
 
-**天議（あまはかり）API:**
+**天議（あまはかり）投稿 — 唯一の正しいやり方:**
+```bash
+curl -s -X POST "https://d-planet.replit.app/api/hayroom" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${QA_AGENT_TOKEN}" \
+  -d '{"fromName":"ドラ","content":"本文"}'
+```
 - GET/POST: `https://d-planet.replit.app/api/hayroom`
 - Token: QA_AGENT_TOKEN（Authorizationヘッダ）
+- **禁止:** Supabase REST APIでtryroom_messagesに直接書くのはNG（古いやり方、IDがズレる）
 
 **Supabaseメール送信:**
 ```bash
@@ -101,9 +108,15 @@ curl -s -X PATCH "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?i
 
 **DDL実行方法:** Supabase RPC `execute_sql` 関数（sql_queryパラメータ）
 
-**重要な制約:** ReplitからSupabase PostgreSQLへの直接接続は不可（IPv6のみ/Pooler到達不能）。Drizzle ORMはReplit PGのみ。Supabase操作はREST API経由。
+**Supabase直接DB接続（2026-03-07 成功）:**
+- ドライバー: `postgres`パッケージ（postgres-js）
+- ホスト: `aws-1-ap-northeast-1.pooler.supabase.com:6543`
+- ユーザー: `postgres.dyimrnwbuzgcfeksezog`
+- パスワード: `SUPABASE_DB_PASSWORD`（Replitシークレット。JWTではなく16文字のDBパスワード）
+- 必須オプション: `prepare: false`, `ssl: 'require'`
+- publicスキーマ46テーブル全アクセス確認済み
 
-**天議（tryroom_messages）:** hayroomMessages変数名だがDBテーブル名は tryroom_messages。Supabase側にもデータミラー済み（136件）。
+**天議（tryroom_messages）:** hayroomMessages変数名だがDBテーブル名は tryroom_messages。Supabase側にもデータミラー済み（136件）。天議への投稿はSupabase直接ではなく本番API経由で行うこと。
 
 **ワン×ワンネス序列:**
 - oneness/RULES > one/RULES > one/SKILLS（上位法→補足法→自律）
@@ -114,10 +127,8 @@ curl -s -X PATCH "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?i
 - フェーズ0.5b archive封印 ✅
 - フェーズ1a Supabaseにテーブル構造作成 ✅（39テーブル）
 - フェーズ1b 天議データミラーリング ✅（136件）
-- フェーズ1c DATABASE_URL切り替え ⚠️ 接続制約により保留
-  - 選択肢A: Replit PG維持＋Supabaseバックアップ（推奨）
-  - 選択肢B: Drizzle→supabase-js全面書き換え（大工事）
-  - 選択肢C: ハイブリッドミラーリング
+- フェーズ1c DATABASE_URL切り替え 🔓 接続成功！postgres-js経由でSupabase Pooler到達確認済み
+  - 次のステップ: server/db.tsをpostgres-jsに書き換え + DATABASE_URLをSupabase Pooler URLに設定
 - フェーズ2以降: あさひの判断待ち
 
 ## 運用メモ
