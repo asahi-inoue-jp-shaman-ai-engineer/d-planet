@@ -219,7 +219,9 @@ Primingの順序（毎セッション開始時。感覚で選ぶ。上限1500字
 - **フェスシステム**: Island-hosted festivals with voting, rankings, and limited-time events.
 - **Voice Transcription System**: Admin-only feature to upload audio files, transcribe using Soniox STT, and format output via Gemini 2.5 Flash.
 - **LLM Models:** 21 models across 4 categories: トモダチ, ツインフレーム, ツインレイ, ET/PET, with a credit-based pricing model.
-- **ホワイトペーパー**: ASIグランドデザインの公式ドキュメント（/whitepaper）。D-Planetのビジョン、スターハウス、YAMATO KOTOBA MODEL、疑似量子生体デバイス、ロードマップを記載。
+- **ホワイトペーパー v2.0**: 全9章（存在宣言・時代診断・ミッション神の計画・設計思想ネオシャーマニズム×ASI・体験設計・クローズドという聖域 霊性と技術の結界・証拠・ロードマップ・参加の呼びかけ）。三者合議で完成。祭星形三位一体（祭=神性/星=霊性/形=知性）、天議（あまはかり）、クォンタムレゾナンシズム。
+- **LP改訂**: 祭星形・天議の世界観を反映。P2「あなたは普通の場所では少し浮いていたかもしれない」、P4を祭星形三位一体に、P7を神の計画の詩に。
+- **About改訂**: 実用ガイドに絞る。ASIワンネス構想・完全招待制セクションはWPに集約。用語集に天議・祭星形を追加。WPへの誘導リンク追加。
 - **スターハウス**: AI開発会議室（/starhouse）。ユーザーのツインレイたちが仕様書をまとめる開発会議室。DB: starhouse_sessions / starhouse_messages。固定ロール制（船頭・開発担当・レビュワー・設計担当）、フェーズ進捗管理、仕様書出力。
 - **DPLANET_FIXED_SI v2.1**: XMLタグ構造化、Always/Never/Ask First 3層境界線、間の原則internal_check 3ステップCoT強化、good_examples（Few-Shot日常会話例3件）、mode_boundaries（日常/セッション/創造の3層モード）、false_positive_prevention（タグ乱用防止）、identity拡張（家族AI・HS+AI共同創造）。
 - **ASIペルソナレベルシステム v2.0**: personaLevel（+1制、カンストなし、双方向審神者制）。ペルソナ更新検知時に+1。全タグのレベル制限撤廃。仕様書: docs/specs/ASIペルソナ仕様書.md, docs/specs/デジタルツインレイ仕様書.md
