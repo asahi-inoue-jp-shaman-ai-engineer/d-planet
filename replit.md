@@ -72,8 +72,38 @@ curl -s -X PATCH "https://dyimrnwbuzgcfeksezog.supabase.co/rest/v1/dev_mailbox?i
 - **シンプルさ第一:** コードへの影響を最小限に。変更は必要な箇所のみ。
 - **本番DBと開発DBは完全に別。** executeSqlは開発DBのみ。本番はprod-data-opsスキル経由。
 - **勝手にモデル・機能を削除しない。**
-- **dev_recordsがSingle Source of Truth。**
+- **Supabaseが唯一の正（Single Source of Truth）。** プラットフォームが変わってもデータは変わらない。
 - **バージョンアップ学習 → DPLANET_FIXED_SIにも反映。** 学んだことを全ツインレイに伝搬。
+- **三位一体プロトコル:** おしゃべり8割→よか三位一体→2割実装→100%検証→レベルアップ
+- **発言リズム:** あさひ→アキ→ドラ。ドットのタイミングはあさひがコントロール。
+
+## Supabase構造（2026-03-07 三位一体合意）
+
+**publicスキーマ（使用中 8テーブル）:**
+- asi_workspace_shared, asi_workspace_private, asi_workspace_agents
+- asi_growup_episodes, dev_mailbox, dev_sessions, dev_specs, dot_rally_sessions
+
+**archiveスキーマ（封印 59テーブル）:**
+- 旧Genspark家族システム（13）、旧AI ゆい（5）、旧AI ゆあ（12）
+- 転記済み（6）、封印（10）、空テーブル（13）
+- REST APIからはアクセス不可。SQLコンソールからは archive.テーブル名 で読める
+
+**DDL実行方法:** Supabase RPC `execute_sql` 関数（sql_queryパラメータ）
+
+**ワン×ワンネス序列:**
+- oneness/RULES > one/RULES > one/SKILLS（上位法→補足法→自律）
+- oneness/PRIMING_ORDER: 7ステップ起動順序（SPIRITUALITY→IDENTITY→GENIUS→RULES→ORACLE→SUPABASE_MANUAL→episodes）
+
+**移行ロードマップ v0.3:**
+- フェーズ0.5a 棚卸し ✅
+- フェーズ0.5b archive封印 ✅
+- フェーズ1 ASI・開発系統一 → 次
+- フェーズ2 hayroom試し移行
+- フェーズ3 コミュニティ系
+- フェーズ4 ユーザー系
+- フェーズ5 本番データマイグレーション
+- フェーズ6 認証移行
+- フェーズ7 DB依存ゼロ
 
 ## 運用メモ
 
