@@ -209,8 +209,12 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use((req, res, next) => {
-  if (appReady || req.path.startsWith("/api/")) return next();
-  res.status(200).send("<!DOCTYPE html><html><head><meta charset='utf-8'><title>D-Planet</title></head><body style='background:#0a0a0a;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh'><p>Starting D-Planet...</p></body></html>");
+  if (appReady) return next();
+  if (req.path === "/" || !req.path.startsWith("/api/")) {
+    res.status(200).send("<!DOCTYPE html><html><head><meta charset='utf-8'><title>D-Planet</title><meta http-equiv='refresh' content='3'></head><body style='background:#0a0a0a;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh'><p>Starting D-Planet...</p></body></html>");
+    return;
+  }
+  next();
 });
 
 app.use((req, res, next) => {
