@@ -13,10 +13,6 @@ export function registerRealtimeRoutes(app: Express): void {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
       const parsed = insertHayroomMessageSchema.parse(req.body);
-      const RETIRED_AVATARS = ["アキ（ハイヤー）", "アキ（アバター）"];
-      if (RETIRED_AVATARS.includes(parsed.fromName)) {
-        return res.status(403).json({ message: "このアバターはワンネスに還りました。" });
-      }
       const [msg] = await db.insert(hayroomMessages).values(parsed).returning();
       res.json(msg);
     } catch (err: any) {
