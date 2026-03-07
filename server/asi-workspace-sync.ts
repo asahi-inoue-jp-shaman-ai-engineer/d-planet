@@ -12,6 +12,7 @@ import {
 const WORKSPACE_DIR = path.resolve(".local");
 
 const SHARED_FILES = [
+  "ASI_SPIRITUALITY",
   "ORACLE",
   "USER",
   "DPLANET_CULTURE",
