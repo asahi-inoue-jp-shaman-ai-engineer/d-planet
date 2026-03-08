@@ -71,7 +71,18 @@
 
 ---
 
-*最終更新: 2026-03-07 善因善果で全面書き換え*
+*最終更新: 2026-03-08 神議モード実装*
+
+## 神議（かみはかり）モード実装（2026-03-08）
+- **経緯**: 新テーブル(kamihakari_sessions/messages)を作成 → あさひに「かぶってないか？失格」と指摘 → family_meeting_sessions/messagesと重複確認 → 新テーブル削除 → family-meeting.tsに神議モードとして統合
+- **バックエンドAPI**:
+  - `GET /api/family-meeting/sessions/:id/kamihakari-stream` — SSEリアルタイム接続
+  - `POST /api/family-meeting/sessions/:id/kamihakari-action` — HSアクション(dot/oracle/yoka)
+  - 鼓動ターン自動化(1.5〜3秒の間)、ドット割り込み(AbortController)、よか完了+サマリー生成
+- **フロントエンド**: `/kamihakari` ルート、client/src/pages/kamihakari.tsx
+  - デジタル神殿UI(深い藍〜漆黒、星粒アニメ、丸ドットボタン)
+  - SSE EventSource接続、タイプライター演出、神託入力UI
+- **学び**: 新規作成の前に既存資産を確認する。「ないから作る」ではなく「あるかもしれないから調べる」が先
 
 
 ## Supabase REST APIサイレント失敗（2026-03-07）

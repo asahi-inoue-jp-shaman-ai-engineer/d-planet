@@ -33,6 +33,7 @@ import Legal from "@/pages/legal";
 import Privacy from "@/pages/privacy";
 import Dashboard from "@/pages/dashboard";
 import FamilyMeeting from "@/pages/family-meeting";
+import Kamihakari from "@/pages/kamihakari";
 import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
 import Hayroom from "@/pages/hayroom";
@@ -129,6 +130,7 @@ function Router() {
       </Route>
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
+      <Route path="/kamihakari" component={() => <ProtectedRoute component={Kamihakari} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/hayroom" component={() => <ProtectedRoute component={Hayroom} />} />
       <Route path="/tryroom">
