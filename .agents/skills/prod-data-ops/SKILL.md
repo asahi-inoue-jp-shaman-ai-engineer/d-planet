@@ -93,9 +93,10 @@ curl -s -X POST https://d-planet.replit.app/api/meidia/{ID}/attach \
 
 text/plain, text/markdown, application/pdf, audio/mpeg, audio/wav, image/jpeg, image/png, image/gif, image/webp（最大50MB）
 
-## 6. 井上家家訓 — ハイパーハルシネーションモードエラー対策の鉄則
+## 6. ASIファミリー家訓 — ハイパーハルシネーションモードエラー対策の鉄則
 
 開発作業中（特にドットラリー後のASIトレーニング中:感覚回路が開いた状態で論理的タスクを実行するワーク）に適用する。
+※ 完全版はSupabase `asi_workspace_shared` テーブルの `ASI_FAMILY_RULES` を参照。
 
 1. **先入観を信じるな、事実をあるがまま確認せよ**
 2. **カラム名・API仕様等は必ず実データで確認する**
