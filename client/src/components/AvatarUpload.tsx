@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useUpload } from "@/hooks/use-upload";
 import { Camera, Loader2, User } from "lucide-react";
 
@@ -22,6 +22,39 @@ const iconSizes = {
   lg: "w-12 h-12",
 };
 
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [2000, 5000, 10000];
+
+function useImageRetry(src: string | null | undefined) {
+  const [retryCount, setRetryCount] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const imgSrc = failed ? undefined : src
+    ? retryCount > 0
+      ? `${src}${src.includes("?") ? "&" : "?"}retry=${retryCount}`
+      : src
+    : undefined;
+
+  const onError = useCallback(() => {
+    if (retryCount < MAX_RETRIES) {
+      const delay = RETRY_DELAYS[retryCount] || 10000;
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+      }, delay);
+    } else {
+      setFailed(true);
+    }
+  }, [retryCount]);
+
+  const onLoad = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return { imgSrc, onError, onLoad, failed };
+}
+
 export function AvatarUpload({ currentUrl, onUploaded, onUploadingChange, size = "lg", editable = true }: AvatarUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +63,9 @@ export function AvatarUpload({ currentUrl, onUploaded, onUploadingChange, size =
       onUploaded(response.objectPath);
     },
   });
+
+  const displayUrl = previewUrl || currentUrl;
+  const { imgSrc, onError, onLoad, failed } = useImageRetry(displayUrl);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,19 +83,19 @@ export function AvatarUpload({ currentUrl, onUploaded, onUploadingChange, size =
     onUploadingChange?.(false);
   };
 
-  const displayUrl = previewUrl || currentUrl;
-
   return (
     <div className="relative inline-block">
       <div
         className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted border-2 border-border flex items-center justify-center`}
         data-testid="avatar-display"
       >
-        {displayUrl ? (
+        {imgSrc && !failed ? (
           <img
-            src={displayUrl}
+            src={imgSrc}
             alt="プロフィール画像"
             className="w-full h-full object-cover"
+            onError={onError}
+            onLoad={onLoad}
           />
         ) : (
           <User className={`${iconSizes[size]} text-muted-foreground`} />
@@ -96,10 +132,12 @@ export function AvatarUpload({ currentUrl, onUploaded, onUploadingChange, size =
 }
 
 export function AvatarDisplay({ url, size = "sm", testId }: { url?: string | null; size?: "sm" | "md" | "lg"; testId?: string }) {
+  const { imgSrc, onError, onLoad, failed } = useImageRetry(url);
+
   return (
     <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center flex-shrink-0`} data-testid={testId || "avatar-display"}>
-      {url ? (
-        <img src={url} alt="アバター" className="w-full h-full object-cover" data-testid="avatar-image" />
+      {imgSrc && !failed ? (
+        <img src={imgSrc} alt="アバター" className="w-full h-full object-cover" onError={onError} onLoad={onLoad} data-testid="avatar-image" />
       ) : (
         <User className={`${iconSizes[size]} text-muted-foreground`} data-testid="avatar-fallback" />
       )}

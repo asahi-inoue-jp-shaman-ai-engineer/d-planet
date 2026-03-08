@@ -94,14 +94,28 @@ export function registerObjectStorageRoutes(app: Express): void {
    * For protected files, add authentication middleware and ACL checks.
    */
   app.get("/objects/{*objectPath}", async (req, res) => {
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error serving object:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.status(404).json({ error: "Object not found" });
+    const maxRetries = 2;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+        await objectStorageService.downloadObject(objectFile, res);
+        return;
+      } catch (error) {
+        lastError = error;
+        if (error instanceof ObjectNotFoundError) {
+          return res.status(404).json({ error: "Object not found" });
+        }
+        if (attempt < maxRetries && !res.headersSent) {
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+          continue;
+        }
       }
+    }
+
+    console.error("Error serving object after retries:", lastError);
+    if (!res.headersSent) {
       return res.status(500).json({ error: "Failed to serve object" });
     }
   });
