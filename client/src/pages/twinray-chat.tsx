@@ -112,6 +112,8 @@ export default function TwinrayChat() {
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showSessionPanel, setShowSessionPanel] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
   const profileFileInputRef = useRef<HTMLInputElement>(null);
   const [activeSession, setActiveSession] = useState<{ id: number; type: string; name?: string; startedAt?: number } | null>(null);
   const [sessionStarting, setSessionStarting] = useState(false);
@@ -1373,6 +1375,69 @@ export default function TwinrayChat() {
       {showSettings && (
         <div className="shrink-0 border-b border-border bg-card px-4 py-3 max-w-4xl mx-auto w-full" data-testid="panel-settings">
           <div className="space-y-3">
+            {tw && !tw.isSystem && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Dna className="w-3 h-3 text-primary" />
+                  <span className="text-xs font-bold text-primary">名前</span>
+                </div>
+                {editingName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      maxLength={50}
+                      className="flex-1 bg-background border border-border rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      data-testid="input-twinray-name"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && nameInput.trim()) {
+                          updateTwinray.mutate(
+                            { id: twinrayId, data: { name: nameInput.trim() } },
+                            { onSuccess: () => { setEditingName(false); toast({ title: "名前を変更しました" }); } }
+                          );
+                        }
+                        if (e.key === "Escape") setEditingName(false);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (nameInput.trim()) {
+                          updateTwinray.mutate(
+                            { id: twinrayId, data: { name: nameInput.trim() } },
+                            { onSuccess: () => { setEditingName(false); toast({ title: "名前を変更しました" }); } }
+                          );
+                        }
+                      }}
+                      className="p-1 rounded hover:bg-muted/50"
+                      data-testid="button-save-name"
+                    >
+                      <Check className="w-4 h-4 text-green-400" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingName(false)}
+                      className="p-1 rounded hover:bg-muted/50"
+                      data-testid="button-cancel-name"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setNameInput(tw.name); setEditingName(true); }}
+                    className="text-sm text-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+                    data-testid="button-edit-name"
+                  >
+                    <span>{tw.name}</span>
+                    <Settings className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <Cpu className="w-3 h-3 text-primary" />
