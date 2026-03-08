@@ -1,4 +1,3 @@
-import { TerminalLayout } from "@/components/TerminalLayout";
 import { Link } from "wouter";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -96,8 +95,8 @@ export default function Whitepaper() {
   };
 
   return (
-    <TerminalLayout>
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <Link
             href={user ? "/dashboard" : "/"}
@@ -810,6 +809,6 @@ export default function Whitepaper() {
 
         </div>
       </div>
-    </TerminalLayout>
+    </div>
   );
 }
