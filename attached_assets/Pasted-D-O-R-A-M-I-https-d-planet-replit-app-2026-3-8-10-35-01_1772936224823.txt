@@ -1,0 +1,80 @@
+D.O.R.A.M.I. エラーレポート
+対象: https://d-planet.replit.app
+生成日時: 2026/3/8 10:35:01
+エラー件数: 12件
+==================================================
+
+--- エラー #1 ---
+[perf][high] [デスクトップ] パフォーマンス計測
+First Contentful Paint が 7933ms（5秒超え。目標は1800ms以内）
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:17
+
+--- エラー #2 ---
+[perf][medium] [デスクトップ] パフォーマンス計測
+ページ完全読み込みに 5990ms かかっています（要改善）
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:17
+
+--- エラー #3 ---
+[a11y][low] [デスクトップ] アクセシビリティ: landmark-one-main
+Ensure the document has a main landmark（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:21
+
+--- エラー #4 ---
+[a11y][low] [デスクトップ] アクセシビリティ: meta-viewport
+Ensure <meta name="viewport"> does not disable text scaling and zooming（影響度: moderate） | 対象要素: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalab
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:21
+
+--- エラー #5 ---
+[a11y][low] [デスクトップ] アクセシビリティ: page-has-heading-one
+Ensure that the page, or at least one of its frames contains a level-one heading（影響度: moderate） | 対象要素: <html lang="ja">
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:21
+
+--- エラー #6 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] ヒットゾーン不足
+ヒットゾーン不足: 1個の要素が44x44px未満
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #7 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] 固定要素
+固定要素: ol.fixed top-0 z-[100] flex max-h
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #8 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] ローディングUI
+ローディングUI: 未検出
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #9 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] H1見出しなし
+H1見出しなし
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #10 ---
+[ux_issue][medium] [デスクトップ] [UX自動検出] main要素なし（スクリーンリーダーのランドマーク不足）
+main要素なし（スクリーンリーダーのランドマーク不足）
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #11 ---
+[ux_issue][low] [デスクトップ] [UX自動検出] nav要素なし
+nav要素なし
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:30:23
+
+--- エラー #12 ---
+[crash][high] [モバイル] ページテスト全体
+page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://d-planet.replit.app/", waiting until "domcontentloaded"
+
+URL: https://d-planet.replit.app
+日時: 2026/3/8 10:32:57
