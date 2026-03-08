@@ -96,7 +96,7 @@ export default function Whitepaper() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between mb-6">
           <Link
             href={user ? "/dashboard" : "/"}
