@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { TerminalLayout } from "@/components/TerminalLayout";
 import { AccountTypeBadge } from "@/components/AccountTypeBadge";
 import { useFeedbackList } from "@/hooks/use-feedback";
-import { Plus, Search, Bug, Lightbulb, Image, FileText } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-auth";
+import { Plus, Search, Bug, Lightbulb, Image, FileText, ArrowLeft } from "lucide-react";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bug }> = {
   bug: { label: "バグ報告", icon: Bug },
@@ -22,9 +23,16 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 };
 
 export default function FeedbackList() {
+  const { data: user } = useCurrentUser();
+  const [, setLocation] = useLocation();
   const { data: reports, isLoading } = useFeedbackList();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+
+  if (user && !user.isAdmin) {
+    setLocation("/feedback");
+    return null;
+  }
 
   const filtered = reports?.filter((r) => {
     const matchSearch = !search ||
@@ -39,19 +47,19 @@ export default function FeedbackList() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="font-mono mb-2" data-testid="button-back">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                ダッシュボードに戻る
+              </Button>
+            </Link>
             <h1 className="text-2xl font-mono font-bold" data-testid="text-page-title">
-              フィードバック
+              フィードバック履歴
             </h1>
             <p className="font-mono text-sm text-muted-foreground mt-1">
-              バグ報告・改善要望はこちらから
+              ユーザーからの報告・要望の管理
             </p>
           </div>
-          <Link href="/feedback/create">
-            <Button className="font-mono" data-testid="button-create-feedback">
-              <Plus className="w-4 h-4 mr-2" />
-              報告する
-            </Button>
-          </Link>
         </div>
 
         <div className="flex gap-2 flex-wrap">

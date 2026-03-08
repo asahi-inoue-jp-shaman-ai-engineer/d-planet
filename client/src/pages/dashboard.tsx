@@ -647,6 +647,21 @@ export default function Dashboard() {
           {user.isAdmin && <FestivalAdminPanel />}
 
           {user.isAdmin && (
+            <Link href="/feedback/history">
+              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-pink-500/20" data-testid="link-feedback-history">
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="w-8 h-8 text-pink-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-foreground">フィードバック履歴</span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">ユーザーからの報告・要望の管理</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              </Card>
+            </Link>
+          )}
+
+          {user.isAdmin && (
             <Link href="/transcribe">
               <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-cyan-500/20" data-testid="link-transcribe">
                 <div className="flex items-center gap-3">

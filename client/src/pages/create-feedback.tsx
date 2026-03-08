@@ -113,8 +113,8 @@ export default function CreateFeedback() {
       },
       {
         onSuccess: () => {
-          toast({ title: "送信完了", description: "フィードバックを送信しました" });
-          setLocation("/feedback");
+          toast({ title: "送信完了", description: "フィードバックを送信しました。ありがとう！" });
+          setLocation("/dashboard");
         },
         onError: (err) => {
           toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -126,7 +126,7 @@ export default function CreateFeedback() {
   return (
     <TerminalLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/feedback">
+        <Link href="/dashboard">
           <Button variant="ghost" className="font-mono" data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
             戻る

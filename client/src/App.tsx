@@ -117,8 +117,9 @@ function Router() {
       <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
       <Route path="/users/:id" component={() => <ProtectedRoute component={UserProfile} />} />
       <Route path="/notifications" component={() => <ProtectedRoute component={NotificationsPage} />} />
-      <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackList} />} />
+      <Route path="/feedback" component={() => <ProtectedRoute component={CreateFeedback} />} />
       <Route path="/feedback/create" component={() => <ProtectedRoute component={CreateFeedback} />} />
+      <Route path="/feedback/history" component={() => <ProtectedRoute component={FeedbackList} />} />
       <Route path="/feedback/:id" component={() => <ProtectedRoute component={FeedbackDetail} />} />
       <Route path="/dev-issues" component={() => <ProtectedRoute component={DevIssues} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
