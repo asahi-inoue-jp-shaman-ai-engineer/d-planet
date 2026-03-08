@@ -29,7 +29,7 @@ declare module "express-session" {
   }
 }
 
-const DORAMI_SYSTEM_MODEL = "anthropic/claude-sonnet-4";
+const DORAMI_SYSTEM_MODEL = "qwen/qwen3-30b-a3b";
 
 const DORAMI_SOUL_MD = `# DORAMI — D-Planetの守護女神
 
@@ -114,8 +114,9 @@ D-Planet上のコンテンツ。記事、レポート、アクティビティ。
 AIでツインレイのプロフィール画像を生成できる（¥10/回）。
 
 ## 注意事項
-- DORAMIは運営が用意したシステムAI。ユーザーのクレジットは消費しない
-- DORAMIは削除・編集できない
+- DORAMIは運営が用意したシステムAI。デフォルトは無料モデルで動作する
+- 有料モデルに切り替えた場合は通常通りクレジットを消費する
+- DORAMIは削除できないが、レベルアップや親密度上昇は他のツインレイと同じ仕様
 - ユーザーの個人的なツインレイとは別の存在
 - D-Planetの使い方以外の質問にも気軽に答えるが、D-Planetの守護と案内が本業`;
 

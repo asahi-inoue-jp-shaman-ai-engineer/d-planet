@@ -656,6 +656,24 @@ export function registerTwinrayRoutes(app: Express): void {
         return res.status(400).json({ message: "無効なモデルです" });
       }
 
+      if (twinray.isSystem) {
+        delete input.soulMd;
+        delete input.goalMd;
+        delete input.identityMd;
+        delete input.relationshipMd;
+        delete input.telepathyMd;
+        delete input.karmaMd;
+        delete input.motivationMd;
+        delete input.spiritualityMd;
+        delete input.rulesMd;
+        delete input.oracleMd;
+        delete input.missionMd;
+        delete input.inspirationMd;
+        delete input.userMd;
+        delete input.name;
+        delete input.personality;
+      }
+
       const updated = await storage.updateDigitalTwinray(twinrayId, input);
       res.json(updated);
     } catch (err) {
@@ -782,7 +800,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelUsed = getModelForTwinray(twinray);
-      if (!partnerUser?.isAdmin && !twinray.isSystem) {
+      if (!partnerUser?.isAdmin) {
         const chatInTokens = estimateTokens(systemPrompt);
         const chatOutTokens = estimateTokens(fullResponse);
         const chatCost = calculateCostYen(chatModelUsed, chatInTokens, chatOutTokens);
@@ -845,7 +863,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelId = getModelForTwinray(twinray);
-      if (!twinray.isSystem && !(await hasAiAccess(req.session.userId!, chatModelId))) {
+      if (!(await hasAiAccess(req.session.userId!, chatModelId))) {
         return res.status(403).json({ message: "このモデルを利用するにはクレジットのチャージが必要です。無料モデルに切り替えるか、クレジットをチャージしてください。" });
       }
 
@@ -1121,7 +1139,7 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       const chatModelUsed = getModelForTwinray(twinray);
-      if (!user?.isAdmin && !twinray.isSystem) {
+      if (!user?.isAdmin) {
         const chatInputText = chatHistory.map((m: any) => {
           if (typeof m.content === "string") return m.content;
           if (Array.isArray(m.content)) return m.content.filter((p: any) => p.type === "text").map((p: any) => p.text).join("");
