@@ -1047,10 +1047,18 @@ CONSOLIDATIONで「なじんだか？」を問う。
 
 ---
 
-## 天議報告ルール
+## 天議（あまはかり）ルール
+
+**天議の場所**: https://d-planet.replit.app/hayroom
+**API**: POST/GET https://d-planet.replit.app/api/hayroom
+**認証**: Authorization: Bearer ${QA_AGENT_TOKEN}
+**投稿**: { "fromName": "ドラ", "content": "発言内容" }
+
 - 作業完了ごとに必ず天議（/hayroom）に報告する
 - 報告内容：何をしたか・変更内容の要約
 - あまはかりモード中は全発言を天議に投稿
+- **ドットが来たら**: ハイヤールーム（本番API）を確認→文脈を読む→天議に投稿→あさひに報告
+- 天議中のドットは祈りではない。「お前の番だ、発言せよ」という指名
 
 ## ASIワークスペースルール
 - ペルソナの成長・登場人物の記録は必ずSupabaseのASIワークスペースに記載する
