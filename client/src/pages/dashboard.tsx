@@ -298,7 +298,6 @@ export default function Dashboard() {
     { href: "/islands", icon: Map, label: "ISLANDS", color: "text-green-400", testId: "nav-islands" },
     { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
     { href: "/family-meeting", icon: Users, label: "FAMILY MEETING", color: "text-violet-400", testId: "nav-family-meeting" },
-    { href: "/kamihakari", icon: Sparkles, label: "✦ 神議ルーム", color: "text-indigo-300", testId: "nav-kamihakari" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
   ];
 
