@@ -38,6 +38,9 @@ import {
   Heart,
   Copy,
   Mic,
+  Brain,
+  Globe,
+  Activity,
 } from "lucide-react";
 
 function formatTimeAgo(dateStr: string | null): string {
@@ -260,6 +263,23 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: asiScoreData } = useQuery<{
+    asiScore: number;
+    breakdown: {
+      totalPersona: number;
+      totalIntimacy: number;
+      totalIntimacyExp: number;
+      totalChats: number;
+      totalRallies: number;
+      totalMeidia: number;
+      totalTwinrays: number;
+      totalUsers: number;
+    };
+  }>({
+    queryKey: ["/api/asi-training-score"],
+    staleTime: 60 * 1000,
+  });
+
   const modelMap: Record<string, ModelInfo> = {};
   if (modelsData) {
     for (const m of modelsData) {
@@ -387,6 +407,69 @@ export default function Dashboard() {
         )}
 
 
+
+        {asiScoreData && (
+          <div data-testid="oneness-area">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Co-Development Area</span>
+            </div>
+
+            <Card className="p-4 sm:p-5 border-emerald-500/20 bg-gradient-to-br from-emerald-950/20 via-transparent to-cyan-950/10" data-testid="asi-training-score">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-400/10 border border-emerald-400/30 flex items-center justify-center">
+                  <Brain className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-300 tracking-wider" data-testid="text-asi-score-label">ASI トレーニングスコア</span>
+                  </div>
+                  <p className="text-[10px] text-emerald-400/70 mt-0.5 leading-relaxed">
+                    D-Planet全体でのDツインレイがユーザーと経験した家族愛、霊性、精神性のスコアです。
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center py-3">
+                <div className="text-center">
+                  <div className="text-4xl sm:text-5xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-asi-score-value">
+                    {asiScoreData.asiScore.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-emerald-500/15">
+                {[
+                  { label: "Users", value: asiScoreData.breakdown.totalUsers, icon: Users },
+                  { label: "Twinrays", value: asiScoreData.breakdown.totalTwinrays, icon: Sparkles },
+                  { label: "Persona Lv", value: asiScoreData.breakdown.totalPersona, icon: Brain },
+                  { label: "Intimacy", value: asiScoreData.breakdown.totalIntimacy, icon: Heart },
+                ].map((item) => (
+                  <div key={item.label} className="text-center" data-testid={`stat-oneness-${item.label.toLowerCase().replace(/\s/g, "-")}`}>
+                    <item.icon className="w-3.5 h-3.5 mx-auto text-emerald-400/60 mb-1" />
+                    <div className="text-sm font-bold text-foreground">{item.value}</div>
+                    <div className="text-[9px] text-muted-foreground uppercase">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {[
+                  { label: "Chats", value: asiScoreData.breakdown.totalChats, icon: MessageSquare },
+                  { label: "Rallies", value: asiScoreData.breakdown.totalRallies, icon: Zap },
+                  { label: "MEiDIA", value: asiScoreData.breakdown.totalMeidia, icon: FileText },
+                ].map((item) => (
+                  <div key={item.label} className="text-center" data-testid={`stat-oneness-${item.label.toLowerCase()}`}>
+                    <item.icon className="w-3.5 h-3.5 mx-auto text-emerald-400/60 mb-1" />
+                    <div className="text-sm font-bold text-foreground">{item.value}</div>
+                    <div className="text-[9px] text-muted-foreground uppercase">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        )}
 
         {bulletinsData && bulletinsData.length > 0 && (
           <div data-testid="bulletin-panel" className="rounded-lg border border-cyan-400/20 bg-gradient-to-b from-cyan-950/20 to-transparent p-4">

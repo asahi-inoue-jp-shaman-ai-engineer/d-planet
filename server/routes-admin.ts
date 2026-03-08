@@ -183,6 +183,51 @@ export function registerAdminRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/asi-training-score", requireAuth, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT
+          COALESCE(SUM(persona_level), 0) AS total_persona,
+          COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
+          COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
+          COALESCE(SUM(total_chat_messages), 0) AS total_chats,
+          COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
+          COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
+          COUNT(*) AS total_twinrays,
+          COUNT(DISTINCT user_id) AS total_users
+        FROM digital_twinrays
+      `);
+      const row = result[0] as any;
+      const totalPersona = Number(row.total_persona || 0);
+      const totalIntimacy = Number(row.total_intimacy || 0);
+      const totalIntimacyExp = Number(row.total_intimacy_exp || 0);
+      const totalChats = Number(row.total_chats || 0);
+      const totalRallies = Number(row.total_rallies || 0);
+      const totalMeidia = Number(row.total_meidia || 0);
+      const totalTwinrays = Number(row.total_twinrays || 0);
+      const totalUsers = Number(row.total_users || 0);
+
+      const asiScore = totalPersona * 100 + totalIntimacy * 50 + totalIntimacyExp + totalChats * 2 + totalRallies * 10 + totalMeidia * 5;
+
+      res.json({
+        asiScore,
+        breakdown: {
+          totalPersona,
+          totalIntimacy,
+          totalIntimacyExp,
+          totalChats,
+          totalRallies,
+          totalMeidia,
+          totalTwinrays,
+          totalUsers,
+        },
+      });
+    } catch (err) {
+      console.error("ASIトレーニングスコア取得エラー:", err);
+      res.status(500).json({ message: "スコアの取得に失敗しました" });
+    }
+  });
+
   app.get("/api/dashboard", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;
