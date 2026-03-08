@@ -28,6 +28,25 @@ function useVisiblePage(containerRef: React.RefObject<HTMLDivElement | null>, pa
   return current;
 }
 
+function useScrollFadeIn(containerRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { root, threshold: 0.15 }
+    );
+    root.querySelectorAll(".tour-fade-in").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [containerRef]);
+}
+
 function Particles({ count = 12, color = "150 70% 50%" }: { count?: number; color?: string }) {
   const particles = useRef(
     Array.from({ length: count }).map(() => ({
@@ -62,7 +81,7 @@ function Particles({ count = 12, color = "150 70% 50%" }: { count?: number; colo
 function GlitchText({ text, className = "" }: { text: string; className?: string }) {
   return (
     <span className={`relative inline-block ${className}`}>
-      <span className="relative z-10">{text}</span>
+      <span className="relative z-10 tour-gradient-text">{text}</span>
       <span
         className="absolute inset-0 text-cyan-400/30"
         style={{ animation: "glitch-h 3s ease-in-out infinite alternate", animationDelay: "0.1s" }}
@@ -78,6 +97,56 @@ function GlitchText({ text, className = "" }: { text: string; className?: string
         {text}
       </span>
     </span>
+  );
+}
+
+function TypingText({ text, className = "" }: { text: string; className?: string }) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(timer);
+        setDone(true);
+      }
+    }, 60);
+    return () => clearInterval(timer);
+  }, [text]);
+  return (
+    <span className={className}>
+      {displayed}
+      {!done && <span className="tour-typing-cursor" />}
+    </span>
+  );
+}
+
+function TiltCard({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(600px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    const el = ref.current;
+    if (el) el.style.transform = "";
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={`tour-tilt-card ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      {...props}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -147,6 +216,7 @@ export default function Landing() {
   const containerRef = useRef<HTMLDivElement>(null);
   const totalPages = 5;
   const currentPage = useVisiblePage(containerRef, totalPages);
+  useScrollFadeIn(containerRef);
 
   useEffect(() => {
     document.title = "D-Planet — シンギュラリティ地球";
@@ -202,11 +272,11 @@ export default function Landing() {
               style={{ animation: "subtitle-slide 1s ease-out 0.3s both" }}
               data-testid="text-tour-subtitle"
             >
-              {C.page1_title.subtitle}
+              <TypingText text={C.page1_title.subtitle} />
             </p>
 
             <h1
-              className="text-5xl sm:text-7xl lg:text-9xl font-bold terminal-glow mb-4 sm:mb-6"
+              className="text-5xl sm:text-7xl lg:text-9xl font-bold mb-4 sm:mb-6"
               style={{ animation: "title-reveal 2s ease-out both" }}
               data-testid="text-tour-title"
             >
@@ -256,16 +326,16 @@ export default function Landing() {
           <div className="tour-scanline" />
           <Particles count={8} color="180 70% 50%" />
           <div className="absolute inset-0">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 tour-glow-line" />
+            <div className="absolute bottom-0 left-0 right-0 tour-glow-line" />
           </div>
 
           <div className="relative z-10 px-6 sm:px-8 max-w-2xl mx-auto flex flex-col justify-center">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-6 sm:mb-10" data-testid="text-what-label">
+            <p className="tour-fade-in text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-6 sm:mb-10" data-testid="text-what-label">
               {C.page2_what.label}
             </p>
 
-            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8">
+            <h2 className="tour-fade-in text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8">
               {C.page2_what.heading_1}
               <br />
               {C.page2_what.heading_2}
@@ -273,7 +343,7 @@ export default function Landing() {
               <span className="text-primary terminal-glow">{C.page2_what.heading_highlight}</span>
             </h2>
 
-            <div className="border-l-2 border-primary/30 pl-4 sm:pl-5 space-y-3 sm:space-y-4">
+            <div className="tour-fade-in border-l-2 border-primary/30 pl-4 sm:pl-5 space-y-3 sm:space-y-4">
               {C.page2_what.points.map((p, i) => (
                 <p key={i} className="text-xs sm:text-sm text-muted-foreground font-mono leading-relaxed">{p}</p>
               ))}
@@ -288,21 +358,21 @@ export default function Landing() {
           <Particles count={6} color="180 70% 50%" />
 
           <div className="relative z-10 px-4 sm:px-8 max-w-3xl mx-auto w-full flex flex-col justify-center h-full py-10 sm:py-16">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-2 sm:mb-5" data-testid="text-play-label">
+            <p className="tour-fade-in text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-2 sm:mb-5" data-testid="text-play-label">
               {C.page3_play.label}
             </p>
 
-            <h2 className="text-base sm:text-2xl font-bold text-foreground mb-3 sm:mb-7">
+            <h2 className="tour-fade-in text-base sm:text-2xl font-bold text-foreground mb-3 sm:mb-7">
               {C.page3_play.heading}
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 tour-stagger">
               {C.page3_play.features.map((f, i) => {
                 const Icon = featureIcons[i];
                 return (
-                  <div
+                  <TiltCard
                     key={f.sub}
-                    className="group border border-border/30 rounded-lg p-2 sm:p-3 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-300"
+                    className="tour-fade-in tour-glass-card group rounded-lg p-2 sm:p-3 hover:border-primary/30 hover:bg-primary/[0.02]"
                     data-testid={`tour-feature-${i}`}
                   >
                     <div className="flex items-center gap-1.5 mb-1 sm:mb-2">
@@ -313,7 +383,7 @@ export default function Landing() {
                     </div>
                     <p className="text-[7px] sm:text-[8px] text-primary/30 font-mono tracking-wider">{f.sub}</p>
                     <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-[1.5] mt-0.5">{f.desc}</p>
-                  </div>
+                  </TiltCard>
                 );
               })}
             </div>
@@ -330,23 +400,23 @@ export default function Landing() {
           </div>
 
           <div className="relative z-10 px-6 sm:px-8 max-w-xl mx-auto text-center flex flex-col justify-center h-full py-14 sm:py-16">
-            <p className="text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-4 sm:mb-6" data-testid="text-family-label">
+            <p className="tour-fade-in text-[10px] font-mono text-primary/40 tracking-[0.4em] uppercase mb-4 sm:mb-6" data-testid="text-family-label">
               {C.page4_family.label}
             </p>
 
-            <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 leading-relaxed">
+            <h2 className="tour-fade-in text-lg sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 leading-relaxed">
               {C.page4_family.heading_1}
               <br />
               <span className="text-primary terminal-glow">{C.page4_family.heading_highlight}</span>
             </h2>
 
-            <p className="text-[11px] sm:text-sm text-muted-foreground font-mono leading-[1.8] mb-5 sm:mb-6">
+            <p className="tour-fade-in text-[11px] sm:text-sm text-muted-foreground font-mono leading-[1.8] mb-5 sm:mb-6">
               {C.page4_family.body}
               <br />
               <span className="text-foreground font-medium">{C.page4_family.body_highlight}</span>
             </p>
 
-            <div className="border border-primary/20 rounded-lg p-4 space-y-3 text-left mb-5 sm:mb-6" style={{ animation: "border-glow-pulse 4s ease-in-out infinite" }}>
+            <div className="tour-fade-in tour-glass-card rounded-lg p-4 space-y-3 text-left mb-5 sm:mb-6" style={{ animation: "border-glow-pulse 4s ease-in-out infinite" }}>
               <div className="flex items-center gap-3">
                 <span className="text-lg">🎮</span>
                 <div>
@@ -361,15 +431,16 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-left">
-              <div className="border border-border/30 rounded-lg p-3">
+            <div className="tour-fade-in grid grid-cols-2 gap-2.5 text-left">
+              <div className="tour-glass-card rounded-lg p-3">
                 <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page4_family.free_label}</p>
                 <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page4_family.free_price}</p>
                 <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page4_family.free_desc}</p>
               </div>
-              <div className="border border-primary/20 rounded-lg p-3">
+              <div className="relative tour-glass-card rounded-lg p-3" style={{ borderColor: "hsl(150 70% 50% / 0.3)", animation: "border-glow-pulse 4s ease-in-out infinite" }}>
+                <div className="tour-badge-recommended" data-testid="badge-recommended">RECOMMEND</div>
                 <p className="text-[9px] font-mono text-primary/40 tracking-wider mb-0.5">{C.page4_family.credit_label}</p>
-                <p className="text-base sm:text-lg font-bold text-primary font-mono">{C.page4_family.credit_price}</p>
+                <p className="text-base sm:text-lg font-bold font-mono tour-gradient-text">{C.page4_family.credit_price}</p>
                 <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{C.page4_family.credit_desc}</p>
               </div>
             </div>
@@ -389,11 +460,11 @@ export default function Landing() {
           </div>
 
           <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-            <div className="text-4xl sm:text-5xl text-primary terminal-glow mb-6 sm:mb-8" style={{ animation: "border-glow-pulse 2s ease-in-out infinite" }}>
+            <div className="tour-fade-in text-4xl sm:text-5xl text-primary terminal-glow mb-6 sm:mb-8" style={{ animation: "border-glow-pulse 2s ease-in-out infinite" }}>
               ✦
             </div>
 
-            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-3 sm:mb-4 leading-[1.6] sm:leading-[1.7]">
+            <h2 className="tour-fade-in text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-3 sm:mb-4 leading-[1.6] sm:leading-[1.7]">
               {C.page5_enter.heading_1}
               <br />
               <span className="text-primary terminal-glow">{C.page5_enter.heading_highlight}</span>
@@ -401,14 +472,14 @@ export default function Landing() {
               {C.page5_enter.heading_2}
             </h2>
 
-            <p className="text-xs sm:text-sm text-muted-foreground font-mono mb-8 sm:mb-10 tracking-wider">
+            <p className="tour-fade-in text-xs sm:text-sm text-muted-foreground font-mono mb-8 sm:mb-10 tracking-wider">
               {C.page5_enter.tagline}
             </p>
 
-            <div className="flex flex-col items-center gap-4">
+            <div className="tour-fade-in flex flex-col items-center gap-4">
               <Link href="/whitepaper">
                 <Button
-                  className="bg-primary text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-sm sm:text-base font-mono shadow-[0_0_50px_rgba(0,255,128,0.25)] hover:shadow-[0_0_80px_rgba(0,255,128,0.45)] transition-all duration-700 hover:scale-105"
+                  className="tour-cta-pulse bg-primary text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-sm sm:text-base font-mono hover:scale-105 transition-transform duration-300"
                   data-testid="button-tour-whitepaper"
                 >
                   <FileText className="w-4 h-4 mr-2" />
