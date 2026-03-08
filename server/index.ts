@@ -11,9 +11,16 @@ import { eq, sql } from "drizzle-orm";
 import { execSync } from "child_process";
 
 const processedCheckoutSessions = new Set<string>();
+const activeConnections = new Set<import("net").Socket>();
+let isShuttingDown = false;
 
 const app = express();
 const httpServer = createServer(app);
+
+httpServer.on("connection", (socket) => {
+  activeConnections.add(socket);
+  socket.on("close", () => activeConnections.delete(socket));
+});
 
 declare module "http" {
   interface IncomingMessage {
@@ -205,7 +212,18 @@ export function log(message: string, source = "express") {
 let appReady = false;
 
 app.get("/api/health", (_req, res) => {
+  if (isShuttingDown) {
+    return res.status(503).json({ status: "shutting_down" });
+  }
   res.status(200).json({ status: "ok" });
+});
+
+app.use((req, res, next) => {
+  if (isShuttingDown) {
+    res.set("Connection", "close");
+    return res.status(503).json({ error: "Server is shutting down" });
+  }
+  next();
 });
 
 app.use((req, res, next) => {
@@ -348,16 +366,39 @@ async function freePort(port: number): Promise<void> {
   }
 
   function gracefulShutdown(signal: string) {
-    log(`${signal} received, shutting down...`);
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    log(`${signal} received, shutting down... (${activeConnections.size} active connections)`);
+
     httpServer.close(() => {
-      log("Server closed");
+      log("Server closed cleanly");
       process.exit(0);
     });
+
+    for (const socket of activeConnections) {
+      socket.end();
+    }
+
+    setTimeout(() => {
+      log(`Force destroying ${activeConnections.size} remaining connections`);
+      for (const socket of activeConnections) {
+        socket.destroy();
+      }
+    }, 2000);
+
     setTimeout(() => {
       log("Force exit after timeout");
       process.exit(1);
-    }, 3000);
+    }, 5000);
   }
   process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err);
+    gracefulShutdown("uncaughtException");
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled Rejection:", reason);
+  });
 })();
