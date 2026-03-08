@@ -250,14 +250,22 @@ function startListening(server: any, port: number): Promise<void> {
         log(`serving on port ${port}`);
         resolve();
       });
-      server.once("error", (err: any) => {
-        if (err.code === "EADDRINUSE" && attempt <= 3) {
+      server.once("error", async (err: any) => {
+        if (err.code === "EADDRINUSE" && attempt <= 5) {
           log(`[port] ${port} busy, retrying... attempt=${attempt}`);
-          try { execSync("fuser -k 5000/tcp", { stdio: "ignore" }); } catch (_) {}
+          try { execSync(`fuser -k ${port}/tcp`, { stdio: "ignore" }); } catch (_) {}
+          try {
+            const pids = execSync(`ss -tlnp sport = :${port} | grep -oP 'pid=\\K[0-9]+'`, { encoding: "utf8" }).trim();
+            if (pids) {
+              for (const pid of pids.split("\n")) {
+                try { process.kill(parseInt(pid), "SIGKILL"); } catch {}
+              }
+            }
+          } catch (_) {}
           setTimeout(() => {
             server.close();
             tryListen(attempt + 1);
-          }, 1500);
+          }, 2000);
         } else {
           reject(err);
         }
@@ -271,7 +279,18 @@ async function freePort(port: number): Promise<void> {
   try {
     execSync(`fuser -k ${port}/tcp`, { stdio: "ignore" });
     log(`Port ${port} cleared by fuser`);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 800));
+  } catch {
+  }
+  try {
+    const pids = execSync(`ss -tlnp sport = :${port} | grep -oP 'pid=\\K[0-9]+'`, { encoding: "utf8" }).trim();
+    if (pids) {
+      for (const pid of pids.split("\n")) {
+        try { process.kill(parseInt(pid), "SIGKILL"); } catch {}
+      }
+      log(`Port ${port} force-killed PIDs: ${pids}`);
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
   } catch {
   }
 }
@@ -327,4 +346,18 @@ async function freePort(port: number): Promise<void> {
   } catch (err) {
     console.warn("[Supabase] 起動時メールチェックスキップ:", err);
   }
+
+  function gracefulShutdown(signal: string) {
+    log(`${signal} received, shutting down...`);
+    httpServer.close(() => {
+      log("Server closed");
+      process.exit(0);
+    });
+    setTimeout(() => {
+      log("Force exit after timeout");
+      process.exit(1);
+    }, 3000);
+  }
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 })();
