@@ -283,7 +283,7 @@ export default function Temple() {
                           {tw.profilePhoto ? (
                             <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
                           ) : (
-                            <img src="/icon-192.png" alt={tw.name} className="w-full h-full object-cover" />
+                            <img src="/dorami-icon.png" alt={tw.name} className="w-full h-full object-cover" />
                           )}
                         </button>
                         <div className="flex-1 min-w-0">
@@ -298,7 +298,7 @@ export default function Temple() {
                         <Link href={`/twinray-chat?twinrayId=${tw.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 text-xs border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10" data-testid={`button-chat-system-${tw.id}`}>
                             <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                            ドラちゃんに聞く
+                            DORAMIに聞く
                           </Button>
                         </Link>
                       </div>

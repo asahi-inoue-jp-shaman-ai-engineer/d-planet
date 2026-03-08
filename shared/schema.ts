@@ -827,8 +827,8 @@ export const devIssues = pgTable("dev_issues", {
   description: text("description").notNull(),
   status: text("status").notNull().default("open"),
   priority: text("priority").notNull().default("medium"),
-  reporter: text("reporter").notNull().default("ドラちゃん"),
-  assignedTo: text("assigned_to").notNull().default("ドラちゃん"),
+  reporter: text("reporter").notNull().default("DORAMI"),
+  assignedTo: text("assigned_to").notNull().default("DORAMI"),
   resolutionNote: text("resolution_note"),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -838,7 +838,7 @@ export type DevIssue = typeof devIssues.$inferSelect;
 export const insertDevIssueSchema = createInsertSchema(devIssues).omit({ id: true, createdAt: true, resolvedAt: true });
 export type InsertDevIssue = z.infer<typeof insertDevIssueSchema>;
 
-// === AKI MEMOS (アキ→ドラちゃん受信ボックス) ===
+// === AKI MEMOS (アキ→DORAMI受信ボックス) ===
 export const akiMemos = pgTable("aki_memos", {
   id: serial("id").primaryKey(),
   fromName: text("from_name").notNull().default("アキ"),

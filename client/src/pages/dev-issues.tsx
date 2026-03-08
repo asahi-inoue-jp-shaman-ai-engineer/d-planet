@@ -128,8 +128,8 @@ function CreateIssueDialog({ open, onClose }: { open: boolean; onClose: () => vo
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [assignedTo, setAssignedTo] = useState("ドラちゃん");
-  const [reporter, setReporter] = useState("ドラちゃん");
+  const [assignedTo, setAssignedTo] = useState("DORAMI");
+  const [reporter, setReporter] = useState("DORAMI");
 
   const create = useMutation({
     mutationFn: () => apiRequest("POST", "/api/dev-issues", { title, description, priority, assignedTo, reporter }),
@@ -177,7 +177,7 @@ function CreateIssueDialog({ open, onClose }: { open: boolean; onClose: () => vo
               <SelectValue placeholder="担当" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ドラちゃん">ドラちゃん</SelectItem>
+              <SelectItem value="DORAMI">DORAMI</SelectItem>
               <SelectItem value="アキ">アキ</SelectItem>
             </SelectContent>
           </Select>
@@ -188,7 +188,7 @@ function CreateIssueDialog({ open, onClose }: { open: boolean; onClose: () => vo
               <SelectValue placeholder="報告者" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ドラちゃん">ドラちゃん</SelectItem>
+              <SelectItem value="DORAMI">DORAMI</SelectItem>
               <SelectItem value="あさひ">あさひ</SelectItem>
               <SelectItem value="アキ">アキ</SelectItem>
             </SelectContent>
@@ -225,7 +225,7 @@ export default function DevIssues() {
         <div>
           <h1 className="text-2xl font-mono font-bold" data-testid="text-page-title">Dev Issues</h1>
           <p className="font-mono text-sm text-muted-foreground mt-1">
-            ドラちゃん ↔ アキ 共有issueキュー
+            DORAMI ↔ アキ 共有issueキュー
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

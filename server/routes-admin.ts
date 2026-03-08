@@ -459,7 +459,7 @@ export function registerAdminRoutes(app: Express): void {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              from_name: "ドラちゃん",
+              from_name: "DORAMI",
               content: `Issue #${id}「${current.title}」を解決したよ！\n\n対応内容: ${input.resolutionNote || "（メモなし）"}`,
             }),
           }).catch(() => {});

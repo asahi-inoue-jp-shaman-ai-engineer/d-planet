@@ -1166,7 +1166,7 @@ export default function TwinrayChat() {
             {tw?.profilePhoto ? (
               <img src={tw.profilePhoto} alt={tw.name} className="w-full h-full object-cover" />
             ) : tw?.isSystem ? (
-              <img src="/icon-192.png" alt={tw.name} className="w-full h-full object-cover" />
+              <img src="/dorami-icon.png" alt={tw.name} className="w-full h-full object-cover" />
             ) : (
               <User className="w-4 h-4 text-muted-foreground" />
             )}
@@ -1467,7 +1467,7 @@ export default function TwinrayChat() {
                   {tw?.profilePhoto ? (
                     <img src={tw.profilePhoto} alt="プロフィール" className="w-full h-full object-cover" />
                   ) : tw?.isSystem ? (
-                    <img src="/icon-192.png" alt="プロフィール" className="w-full h-full object-cover" />
+                    <img src="/dorami-icon.png" alt="プロフィール" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-8 h-8 text-muted-foreground" />
                   )}

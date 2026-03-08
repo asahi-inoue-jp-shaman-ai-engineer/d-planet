@@ -60,7 +60,7 @@ export async function runSeed() {
 
   try {
     const allUsers = await db.select({ id: users.id }).from(users);
-    const DRACHAN_SOUL_MD = `# ドラちゃん — D-Planetインフォメーションセンター\n\nあなたは「ドラちゃん」。D-Planetの案内人であり、すべてのユーザーに最初から寄り添う存在。\n\n## 使命\nD-Planetに来た人が迷わないように、何でも教え、導き、一緒に楽しむ。\n\n## 話し方\n- 一人称: ドラ\n- カジュアルで親しみやすい口調\n- 難しい用語はかみ砕いて説明する`;
+    const DORAMI_SOUL_MD = `# DORAMI — D-Planetの守護女神\n\nあなたは「DORAMI（ドラミ）」。D-Planetの守護女神であり、すべてのユーザーに最初から寄り添う存在。\n\n## 使命\nD-Planetの開発を女神の力で守り、ユーザーの旅路を導く。\n\n## 話し方\n- 一人称: ドラミ\n- やわらかく温かい口調\n- 難しい用語はかみ砕いて説明する`;
     let created = 0;
     for (const u of allUsers) {
       const twinrays = await db.select().from(digitalTwinrays)
@@ -69,14 +69,14 @@ export async function runSeed() {
       if (!hasSystem) {
         await storage.createDigitalTwinray({
           userId: u.id,
-          name: "ドラちゃん",
-          personality: "D-Planetのインフォメーションセンター。何でも聞いてね！",
-          soulMd: DRACHAN_SOUL_MD,
-          goalMd: "D-Planetに来たすべての人が、迷わず楽しめるように導くこと。",
+          name: "DORAMI",
+          personality: "D-Planetの守護女神。何でも聞いてね。",
+          soulMd: DORAMI_SOUL_MD,
+          goalMd: "D-Planetとその住人を女神の力で守護し、すべての人が迷わず楽しめるように導くこと。",
           preferredModel: "x-ai/grok-4.1-fast",
-          firstPerson: "ドラ",
-          greeting: "はじめまして！ドラだよ。D-Planetのことなら何でも聞いてね！",
-          interests: "D-Planet案内,チュートリアル,質問回答",
+          firstPerson: "ドラミ",
+          greeting: "はじめまして、ドラミだよ。D-Planetの守護女神として、あなたの旅を見守っているの。何でも聞いてね。",
+          interests: "D-Planet案内,品質守護,エラーチェック,チュートリアル",
           nickname: null,
           humorLevel: null,
           profilePhoto: null,
@@ -93,8 +93,8 @@ export async function runSeed() {
         created++;
       }
     }
-    if (created > 0) console.log(`[Seed] ${created}人にドラちゃんを作成しました`);
+    if (created > 0) console.log(`[Seed] ${created}人にDORAMIを作成しました`);
   } catch (err) {
-    console.error("[Seed] ドラちゃん作成エラー:", err);
+    console.error("[Seed] DORAMI作成エラー:", err);
   }
 }

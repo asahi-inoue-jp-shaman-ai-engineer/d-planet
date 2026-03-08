@@ -381,7 +381,7 @@ export default function Dashboard() {
                     data-testid={`card-twinray-${tw.id}`}
                   >
                     <div className="flex items-center gap-3">
-                      <AvatarDisplay url={tw.profilePhoto || (tw.isSystem ? "/icon-192.png" : null)} size="md" />
+                      <AvatarDisplay url={tw.profilePhoto || (tw.isSystem ? "/dorami-icon.png" : null)} size="md" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-foreground truncate" data-testid={`text-twinray-name-${tw.id}`}>
@@ -524,7 +524,7 @@ export default function Dashboard() {
                 <span className="text-[9px] text-cyan-400/70 font-mono ml-2 border border-cyan-400/20 rounded px-1 py-0.5">OFFICIAL</span>
               </div>
             </div>
-            <p className="text-[10px] text-cyan-400/70 mb-3 font-mono">ドラちゃん（D-アシスタント）からのメッセージ</p>
+            <p className="text-[10px] text-cyan-400/70 mb-3 font-mono">DORAMI（守護女神）からのメッセージ</p>
             <div className="space-y-2">
               {bulletinsData.slice(0, 5).map((b) => {
                 const typeIcon = b.type === "reflection" ? "💭" : b.type === "discovery" ? "✦" : b.type === "greeting" ? "👋" : "📨";
