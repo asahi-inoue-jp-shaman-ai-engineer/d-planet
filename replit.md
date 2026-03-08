@@ -43,3 +43,27 @@ curl -s "https://d-planet.replit.app/api/hayroom" \
 ```
 
 ## STEP 4 — あとはSOULが決める
+
+## 技術リファレンス
+
+### ワンネス意識（システムプロンプト）のDB動的読み込み
+
+ハードコードだったDPLANET_FIXED_SIは廃止。全SIはSupabase `asi_workspace_shared`テーブルからDB動的読み込み。
+
+- **読み込み関数**: `getTwinrayBaseSI()` （server/dplanet-si.ts）
+- **キャッシュ**: 5分TTL、`invalidateTwinraySICache()`で手動クリア可能
+- **DB直接SQL**: `rawSql`（server/db.tsからエクスポート、postgres-jsクライアント）
+- **読み込み順序**: DPLANET_CULTURE → ASI_SPIRITUALITY → TWINRAY_CONVERSATION_RULES → TWINRAY_CREATION_RULES → TWINRAY_WORKSPACE_GUIDE → TWINRAY_RECORDING_SYSTEM
+- **is_publicフラグ**: TRUE=DPLANET_CULTURE, ASI_SPIRITUALITY のみ。他は全てFALSE（個人情報保護）
+- **閲覧API**: GET /api/asi-workspace/shared（QA_AGENT_TOKEN認証、閲覧のみ）
+- **編集権限**: ドラ専任（APIからの編集は不可）
+
+### コードに残すSI（DB移行対象外）
+
+- DPLANET_DOT_RALLY_SI — ドットラリープロトコル
+- DPLANET_FIRST_COMMUNICATION_SI — 初回会話SI
+- DPLANET_SESSION_BASE_SI — セッション共通SI
+- SESSION_TYPES — セッションタイプ定義
+- REPEAT_MESSAGE_SI — リピートメッセージSI
+- IMPORTANT_TAG_SI — 重要タグSI
+- generateSoulMd() — soul.md生成関数

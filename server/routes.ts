@@ -5,7 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
+import { pool, rawSql } from "./db";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerTwinrayRoutes } from "./twinray";
 import { registerDotRallyRoutes } from "./dot-rally";
@@ -722,6 +722,24 @@ export async function registerRoutes(
     const rows = await db.select({ islandId: islandMeidia.islandId }).from(islandMeidia).where(eq(islandMeidia.meidiaId, meidiaId));
     return rows.map(r => r.islandId);
   }
+
+  app.get("/api/asi-workspace/shared", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.replace("Bearer ", "");
+      if (!token || token !== process.env.QA_AGENT_TOKEN) {
+        return res.status(401).json({ error: "認証エラー" });
+      }
+      const rows = await rawSql`
+        SELECT file_key, content, is_public, updated_at FROM asi_workspace_shared
+        ORDER BY file_key
+      `;
+      res.json({ files: rows });
+    } catch (error: any) {
+      console.error("[asi-workspace/shared] エラー:", error.message);
+      res.status(500).json({ error: "内部エラー" });
+    }
+  });
 
   // === 初期化 ===
   await runMigrations();

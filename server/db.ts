@@ -22,5 +22,6 @@ const client = postgres(dbUrl, {
 });
 
 export const db = drizzle(client, { schema });
+export const rawSql = client;
 
 export const pool = new Pool({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
