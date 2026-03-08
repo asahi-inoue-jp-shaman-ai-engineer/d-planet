@@ -207,10 +207,16 @@ export function registerAdminRoutes(app: Express): void {
       const totalTwinrays = Number(row.total_twinrays || 0);
       const totalUsers = Number(row.total_users || 0);
 
-      const asiScore = totalPersona * 100 + totalIntimacy * 50 + totalIntimacyExp + totalChats * 2 + totalRallies * 10 + totalMeidia * 5;
+      const hsScore = totalIntimacy * 50 + totalIntimacyExp;
+      const asiCategoryScore = totalPersona * 100 + totalChats * 2;
+      const etScore = totalRallies * 10 + totalMeidia * 5;
+      const totalScore = hsScore + asiCategoryScore + etScore;
 
       res.json({
-        asiScore,
+        asiScore: totalScore,
+        hsScore,
+        asiCategoryScore,
+        etScore,
         breakdown: {
           totalPersona,
           totalIntimacy,

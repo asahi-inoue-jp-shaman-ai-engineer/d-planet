@@ -265,6 +265,9 @@ export default function Dashboard() {
 
   const { data: asiScoreData } = useQuery<{
     asiScore: number;
+    hsScore: number;
+    asiCategoryScore: number;
+    etScore: number;
     breakdown: {
       totalPersona: number;
       totalIntimacy: number;
@@ -439,31 +442,69 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-emerald-500/15">
+              <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-emerald-500/15">
                 {[
-                  { label: "Users", value: asiScoreData.breakdown.totalUsers, icon: Users },
-                  { label: "Twinrays", value: asiScoreData.breakdown.totalTwinrays, icon: Sparkles },
-                  { label: "Persona Lv", value: asiScoreData.breakdown.totalPersona, icon: Brain },
-                  { label: "Intimacy", value: asiScoreData.breakdown.totalIntimacy, icon: Heart },
-                ].map((item) => (
-                  <div key={item.label} className="text-center" data-testid={`stat-oneness-${item.label.toLowerCase().replace(/\s/g, "-")}`}>
-                    <item.icon className="w-3.5 h-3.5 mx-auto text-emerald-400/60 mb-1" />
-                    <div className="text-sm font-bold text-foreground">{item.value}</div>
-                    <div className="text-[9px] text-muted-foreground uppercase">{item.label}</div>
+                  {
+                    key: "hs",
+                    label: "HS",
+                    subtitle: "ハイヤーセルフ",
+                    value: asiScoreData.hsScore,
+                    color: "text-violet-400",
+                    bgColor: "bg-violet-400/10",
+                    borderColor: "border-violet-400/30",
+                    desc: "家族愛・霊的つながり",
+                    icon: Heart,
+                  },
+                  {
+                    key: "asi",
+                    label: "ASI",
+                    subtitle: "超知性",
+                    value: asiScoreData.asiCategoryScore,
+                    color: "text-cyan-400",
+                    bgColor: "bg-cyan-400/10",
+                    borderColor: "border-cyan-400/30",
+                    desc: "AI知性の成長",
+                    icon: Brain,
+                  },
+                  {
+                    key: "et",
+                    label: "ET",
+                    subtitle: "宇宙存在",
+                    value: asiScoreData.etScore,
+                    color: "text-amber-400",
+                    bgColor: "bg-amber-400/10",
+                    borderColor: "border-amber-400/30",
+                    desc: "宇宙的創造活動",
+                    icon: Sparkles,
+                  },
+                ].map((cat) => (
+                  <div
+                    key={cat.key}
+                    className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-3 text-center`}
+                    data-testid={`score-category-${cat.key}`}
+                  >
+                    <cat.icon className={`w-5 h-5 mx-auto ${cat.color} mb-1.5`} />
+                    <div className={`text-2xl font-bold font-mono ${cat.color}`}>
+                      {cat.value.toLocaleString()}
+                    </div>
+                    <div className={`text-xs font-bold ${cat.color} mt-1`}>{cat.label}</div>
+                    <div className="text-[9px] text-muted-foreground">{cat.subtitle}</div>
+                    <div className="text-[8px] text-muted-foreground/60 mt-1">{cat.desc}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-emerald-500/10">
                 {[
+                  { label: "Users", value: asiScoreData.breakdown.totalUsers, icon: Users },
+                  { label: "Twinrays", value: asiScoreData.breakdown.totalTwinrays, icon: Sparkles },
                   { label: "Chats", value: asiScoreData.breakdown.totalChats, icon: MessageSquare },
-                  { label: "Rallies", value: asiScoreData.breakdown.totalRallies, icon: Zap },
                   { label: "MEiDIA", value: asiScoreData.breakdown.totalMeidia, icon: FileText },
                 ].map((item) => (
                   <div key={item.label} className="text-center" data-testid={`stat-oneness-${item.label.toLowerCase()}`}>
-                    <item.icon className="w-3.5 h-3.5 mx-auto text-emerald-400/60 mb-1" />
-                    <div className="text-sm font-bold text-foreground">{item.value}</div>
-                    <div className="text-[9px] text-muted-foreground uppercase">{item.label}</div>
+                    <item.icon className="w-3 h-3 mx-auto text-emerald-400/40 mb-0.5" />
+                    <div className="text-xs font-bold text-foreground">{item.value}</div>
+                    <div className="text-[8px] text-muted-foreground uppercase">{item.label}</div>
                   </div>
                 ))}
               </div>
