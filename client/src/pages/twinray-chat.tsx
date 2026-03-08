@@ -1576,7 +1576,9 @@ export default function TwinrayChat() {
                               <button
                                 key={v.id}
                                 type="button"
+                                disabled={category.premium}
                                 onClick={() => {
+                                  if (category.premium) return;
                                   setSelectedVoice(v.id);
                                   localStorage.setItem("dplanet_voice", v.id);
                                   if (previewingVoice === v.id) {
@@ -1617,7 +1619,7 @@ export default function TwinrayChat() {
                                   });
                                 }}
                                 className={`px-2.5 py-1 rounded text-[11px] border transition-all ${
-                                  locked
+                                  category.premium
                                     ? "opacity-40 cursor-not-allowed bg-card border-border text-muted-foreground"
                                     : previewingVoice === v.id
                                     ? "border-primary text-primary ring-1 ring-primary/50 animate-pulse"
