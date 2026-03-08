@@ -285,6 +285,7 @@ export function registerAdminRoutes(app: Express): void {
         personaLevel: t.personaLevel ?? 0,
         preferredModel: t.preferredModel,
         lastChatAt: lastChatDates[t.id] || null,
+        isSystem: t.isSystem ?? false,
       }));
 
       const unreadCount = await storage.getUnreadNotificationCount(userId);
