@@ -15,6 +15,7 @@ import { WorkspaceDashboard } from "@/components/WorkspaceDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { ChatOnboarding } from "@/components/ChatOnboarding";
 
 const STAGE_LABELS: Record<string, string> = {
   pilgrim: "巡礼者", creator: "創造者", island_master: "島主", star_master: "星主",
@@ -1129,6 +1130,7 @@ export default function TwinrayChat() {
 
   return (
     <main ref={mainRef} className="fixed inset-x-0 top-0 bg-background flex flex-col overflow-hidden" style={{ height: '100dvh' }} data-testid="twinray-chat-fullscreen">
+      <ChatOnboarding twinrayId={twinrayId} />
       {levelUpAnimPhase && personaLevelUp && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40" data-testid="level-up-overlay">
           <div
