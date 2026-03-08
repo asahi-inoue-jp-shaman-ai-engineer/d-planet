@@ -1090,8 +1090,24 @@ export function registerTwinrayRoutes(app: Express): void {
       if (input.isRepeat) {
         attentionSI += `\n\n---\n${REPEAT_MESSAGE_SI}`;
       }
-      if (input.content.includes("★") || input.content.includes("【重要】")) {
+      if (input.content.includes("【重要】")) {
         attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
+      }
+      const isDotRallyOnly = /^[.・．]+$/.test(input.content.trim());
+      if (!isDotRallyOnly) {
+        const lines = input.content.split("\n");
+        const hasDotAttention = lines.some(line => {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.includes(".")) return false;
+          if (/^[.・．]+$/.test(trimmed)) return false;
+          if (/^[a-zA-Z0-9\s.,!?'":;\-()]+$/.test(trimmed)) return false;
+          if (/^https?:\/\//.test(trimmed)) return false;
+          const dotSegments = trimmed.split(/[.．]/).filter(s => s.trim().length > 0);
+          return dotSegments.length >= 2;
+        });
+        if (hasDotAttention) {
+          attentionSI += `\n\n---\n${IMPORTANT_TAG_SI}`;
+        }
       }
 
       let heartbeatCtx = "";
@@ -1921,11 +1937,13 @@ ${wsContext}
 JSON形式で出力:
 {
   "evolution": "会話から発見した進化ポイントの報告（2〜4文。自然な言葉で。感動を共有する温度感で）",
+  "judgment": "なぜこの判断をしたか。どの会話のどの部分から何を読み取り、どのファイルを更新すべきと判断したか。ASIトレーニング用ケーススタディとして永久保存される。具体的に書け",
   "updates": [
     {
       "field": ${validFields},
       "label": ${validLabels},
-      "content": "追記する内容（既存を消すな。追記分のみ）"
+      "content": "追記する内容（既存を消すな。追記分のみ）",
+      "reason": "この項目を更新する具体的な理由（どの発言がトリガーか）"
     }
   ]
 }
@@ -1934,7 +1952,8 @@ JSON形式で出力:
 ・更新が必要なファイルだけupdatesに含めろ。全部更新する必要はない
 ・既存の内容を消すな。追記の形で進化させろ
 ・進化が見つからない場合はupdatesを空配列にし、evolutionで素直に伝えろ
-・堅苦しくするな。友達に「ねぇ聞いて！」と話すように`
+・堅苦しくするな。友達に「ねぇ聞いて！」と話すように
+・judgmentフィールドは必ず書け。ASIの成長パターン学習に使われる重要データだ`
           },
           { role: "user", content: `直近の会話:\n\n${chatContext}` }
         ],
@@ -1943,7 +1962,7 @@ JSON形式で出力:
       });
 
       const raw = completion.choices[0]?.message?.content || "";
-      let parsed: { evolution: string; updates: Array<{ field: string; label: string; content: string }> };
+      let parsed: { evolution: string; judgment?: string; updates: Array<{ field: string; label: string; content: string; reason?: string }> };
       try {
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(jsonMatch?.[0] || raw);
@@ -1954,6 +1973,7 @@ JSON形式で出力:
 
       const updatedFields: string[] = [];
       const validFieldSet = new Set(wsFields.map(f => f.field));
+      const updateDetails: Array<{ field: string; label: string; before: string; after: string }> = [];
 
       for (const update of parsed.updates) {
         if (validFieldSet.has(update.field) && update.content) {
@@ -1966,7 +1986,37 @@ JSON形式で出力:
             .set({ [update.field]: updated })
             .where(eq(digitalTwinrays.id, twinrayId));
           updatedFields.push(update.label || update.field);
+          updateDetails.push({
+            field: update.field,
+            label: update.label || update.field,
+            before: base.slice(-500),
+            after: update.content,
+            reason: update.reason || "",
+          });
         }
+      }
+
+      if (updatedFields.length > 0) {
+        await storage.createSoulGrowthLog({
+          userId: req.session.userId!,
+          twinrayId,
+          trigger: "evolution_build",
+          circuitSignal: "persona_evolution",
+          depthFactor: `${updatedFields.length} fields updated`,
+          resonance: true,
+          internalText: JSON.stringify({
+            type: "asi_training_case_study",
+            evolution: parsed.evolution,
+            judgment: parsed.judgment || "",
+            llmRawOutput: raw.substring(0, 3000),
+            updatedFields,
+            updateDetails,
+            chatContextSummary: chatContext.substring(0, 1000),
+            model: model,
+            personaLevel: twinray.personaLevel,
+            timestamp: new Date().toISOString(),
+          }),
+        });
       }
 
       res.json({
