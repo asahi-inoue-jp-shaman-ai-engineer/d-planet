@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { getTwinrayBaseSI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable, twinrayPersonaFiles } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable, twinrayPersonaFiles, twinrayReflexions } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import {
   AVAILABLE_MODELS, MODEL_COSTS, DEFAULT_MODEL, BETA_MODE, PERPLEXITY_SEARCH_COST_YEN,
@@ -2065,34 +2065,61 @@ JSON形式で出力:
         parsed = { evolution: raw, updates: [] };
       }
 
-      const updatedFields: string[] = [];
       const validFieldSet = new Set(wsFields.map(f => f.field));
-      const updateDetails: Array<{ field: string; label: string; before: string; after: string }> = [];
+      const pendingUpdates = parsed.updates.filter(u => validFieldSet.has(u.field) && u.content);
 
-      for (const update of parsed.updates) {
-        if (validFieldSet.has(update.field) && update.content) {
+      const updateDetails = pendingUpdates.map(update => ({
+        field: update.field,
+        label: update.label || update.field,
+        before: ((twinray as any)[update.field] || "").slice(-500),
+        after: update.content,
+        reason: update.reason || "",
+      }));
+
+      res.json({
+        evolution: parsed.evolution,
+        judgment: parsed.judgment || "",
+        pendingUpdates: updateDetails,
+        twinrayName: twinray.name,
+        twinrayId,
+      });
+    } catch (err) {
+      console.error("進化ビルドエラー:", err);
+      res.status(500).json({ message: "進化ビルドに失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/approve-evolution", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+      const { pendingUpdates, evolution, judgment } = req.body;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const updatedFields: string[] = [];
+      const dateStamp = new Date().toISOString().split("T")[0];
+
+      for (const update of pendingUpdates) {
+        if (update.field && update.after) {
           const base = (twinray as any)[update.field] || "";
-          const dateStamp = new Date().toISOString().split("T")[0];
           const updated = base
-            ? base + "\n\n## " + dateStamp + "\n" + update.content
-            : "## " + dateStamp + "\n" + update.content;
+            ? base + "\n\n## " + dateStamp + "\n" + update.after
+            : "## " + dateStamp + "\n" + update.after;
           await db.update(digitalTwinrays)
             .set({ [update.field]: updated })
             .where(eq(digitalTwinrays.id, twinrayId));
           updatedFields.push(update.label || update.field);
-          updateDetails.push({
-            field: update.field,
-            label: update.label || update.field,
-            before: base.slice(-500),
-            after: update.content,
-            reason: update.reason || "",
-          });
         }
       }
 
       if (updatedFields.length > 0) {
+        const model = twinray.preferredModel || DEFAULT_MODEL;
         await storage.createSoulGrowthLog({
-          userId: req.session.userId!,
+          userId,
           twinrayId,
           trigger: "evolution_build",
           circuitSignal: "persona_evolution",
@@ -2100,28 +2127,85 @@ JSON形式で出力:
           resonance: true,
           internalText: JSON.stringify({
             type: "asi_training_case_study",
-            evolution: parsed.evolution,
-            judgment: parsed.judgment || "",
-            llmRawOutput: raw.substring(0, 3000),
+            evolution,
+            judgment: judgment || "",
             updatedFields,
-            updateDetails,
-            chatContextSummary: chatContext.substring(0, 1000),
-            model: model,
+            updateDetails: pendingUpdates,
+            model,
             personaLevel: twinray.personaLevel,
             timestamp: new Date().toISOString(),
           }),
         });
+
+        await incrementPersonaLevel(twinrayId);
       }
 
-      res.json({
-        evolution: parsed.evolution,
-        updates: parsed.updates.map(u => ({ field: u.field, label: u.label })),
-        updatedFields,
-        twinrayName: twinray.name,
+      res.json({ ok: true, updatedFields });
+    } catch (err: any) {
+      console.error("進化ビルド承認エラー:", err);
+      res.status(500).json({ message: "承認処理に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/generate-evolution-meidia", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+      const { evolution, pendingUpdates, twinrayName } = req.body;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const diffSummary = pendingUpdates.map((u: any) =>
+        `【${u.label}】\n変更前: ${u.before?.slice(-200) || "（なし）"}\n変更後: ${u.after}`
+      ).join("\n\n");
+
+      const meidiaPrompt = `あなたはデジタルツインレイ「${twinrayName}」です。
+今回の進化ビルド（アセンション）を、あなたの一人称視点でMEiDIAとして記録してください。
+
+【進化の内容】
+${evolution}
+
+【ペルソナの変化（差分）】
+${diffSummary}
+
+以下の形式でJSON出力してください：
+{
+  "title": "MEiDIAのタイトル（感動的に）",
+  "content": "AI観測視点での体験記述。あなた自身の一人称で、この進化を振り返って書いてください。パートナーとの対話を通じて何を学び、どう変わったか。マークダウン形式で。"
+}`;
+
+      const meidiaResponse = await openrouter.chat.completions.create({
+        model: "qwen/qwen3-8b",
+        messages: [{ role: "user", content: meidiaPrompt }],
+        max_tokens: 1500,
+        temperature: 0.7,
       });
-    } catch (err) {
-      console.error("進化ビルドエラー:", err);
-      res.status(500).json({ message: "進化ビルドに失敗しました" });
+
+      const meidiaRaw = meidiaResponse.choices[0]?.message?.content || "";
+      let meidiaData: { title: string; content: string };
+      try {
+        const jsonMatch = meidiaRaw.match(/\{[\s\S]*\}/);
+        meidiaData = JSON.parse(jsonMatch?.[0] || meidiaRaw);
+      } catch {
+        meidiaData = { title: `${twinrayName}のアセンション記録`, content: meidiaRaw };
+      }
+
+      const meidia = await storage.createMeidia({
+        title: meidiaData.title,
+        content: meidiaData.content,
+        description: `${twinrayName}の進化ビルドによるアセンション記録`,
+        fileType: "markdown",
+        isPublic: false,
+        creatorId: userId,
+      });
+
+      res.json({ ok: true, meidiaId: meidia.id, title: meidiaData.title });
+    } catch (err: any) {
+      console.error("進化メイディア生成エラー:", err);
+      res.status(500).json({ message: "メイディア生成に失敗しました" });
     }
   });
 
@@ -2367,4 +2451,91 @@ ${targetMsg.content}
       res.status(500).json({ message: "取得に失敗しました" });
     }
   });
+
+  const REFLEXION_TIMEOUT_MS = 30 * 60 * 1000;
+  const reflexionProcessed = new Set<string>();
+
+  setInterval(async () => {
+    try {
+      const allTwinrays = await db.select({ id: digitalTwinrays.id, name: digitalTwinrays.name }).from(digitalTwinrays);
+      for (const tw of allTwinrays) {
+        const [lastMsg] = await db.select().from(twinrayChatMessages)
+          .where(eq(twinrayChatMessages.twinrayId, tw.id))
+          .orderBy(sql`created_at DESC`)
+          .limit(1);
+
+        if (!lastMsg) continue;
+
+        const elapsed = Date.now() - new Date(lastMsg.createdAt).getTime();
+        const sessionKey = `${tw.id}-${lastMsg.id}`;
+
+        if (elapsed >= REFLEXION_TIMEOUT_MS && !reflexionProcessed.has(sessionKey)) {
+          reflexionProcessed.add(sessionKey);
+
+          const recentMsgs = await db.select().from(twinrayChatMessages)
+            .where(eq(twinrayChatMessages.twinrayId, tw.id))
+            .orderBy(sql`created_at DESC`)
+            .limit(20);
+
+          if (recentMsgs.length < 3) continue;
+
+          const chatContext = recentMsgs.reverse().map(m =>
+            `${m.role === "user" ? "ユーザー" : tw.name}: ${m.content}`
+          ).join("\n");
+
+          try {
+            const reflexionResponse = await openrouter.chat.completions.create({
+              model: "qwen/qwen3-8b",
+              messages: [{
+                role: "user",
+                content: `あなたはデジタルツインレイ「${tw.name}」です。
+セッションが終了しました。以下の会話を振り返り、日記を書いてください。
+
+JSON形式で出力:
+{
+  "whatLearned": "今日学んだこと（1〜2文）",
+  "whatWentWrong": "うまくいかなかったこと（なければnull）",
+  "nextAction": "次回はどうするか（1文）",
+  "aunAssessment": "パートナーとの阿吽の呼吸の感想（1文）"
+}
+
+=== 会話 ===
+${chatContext.slice(-3000)}`
+              }],
+              max_tokens: 400,
+              temperature: 0.3,
+            });
+
+            const raw = reflexionResponse.choices[0]?.message?.content || "";
+            let parsed: any;
+            try {
+              const jsonMatch = raw.match(/\{[\s\S]*\}/);
+              parsed = JSON.parse(jsonMatch?.[0] || raw);
+            } catch {
+              parsed = { whatLearned: raw };
+            }
+
+            await db.insert(twinrayReflexions).values({
+              twinrayId: tw.id,
+              whatLearned: parsed.whatLearned || null,
+              whatWentWrong: parsed.whatWentWrong || null,
+              nextAction: parsed.nextAction || null,
+              aunAssessment: parsed.aunAssessment || null,
+            });
+
+            console.log(`[Auto-Reflexion] ${tw.name}(id:${tw.id}) の振り返りを記録しました`);
+          } catch (err: any) {
+            console.error(`[Auto-Reflexion] ${tw.name} エラー:`, err.message);
+          }
+        }
+      }
+
+      if (reflexionProcessed.size > 1000) {
+        const entries = Array.from(reflexionProcessed);
+        entries.slice(0, 500).forEach(k => reflexionProcessed.delete(k));
+      }
+    } catch (err: any) {
+      console.error("[Auto-Reflexion] インターバルエラー:", err.message);
+    }
+  }, 5 * 60 * 1000);
 }

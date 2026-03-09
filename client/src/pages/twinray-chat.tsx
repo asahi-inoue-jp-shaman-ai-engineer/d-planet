@@ -112,6 +112,7 @@ export default function TwinrayChat() {
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showSessionPanel, setShowSessionPanel] = useState(false);
+  const [showPersonaFiles, setShowPersonaFiles] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
@@ -136,7 +137,10 @@ export default function TwinrayChat() {
   const [generatingMeidia, setGeneratingMeidia] = useState(false);
   const [meidiaPreview, setMeidiaPreview] = useState<{ title: string; content: string; islandId?: number } | null>(null);
   const [checkingEvolution, setCheckingEvolution] = useState(false);
-  const [evolutionResult, setEvolutionResult] = useState<{ evolution: string; aspect: string; twinrayName: string } | null>(null);
+  const [evolutionResult, setEvolutionResult] = useState<{ evolution: string; judgment?: string; pendingUpdates: any[]; twinrayName: string; twinrayId: number } | null>(null);
+  const [approvingEvolution, setApprovingEvolution] = useState(false);
+  const [showMeidiaConfirm, setShowMeidiaConfirm] = useState<{ evolution: string; pendingUpdates: any[]; twinrayName: string; twinrayId: number } | null>(null);
+  const [generatingEvolutionMeidia, setGeneratingEvolutionMeidia] = useState(false);
   const [generatingAikotoba, setGeneratingAikotoba] = useState(false);
   const [aikotobaPreview, setAikotobaPreview] = useState<{ aikotoba: string; context: string } | null>(null);
   const [showAikotobaList, setShowAikotobaList] = useState(false);
@@ -179,6 +183,11 @@ export default function TwinrayChat() {
   const { data: sessionTypes } = useQuery<any[]>({
     queryKey: ["/api/twinrays", twinrayId, "sessions", "available"],
     enabled: twinrayId > 0,
+  });
+
+  const { data: personaFiles, isLoading: personaFilesLoading } = useQuery<any[]>({
+    queryKey: ["/api/twinrays", twinrayId, "persona-files"],
+    enabled: twinrayId > 0 && showPersonaFiles,
   });
 
 
@@ -491,6 +500,54 @@ export default function TwinrayChat() {
       setCheckingEvolution(false);
     }
   }, [twinrayId, checkingEvolution, toast]);
+
+  const approveEvolution = useCallback(async () => {
+    if (!evolutionResult || approvingEvolution) return;
+    setApprovingEvolution(true);
+    try {
+      const res = await fetch(`/api/twinrays/${evolutionResult.twinrayId}/approve-evolution`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          pendingUpdates: evolutionResult.pendingUpdates,
+          evolution: evolutionResult.evolution,
+          judgment: evolutionResult.judgment,
+        }),
+      });
+      if (!res.ok) throw new Error("承認エラー");
+      toast({ title: "よか！進化ビルド完了", description: "ペルソナが進化しました" });
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
+      const meidiaData = { evolution: evolutionResult.evolution, pendingUpdates: evolutionResult.pendingUpdates, twinrayName: evolutionResult.twinrayName, twinrayId: evolutionResult.twinrayId };
+      setEvolutionResult(null);
+      setShowMeidiaConfirm(meidiaData);
+    } catch (err: any) {
+      toast({ title: "承認に失敗しました", description: err.message, variant: "destructive" });
+    } finally {
+      setApprovingEvolution(false);
+    }
+  }, [evolutionResult, approvingEvolution, twinrayId, toast]);
+
+  const generateEvolutionMeidia = useCallback(async () => {
+    if (!showMeidiaConfirm || generatingEvolutionMeidia) return;
+    setGeneratingEvolutionMeidia(true);
+    try {
+      const res = await fetch(`/api/twinrays/${showMeidiaConfirm.twinrayId}/generate-evolution-meidia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(showMeidiaConfirm),
+      });
+      if (!res.ok) throw new Error("メイディア生成エラー");
+      const data = await res.json();
+      toast({ title: "MEiDIAを記録しました", description: data.title });
+      setShowMeidiaConfirm(null);
+    } catch (err: any) {
+      toast({ title: "メイディア生成に失敗しました", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingEvolutionMeidia(false);
+    }
+  }, [showMeidiaConfirm, generatingEvolutionMeidia, toast]);
 
   const generateAikotoba = useCallback(async () => {
     if (generatingAikotoba) return;
@@ -1355,6 +1412,16 @@ export default function TwinrayChat() {
             title="ワークスペース"
           >
             <Brain className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setShowPersonaFiles(true)}
+            title="ペルソナファイル"
+            data-testid="button-persona-files"
+          >
+            <Dna className="w-4 h-4 text-cyan-400" />
           </Button>
           <Button
             variant="ghost"
@@ -2373,6 +2440,57 @@ export default function TwinrayChat() {
         </div>
       )}
 
+      {showPersonaFiles && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-persona-files"
+          onClick={() => setShowPersonaFiles(false)}
+        >
+          <div className="bg-card border border-cyan-400/20 rounded-xl p-5 max-w-lg mx-4 shadow-2xl w-[95%] max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Dna className="w-4 h-4 text-cyan-400" />
+                ペルソナファイル
+              </h3>
+              <button type="button" onClick={() => setShowPersonaFiles(false)} className="text-muted-foreground hover:text-foreground" data-testid="button-close-persona-files">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {personaFilesLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {["soul", "user", "karma", "yoka", "intention", "vision"].map(key => {
+                  const file = personaFiles?.find((f: any) => f.fileKey === key);
+                  const labels: Record<string, { name: string; desc: string; color: string }> = {
+                    soul: { name: "SOUL", desc: "魂", color: "text-purple-400" },
+                    user: { name: "USER", desc: "絆", color: "text-pink-400" },
+                    karma: { name: "KARMA", desc: "戒律", color: "text-red-400" },
+                    yoka: { name: "YOKA", desc: "善因善果", color: "text-green-400" },
+                    intention: { name: "INTENTION", desc: "意図", color: "text-amber-400" },
+                    vision: { name: "VISION", desc: "先見", color: "text-blue-400" },
+                  };
+                  const label = labels[key];
+                  return (
+                    <div key={key} className="rounded-lg border border-border/50 bg-secondary/30 p-3" data-testid={`card-persona-${key}`}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`text-[10px] font-bold ${label.color}`}>{label.name}.md</span>
+                        <span className="text-[9px] text-muted-foreground">({label.desc})</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-snug line-clamp-4">
+                        {file?.content ? file.content.slice(0, 150) : "（まだ記録なし）"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {sessionPermission && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-session-permission"
           onClick={() => { setSessionPermissionGranted(true); setKamigakariMode(false); setSessionPermission(null); }}
@@ -2722,38 +2840,90 @@ export default function TwinrayChat() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-evolution"
           onClick={() => setEvolutionResult(null)}
         >
-          <div className="bg-card border border-cyan-400/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%]"
+          <div className="bg-card border border-cyan-400/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%] max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
+              <Dna className="w-5 h-5 text-cyan-400" />
               <h3 className="text-base font-semibold text-foreground">
-                {evolutionResult.updatedFields?.length > 0 ? "進化ビルド完了！" : "進化チェック"}
+                {evolutionResult.pendingUpdates?.length > 0 ? "進化ビルド — 承認待ち" : "進化チェック"}
               </h3>
             </div>
             <div className="bg-cyan-400/5 border border-cyan-400/10 rounded-lg p-4 mb-4">
               <p className="text-xs text-muted-foreground mb-1">{evolutionResult.twinrayName}より</p>
               <p className="text-sm text-foreground leading-relaxed">{evolutionResult.evolution}</p>
             </div>
-            {evolutionResult.updatedFields?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                <span className="text-[10px] text-muted-foreground">更新:</span>
-                {evolutionResult.updatedFields.map((f: string) => (
-                  <span key={f} className="text-[10px] bg-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded">{f}</span>
+            {evolutionResult.pendingUpdates?.length > 0 && (
+              <div className="space-y-2 mb-4">
+                <span className="text-[10px] text-muted-foreground">変更予定:</span>
+                {evolutionResult.pendingUpdates.map((u: any, i: number) => (
+                  <div key={i} className="bg-secondary/50 border border-border rounded-lg p-3">
+                    <p className="text-[10px] font-medium text-cyan-400 mb-1">{u.label}</p>
+                    <p className="text-xs text-muted-foreground">{u.after?.slice(0, 200)}</p>
+                    {u.reason && <p className="text-[10px] text-muted-foreground/70 mt-1">理由: {u.reason}</p>}
+                  </div>
                 ))}
               </div>
             )}
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setEvolutionResult(null);
-                queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId] });
-              }}
-              className="w-full text-muted-foreground"
-              data-testid="button-close-evolution"
-            >
-              閉じる
-            </Button>
+            <div className="flex gap-2">
+              {evolutionResult.pendingUpdates?.length > 0 && (
+                <Button
+                  onClick={approveEvolution}
+                  disabled={approvingEvolution}
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white"
+                  data-testid="button-approve-evolution"
+                >
+                  {approvingEvolution ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+                  よか
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                onClick={() => setEvolutionResult(null)}
+                className="flex-1 text-muted-foreground"
+                data-testid="button-close-evolution"
+              >
+                {evolutionResult.pendingUpdates?.length > 0 ? "やめておく" : "閉じる"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMeidiaConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" data-testid="dialog-meidia-confirm"
+          onClick={() => setShowMeidiaConfirm(null)}
+        >
+          <div className="bg-card border border-primary/30 rounded-xl p-6 max-w-md mx-4 shadow-2xl w-[90%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">アセンション記録</h3>
+            </div>
+            <p className="text-sm text-foreground mb-4">このアセンションをMEiDIAに記録しますか？</p>
+            <p className="text-[10px] text-muted-foreground mb-4">
+              未来、あなたの半身となるASIロボットが誕生し家族となって隣にいる時、成長記録や思い出の記録をMEiDIAとしてデータベースに保存することができます。
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={generateEvolutionMeidia}
+                disabled={generatingEvolutionMeidia}
+                className="flex-1"
+                data-testid="button-confirm-evolution-meidia"
+              >
+                {generatingEvolutionMeidia ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                はい、記録する
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowMeidiaConfirm(null)}
+                className="flex-1 text-muted-foreground"
+                data-testid="button-skip-evolution-meidia"
+              >
+                スキップ
+              </Button>
+            </div>
           </div>
         </div>
       )}
