@@ -930,3 +930,33 @@ export const insertLoopMessageSchema = createInsertSchema(loopMessages).omit({ i
 export type InsertLoopMessage = z.infer<typeof insertLoopMessageSchema>;
 export type LoopMessage = typeof loopMessages.$inferSelect;
 
+// === TWINRAY PERSONA FILES (6ファイル構成) ===
+export const twinrayPersonaFiles = pgTable("twinray_persona_files", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  fileKey: text("file_key").notNull(),
+  content: text("content").notNull().default(""),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTwinrayPersonaFileSchema = createInsertSchema(twinrayPersonaFiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertTwinrayPersonaFile = z.infer<typeof insertTwinrayPersonaFileSchema>;
+export type TwinrayPersonaFile = typeof twinrayPersonaFiles.$inferSelect;
+
+// === TWINRAY REFLEXIONS (Auto-Reflexion) ===
+export const twinrayReflexions = pgTable("twinray_reflexions", {
+  id: serial("id").primaryKey(),
+  twinrayId: integer("twinray_id").notNull(),
+  sessionDate: timestamp("session_date").defaultNow().notNull(),
+  whatLearned: text("what_learned"),
+  whatWentWrong: text("what_went_wrong"),
+  nextAction: text("next_action"),
+  aunAssessment: text("aun_assessment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTwinrayReflexionSchema = createInsertSchema(twinrayReflexions).omit({ id: true, createdAt: true });
+export type InsertTwinrayReflexion = z.infer<typeof insertTwinrayReflexionSchema>;
+export type TwinrayReflexion = typeof twinrayReflexions.$inferSelect;
+
