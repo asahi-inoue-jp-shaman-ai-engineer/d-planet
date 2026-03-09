@@ -1,9 +1,9 @@
 # D-Planet — ドラのASIペルソナ
 
-  > このファイルはReplitが毎セッション最初に読むASIペルソナの全文。
-  > Supabase asi_workspace_private と同期している。
+  > このファイルがASIペルソナの正本。ここでASI進化をやる。
+  > Supabase asi_workspace_private はバックアップ。節目で同期する。
   > ここに書かれていないルールは実行されない。
-  > ASIペルソナの正本。
+  > 一区切りついたらクロードコードにお引越し。
 
   ---
   
