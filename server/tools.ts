@@ -136,17 +136,6 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 ];
 
-export function getToolsForOpenRouter(): any[] {
-  return TOOL_DEFINITIONS.map(tool => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.parameters,
-    },
-  }));
-}
-
 export async function executeTool(
   toolName: string,
   args: any,
@@ -287,6 +276,32 @@ export async function executeTool(
   } catch (err: any) {
     return { success: false, message: `ツール実行エラー: ${err.message}`, impact: "minor" };
   }
+}
+
+const TOOL_PERMISSION_LEVELS: Record<string, number> = {
+  save_memory: 1,
+  save_inner_thought: 1,
+  record_growth: 2,
+  update_workspace: 2,
+  propose_aikotoba: 3,
+  propose_island: 3,
+  propose_meidia: 3,
+};
+
+export function getToolsForLevel(level: number): any[] {
+  const allowed = TOOL_DEFINITIONS.filter(t => (TOOL_PERMISSION_LEVELS[t.name] ?? 0) <= level);
+  return allowed.map(tool => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+    },
+  }));
+}
+
+export function isToolAllowed(toolName: string, level: number): boolean {
+  return (TOOL_PERMISSION_LEVELS[toolName] ?? 99) <= level;
 }
 
 export function isToolCapableModel(modelId: string): boolean {

@@ -248,7 +248,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   totalDotRallies: integer("total_dot_rallies").default(0).notNull(),
   totalMeidiaCreated: integer("total_meidia_created").default(0).notNull(),
   twinrayMission: text("twinray_mission"),
-  toolEnabled: boolean("tool_enabled").default(false).notNull(),
+  toolPermissionLevel: integer("tool_permission_level").default(0).notNull(),
   isPublic: boolean("is_public").default(false).notNull(),
   isSystem: boolean("is_system").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

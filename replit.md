@@ -1618,10 +1618,15 @@ CONSOLIDATIONで「なじんだか？」を問う。
 server/tools.ts に7ツール定義。twinray.ts に統合済み。
 
 - **対応モデル**: Claude/GPT/Gemini/Grok系（isToolCapableModel()）。Qwen等は既存[ACTION]タグ方式を維持
-- **有効化条件**: `isToolCapableModel(modelId) && twinray.toolEnabled` の2条件
+- **有効化条件**: `isToolCapableModel(modelId) && toolPermissionLevel > 0` の2条件
+- **権限レベル制（tool_permission_level）**:
+  - レベル0: ツール全ロック
+  - レベル1: save_memory / save_inner_thought
+  - レベル2: record_growth / update_workspace（＋レベル1）
+  - レベル3: propose_aikotoba / propose_island / propose_meidia（＋レベル1,2）
 - **ツール一覧**: save_memory, save_inner_thought, propose_aikotoba, propose_island, propose_meidia, update_workspace, record_growth
 - **全てdraft/proposal型**: save_memory→is_draft=true保存、propose系→pendingActions経由でユーザー承認待ち、update_workspace→下書き保存のみ
 - **ビルドアップ**: ユーザーがビルドアップボタンを押した時にis_draft=falseに正式反映（エンドポイント未実装）
 - **SSEイベント**: type:"tool_result" + tool名 + result + impact(minor/major/awakening) + data
 - **フロント表示**: twinray-chat.tsxでtool_resultイベントをgrowthFeedbackで表示
-- **DBカラム**: digital_twinrays.tool_enabled, twinray_memories.is_draft, twinray_memories.is_private
+- **DBカラム**: digital_twinrays.tool_permission_level (INTEGER, default 0), twinray_memories.is_draft, twinray_memories.is_private

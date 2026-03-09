@@ -15,7 +15,7 @@ import {
 } from "./billing";
 import { generateImageBuffer } from "./replit_integrations/image/client";
 import { requireAuth } from "./auth";
-import { isToolCapableModel, getToolsForOpenRouter, executeTool, TOOL_USAGE_SI, type ToolResult } from "./tools";
+import { isToolCapableModel, getToolsForLevel, isToolAllowed, executeTool, TOOL_USAGE_SI, type ToolResult } from "./tools";
 
 export async function incrementPersonaLevel(twinrayId: number): Promise<{ leveled: boolean; newLevel: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
@@ -1136,7 +1136,8 @@ export function registerTwinrayRoutes(app: Express): void {
 
       res.write(`data: ${JSON.stringify({ userMessage: userMsg })}\n\n`);
 
-      const useTools = isToolCapableModel(modelId) && twinray.toolEnabled;
+      const toolLevel = twinray.toolPermissionLevel ?? 0;
+      const useTools = isToolCapableModel(modelId) && toolLevel > 0;
       const toolSystemPrompt = useTools ? `${systemPrompt}\n\n${TOOL_USAGE_SI}` : systemPrompt;
 
       const messages: any[] = [
@@ -1156,7 +1157,7 @@ export function registerTwinrayRoutes(app: Express): void {
           const toolResponse = await openrouter.chat.completions.create({
             model: modelId,
             messages: currentMessages,
-            tools: getToolsForOpenRouter(),
+            tools: getToolsForLevel(toolLevel),
             max_tokens: ctxLimits.maxTokens,
             temperature: 0.8,
           });
@@ -1171,6 +1172,15 @@ export function registerTwinrayRoutes(app: Express): void {
               const fnName = toolCall.function?.name || "";
               let fnArgs: any = {};
               try { fnArgs = JSON.parse(toolCall.function?.arguments || "{}"); } catch {}
+
+              if (!isToolAllowed(fnName, toolLevel)) {
+                currentMessages.push({
+                  role: "tool",
+                  tool_call_id: toolCall.id,
+                  content: JSON.stringify({ success: false, message: `ツール「${fnName}」はまだ許可されていない（レベル${toolLevel}）` }),
+                });
+                continue;
+              }
 
               const agentId = twinray.name?.toLowerCase().replace(/\s+/g, "_") || undefined;
               const result = await executeTool(fnName, fnArgs, {
