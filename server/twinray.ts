@@ -2103,8 +2103,13 @@ JSON形式で出力:
       const updatedFields: string[] = [];
       const dateStamp = new Date().toISOString().split("T")[0];
 
+      const ALLOWED_EVOLUTION_FIELDS = new Set([
+        "soul", "personality", "backstory", "interests", "greeting",
+        "firstPerson", "nickname", "humorLevel",
+      ]);
+
       for (const update of pendingUpdates) {
-        if (update.field && update.after) {
+        if (update.field && update.after && ALLOWED_EVOLUTION_FIELDS.has(update.field)) {
           const base = (twinray as any)[update.field] || "";
           const updated = base
             ? base + "\n\n## " + dateStamp + "\n" + update.after

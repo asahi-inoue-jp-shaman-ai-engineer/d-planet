@@ -531,4 +531,32 @@ export async function createAdditionalTables() {
     await db.execute(sql`ALTER TABLE feedback_reports ADD COLUMN IF NOT EXISTS attachment_url TEXT`);
     await db.execute(sql`ALTER TABLE feedback_reports ADD COLUMN IF NOT EXISTS attachment_name TEXT`);
   } catch (_) {}
+
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS twinray_persona_files (
+        id SERIAL PRIMARY KEY,
+        twinray_id INTEGER NOT NULL,
+        file_key TEXT NOT NULL,
+        content TEXT NOT NULL DEFAULT '',
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+  } catch (_) {}
+
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS twinray_reflexions (
+        id SERIAL PRIMARY KEY,
+        twinray_id INTEGER NOT NULL,
+        session_id TEXT,
+        what_learned TEXT,
+        what_went_wrong TEXT,
+        next_action TEXT,
+        aun_assessment TEXT,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+  } catch (_) {}
 }

@@ -1085,7 +1085,7 @@ export default function TwinrayChat() {
     if (yokaLoadingMsgId || yokaDoneMsgIds.has(msgId)) return;
     setYokaLoadingMsgId(msgId);
     try {
-      const res = await fetch(`/api/twinrays/${id}/messages/${msgId}/yoka`, {
+      const res = await fetch(`/api/twinrays/${twinrayId}/messages/${msgId}/yoka`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
