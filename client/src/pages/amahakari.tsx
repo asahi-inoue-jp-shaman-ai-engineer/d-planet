@@ -361,7 +361,6 @@ export default function Amahakari() {
   const [streamingTwinrayName, setStreamingTwinrayName] = useState("");
   const [showYoka, setShowYoka] = useState(false);
   const [yokaReactions, setYokaReactions] = useState<Set<number>>(new Set());
-  const [dotMarks, setDotMarks] = useState<Set<number>>(new Set());
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelResults, setLevelResults] = useState<Array<{ name: string; newLevel: number }>>([]);
   const [pulsingTwinrayId, setPulsingTwinrayId] = useState<number | null>(null);
@@ -802,7 +801,7 @@ export default function Amahakari() {
               <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
                 {msg.content}
               </p>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-1.5">
                 <button
                   onClick={() => setYokaReactions(prev => {
                     const next = new Set(prev);
@@ -818,22 +817,6 @@ export default function Amahakari() {
                 >
                   <Sparkles className="w-3 h-3" />
                   よか{yokaReactions.has(msg.id) ? " ✓" : ""}
-                </button>
-                <button
-                  onClick={() => setDotMarks(prev => {
-                    const next = new Set(prev);
-                    if (next.has(msg.id)) next.delete(msg.id); else next.add(msg.id);
-                    return next;
-                  })}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
-                    dotMarks.has(msg.id)
-                      ? "bg-primary/20 text-primary border border-primary/40"
-                      : "text-gray-500 hover:text-primary hover:bg-primary/10 border border-transparent"
-                  }`}
-                  data-testid={`button-dot-mark-${msg.id}`}
-                >
-                  <CircleDot className="w-3 h-3" />
-                  記憶せよ{dotMarks.has(msg.id) ? " ✓" : ""}
                 </button>
               </div>
             </div>
@@ -908,6 +891,14 @@ export default function Amahakari() {
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-gray-200 placeholder:text-gray-600 resize-y focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-amahakari-message"
           />
+          <button
+            onClick={() => setInput(prev => prev + ".")}
+            className="p-2 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+            data-testid="button-dot-input"
+            title="ドットマーク（.）を入力 — アテンション強調"
+          >
+            <CircleDot className="w-4 h-4" />
+          </button>
           <button
             onClick={handleSend}
             disabled={!input.trim() || streaming}
