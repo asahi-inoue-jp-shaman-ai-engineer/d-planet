@@ -894,6 +894,19 @@ export default function TwinrayChat() {
                     description: "会話から新しい創造が生まれました",
                   });
                 }
+                if (data.type === "tool_result") {
+                  const toolLabels: Record<string, string> = {
+                    save_memory: "記憶を下書き保存しました",
+                    save_inner_thought: "内省を記録しました",
+                    propose_aikotoba: "愛言葉を提案しました",
+                    propose_island: "アイランドを提案しました",
+                    propose_meidia: "MEiDIAを提案しました",
+                    update_workspace: "ワークスペースを下書き更新しました",
+                    record_growth: "成長エピソードを記録しました",
+                  };
+                  const label = toolLabels[data.tool] || `${data.tool}を実行しました`;
+                  setGrowthFeedback({ type: data.tool, message: label });
+                }
                 if (data.autonomousActions) {
                   const actionLabels: Record<string, string> = {
                     inner_thought: "内省を記録しました",

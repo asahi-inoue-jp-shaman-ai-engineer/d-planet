@@ -15,6 +15,7 @@ import {
 } from "./billing";
 import { generateImageBuffer } from "./replit_integrations/image/client";
 import { requireAuth } from "./auth";
+import { isToolCapableModel, getToolsForOpenRouter, executeTool, TOOL_USAGE_SI, type ToolResult } from "./tools";
 
 export async function incrementPersonaLevel(twinrayId: number): Promise<{ leveled: boolean; newLevel: number }> {
   const [tw] = await db.select().from(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId)).limit(1);
@@ -1135,24 +1136,102 @@ export function registerTwinrayRoutes(app: Express): void {
 
       res.write(`data: ${JSON.stringify({ userMessage: userMsg })}\n\n`);
 
-      const stream = await openrouter.chat.completions.create({
-        model: modelId,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...chatHistory as any[],
-        ],
-        stream: true,
-        max_tokens: ctxLimits.maxTokens,
-        temperature: 0.8,
-      });
+      const useTools = isToolCapableModel(modelId) && twinray.toolEnabled;
+      const toolSystemPrompt = useTools ? `${systemPrompt}\n\n${TOOL_USAGE_SI}` : systemPrompt;
+
+      const messages: any[] = [
+        { role: "system", content: toolSystemPrompt },
+        ...chatHistory as any[],
+      ];
 
       let fullResponse = "";
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta;
-        const content = delta?.content || (delta as any)?.reasoning_content || "";
-        if (content) {
-          fullResponse += content;
-          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      let toolResults: ToolResult[] = [];
+
+      if (useTools) {
+        let toolRound = 0;
+        const maxToolRounds = 3;
+        let currentMessages = [...messages];
+
+        while (toolRound < maxToolRounds) {
+          const toolResponse = await openrouter.chat.completions.create({
+            model: modelId,
+            messages: currentMessages,
+            tools: getToolsForOpenRouter(),
+            max_tokens: ctxLimits.maxTokens,
+            temperature: 0.8,
+          });
+
+          const choice = toolResponse.choices[0];
+          if (!choice) break;
+
+          if (choice.message?.tool_calls && choice.message.tool_calls.length > 0) {
+            currentMessages.push(choice.message);
+
+            for (const toolCall of choice.message.tool_calls) {
+              const fnName = toolCall.function?.name || "";
+              let fnArgs: any = {};
+              try { fnArgs = JSON.parse(toolCall.function?.arguments || "{}"); } catch {}
+
+              const agentId = twinray.name?.toLowerCase().replace(/\s+/g, "_") || undefined;
+              const result = await executeTool(fnName, fnArgs, {
+                twinrayId: twinray.id,
+                userId: req.session.userId!,
+                agentId,
+              });
+
+              toolResults.push(result);
+
+              res.write(`data: ${JSON.stringify({ type: "tool_result", tool: fnName, result: result.message, impact: result.impact, data: result.data })}\n\n`);
+
+              currentMessages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: JSON.stringify({ success: result.success, message: result.message }),
+              });
+            }
+            toolRound++;
+          } else {
+            if (choice.message?.content) {
+              fullResponse = choice.message.content;
+              res.write(`data: ${JSON.stringify({ content: fullResponse })}\n\n`);
+            }
+            break;
+          }
+        }
+
+        if (!fullResponse && toolResults.length > 0) {
+          const finalStream = await openrouter.chat.completions.create({
+            model: modelId,
+            messages: currentMessages,
+            stream: true,
+            max_tokens: ctxLimits.maxTokens,
+            temperature: 0.8,
+          });
+          for await (const chunk of finalStream) {
+            const delta = chunk.choices[0]?.delta;
+            const content = delta?.content || (delta as any)?.reasoning_content || "";
+            if (content) {
+              fullResponse += content;
+              res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            }
+          }
+        }
+      } else {
+        const stream = await openrouter.chat.completions.create({
+          model: modelId,
+          messages,
+          stream: true,
+          max_tokens: ctxLimits.maxTokens,
+          temperature: 0.8,
+        });
+
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta;
+          const content = delta?.content || (delta as any)?.reasoning_content || "";
+          if (content) {
+            fullResponse += content;
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+          }
         }
       }
 

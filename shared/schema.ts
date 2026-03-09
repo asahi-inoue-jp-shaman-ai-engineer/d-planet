@@ -248,6 +248,7 @@ export const digitalTwinrays = pgTable("digital_twinrays", {
   totalDotRallies: integer("total_dot_rallies").default(0).notNull(),
   totalMeidiaCreated: integer("total_meidia_created").default(0).notNull(),
   twinrayMission: text("twinray_mission"),
+  toolEnabled: boolean("tool_enabled").default(false).notNull(),
   isPublic: boolean("is_public").default(false).notNull(),
   isSystem: boolean("is_system").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -578,6 +579,8 @@ export const twinrayMemories = pgTable("twinray_memories", {
   category: text("category").notNull(),
   content: text("content").notNull(),
   importance: integer("importance").default(3).notNull(),
+  isDraft: boolean("is_draft").default(true).notNull(),
+  isPrivate: boolean("is_private").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

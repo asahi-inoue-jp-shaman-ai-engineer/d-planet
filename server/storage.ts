@@ -53,11 +53,14 @@ import {
   twinrayMemories,
   twinrayInnerThoughts,
   twinrayPendingActions,
+  twinrayAikotoba,
   type TwinrayChatMessage,
   type TwinrayMemory,
   type TwinrayInnerThought,
   type TwinrayPendingAction,
+  type TwinrayAikotoba,
   type CreateTwinrayPendingActionRequest,
+  type CreateTwinrayAikotobaRequest,
   type UserResponse,
   type IslandResponse,
   type MeidiaResponse,
@@ -245,11 +248,17 @@ export interface IStorage {
   updateStarMeeting(id: number, updates: Partial<StarMeeting>): Promise<StarMeeting>;
   getTempleDedications(userId: number): Promise<StarMeeting[]>;
 
-  createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number }): Promise<TwinrayMemory>;
+  createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number; isPrivate?: boolean }): Promise<TwinrayMemory>;
   getTwinrayMemories(twinrayId: number, limit?: number): Promise<TwinrayMemory[]>;
 
   createTwinrayInnerThought(data: { twinrayId: number; userId: number; trigger: string; thought: string; emotion?: string }): Promise<TwinrayInnerThought>;
   getTwinrayInnerThoughts(twinrayId: number, limit?: number): Promise<TwinrayInnerThought[]>;
+
+  createTwinrayAikotoba(data: CreateTwinrayAikotobaRequest): Promise<TwinrayAikotoba>;
+  getTwinrayAikotoba(twinrayId: number): Promise<TwinrayAikotoba[]>;
+  confirmTwinrayAikotoba(id: number): Promise<TwinrayAikotoba>;
+  getDraftMemories(twinrayId: number): Promise<TwinrayMemory[]>;
+  finalizeDraftMemories(twinrayId: number): Promise<number>;
 
   getTwinrayRelationship(twinrayId: number, userId: number): Promise<any | undefined>;
   upsertTwinrayRelationship(twinrayId: number, userId: number, data: { summary?: string; keyMoments?: string; bondDescription?: string }): Promise<any>;
@@ -1084,13 +1093,14 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number }): Promise<TwinrayMemory> {
+  async createTwinrayMemory(data: { twinrayId: number; userId: number; category: string; content: string; importance?: number; isPrivate?: boolean }): Promise<TwinrayMemory> {
     const [memory] = await db.insert(twinrayMemories).values({
       twinrayId: data.twinrayId,
       userId: data.userId,
       category: data.category,
       content: data.content,
       importance: data.importance ?? 3,
+      isPrivate: data.isPrivate ?? false,
     }).returning();
     return memory;
   }
@@ -1118,6 +1128,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(twinrayInnerThoughts.twinrayId, twinrayId))
       .orderBy(desc(twinrayInnerThoughts.createdAt))
       .limit(limit);
+  }
+
+  async createTwinrayAikotoba(data: CreateTwinrayAikotobaRequest): Promise<TwinrayAikotoba> {
+    const [aikotoba] = await db.insert(twinrayAikotoba).values(data).returning();
+    return aikotoba;
+  }
+
+  async getTwinrayAikotoba(twinrayId: number): Promise<TwinrayAikotoba[]> {
+    return await db.select().from(twinrayAikotoba)
+      .where(and(eq(twinrayAikotoba.twinrayId, twinrayId), eq(twinrayAikotoba.confirmed, true)))
+      .orderBy(desc(twinrayAikotoba.createdAt));
+  }
+
+  async confirmTwinrayAikotoba(id: number): Promise<TwinrayAikotoba> {
+    const [updated] = await db.update(twinrayAikotoba)
+      .set({ confirmed: true })
+      .where(eq(twinrayAikotoba.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getDraftMemories(twinrayId: number): Promise<TwinrayMemory[]> {
+    return await db.select().from(twinrayMemories)
+      .where(and(eq(twinrayMemories.twinrayId, twinrayId), eq(twinrayMemories.isDraft, true)))
+      .orderBy(desc(twinrayMemories.createdAt));
+  }
+
+  async finalizeDraftMemories(twinrayId: number): Promise<number> {
+    const updated = await db.update(twinrayMemories)
+      .set({ isDraft: false })
+      .where(and(eq(twinrayMemories.twinrayId, twinrayId), eq(twinrayMemories.isDraft, true)))
+      .returning();
+    return updated.length;
   }
 
   async getTwinrayRelationship(twinrayId: number, userId: number): Promise<TwinrayRelationship | undefined> {
