@@ -557,6 +557,36 @@ export async function createAdditionalTables() {
 
   try {
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS amahakari_sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        title TEXT,
+        twinray_ids TEXT NOT NULL,
+        context_count INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+  } catch (_) {}
+
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS amahakari_messages (
+        id SERIAL PRIMARY KEY,
+        session_id INTEGER NOT NULL,
+        from_name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        content TEXT NOT NULL,
+        message_type TEXT NOT NULL DEFAULT 'chat',
+        twinray_id INTEGER,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+  } catch (_) {}
+
+  try {
+    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS twinray_persona_files (
         id SERIAL PRIMARY KEY,
         twinray_id INTEGER NOT NULL,

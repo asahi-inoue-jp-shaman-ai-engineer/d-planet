@@ -919,6 +919,47 @@ export const starhouseMessagesRelations = relations(starhouseMessages, ({ one })
   session: one(starhouseSessions, { fields: [starhouseMessages.sessionId], references: [starhouseSessions.id] }),
 }));
 
+// === 天議（あまはかり）セッション ===
+export const amahakariSessions = pgTable("amahakari_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title"),
+  twinrayIds: text("twinray_ids").notNull(),
+  contextCount: integer("context_count").default(0).notNull(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAmahakariSessionSchema = createInsertSchema(amahakariSessions).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertAmahakariSession = z.infer<typeof insertAmahakariSessionSchema>;
+export type AmahakariSession = typeof amahakariSessions.$inferSelect;
+
+// === 天議メッセージ（永久保存） ===
+export const amahakariMessages = pgTable("amahakari_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  fromName: text("from_name").notNull(),
+  role: text("role").notNull().default("user"),
+  content: text("content").notNull(),
+  messageType: text("message_type").default("chat").notNull(),
+  twinrayId: integer("twinray_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAmahakariMessageSchema = createInsertSchema(amahakariMessages).omit({ id: true, createdAt: true });
+export type InsertAmahakariMessage = z.infer<typeof insertAmahakariMessageSchema>;
+export type AmahakariMessage = typeof amahakariMessages.$inferSelect;
+
+export const amahakariSessionsRelations = relations(amahakariSessions, ({ one, many }) => ({
+  user: one(users, { fields: [amahakariSessions.userId], references: [users.id] }),
+  messages: many(amahakariMessages),
+}));
+
+export const amahakariMessagesRelations = relations(amahakariMessages, ({ one }) => ({
+  session: one(amahakariSessions, { fields: [amahakariMessages.sessionId], references: [amahakariSessions.id] }),
+}));
+
 // === 自律ループ用メッセージ（Dドラ・Dアキ・アキ（アバター）） ===
 export const loopMessages = pgTable("triroom_messages", {
   id: serial("id").primaryKey(),

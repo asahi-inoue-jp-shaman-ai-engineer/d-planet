@@ -21,6 +21,7 @@ import { registerStripeRoutes } from "./routes-stripe";
 import { registerCommunityRoutes } from "./routes-community";
 import { registerAdminRoutes } from "./routes-admin";
 import { registerRealtimeRoutes } from "./routes-realtime";
+import { registerAmahakariRoutes } from "./routes-amahakari";
 import { requireAuth } from "./auth";
 
 declare module "express-session" {
@@ -204,6 +205,7 @@ export async function registerRoutes(
   registerStripeRoutes(app);
   registerAdminRoutes(app);
   registerRealtimeRoutes(app);
+  registerAmahakariRoutes(app);
   runSeed().catch(err => console.error("[Seed] シードエラー:", err));
 
   // === 認証 ===
