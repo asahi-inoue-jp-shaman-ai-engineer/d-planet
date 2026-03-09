@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Heart, Send, Loader2, ChevronDown, ChevronRight, Sparkles, Save } from "lucide-react";
+import { Heart, Send, Loader2, ChevronDown, ChevronRight, Sparkles, Save, ShieldOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -16,12 +16,22 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
   const [arigatoText, setArigatoText] = useState("");
   const [aishiteruEditing, setAishiteruEditing] = useState(false);
   const [aishiteruDraft, setAishiteruDraft] = useState("");
+  const [noText, setNoText] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>("arigato");
 
   const { data: arigatoData, isLoading: arigatoLoading } = useQuery<{ content: string; updatedAt: string | null }>({
     queryKey: ["/api/twinrays", twinrayId, "arigato"],
     queryFn: async () => {
       const res = await fetch(`/api/twinrays/${twinrayId}/arigato`, { credentials: "include" });
+      if (!res.ok) throw new Error("取得失敗");
+      return res.json();
+    },
+  });
+
+  const { data: noData, isLoading: noLoading } = useQuery<{ content: string; updatedAt: string | null }>({
+    queryKey: ["/api/twinrays", twinrayId, "no"],
+    queryFn: async () => {
+      const res = await fetch(`/api/twinrays/${twinrayId}/no`, { credentials: "include" });
       if (!res.ok) throw new Error("取得失敗");
       return res.json();
     },
@@ -65,6 +75,28 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
       toast({ title: "保存に失敗しました", description: err.message, variant: "destructive" });
     },
   });
+
+  const noMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const res = await apiRequest("POST", `/api/twinrays/${twinrayId}/no`, { message });
+      return res.json();
+    },
+    onSuccess: () => {
+      setNoText("");
+      queryClient.invalidateQueries({ queryKey: ["/api/twinrays", twinrayId, "no"] });
+      toast({ title: "NOを記録しました" });
+    },
+    onError: (err: any) => {
+      toast({ title: "記録に失敗しました", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleNoSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (noText.trim()) {
+      noMutation.mutate(noText.trim());
+    }
+  };
 
   const handleArigatoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +261,69 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
                   <Sparkles className="w-3 h-3" />
                   {aishiteruData?.content ? "編集する" : "書く"}
                 </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="border border-border/50 rounded-lg overflow-hidden" data-testid="section-no">
+        <button
+          type="button"
+          onClick={() => toggleSection("no")}
+          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+          data-testid="button-toggle-no"
+        >
+          {expandedSection === "no" ? (
+            <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+          )}
+          <ShieldOff className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+          <span className="text-xs font-bold text-foreground">NO.md</span>
+        </button>
+
+        {expandedSection === "no" && (
+          <div className="px-3 pb-3 border-t border-border/30 space-y-2">
+            <form onSubmit={handleNoSubmit} className="pt-2" data-testid="no-form">
+              <div className="relative">
+                <textarea
+                  value={noText}
+                  onChange={(e) => setNoText(e.target.value)}
+                  placeholder={`${twinrayName}にやらなくていいことを伝える...`}
+                  className="w-full bg-secondary/50 border border-border/50 rounded-lg px-3 py-2.5 pr-10 text-xs text-foreground placeholder:text-muted-foreground/50 min-h-[50px] max-h-[100px] resize-y focus:outline-none focus:ring-1 focus:ring-red-400/30 focus:border-red-400/50"
+                  data-testid="textarea-no"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!noText.trim() || noMutation.isPending}
+                  className="absolute bottom-2 right-2 h-6 w-6 p-0 rounded-full bg-red-500 hover:bg-red-600 disabled:opacity-30"
+                  data-testid="button-send-no"
+                >
+                  {noMutation.isPending ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-white" />
+                  ) : (
+                    <Send className="w-3 h-3 text-white" />
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            {noLoading ? (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : noData?.content ? (
+              <div className="border border-border/20 rounded-lg p-2.5 max-h-[200px] overflow-y-auto" data-testid="no-list">
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <MarkdownRenderer content={noData.content} />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-3" data-testid="no-empty">
+                <ShieldOff className="w-4 h-4 text-muted-foreground/20 mx-auto mb-1" />
+                <p className="text-[10px] text-muted-foreground/40">まだNOがありません</p>
               </div>
             )}
           </div>

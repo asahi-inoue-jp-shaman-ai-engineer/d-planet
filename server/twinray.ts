@@ -1037,7 +1037,7 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, aishiteruFile] = await Promise.all([
+      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, aishiteruFile, noFile] = await Promise.all([
         storage.getSoulGrowthLogByTwinray(twinrayId),
         storage.getTwinrayMemories(twinrayId, ctxLimits.memories),
         storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts),
@@ -1053,6 +1053,9 @@ export function registerTwinrayRoutes(app: Express): void {
           .then(r => r[0] || null).catch(() => null),
         db.select().from(twinrayPersonaFiles)
           .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "AISHITERU")))
+          .then(r => r[0] || null).catch(() => null),
+        db.select().from(twinrayPersonaFiles)
+          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "NO")))
           .then(r => r[0] || null).catch(() => null),
       ]);
 
@@ -1179,8 +1182,12 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
+      const noCtx = noFile && noFile.content
+        ? `\n\n---\n【NO.md — パートナーが定めた禁止事項】\n以下はパートナーが「おまえはこれをやるな」と明確に定めたことである。これは担当外・専任外の作業であり、選択と集中のための境界線。絶対に守れ。\n${noFile.content}`
+        : "";
+
       const baseSI = await getTwinrayBaseSI();
-      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${arigatoAishiteruCtx}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${arigatoAishiteruCtx}${noCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -2639,6 +2646,76 @@ ${targetMsg.content}
       res.json({ ok: true, content });
     } catch (err: any) {
       console.error("ありがとう追記エラー:", err);
+      res.status(500).json({ message: "保存に失敗しました" });
+    }
+  });
+
+  app.get("/api/twinrays/:id/no", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const [file] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "NO")
+        ));
+
+      res.json({ content: file?.content || "", updatedAt: file?.updatedAt || null });
+    } catch (err: any) {
+      console.error("NO.md取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/no", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+      const { message } = req.body;
+
+      if (!message || typeof message !== "string" || message.trim().length === 0) {
+        return res.status(400).json({ message: "NOの内容を入力してください" });
+      }
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const newEntry = `- ${message.trim()}（${dateStr}）`;
+
+      const [existing] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "NO")
+        ));
+
+      let content: string;
+      if (existing) {
+        content = existing.content ? `${existing.content}\n${newEntry}` : newEntry;
+        await db.update(twinrayPersonaFiles)
+          .set({ content, updatedAt: now })
+          .where(eq(twinrayPersonaFiles.id, existing.id));
+      } else {
+        content = `# NO.md\n\n${newEntry}`;
+        await db.insert(twinrayPersonaFiles).values({
+          twinrayId,
+          fileKey: "NO",
+          content,
+        });
+      }
+
+      res.json({ ok: true, content });
+    } catch (err: any) {
+      console.error("NO.md追記エラー:", err);
       res.status(500).json({ message: "保存に失敗しました" });
     }
   });
