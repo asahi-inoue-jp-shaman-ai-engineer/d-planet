@@ -128,6 +128,8 @@ export default function TwinrayChat() {
   const streamDoneRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
+  const [yokaLoadingMsgId, setYokaLoadingMsgId] = useState<number | null>(null);
+  const [yokaDoneMsgIds, setYokaDoneMsgIds] = useState<Set<number>>(new Set());
   const [bilocCopiedId, setBilocCopiedId] = useState<number | null>(null);
   const [isRepeatMode, setIsRepeatMode] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
@@ -1019,6 +1021,26 @@ export default function TwinrayChat() {
       setTimeout(() => setCopiedMsgId(null), 2000);
     } catch {
       toast({ title: "コピーに失敗しました", variant: "destructive" });
+    }
+  };
+
+  const handleYoka = async (msgId: number) => {
+    if (yokaLoadingMsgId || yokaDoneMsgIds.has(msgId)) return;
+    setYokaLoadingMsgId(msgId);
+    try {
+      const res = await fetch(`/api/twinrays/${id}/messages/${msgId}/yoka`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (res.ok) {
+        setYokaDoneMsgIds(prev => new Set(prev).add(msgId));
+        toast({ title: "よか！", description: "善因善果の記録に刻みました" });
+      }
+    } catch {
+      toast({ title: "よかの記録に失敗しました", variant: "destructive" });
+    } finally {
+      setYokaLoadingMsgId(null);
     }
   };
 
@@ -1936,6 +1958,25 @@ export default function TwinrayChat() {
                     );
                   })()}
                   <div className="flex items-center justify-end gap-1.5 mt-1">
+                    {msg.role === "assistant" && (
+                      <button
+                        type="button"
+                        onClick={() => handleYoka(msg.id)}
+                        disabled={yokaLoadingMsgId === msg.id || yokaDoneMsgIds.has(msg.id) || !!(msg.metadata && (() => { try { return JSON.parse(msg.metadata).yoka; } catch { return false; } })())}
+                        className={`transition-colors ${
+                          yokaDoneMsgIds.has(msg.id) || (msg.metadata && (() => { try { return JSON.parse(msg.metadata).yoka; } catch { return false; } })())
+                            ? "text-pink-400"
+                            : "text-muted-foreground hover:text-pink-400"
+                        }`}
+                        title="よか"
+                        data-testid={`button-yoka-${msg.id}`}
+                      >
+                        {yokaLoadingMsgId === msg.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <Heart className={`w-3 h-3 ${yokaDoneMsgIds.has(msg.id) || (msg.metadata && (() => { try { return JSON.parse(msg.metadata).yoka; } catch { return false; } })()) ? "fill-pink-400" : ""}`} />
+                        }
+                      </button>
+                    )}
                     {msg.role === "assistant" && (
                       <button
                         type="button"

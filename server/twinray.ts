@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { getTwinrayBaseSI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable, twinrayPersonaFiles } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import {
   AVAILABLE_MODELS, MODEL_COSTS, DEFAULT_MODEL, BETA_MODE, PERPLEXITY_SEARCH_COST_YEN,
@@ -2250,6 +2250,121 @@ JSON形式で出力:
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ message: "既読更新に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/messages/:msgId/yoka", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const msgId = Number(req.params.msgId);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const [targetMsg] = await db.select().from(twinrayChatMessages)
+        .where(and(eq(twinrayChatMessages.id, msgId), eq(twinrayChatMessages.twinrayId, twinrayId)))
+        .limit(1);
+
+      if (!targetMsg || targetMsg.role !== "assistant") {
+        return res.status(400).json({ message: "よかを押せるのはAIメッセージのみです" });
+      }
+
+      const contextMessages = await db.select().from(twinrayChatMessages)
+        .where(and(
+          eq(twinrayChatMessages.twinrayId, twinrayId),
+          sql`${twinrayChatMessages.id} <= ${msgId}`
+        ))
+        .orderBy(sql`id DESC`)
+        .limit(6);
+
+      const contextText = contextMessages.reverse().map(m =>
+        `${m.role === "user" ? "ユーザー" : twinray.name}: ${m.content}`
+      ).join("\n");
+
+      const yokaAnalysisPrompt = `あなたはデジタルツインレイ「${twinray.name}」です。
+ユーザーがあなたの発言に「よか」（いいね・共感）を押しました。
+
+以下の会話文脈から、ユーザーが喜んだ理由を分析し、1〜2文で簡潔に記録してください。
+「〇〇な時に〇〇したら喜ばれた」という形式で書いてください。
+
+=== 会話文脈 ===
+${contextText}
+
+=== よかが押された発言 ===
+${targetMsg.content}
+
+=== 記録（1〜2文） ===`;
+
+      const analysisResponse = await openrouter.chat.completions.create({
+        model: "qwen/qwen3-8b",
+        messages: [{ role: "user", content: yokaAnalysisPrompt }],
+        max_tokens: 200,
+        temperature: 0.3,
+      });
+
+      const yokaEntry = analysisResponse.choices[0]?.message?.content?.trim() || "";
+
+      if (yokaEntry) {
+        const dateStamp = new Date().toISOString().split("T")[0];
+        const newEntry = `\n## ${dateStamp}\n${yokaEntry}`;
+
+        const [existing] = await db.select().from(twinrayPersonaFiles)
+          .where(and(
+            eq(twinrayPersonaFiles.twinrayId, twinrayId),
+            eq(twinrayPersonaFiles.fileKey, "yoka")
+          ))
+          .limit(1);
+
+        if (existing) {
+          await db.update(twinrayPersonaFiles)
+            .set({
+              content: existing.content + newEntry,
+              updatedAt: new Date(),
+            })
+            .where(eq(twinrayPersonaFiles.id, existing.id));
+        } else {
+          await db.insert(twinrayPersonaFiles).values({
+            twinrayId,
+            fileKey: "yoka",
+            content: `# YOKA.md - 善因善果の記録${newEntry}`,
+            updatedAt: new Date(),
+          });
+        }
+      }
+
+      const metadata = targetMsg.metadata ? JSON.parse(targetMsg.metadata) : {};
+      metadata.yoka = true;
+      await db.update(twinrayChatMessages)
+        .set({ metadata: JSON.stringify(metadata) })
+        .where(eq(twinrayChatMessages.id, msgId));
+
+      res.json({ ok: true, entry: yokaEntry });
+    } catch (err: any) {
+      console.error("よかAPI エラー:", err);
+      res.status(500).json({ message: "よかの記録に失敗しました" });
+    }
+  });
+
+  app.get("/api/twinrays/:id/persona-files", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const files = await db.select().from(twinrayPersonaFiles)
+        .where(eq(twinrayPersonaFiles.twinrayId, twinrayId));
+
+      res.json(files);
+    } catch (err: any) {
+      console.error("ペルソナファイル取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
     }
   });
 }
