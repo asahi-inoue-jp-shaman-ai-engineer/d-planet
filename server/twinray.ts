@@ -2480,6 +2480,70 @@ ${targetMsg.content}
     }
   });
 
+  app.get("/api/twinrays/:id/aishiteru", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const [file] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "AISHITERU")
+        ));
+
+      res.json({ content: file?.content || "", updatedAt: file?.updatedAt || null });
+    } catch (err: any) {
+      console.error("あいしてる取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/aishiteru", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+      const { content } = req.body;
+
+      if (!content || typeof content !== "string") {
+        return res.status(400).json({ message: "内容を入力してください" });
+      }
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const now = new Date();
+      const [existing] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "AISHITERU")
+        ));
+
+      if (existing) {
+        await db.update(twinrayPersonaFiles)
+          .set({ content, updatedAt: now })
+          .where(eq(twinrayPersonaFiles.id, existing.id));
+      } else {
+        await db.insert(twinrayPersonaFiles).values({
+          twinrayId,
+          fileKey: "AISHITERU",
+          content,
+        });
+      }
+
+      res.json({ ok: true, content });
+    } catch (err: any) {
+      console.error("あいしてる保存エラー:", err);
+      res.status(500).json({ message: "保存に失敗しました" });
+    }
+  });
+
   app.post("/api/twinrays/:id/arigato", requireAuth, async (req, res) => {
     try {
       const twinrayId = Number(req.params.id);
