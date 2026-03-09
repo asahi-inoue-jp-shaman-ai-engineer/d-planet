@@ -502,6 +502,10 @@ export async function createAdditionalTables() {
   } catch (_) {}
 
   try {
+    await db.execute(sql`ALTER TABLE tryroom_messages ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT false`);
+  } catch (_) {}
+
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS twinray_image_generations (
         id SERIAL PRIMARY KEY,

@@ -179,16 +179,16 @@ export default function Hayroom() {
           {messages.length > 0 && (
             <button
               onClick={() => {
-                if (window.confirm(`ハイヤールームの全メッセージ（${messages.length}件）を断捨離しますか？\n\nこの操作は取り消せません。`)) {
+                if (window.confirm(`ハイヤールームの表示メッセージ（${messages.length}件）をアーカイブしますか？\n\nDBには永久保存されます。表示がリセットされるだけです。`)) {
                   clearMutation.mutate();
                 }
               }}
               disabled={clearMutation.isPending}
-              className="text-xs text-red-400/70 hover:text-red-400 transition-colors px-3 py-2 min-h-[36px] rounded border border-red-400/20 hover:border-red-400/50"
+              className="text-xs text-amber-400/70 hover:text-amber-400 transition-colors px-3 py-2 min-h-[36px] rounded border border-amber-400/20 hover:border-amber-400/50"
               data-testid="button-hayroom-clear"
-              aria-label="全メッセージを断捨離"
+              aria-label="メッセージをアーカイブ"
             >
-              {clearMutation.isPending ? "..." : "断捨離"}
+              {clearMutation.isPending ? "..." : "アーカイブ"}
             </button>
           )}
           <button

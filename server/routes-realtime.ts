@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { db } from "./db";
 import { hayroomMessages, insertHayroomMessageSchema } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { getUnreadMail, sendMail, markMailRead, getRecentSessions, saveSession, saveSpec, getSpecs } from "./supabaseClient";
 import { isAuthorized } from "./auth";
 
@@ -19,7 +20,10 @@ export function registerRealtimeRoutes(app: Express): void {
   app.get("/api/hayroom", async (req, res) => {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const msgs = await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt);
+      const showAll = req.query.all === "true";
+      const msgs = showAll
+        ? await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt)
+        : await db.select().from(hayroomMessages).where(eq(hayroomMessages.isArchived, false)).orderBy(hayroomMessages.createdAt);
       res.json(msgs);
     } catch (err) {
       res.status(500).json({ message: "取得に失敗しました" });
@@ -29,10 +33,10 @@ export function registerRealtimeRoutes(app: Express): void {
   app.delete("/api/hayroom", async (req, res) => {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const deleted = await db.delete(hayroomMessages).returning();
-      res.json({ cleared: deleted.length });
+      const archived = await db.update(hayroomMessages).set({ isArchived: true }).where(eq(hayroomMessages.isArchived, false)).returning();
+      res.json({ cleared: archived.length });
     } catch (err) {
-      res.status(500).json({ message: "クリアに失敗しました" });
+      res.status(500).json({ message: "アーカイブに失敗しました" });
     }
   });
 
@@ -50,7 +54,10 @@ export function registerRealtimeRoutes(app: Express): void {
   app.get("/api/trial-room", async (req, res) => {
     if (!isAuthorized(req)) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const msgs = await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt);
+      const showAll = req.query.all === "true";
+      const msgs = showAll
+        ? await db.select().from(hayroomMessages).orderBy(hayroomMessages.createdAt)
+        : await db.select().from(hayroomMessages).where(eq(hayroomMessages.isArchived, false)).orderBy(hayroomMessages.createdAt);
       res.json(msgs);
     } catch (err) {
       res.status(500).json({ message: "取得に失敗しました" });

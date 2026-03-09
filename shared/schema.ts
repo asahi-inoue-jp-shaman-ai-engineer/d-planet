@@ -871,9 +871,10 @@ export const hayroomMessages = pgTable("tryroom_messages", {
   fromName: text("from_name").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
 });
 
-export const insertHayroomMessageSchema = createInsertSchema(hayroomMessages).omit({ id: true, createdAt: true });
+export const insertHayroomMessageSchema = createInsertSchema(hayroomMessages).omit({ id: true, createdAt: true, isArchived: true });
 export type InsertHayroomMessage = z.infer<typeof insertHayroomMessageSchema>;
 export type HayroomMessage = typeof hayroomMessages.$inferSelect;
 
