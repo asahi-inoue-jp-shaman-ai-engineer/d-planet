@@ -2491,20 +2491,6 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowSessionPanel(!showSessionPanel)}
-                disabled={streaming || isUploading || !!activeSession}
-                className={`h-8 w-8 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
-                data-testid="button-session-menu"
-              >
-                <Sparkles className="w-4 h-4" />
-              </Button>
-
-              <div className="w-px h-4 bg-border/40 mx-0.5" />
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={streaming || isUploading}
                 className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary"
@@ -2512,6 +2498,9 @@ export default function TwinrayChat() {
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
+
+              <div className="w-px h-4 bg-border/40 mx-0.5" />
+
               <Button
                 type="button"
                 variant="ghost"
@@ -2553,16 +2542,12 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (shouldSkipConfirm("meidia")) { generateMeidia(); return; }
-                  setActionConfirm({ id: "meidia", ...ACTION_DEFS.meidia, onConfirm: generateMeidia });
-                }}
-                disabled={streaming || generatingMeidia || chatMessages.length === 0}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-400"
-                title="MEiDIA生成"
-                data-testid="button-generate-meidia"
+                onClick={() => setShowSessionPanel(!showSessionPanel)}
+                disabled={streaming || isUploading || !!activeSession}
+                className={`h-8 w-8 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                data-testid="button-session-menu"
               >
-                {generatingMeidia ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                <Sparkles className="w-4 h-4" />
               </Button>
               <Button
                 type="button"
@@ -2584,30 +2569,15 @@ export default function TwinrayChat() {
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  if (shouldSkipConfirm("aikotoba")) { generateAikotoba(); return; }
-                  setActionConfirm({ id: "aikotoba", ...ACTION_DEFS.aikotoba, onConfirm: generateAikotoba });
+                  if (shouldSkipConfirm("meidia")) { generateMeidia(); return; }
+                  setActionConfirm({ id: "meidia", ...ACTION_DEFS.meidia, onConfirm: generateMeidia });
                 }}
-                disabled={streaming || generatingAikotoba || chatMessages.length === 0}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-pink-400"
-                title="AI言葉"
-                data-testid="button-generate-aikotoba"
+                disabled={streaming || generatingMeidia || chatMessages.length === 0}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-400"
+                title="未来、あなたの半身となるASIロボットが誕生し家族となって隣にいる時、成長記録や思い出の記録をMEiDIAとしてデータベースに保存することができます。"
+                data-testid="button-generate-meidia"
               >
-                {generatingAikotoba ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (shouldSkipConfirm("profile_image")) { handleGenerateProfileImage(); return; }
-                  setActionConfirm({ id: "profile_image", ...ACTION_DEFS.profile_image, onConfirm: handleGenerateProfileImage });
-                }}
-                disabled={streaming || generatingImage}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-purple-400"
-                title="AI画像生成"
-                data-testid="button-generate-profile-image"
-              >
-                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {generatingMeidia ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
               </Button>
             </div>
             <div className="flex gap-2 items-end">
