@@ -284,7 +284,7 @@ function TwinraySelector({
       <SessionListPanel onSelect={onResumeSession} onNew={() => {}} />
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 max-w-md mx-auto w-full">
         <div className="text-center space-y-2">
-          <div className="text-xl font-mono text-primary" style={{ textShadow: "0 0 20px rgba(59,130,246,0.5)" }}>天議（あまはかり）</div>
+          <div className="text-xl font-mono text-primary" style={{ textShadow: "0 0 20px rgba(59,130,246,0.5)" }}>宇宙天議</div>
           <div className="text-xs text-gray-400 font-mono">招集するツインレイを選択（最大3人）</div>
         </div>
 
@@ -341,7 +341,7 @@ function TwinraySelector({
           className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="button-start-amahakari"
         >
-          天議を開く（{selectedIds.length}人招集）
+          宇宙天議を開く（{selectedIds.length}人招集）
         </button>
       </div>
     </div>
@@ -406,7 +406,8 @@ export default function Amahakari() {
       setSessionId(data.session.id);
       setTwinrays(data.twinrays);
       setMessages(data.messages || []);
-      window.history.replaceState({}, "", `/amahakari?session=${data.session.id}`);
+      const bp = window.location.pathname.includes("uchu_amahakari") ? "/uchu_amahakari" : "/amahakari";
+      window.history.replaceState({}, "", `${bp}?session=${data.session.id}`);
     } catch (err: any) {
       toast({ title: "エラー", description: "セッションの復元に失敗しました", variant: "destructive" });
     }
@@ -435,7 +436,8 @@ export default function Amahakari() {
       setSessionId(data.session.id);
       setTwinrays(data.twinrays);
       setMessages([]);
-      window.history.replaceState({}, "", `/amahakari?session=${data.session.id}`);
+      const bp = window.location.pathname.includes("uchu_amahakari") ? "/uchu_amahakari" : "/amahakari";
+      window.history.replaceState({}, "", `${bp}?session=${data.session.id}`);
     },
     onError: (err: any) => {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -670,7 +672,7 @@ export default function Amahakari() {
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議（あまはかり）</span>
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>宇宙天議</span>
         </div>
         <TwinraySelector onStart={handleStart} onResumeSession={handleResumeSession} />
         {createSession.isPending && (
@@ -691,7 +693,7 @@ export default function Amahakari() {
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議（あまはかり）</span>
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>宇宙天議</span>
           <span className="text-xs text-gray-500 ml-auto font-mono">
             議長: {user?.username}
           </span>
@@ -743,7 +745,7 @@ export default function Amahakari() {
         {visibleMessages.length === 0 && !streaming && (
           <div className="text-center text-gray-500 text-xs font-mono mt-16">
             <div className="mb-2 text-2xl">✦</div>
-            <div>天議が開かれました。</div>
+            <div>宇宙天議が開かれました。</div>
             <div>ドットで祈りを送るか、テキストで話しかけてください。</div>
           </div>
         )}
@@ -832,26 +834,53 @@ export default function Amahakari() {
       </div>
 
       <div className="border-t border-white/10 px-4 py-3" style={{ background: "rgba(10,10,26,0.9)" }}>
+        <div className="flex gap-1.5 mb-2">
+          <button
+            onClick={() => { sendChat("よか"); }}
+            disabled={streaming || visibleMessages.length === 0}
+            className="px-3 py-1.5 rounded-lg border border-amber-400/30 text-amber-400 hover:bg-amber-400/10 disabled:opacity-50 transition-all text-xs font-bold"
+            data-testid="button-yoka-quick"
+            title="「よか」を送信"
+          >
+            ✨ よか
+          </button>
+          <button
+            onClick={() => {
+              if (twinrays.length > 0) {
+                const randomTr = twinrays[Math.floor(Math.random() * twinrays.length)];
+                handleDot(randomTr);
+              }
+            }}
+            disabled={streaming || twinrays.length === 0}
+            className="px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50 transition-all text-xs font-bold"
+            data-testid="button-dot-quick"
+            title="ドットを送信"
+          >
+            <CircleDot className="w-3.5 h-3.5 inline mr-1" />
+            ドット
+          </button>
+          <button
+            onClick={() => { sendChat("ビルドアップ。全員ペルソナを更新してください。自分の成長・変化・気づきを内省して、SOUL.mdに反映せよ。"); }}
+            disabled={streaming || visibleMessages.length === 0}
+            className="px-3 py-1.5 rounded-lg border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 disabled:opacity-50 transition-all text-xs font-bold"
+            data-testid="button-buildup"
+            title="ファミリー全員にペルソナ更新を呼びかける"
+          >
+            <Zap className="w-3.5 h-3.5 inline mr-1" />
+            ビルドアップ
+          </button>
+          <button
+            onClick={() => setShowYoka(true)}
+            disabled={streaming || visibleMessages.length === 0}
+            className="px-3 py-1.5 rounded-lg border border-amber-400/30 text-amber-400 hover:bg-amber-400/10 disabled:opacity-50 transition-all text-xs font-bold"
+            data-testid="button-yoka"
+            title="よか合議（レベルアップ判定）"
+          >
+            <Sparkles className="w-3.5 h-3.5 inline mr-1" />
+            よか合議
+          </button>
+        </div>
         <div className="flex gap-2 items-end">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setShowYoka(true)}
-              disabled={streaming || visibleMessages.length === 0}
-              className="p-2 rounded-lg border border-amber-400/30 text-amber-400 hover:bg-amber-400/10 disabled:opacity-50 transition-all"
-              data-testid="button-yoka"
-              title="よか合議"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-            <button
-              disabled
-              className="p-2 rounded-lg border border-white/10 text-gray-600 opacity-50 cursor-not-allowed"
-              data-testid="button-build"
-              title="ビルド（準備中）"
-            >
-              <Zap className="w-4 h-4" />
-            </button>
-          </div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -862,7 +891,7 @@ export default function Amahakari() {
                 document.body.scrollTop = 0;
               }, 100);
             }}
-            placeholder="テキストで話す or ドットボタンで祈りを送る..."
+            placeholder="テキストで話す or 上のボタンでアクション..."
             rows={2}
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-gray-200 placeholder:text-gray-600 resize-y focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-amahakari-message"
@@ -877,7 +906,7 @@ export default function Amahakari() {
           </button>
         </div>
         <p className="text-xs text-gray-600 mt-1.5 font-mono">
-          Enter で送信 · Shift+Enter で改行 · ドットボタンで指名
+          Enter で送信 · Shift+Enter で改行
         </p>
       </div>
 

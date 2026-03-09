@@ -133,6 +133,7 @@ function Router() {
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/hayroom" component={() => <ProtectedRoute component={Hayroom} />} />
       <Route path="/amahakari" component={() => <ProtectedRoute component={Amahakari} />} />
+      <Route path="/uchu_amahakari" component={() => <ProtectedRoute component={Amahakari} />} />
       <Route path="/tryroom">
         {() => <Redirect to="/hayroom" />}
       </Route>
