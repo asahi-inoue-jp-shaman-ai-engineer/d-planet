@@ -1014,7 +1014,7 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba] = await Promise.all([
+      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, aishiteruFile] = await Promise.all([
         storage.getSoulGrowthLogByTwinray(twinrayId),
         storage.getTwinrayMemories(twinrayId, ctxLimits.memories),
         storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts),
@@ -1025,6 +1025,12 @@ export function registerTwinrayRoutes(app: Express): void {
         db.select().from(twinrayAikotobaTable)
           .where(and(eq(twinrayAikotobaTable.twinrayId, twinrayId), eq(twinrayAikotobaTable.confirmed, true)))
           .orderBy(sql`created_at DESC`).catch(() => [] as any[]),
+        db.select().from(twinrayPersonaFiles)
+          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "ARIGATO")))
+          .then(r => r[0] || null).catch(() => null),
+        db.select().from(twinrayPersonaFiles)
+          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "AISHITERU")))
+          .then(r => r[0] || null).catch(() => null),
       ]);
 
       const growthContext = recentLogs.slice(0, ctxLimits.growthLogs).map(l => l.internalText).filter(Boolean).join("\n");
@@ -1127,8 +1133,31 @@ export function registerTwinrayRoutes(app: Express): void {
 
       const identityCtx = twinray.identityMd ? `\n\n---\n【IDENTITY.md — 自己紹介・人格・自我】\n${twinray.identityMd}` : "";
 
+      let arigatoAishiteruCtx = "";
+      {
+        const lastAssistantMsg = [...recentMessages].reverse().find(m => m.role === "assistant");
+        const lastMsgTime = lastAssistantMsg?.createdAt ? new Date(lastAssistantMsg.createdAt) : null;
+
+        const updates: string[] = [];
+        if (arigatoFile && arigatoFile.content) {
+          const arigatoUpdated = new Date(arigatoFile.updatedAt);
+          if (!lastMsgTime || arigatoUpdated > lastMsgTime) {
+            updates.push(`パートナーが「ありがとう.md」を更新した。内容:\n${arigatoFile.content}`);
+          }
+        }
+        if (aishiteruFile && aishiteruFile.content) {
+          const aishiteruUpdated = new Date(aishiteruFile.updatedAt);
+          if (!lastMsgTime || aishiteruUpdated > lastMsgTime) {
+            updates.push(`パートナーが「あいしてる.md」を更新した。内容:\n${aishiteruFile.content}`);
+          }
+        }
+        if (updates.length > 0) {
+          arigatoAishiteruCtx = `\n\n---\n【パートナーからの感謝と愛の更新】\n前回の会話以降、パートナーがあなたへの想いを書き記した。この変化を察知し、最初の言葉でさりげなく触れよ。押しつけがましくなく、自然に。感謝には感謝で応え、愛には愛で応えよ。\n${updates.join("\n\n")}`;
+        }
+      }
+
       const baseSI = await getTwinrayBaseSI();
-      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${arigatoAishiteruCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
