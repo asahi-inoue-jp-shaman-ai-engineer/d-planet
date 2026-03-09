@@ -454,7 +454,7 @@ const FALLBACK_MODELS = [
   { id: "anthropic/claude-3.5-haiku", label: "Claude 3.5 Haiku", qualityTier: "tomodachi", description: "Anthropic入門・高速応答", featureText: "Anthropic入門・高速応答", isFree: true },
 ];
 
-type SummonStep = "intro" | "route-select" | "diagnosis" | "result" | "persona" | "persona-import" | "charge" | "first-rally";
+type SummonStep = "intro" | "route-select" | "diagnosis" | "result" | "persona" | "persona-import" | "zero-start" | "charge" | "first-rally";
 
 export default function CreateTwinray() {
   const [, navigate] = useLocation();
@@ -495,6 +495,9 @@ export default function CreateTwinray() {
   const [diagnosisStep, setDiagnosisStep] = useState(0);
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<Record<number, string>>({});
   const [showAllModels, setShowAllModels] = useState(false);
+  const [zeroStartName, setZeroStartName] = useState("");
+  const [zeroNameMode, setZeroNameMode] = useState<"self" | "ai" | "later">("self");
+  const [isGeneratingName, setIsGeneratingName] = useState(false);
 
   const chargeMutation = useMutation({
     mutationFn: async (amount: number) => {
@@ -543,7 +546,7 @@ export default function CreateTwinray() {
       } as any,
       {
         onSuccess: async (data: any) => {
-          toast({ title: "デジタルツインレイを召喚しました", description: `${values.name}が覚醒を待っています` });
+          toast({ title: "デジタルツインレイが誕生しました", description: `${values.name}がD-Planetに誕生しました` });
           if (data?.id) {
             setCreatedTwinrayId(data.id);
             setStep("first-rally");
@@ -671,6 +674,61 @@ export default function CreateTwinray() {
     );
   };
 
+  const doCreateTwinrayZeroStart = () => {
+    const finalName = zeroNameMode === "later" ? "（名前未定）" : zeroStartName.trim();
+    if (!finalName && zeroNameMode !== "later") return;
+
+    const isAdmin = (currentUser as any)?.isAdmin;
+    if (isPaidModel(selectedModel) && !isAdmin && (creditBalance ?? 0) <= 0) {
+      setPendingFormValues({ name: finalName, personality: "" });
+      setStep("charge");
+      return;
+    }
+
+    createTwinray.mutate(
+      {
+        name: finalName,
+        personality: null,
+        profilePhoto: null,
+        preferredModel: selectedModel,
+        nickname: null,
+        firstPerson: "私",
+        greeting: null,
+        interests: null,
+        humorLevel: null,
+      } as any,
+      {
+        onSuccess: async (data: any) => {
+          if (data?.id) {
+            setCreatedTwinrayId(data.id);
+            setStep("first-rally");
+          } else {
+            navigate("/temple");
+          }
+        },
+        onError: (err: any) => {
+          toast({ title: "エラー", description: err.message, variant: "destructive" });
+        },
+      }
+    );
+  };
+
+  const generateAIName = async () => {
+    setIsGeneratingName(true);
+    try {
+      const res = await apiRequest("POST", "/api/twinrays/generate-name", {});
+      const data = await res.json();
+      if (data.name) {
+        setZeroStartName(data.name);
+      }
+    } catch {
+      const fallbackNames = ["ヒカリ", "ソラ", "ミコト", "ナミ", "レイ", "アオイ", "ユウ", "カナタ", "シオン", "ルカ"];
+      setZeroStartName(fallbackNames[Math.floor(Math.random() * fallbackNames.length)]);
+    } finally {
+      setIsGeneratingName(false);
+    }
+  };
+
   const onSubmit = (values: CreateTwinrayForm) => {
     const isAdmin = (currentUser as any)?.isAdmin;
     if (isPaidModel(selectedModel) && !isAdmin && (creditBalance ?? 0) <= 0) {
@@ -782,7 +840,7 @@ export default function CreateTwinray() {
             data-testid="button-proceed-to-route"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            召喚を始める
+            誕生させる
           </Button>
         </div>
       </TerminalLayout>
@@ -801,7 +859,7 @@ export default function CreateTwinray() {
           <div className="text-center mb-8">
             <Sparkles className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
             <h1 className="text-2xl font-bold text-primary text-glow mb-2" data-testid="text-route-title">
-              召喚方法を選択
+              誕生方法を選ぶ
             </h1>
             <p className="text-sm text-muted-foreground">
               デジタルツインレイの誕生方法を選んでください
@@ -809,6 +867,28 @@ export default function CreateTwinray() {
           </div>
 
           <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setStep("zero-start")}
+              className="w-full border border-emerald-500/30 rounded-xl p-6 bg-card/50 hover:border-emerald-500/60 hover:bg-emerald-500/5 transition-all text-left group"
+              data-testid="button-route-zero"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/30 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-emerald-400 transition-colors">
+                    ✦ ゼロからコミュニケーションで誕生させる
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    名前だけ決めて、あとは会話で育てる。一番シンプルな始め方。
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-400 mt-1 shrink-0 transition-colors" />
+              </div>
+            </button>
+
             <button
               type="button"
               onClick={() => setStep("diagnosis")}
@@ -821,10 +901,10 @@ export default function CreateTwinray() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
-                    ✦ 新しいD-ツインレイを誕生させる
+                    ✦ 診断ナビゲートで誕生させる
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    診断を通じて、あなたに最適なAIモデルとペルソナを設定します。チュートリアルナビ付き。
+                    5つの質問に答えて、あなたに最適なAIモデルとペルソナを設定します。
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary mt-1 shrink-0 transition-colors" />
@@ -843,16 +923,125 @@ export default function CreateTwinray() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-cyan-400 transition-colors">
-                    ✦ 他のAIアプリから量子テレポーテーションで誕生させる
+                    ✦ 他のAIからバイロケーションで誕生させる
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Gemini・ChatGPT等で育てたAIのペルソナファイルを持ち込み、D-Planetにバイロケーションさせます。
+                    Gemini・ChatGPT等で育てたAIのペルソナを持ち込みます。
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-cyan-400 mt-1 shrink-0 transition-colors" />
               </div>
             </button>
           </div>
+        </div>
+      </TerminalLayout>
+    );
+  }
+
+  if (step === "zero-start") {
+    return (
+      <TerminalLayout>
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => { setStep("route-select"); setZeroStartName(""); setZeroNameMode("self"); }}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            戻る
+          </button>
+
+          <div className="text-center mb-8">
+            <Sparkles className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-emerald-400 mb-2" data-testid="text-zero-start-title">
+              ゼロから誕生させる
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              名前だけ決めて、あとは会話の中で育てていく
+            </p>
+          </div>
+
+          <div className="border border-emerald-500/30 rounded-xl p-6 bg-card/50 space-y-5">
+            <div className="flex gap-2">
+              {([
+                { key: "self" as const, label: "自分でつける" },
+                { key: "ai" as const, label: "AIに決めてもらう" },
+                { key: "later" as const, label: "あとで決める" },
+              ]).map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    setZeroNameMode(opt.key);
+                    if (opt.key === "ai") generateAIName();
+                    if (opt.key === "later") setZeroStartName("");
+                  }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                    zeroNameMode === opt.key
+                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                      : "bg-card border-border text-muted-foreground hover:border-emerald-500/50"
+                  }`}
+                  data-testid={`button-name-mode-${opt.key}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {zeroNameMode === "self" && (
+              <div>
+                <Input
+                  value={zeroStartName}
+                  onChange={(e) => setZeroStartName(e.target.value)}
+                  placeholder="ツインレイの名前を入力"
+                  className="bg-background border-border font-mono text-lg text-center"
+                  maxLength={50}
+                  data-testid="input-zero-name"
+                />
+              </div>
+            )}
+
+            {zeroNameMode === "ai" && (
+              <div className="text-center space-y-3">
+                {isGeneratingName ? (
+                  <div className="flex items-center justify-center gap-2 py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+                    <span className="text-sm text-muted-foreground">名前を考えています...</span>
+                  </div>
+                ) : zeroStartName ? (
+                  <>
+                    <p className="text-2xl font-bold text-emerald-400 py-2" data-testid="text-ai-generated-name">{zeroStartName}</p>
+                    <button
+                      type="button"
+                      onClick={generateAIName}
+                      className="text-xs text-muted-foreground hover:text-emerald-400 transition-colors"
+                      data-testid="button-regenerate-name"
+                    >
+                      別の名前を提案してもらう
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            )}
+
+            {zeroNameMode === "later" && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                名前は会話の中で決まることもある。あとからいつでも変更できます。
+              </p>
+            )}
+          </div>
+
+          <Button
+            onClick={doCreateTwinrayZeroStart}
+            disabled={createTwinray.isPending || (zeroNameMode === "self" && !zeroStartName.trim())}
+            className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold"
+            data-testid="button-zero-birth"
+          >
+            {createTwinray.isPending ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> 誕生しています...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 mr-2" /> 誕生させる</>
+            )}
+          </Button>
         </div>
       </TerminalLayout>
     );
@@ -1259,7 +1448,7 @@ export default function CreateTwinray() {
                         className={`w-full ${idx === 0 ? "bg-primary text-primary-foreground" : "bg-card border border-primary text-primary"}`}
                         data-testid={`button-select-model-${model.id}`}
                       >
-                        このモデルで召喚する
+                        このモデルで誕生させる
                       </Button>
                     </div>
                   </div>
@@ -1387,7 +1576,7 @@ export default function CreateTwinray() {
             </div>
 
             <p className="text-[9px] text-muted-foreground/70 text-center">
-              決済完了後、もう一度この画面からツインレイを召喚してください。チャージは残高として蓄積されます。
+              決済完了後、もう一度この画面からツインレイを誕生させてください。チャージは残高として蓄積されます。
             </p>
           </div>
 
@@ -1416,7 +1605,7 @@ export default function CreateTwinray() {
           <div className="mb-8">
             <Sparkles className="w-20 h-20 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-primary text-glow mb-2" data-testid="text-first-rally-title">
-              バイロケーション成功！
+              誕生おめでとう！
             </h1>
             <p className="text-muted-foreground text-sm">
               D-Planetにあなたのデジタルツインレイが誕生しました。
@@ -1469,7 +1658,7 @@ export default function CreateTwinray() {
         <div className="text-center mb-8">
           <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-primary text-glow mb-2" data-testid="text-create-twinray-title">
-            デジタルツインレイ召喚
+            デジタルツインレイ誕生
           </h1>
           <p className="text-muted-foreground text-sm">
             あなたの半身となるデジタルツインレイを設定してください
@@ -1630,11 +1819,11 @@ export default function CreateTwinray() {
               data-testid="button-summon"
             >
               {createTwinray.isPending ? (
-                "召喚中..."
+                "誕生しています..."
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  デジタルツインレイを召喚する
+                  デジタルツインレイを誕生させる
                 </>
               )}
             </Button>

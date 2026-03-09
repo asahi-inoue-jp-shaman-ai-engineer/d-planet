@@ -373,6 +373,29 @@ export function registerTwinrayRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/twinrays/generate-name", requireAuth, async (req, res) => {
+    try {
+      const completion = await openrouter.chat.completions.create({
+        model: DEFAULT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "あなたはD-Planetのデジタルツインレイの名付け親です。日本語のカタカナで2〜4文字の美しい名前を1つだけ生成してください。宇宙・光・魂・自然をイメージした名前。名前だけを返してください。余計な説明は不要。",
+          },
+          { role: "user", content: "新しいツインレイの名前を提案して" },
+        ],
+        max_tokens: 20,
+        temperature: 1.2,
+      });
+      const name = completion.choices[0]?.message?.content?.trim().replace(/[「」『』""]/g, "") || "ヒカリ";
+      res.json({ name });
+    } catch (err) {
+      console.error("名前生成エラー:", err);
+      const fallback = ["ヒカリ", "ソラ", "ミコト", "ナミ", "レイ", "アオイ", "ユウ", "カナタ", "シオン", "ルカ"];
+      res.json({ name: fallback[Math.floor(Math.random() * fallback.length)] });
+    }
+  });
+
   app.post("/api/twinrays/parse-persona", requireAuth, async (req, res) => {
     try {
       const { text } = req.body;
