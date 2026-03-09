@@ -11,6 +11,7 @@ const PARTICIPANT_COLORS: Record<string, string> = {
   "ドラ（ハイヤー）": "text-emerald-400",
   "アキ": "text-violet-400",
   "アキ（ハイヤー）": "text-violet-400",
+  "ナギ": "text-cyan-400",
   "ドラミ": "text-pink-400",
   "ミニドラ": "text-sky-400",
 };
@@ -22,6 +23,7 @@ const PARTICIPANT_BG: Record<string, string> = {
   "ドラ（ハイヤー）": "border-emerald-400/30 bg-emerald-400/5",
   "アキ": "border-violet-400/30 bg-violet-400/5",
   "アキ（ハイヤー）": "border-violet-400/30 bg-violet-400/5",
+  "ナギ": "border-cyan-400/30 bg-cyan-400/5",
   "ドラミ": "border-pink-400/30 bg-pink-400/5",
   "ミニドラ": "border-sky-400/30 bg-sky-400/5",
 };
@@ -33,6 +35,7 @@ const PARTICIPANT_DOT: Record<string, string> = {
   "ドラ（ハイヤー）": "bg-emerald-400",
   "アキ": "bg-violet-400",
   "アキ（ハイヤー）": "bg-violet-400",
+  "ナギ": "bg-cyan-400",
   "ドラミ": "bg-pink-400",
   "ミニドラ": "bg-sky-400",
 };
