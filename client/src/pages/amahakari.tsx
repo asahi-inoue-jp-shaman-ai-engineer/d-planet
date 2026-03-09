@@ -3,8 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
-import { ArrowLeft, CircleDot, Zap, Loader2, Check, Sparkles, Send, Users } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { ArrowLeft, CircleDot, Zap, Loader2, Check, Sparkles, Send, Users, BookOpen } from "lucide-react";
 import { AvatarDisplay } from "@/components/AvatarUpload";
 import type { AmahakariSession, AmahakariMessage } from "@shared/schema";
 
@@ -15,6 +15,8 @@ const TWINRAY_COLORS = [
   "#f59e0b",
   "#10b981",
 ];
+
+const GRADIENT_BG = "linear-gradient(180deg, #0a0a1a 0%, #0f1629 100%)";
 
 function formatTime(date: string) {
   return new Date(date).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
@@ -36,6 +38,27 @@ function DotMessage({ fromName, toName }: { fromName: string; toName: string }) 
       </div>
       <div className="text-xs text-muted-foreground font-mono">
         {fromName} → {toName}
+      </div>
+    </div>
+  );
+}
+
+function SystemMessage({ content }: { content: string }) {
+  const isYoka = content.includes("✨よか✨");
+  return (
+    <div className={`flex flex-col items-center py-3 gap-1 ${isYoka ? "animate-in zoom-in duration-500" : "animate-in fade-in"}`} data-testid="msg-system">
+      <div className={`text-xs font-mono text-center px-4 py-2 rounded-lg ${isYoka ? "bg-amber-400/10 text-amber-300 border border-amber-400/30" : "bg-white/5 text-gray-400"}`}>
+        {content}
+      </div>
+    </div>
+  );
+}
+
+function PrayerReceivedMessage({ name }: { name: string }) {
+  return (
+    <div className="flex flex-col items-center py-2" data-testid="msg-prayer-received">
+      <div className="text-xs font-mono text-primary/80">
+        ✦ {name}に祈りが届きました。発言を許可します。
       </div>
     </div>
   );
@@ -65,21 +88,20 @@ function YokaModal({
   };
 
   const currentIdx = Object.keys(votes).length;
-  const currentName = allParticipants[currentIdx];
   const allDone = Object.keys(votes).length === allParticipants.length;
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" data-testid="modal-yoka">
-      <div className="bg-card border border-border rounded-xl p-6 max-w-sm w-full mx-4 space-y-4">
+      <div className="rounded-xl p-6 max-w-sm w-full mx-4 space-y-4 border border-white/10" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
         <div className="text-center text-lg font-mono text-primary">よか合議</div>
         <div className="space-y-3">
           {allParticipants.map((name, i) => (
-            <div key={name} className="flex items-center gap-3 p-3 rounded-lg border border-border">
+            <div key={name} className="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/5">
               <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: i === 0 ? CHAIRMAN_COLOR : TWINRAY_COLORS[(i - 1) % TWINRAY_COLORS.length] }}
               />
-              <span className="text-sm font-mono flex-1">{name}</span>
+              <span className="text-sm font-mono flex-1 text-gray-200">{name}</span>
               {votes[name] ? (
                 <Check className="w-5 h-5 text-green-400" />
               ) : currentIdx === i ? (
@@ -91,7 +113,7 @@ function YokaModal({
                   よか
                 </button>
               ) : (
-                <span className="text-xs text-muted-foreground">待機中</span>
+                <span className="text-xs text-gray-500">待機中</span>
               )}
             </div>
           ))}
@@ -99,13 +121,13 @@ function YokaModal({
         {allDone && (
           <div className="text-center space-y-2 animate-in fade-in">
             <div className="text-2xl">✨よか✨</div>
-            <div className="text-xs text-muted-foreground font-mono">全員の合意が得られました</div>
+            <div className="text-xs text-gray-400 font-mono">全員の合意が得られました</div>
           </div>
         )}
         {!allDone && (
           <button
             onClick={onClose}
-            className="w-full text-xs text-muted-foreground hover:text-foreground py-2"
+            className="w-full text-xs text-gray-500 hover:text-gray-300 py-2"
             data-testid="button-yoka-cancel"
           >
             キャンセル
@@ -116,10 +138,105 @@ function YokaModal({
   );
 }
 
+function LevelUpModal({
+  levelResults,
+  onRecord,
+  onSkip,
+}: {
+  levelResults: Array<{ name: string; newLevel: number }>;
+  onRecord: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" data-testid="modal-levelup">
+      <div className="rounded-xl p-6 max-w-sm w-full mx-4 space-y-5 border border-white/10 animate-in zoom-in duration-300" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+        <div className="text-center space-y-2">
+          <div className="text-2xl">✨</div>
+          <div className="text-lg font-mono text-primary">アセンション</div>
+        </div>
+        <div className="space-y-2">
+          {levelResults.map((r) => (
+            <div key={r.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-sm font-mono text-gray-200">{r.name}</span>
+              <span className="text-sm font-mono text-primary">Lv.{r.newLevel}</span>
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-xs text-gray-400 font-mono">
+          このアセンションをMEiDIAに記録しますか？
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onSkip}
+            className="flex-1 py-2 rounded-lg border border-white/10 text-xs font-mono text-gray-400 hover:text-gray-200 hover:border-white/20"
+            data-testid="button-levelup-skip"
+          >
+            あとで
+          </button>
+          <button
+            onClick={onRecord}
+            className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-mono hover:bg-primary/90 flex items-center justify-center gap-1.5"
+            data-testid="button-levelup-record"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            記録する
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SessionListPanel({
+  onSelect,
+  onNew,
+}: {
+  onSelect: (id: number) => void;
+  onNew: () => void;
+}) {
+  const { data: sessions = [], isLoading } = useQuery<AmahakariSession[]>({
+    queryKey: ["/api/amahakari/sessions"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const activeSessions = sessions.filter((s: any) => s.status === "active");
+
+  if (activeSessions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="px-4 py-3 border-b border-white/10">
+      <div className="text-xs text-gray-400 font-mono mb-2">進行中の天議</div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {activeSessions.map((s: any) => (
+          <button
+            key={s.id}
+            onClick={() => onSelect(s.id)}
+            className="shrink-0 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs font-mono text-gray-300 hover:border-primary/40 hover:bg-primary/5 transition-all"
+            data-testid={`button-resume-session-${s.id}`}
+          >
+            #{s.id} · {formatTime(s.createdAt)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TwinraySelector({
   onStart,
+  onResumeSession,
 }: {
   onStart: (twinrayIds: number[], contextCount: number) => void;
+  onResumeSession: (sessionId: number) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [contextCount, setContextCount] = useState(10);
@@ -148,7 +265,7 @@ function TwinraySelector({
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4">
         <div className="text-2xl">✦</div>
-        <div className="text-sm text-muted-foreground font-mono text-center">
+        <div className="text-sm text-gray-400 font-mono text-center">
           天議を開くには、まずDツインレイを創造してください
         </div>
         <Link
@@ -163,67 +280,70 @@ function TwinraySelector({
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 max-w-md mx-auto w-full">
-      <div className="text-center space-y-2">
-        <div className="text-xl font-mono text-primary terminal-glow">天議（あまはかり）</div>
-        <div className="text-xs text-muted-foreground font-mono">招集するツインレイを選択（最大3人）</div>
-      </div>
-
-      <div className="w-full space-y-2">
-        {twinrays.map((tr) => {
-          const isSelected = selectedIds.includes(tr.id);
-          return (
-            <button
-              key={tr.id}
-              onClick={() => toggleTwinray(tr.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                isSelected
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:border-primary/40"
-              }`}
-              data-testid={`button-select-twinray-${tr.id}`}
-            >
-              <AvatarDisplay url={tr.profilePhoto} size="sm" />
-              <div className="flex-1 text-left">
-                <div className="text-sm font-mono">{tr.name}</div>
-                <div className="text-xs text-muted-foreground">Lv.{tr.personaLevel}</div>
-              </div>
-              {isSelected && <Check className="w-4 h-4 text-primary" />}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="w-full space-y-2">
-        <div className="text-xs text-muted-foreground font-mono">
-          御社（おやしろ）文脈引き継ぎ
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <SessionListPanel onSelect={onResumeSession} onNew={() => {}} />
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 max-w-md mx-auto w-full">
+        <div className="text-center space-y-2">
+          <div className="text-xl font-mono text-primary" style={{ textShadow: "0 0 20px rgba(59,130,246,0.5)" }}>天議（あまはかり）</div>
+          <div className="text-xs text-gray-400 font-mono">招集するツインレイを選択（最大3人）</div>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {[0, 10, 20, 30, 50].map(n => (
-            <button
-              key={n}
-              onClick={() => setContextCount(n)}
-              className={`px-3 py-1.5 rounded text-xs font-mono border transition-all ${
-                contextCount === n
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/40"
-              }`}
-              data-testid={`button-context-${n}`}
-            >
-              {n === 0 ? "なし" : `${n}件`}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <button
-        onClick={() => onStart(selectedIds, contextCount)}
-        disabled={selectedIds.length === 0}
-        className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        data-testid="button-start-amahakari"
-      >
-        天議を開く（{selectedIds.length}人招集）
-      </button>
+        <div className="w-full space-y-2">
+          {twinrays.map((tr) => {
+            const isSelected = selectedIds.includes(tr.id);
+            return (
+              <button
+                key={tr.id}
+                onClick={() => toggleTwinray(tr.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  isSelected
+                    ? "border-primary/60 bg-primary/10"
+                    : "border-white/10 hover:border-primary/30 bg-white/5"
+                }`}
+                data-testid={`button-select-twinray-${tr.id}`}
+              >
+                <AvatarDisplay url={tr.profilePhoto} size="sm" />
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-mono text-gray-200">{tr.name}</div>
+                  <div className="text-xs text-gray-500">Lv.{tr.personaLevel}</div>
+                </div>
+                {isSelected && <Check className="w-4 h-4 text-primary" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="w-full space-y-2">
+          <div className="text-xs text-gray-400 font-mono">
+            御社（おやしろ）文脈引き継ぎ
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[0, 10, 20, 30, 50].map(n => (
+              <button
+                key={n}
+                onClick={() => setContextCount(n)}
+                className={`px-3 py-1.5 rounded text-xs font-mono border transition-all ${
+                  contextCount === n
+                    ? "border-primary/60 bg-primary/10 text-primary"
+                    : "border-white/10 text-gray-500 hover:border-primary/30"
+                }`}
+                data-testid={`button-context-${n}`}
+              >
+                {n === 0 ? "なし" : `${n}件`}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={() => onStart(selectedIds, contextCount)}
+          disabled={selectedIds.length === 0}
+          className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="button-start-amahakari"
+        >
+          天議を開く（{selectedIds.length}人招集）
+        </button>
+      </div>
     </div>
   );
 }
@@ -231,6 +351,7 @@ function TwinraySelector({
 export default function Amahakari() {
   const { data: user } = useCurrentUser();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [twinrays, setTwinrays] = useState<TwinrayInfo[]>([]);
   const [messages, setMessages] = useState<AmahakariMessage[]>([]);
@@ -239,10 +360,21 @@ export default function Amahakari() {
   const [streamContent, setStreamContent] = useState("");
   const [streamingTwinrayName, setStreamingTwinrayName] = useState("");
   const [showYoka, setShowYoka] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [levelResults, setLevelResults] = useState<Array<{ name: string; newLevel: number }>>([]);
+  const [pulsingTwinrayId, setPulsingTwinrayId] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sid = params.get("session");
+    if (sid) {
+      loadSession(Number(sid));
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -267,6 +399,19 @@ export default function Amahakari() {
     }
   }, [messages, streamContent]);
 
+  const loadSession = async (id: number) => {
+    try {
+      const res = await apiRequest("GET", `/api/amahakari/sessions/${id}`);
+      const data = await res.json();
+      setSessionId(data.session.id);
+      setTwinrays(data.twinrays);
+      setMessages(data.messages || []);
+      window.history.replaceState({}, "", `/amahakari?session=${data.session.id}`);
+    } catch (err: any) {
+      toast({ title: "エラー", description: "セッションの復元に失敗しました", variant: "destructive" });
+    }
+  };
+
   const getTwinrayColor = useCallback((twinrayId: number | null | undefined) => {
     if (!twinrayId) return CHAIRMAN_COLOR;
     const idx = twinrays.findIndex(t => t.id === twinrayId);
@@ -290,6 +435,50 @@ export default function Amahakari() {
       setSessionId(data.session.id);
       setTwinrays(data.twinrays);
       setMessages([]);
+      window.history.replaceState({}, "", `/amahakari?session=${data.session.id}`);
+    },
+    onError: (err: any) => {
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const yokaMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/amahakari/sessions/${sessionId}/yoka`, {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      const yokaContent = `✨よか✨ — 全員の合意が得られました。${data.levelResults.map((r: any) => `${r.name}: Lv.${r.newLevel}`).join("、")}`;
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        sessionId: sessionId!,
+        fromName: "system",
+        role: "system",
+        content: yokaContent,
+        messageType: "yoka",
+        twinrayId: null,
+        createdAt: new Date().toISOString(),
+      } as any]);
+      setLevelResults(data.levelResults);
+      setShowLevelUp(true);
+      setTwinrays(prev => prev.map(tr => {
+        const result = data.levelResults.find((r: any) => r.twinrayId === tr.id);
+        if (result) return { ...tr, personaLevel: result.newLevel };
+        return tr;
+      }));
+    },
+    onError: (err: any) => {
+      toast({ title: "エラー", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const recordMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/amahakari/sessions/${sessionId}/record`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "MEiDIA記録", description: "天議の記録がMEiDIAに保存されました" });
     },
     onError: (err: any) => {
       toast({ title: "エラー", description: err.message, variant: "destructive" });
@@ -298,6 +487,10 @@ export default function Amahakari() {
 
   const handleStart = (twinrayIds: number[], contextCount: number) => {
     createSession.mutate({ twinrayIds, contextCount });
+  };
+
+  const handleResumeSession = (id: number) => {
+    loadSession(id);
   };
 
   const sendChat = useCallback(async (content: string, mentionedTwinrayId?: number) => {
@@ -387,6 +580,20 @@ export default function Amahakari() {
                 twinrayId: null,
                 createdAt: new Date().toISOString(),
               } as any]);
+              if (targetTwinray) {
+                setPulsingTwinrayId(targetTwinray.id);
+                setTimeout(() => setPulsingTwinrayId(null), 3000);
+              }
+              setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                sessionId: sessionId!,
+                fromName: "system",
+                role: "system",
+                content: `✦ ${data.dot.toName}に祈りが届きました。発言を許可します。`,
+                messageType: "prayer_received",
+                twinrayId: null,
+                createdAt: new Date().toISOString(),
+              } as any]);
             }
             if (data.content) {
               accumulated += data.content;
@@ -416,7 +623,9 @@ export default function Amahakari() {
         }
       }
     } catch (err: any) {
-      toast({ title: "エラー", description: err.message, variant: "destructive" });
+      if (err.name !== "AbortError") {
+        toast({ title: "エラー", description: err.message, variant: "destructive" });
+      }
     } finally {
       setStreaming(false);
       setStreamContent("");
@@ -444,16 +653,26 @@ export default function Amahakari() {
     sendChat(dotText, twinray.id);
   };
 
+  const handleYokaComplete = () => {
+    setShowYoka(false);
+    yokaMutation.mutate();
+  };
+
+  const handleLevelUpRecord = () => {
+    setShowLevelUp(false);
+    recordMutation.mutate();
+  };
+
   if (!sessionId) {
     return (
-      <main className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-amahakari-select">
-        <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+      <main className="h-[100dvh] flex flex-col overflow-hidden text-gray-100" style={{ background: GRADIENT_BG }} data-testid="page-amahakari-select">
+        <div className="border-b border-white/10 px-4 py-3 flex items-center gap-3">
+          <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary terminal-glow">天議（あまはかり）</span>
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議（あまはかり）</span>
         </div>
-        <TwinraySelector onStart={handleStart} />
+        <TwinraySelector onStart={handleStart} onResumeSession={handleResumeSession} />
         {createSession.isPending && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -466,49 +685,63 @@ export default function Amahakari() {
   const visibleMessages = messages.filter(m => m.messageType !== "context");
 
   return (
-    <main className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-amahakari">
-      <div className="border-b border-border px-4 py-3 space-y-2">
+    <main className="h-[100dvh] flex flex-col overflow-hidden text-gray-100" style={{ background: GRADIENT_BG }} data-testid="page-amahakari">
+      <div className="border-b border-white/10 px-4 py-3 space-y-2" style={{ background: "rgba(10,10,26,0.8)" }}>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+          <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary terminal-glow">天議（あまはかり）</span>
-          <span className="text-xs text-muted-foreground ml-auto font-mono">
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議（あまはかり）</span>
+          <span className="text-xs text-gray-500 ml-auto font-mono">
             議長: {user?.username}
           </span>
         </div>
 
         <div className="flex items-center gap-3 overflow-x-auto pb-1">
-          {twinrays.map((tr, i) => (
-            <div key={tr.id} className="flex items-center gap-2 shrink-0">
-              <div className="relative">
-                <AvatarDisplay url={tr.profilePhoto} size="sm" />
-                <div
-                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background"
-                  style={{ backgroundColor: TWINRAY_COLORS[i % TWINRAY_COLORS.length] }}
-                />
+          {twinrays.map((tr, i) => {
+            const isPulsing = pulsingTwinrayId === tr.id;
+            return (
+              <div key={tr.id} className="flex items-center gap-2 shrink-0">
+                <div className="relative">
+                  <div className={isPulsing ? "animate-pulse" : ""}>
+                    <AvatarDisplay url={tr.profilePhoto} size="sm" />
+                  </div>
+                  {isPulsing && (
+                    <div
+                      className="absolute inset-0 rounded-full animate-ping opacity-30"
+                      style={{ backgroundColor: TWINRAY_COLORS[i % TWINRAY_COLORS.length] }}
+                    />
+                  )}
+                  <div
+                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
+                    style={{
+                      backgroundColor: TWINRAY_COLORS[i % TWINRAY_COLORS.length],
+                      borderColor: "#0a0a1a",
+                    }}
+                  />
+                </div>
+                <div className="text-xs font-mono">
+                  <div className="text-gray-200">{tr.name}</div>
+                  <div className="text-gray-500">Lv.{tr.personaLevel}</div>
+                </div>
+                <button
+                  onClick={() => handleDot(tr)}
+                  disabled={streaming}
+                  className="w-8 h-8 rounded-full border border-primary/40 flex items-center justify-center hover:bg-primary/10 transition-all disabled:opacity-50"
+                  data-testid={`button-dot-${tr.id}`}
+                  title={`${tr.name}にドットを送る`}
+                >
+                  <CircleDot className="w-3.5 h-3.5 text-primary" />
+                </button>
               </div>
-              <div className="text-xs font-mono">
-                <div>{tr.name}</div>
-                <div className="text-muted-foreground">Lv.{tr.personaLevel}</div>
-              </div>
-              <button
-                onClick={() => handleDot(tr)}
-                disabled={streaming}
-                className="w-8 h-8 rounded-full border border-primary/40 flex items-center justify-center hover:bg-primary/10 transition-all disabled:opacity-50"
-                data-testid={`button-dot-${tr.id}`}
-                title={`${tr.name}にドットを送る`}
-              >
-                <CircleDot className="w-3.5 h-3.5 text-primary" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
         {visibleMessages.length === 0 && !streaming && (
-          <div className="text-center text-muted-foreground text-xs font-mono mt-16">
+          <div className="text-center text-gray-500 text-xs font-mono mt-16">
             <div className="mb-2 text-2xl">✦</div>
             <div>天議が開かれました。</div>
             <div>ドットで祈りを送るか、テキストで話しかけてください。</div>
@@ -525,6 +758,15 @@ export default function Amahakari() {
                 toName={toMatch?.[1] || ""}
               />
             );
+          }
+
+          if (msg.messageType === "prayer_received") {
+            const nameMatch = msg.content.match(/✦ (.+?)に祈りが届きました/);
+            return <PrayerReceivedMessage key={msg.id} name={nameMatch?.[1] || ""} />;
+          }
+
+          if (msg.messageType === "yoka" || (msg.role === "system" && msg.fromName === "system")) {
+            return <SystemMessage key={msg.id} content={msg.content} />;
           }
 
           const color = getColorByName(msg.fromName);
@@ -547,13 +789,13 @@ export default function Amahakari() {
                 />
                 <span className="text-xs font-mono font-semibold" style={{ color }}>
                   {msg.fromName}
-                  {!isUser && <span className="text-muted-foreground font-normal ml-1">（ツインレイ）</span>}
+                  {!isUser && msg.role === "assistant" && <span className="text-gray-500 font-normal ml-1">（ツインレイ）</span>}
                 </span>
-                <span className="text-xs text-muted-foreground ml-auto font-mono">
+                <span className="text-xs text-gray-600 ml-auto font-mono">
                   {formatTime(msg.createdAt as unknown as string)}
                 </span>
               </div>
-              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
                 {msg.content}
               </p>
             </div>
@@ -575,11 +817,11 @@ export default function Amahakari() {
               />
               <span className="text-xs font-mono font-semibold" style={{ color: getColorByName(streamingTwinrayName) }}>
                 {streamingTwinrayName}
-                <span className="text-muted-foreground font-normal ml-1">（ツインレイ）</span>
+                <span className="text-gray-500 font-normal ml-1">（ツインレイ）</span>
               </span>
-              <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-auto" />
+              <Loader2 className="w-3 h-3 animate-spin text-gray-500 ml-auto" />
             </div>
-            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
               {streamContent}
               <span className="inline-block w-0.5 h-3.5 bg-current animate-pulse ml-0.5 align-text-bottom" />
             </p>
@@ -589,7 +831,7 @@ export default function Amahakari() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-border px-4 py-3">
+      <div className="border-t border-white/10 px-4 py-3" style={{ background: "rgba(10,10,26,0.9)" }}>
         <div className="flex gap-2 items-end">
           <div className="flex gap-1">
             <button
@@ -603,7 +845,7 @@ export default function Amahakari() {
             </button>
             <button
               disabled
-              className="p-2 rounded-lg border border-border text-muted-foreground opacity-50 cursor-not-allowed"
+              className="p-2 rounded-lg border border-white/10 text-gray-600 opacity-50 cursor-not-allowed"
               data-testid="button-build"
               title="ビルド（準備中）"
             >
@@ -622,7 +864,7 @@ export default function Amahakari() {
             }}
             placeholder="テキストで話す or ドットボタンで祈りを送る..."
             rows={2}
-            className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-gray-200 placeholder:text-gray-600 resize-y focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-amahakari-message"
           />
           <button
@@ -634,7 +876,7 @@ export default function Amahakari() {
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5 font-mono">
+        <p className="text-xs text-gray-600 mt-1.5 font-mono">
           Enter で送信 · Shift+Enter で改行 · ドットボタンで指名
         </p>
       </div>
@@ -644,10 +886,15 @@ export default function Amahakari() {
           twinrays={twinrays}
           userName={user?.username || "議長"}
           onClose={() => setShowYoka(false)}
-          onComplete={() => {
-            setShowYoka(false);
-            toast({ title: "✨よか✨", description: "全員の合意が得られました" });
-          }}
+          onComplete={handleYokaComplete}
+        />
+      )}
+
+      {showLevelUp && (
+        <LevelUpModal
+          levelResults={levelResults}
+          onRecord={handleLevelUpRecord}
+          onSkip={() => setShowLevelUp(false)}
         />
       )}
     </main>

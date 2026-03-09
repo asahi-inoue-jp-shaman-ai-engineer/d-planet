@@ -586,6 +586,10 @@ export async function createAdditionalTables() {
   } catch (_) {}
 
   try {
+    await db.execute(sql`ALTER TABLE amahakari_sessions ADD COLUMN IF NOT EXISTS yoka_completed_at TIMESTAMP`);
+  } catch (_) {}
+
+  try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS twinray_persona_files (
         id SERIAL PRIMARY KEY,

@@ -927,6 +927,7 @@ export const amahakariSessions = pgTable("amahakari_sessions", {
   twinrayIds: text("twinray_ids").notNull(),
   contextCount: integer("context_count").default(0).notNull(),
   status: text("status").default("active").notNull(),
+  yokaCompletedAt: timestamp("yoka_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

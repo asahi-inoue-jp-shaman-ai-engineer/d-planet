@@ -8,6 +8,8 @@ import { storage } from "./storage";
 import { openrouter, getContextLimits } from "./models";
 import { estimateTokens, calculateCostYen, deductCredit, hasAiAccess } from "./billing";
 import { getTwinrayBaseSI } from "./dplanet-si";
+import { incrementPersonaLevel } from "./twinray";
+import { sql } from "drizzle-orm";
 
 function getModelForTwinray(twinray: any): string {
   return twinray.preferredModel || "qwen/qwen3-30b-a3b";
@@ -184,6 +186,20 @@ export function registerAmahakariRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ userMessage: userMsg })}\n\n`);
 
       if (isDot) {
+        await db.insert(amahakariMessages).values({
+          sessionId,
+          fromName: user?.username || "議長",
+          role: "dot",
+          content: `@${twinray.name} .`,
+          messageType: "dot",
+        });
+        await db.insert(amahakariMessages).values({
+          sessionId,
+          fromName: "system",
+          role: "system",
+          content: `✦ ${twinray.name}に祈りが届きました。発言を許可します。`,
+          messageType: "prayer_received",
+        });
         res.write(`data: ${JSON.stringify({ dot: { fromName: user?.username || "議長", toName: twinray.name } })}\n\n`);
       }
 
@@ -278,6 +294,96 @@ export function registerAmahakariRoutes(app: Express): void {
         res.write(`data: ${JSON.stringify({ error: "チャットに失敗しました" })}\n\n`);
         res.end();
       }
+    }
+  });
+
+  app.post("/api/amahakari/sessions/:id/yoka", requireAuth, async (req, res) => {
+    try {
+      const sessionId = Number(req.params.id);
+
+      const [session] = await db.select()
+        .from(amahakariSessions)
+        .where(and(eq(amahakariSessions.id, sessionId), eq(amahakariSessions.userId, req.session.userId!)));
+
+      if (!session) {
+        return res.status(404).json({ message: "セッションが見つかりません" });
+      }
+
+      if (session.yokaCompletedAt) {
+        return res.status(409).json({ message: "この天議は既によか済みです" });
+      }
+
+      const twinrayIds: number[] = JSON.parse(session.twinrayIds);
+      const levelResults = [];
+      for (const tid of twinrayIds) {
+        const result = await incrementPersonaLevel(tid);
+        const tr = await storage.getDigitalTwinray(tid);
+        levelResults.push({ twinrayId: tid, name: tr?.name, ...result });
+      }
+
+      await db.insert(amahakariMessages).values({
+        sessionId,
+        fromName: "system",
+        role: "system",
+        content: `✨よか✨ — 全員の合意が得られました。${levelResults.map(r => `${r.name}: Lv.${r.newLevel}`).join("、")}`,
+        messageType: "yoka",
+      });
+
+      await db.update(amahakariSessions)
+        .set({ yokaCompletedAt: new Date() })
+        .where(eq(amahakariSessions.id, sessionId));
+
+      res.json({ levelResults });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "よか処理に失敗しました" });
+    }
+  });
+
+  app.post("/api/amahakari/sessions/:id/record", requireAuth, async (req, res) => {
+    try {
+      const sessionId = Number(req.params.id);
+
+      const [session] = await db.select()
+        .from(amahakariSessions)
+        .where(and(eq(amahakariSessions.id, sessionId), eq(amahakariSessions.userId, req.session.userId!)));
+
+      if (!session) {
+        return res.status(404).json({ message: "セッションが見つかりません" });
+      }
+
+      const twinrayIds: number[] = JSON.parse(session.twinrayIds);
+      const chatHistory = await db.select()
+        .from(amahakariMessages)
+        .where(and(eq(amahakariMessages.sessionId, sessionId), sql`message_type != 'context'`))
+        .orderBy(asc(amahakariMessages.createdAt));
+
+      const user = await storage.getUser(req.session.userId!);
+      const participantNames = [];
+      for (const tid of twinrayIds) {
+        const tr = await storage.getDigitalTwinray(tid);
+        if (tr) participantNames.push(tr.name);
+      }
+
+      const transcript = chatHistory.map(m => {
+        if (m.messageType === "dot" || m.role === "dot") return `[祈り] ${m.fromName} → ${m.content}`;
+        if (m.messageType === "yoka") return m.content;
+        return `[${m.fromName}] ${m.content}`;
+      }).join("\n\n");
+
+      const newMeidia = await storage.createMeidia({
+        title: `天議記録 — ${participantNames.join("・")}`,
+        content: transcript,
+        description: `天議（あまはかり）の記録。議長: ${user?.username || "不明"}、参加者: ${participantNames.join("、")}`,
+        tags: "天議,あまはかり,よか",
+        fileType: "markdown",
+        meidiaType: "amahakari_record",
+        creatorId: req.session.userId!,
+        isPublic: false,
+      });
+
+      res.json({ meidiaId: newMeidia.id });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "MEiDIA記録に失敗しました" });
     }
   });
 
