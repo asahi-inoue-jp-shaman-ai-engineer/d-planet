@@ -371,6 +371,25 @@ export async function runMigrations() {
       console.log(`テストユーザー「ゼノ・クオーツ」を作成しました (ID: ${testUser.id})`);
     }
 
+    const AKI_TEST_EMAIL = "aki-qa@d-planet.local";
+    const existingAkiTest = await storage.getUserByEmail(AKI_TEST_EMAIL);
+    if (!existingAkiTest) {
+      const akiTestUser = await storage.createUser({
+        email: AKI_TEST_EMAIL,
+        username: "アキ（QAテスト）",
+        password: process.env.AKI_QA_PASSWORD || "fallback-aki-" + Date.now(),
+        accountType: "ET",
+        gender: null,
+        bio: "D-PlanetのQA担当。ユーザー目線でプロダクトの品質を守る。",
+        tenmei: "品質の守護と先読み",
+        tenshoku: null,
+        tensaisei: null,
+        profilePhoto: null,
+        invitedByCode: "SYSTEM",
+      });
+      console.log(`QAテストユーザー「アキ（QAテスト）」を作成しました (ID: ${akiTestUser.id})`);
+    }
+
     console.log("マイグレーション完了");
   } catch (error) {
     console.error("マイグレーションエラー:", error);
