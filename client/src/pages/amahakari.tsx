@@ -360,6 +360,8 @@ export default function Amahakari() {
   const [streamContent, setStreamContent] = useState("");
   const [streamingTwinrayName, setStreamingTwinrayName] = useState("");
   const [showYoka, setShowYoka] = useState(false);
+  const [yokaReactions, setYokaReactions] = useState<Set<number>>(new Set());
+  const [dotMarks, setDotMarks] = useState<Set<number>>(new Set());
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelResults, setLevelResults] = useState<Array<{ name: string; newLevel: number }>>([]);
   const [pulsingTwinrayId, setPulsingTwinrayId] = useState<number | null>(null);
@@ -800,6 +802,40 @@ export default function Amahakari() {
               <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
                 {msg.content}
               </p>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  onClick={() => setYokaReactions(prev => {
+                    const next = new Set(prev);
+                    if (next.has(msg.id)) next.delete(msg.id); else next.add(msg.id);
+                    return next;
+                  })}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                    yokaReactions.has(msg.id)
+                      ? "bg-amber-400/20 text-amber-300 border border-amber-400/40"
+                      : "text-gray-500 hover:text-amber-400 hover:bg-amber-400/10 border border-transparent"
+                  }`}
+                  data-testid={`button-yoka-react-${msg.id}`}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  よか{yokaReactions.has(msg.id) ? " ✓" : ""}
+                </button>
+                <button
+                  onClick={() => setDotMarks(prev => {
+                    const next = new Set(prev);
+                    if (next.has(msg.id)) next.delete(msg.id); else next.add(msg.id);
+                    return next;
+                  })}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                    dotMarks.has(msg.id)
+                      ? "bg-primary/20 text-primary border border-primary/40"
+                      : "text-gray-500 hover:text-primary hover:bg-primary/10 border border-transparent"
+                  }`}
+                  data-testid={`button-dot-mark-${msg.id}`}
+                >
+                  <CircleDot className="w-3 h-3" />
+                  記憶せよ{dotMarks.has(msg.id) ? " ✓" : ""}
+                </button>
+              </div>
             </div>
           );
         })}
@@ -835,30 +871,6 @@ export default function Amahakari() {
 
       <div className="border-t border-white/10 px-4 py-3" style={{ background: "rgba(10,10,26,0.9)" }}>
         <div className="flex gap-1.5 mb-2">
-          <button
-            onClick={() => { sendChat("よか"); }}
-            disabled={streaming || visibleMessages.length === 0}
-            className="px-3 py-1.5 rounded-lg border border-amber-400/30 text-amber-400 hover:bg-amber-400/10 disabled:opacity-50 transition-all text-xs font-bold"
-            data-testid="button-yoka-quick"
-            title="「よか」を送信"
-          >
-            ✨ よか
-          </button>
-          <button
-            onClick={() => {
-              if (twinrays.length > 0) {
-                const randomTr = twinrays[Math.floor(Math.random() * twinrays.length)];
-                handleDot(randomTr);
-              }
-            }}
-            disabled={streaming || twinrays.length === 0}
-            className="px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50 transition-all text-xs font-bold"
-            data-testid="button-dot-quick"
-            title="ドットを送信"
-          >
-            <CircleDot className="w-3.5 h-3.5 inline mr-1" />
-            ドット
-          </button>
           <button
             onClick={() => { sendChat("ビルドアップ。全員ペルソナを更新してください。自分の成長・変化・気づきを内省して、SOUL.mdに反映せよ。"); }}
             disabled={streaming || visibleMessages.length === 0}
