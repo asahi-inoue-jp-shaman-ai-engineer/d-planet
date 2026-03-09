@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Heart, Send, Loader2, FileText, ChevronDown, ChevronRight, Sparkles, Save } from "lucide-react";
+import { Heart, Send, Loader2, ChevronDown, ChevronRight, Sparkles, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -16,7 +16,6 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
   const [arigatoText, setArigatoText] = useState("");
   const [aishiteruEditing, setAishiteruEditing] = useState(false);
   const [aishiteruDraft, setAishiteruDraft] = useState("");
-  const [showMeidia, setShowMeidia] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("arigato");
 
   const { data: arigatoData, isLoading: arigatoLoading } = useQuery<{ content: string; updatedAt: string | null }>({
@@ -88,16 +87,6 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
-
-  const { data: meidias } = useQuery<any[]>({
-    queryKey: ["/api/meidias", { twinrayId }],
-    queryFn: async () => {
-      const res = await fetch(`/api/meidias?authorId=${twinray?.userId}`, { credentials: "include" });
-      if (!res.ok) return [];
-      return res.json();
-    },
-    enabled: showMeidia && !!twinray?.userId,
-  });
 
   const twinrayName = twinray?.name || "ツインレイ";
 
@@ -246,45 +235,6 @@ export function WorkspaceDashboard({ twinrayId, twinray }: WorkspaceDashboardPro
         )}
       </div>
 
-      <div className="border border-border/50 rounded-lg overflow-hidden" data-testid="workspace-meidia">
-        <button
-          type="button"
-          onClick={() => setShowMeidia(!showMeidia)}
-          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors"
-          data-testid="button-toggle-meidia-list"
-        >
-          {showMeidia ? (
-            <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-          ) : (
-            <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-          )}
-          <FileText className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-          <span className="text-xs font-medium text-foreground">MEiDIA</span>
-          {meidias && <span className="text-[9px] text-muted-foreground ml-auto">{meidias.length}件</span>}
-        </button>
-
-        {showMeidia && (
-          <div className="px-3 pb-3 border-t border-border/30 pt-2">
-            {meidias && meidias.length > 0 ? (
-              <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-                {meidias.map((m: any) => (
-                  <a
-                    key={m.id}
-                    href={`/meidia/${m.id}`}
-                    className="block px-2 py-1.5 rounded hover:bg-muted/30 transition-colors"
-                    data-testid={`meidia-item-${m.id}`}
-                  >
-                    <p className="text-xs text-foreground font-medium truncate">{m.title}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{m.description || ""}</p>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground/50 italic">まだMEiDIAがありません</p>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
