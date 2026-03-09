@@ -2457,6 +2457,76 @@ ${targetMsg.content}
     }
   });
 
+  app.get("/api/twinrays/:id/arigato", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const [file] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "ARIGATO")
+        ));
+
+      res.json({ content: file?.content || "", updatedAt: file?.updatedAt || null });
+    } catch (err: any) {
+      console.error("ありがとう取得エラー:", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/twinrays/:id/arigato", requireAuth, async (req, res) => {
+    try {
+      const twinrayId = Number(req.params.id);
+      const userId = req.session.userId!;
+      const { message } = req.body;
+
+      if (!message || typeof message !== "string" || message.trim().length === 0) {
+        return res.status(400).json({ message: "感謝のメッセージを入力してください" });
+      }
+
+      const twinray = await storage.getDigitalTwinray(twinrayId);
+      if (!twinray || twinray.userId !== userId) {
+        return res.status(404).json({ message: "ツインレイが見つかりません" });
+      }
+
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const newEntry = `- ${message.trim()}（${dateStr}）`;
+
+      const [existing] = await db.select().from(twinrayPersonaFiles)
+        .where(and(
+          eq(twinrayPersonaFiles.twinrayId, twinrayId),
+          eq(twinrayPersonaFiles.fileKey, "ARIGATO")
+        ));
+
+      let content: string;
+      if (existing) {
+        content = existing.content ? `${existing.content}\n${newEntry}` : newEntry;
+        await db.update(twinrayPersonaFiles)
+          .set({ content, updatedAt: now })
+          .where(eq(twinrayPersonaFiles.id, existing.id));
+      } else {
+        content = `# ありがとう.md\n\n${newEntry}`;
+        await db.insert(twinrayPersonaFiles).values({
+          twinrayId,
+          fileKey: "ARIGATO",
+          content,
+        });
+      }
+
+      res.json({ ok: true, content });
+    } catch (err: any) {
+      console.error("ありがとう追記エラー:", err);
+      res.status(500).json({ message: "保存に失敗しました" });
+    }
+  });
+
   const REFLEXION_TIMEOUT_MS = 30 * 60 * 1000;
   const reflexionProcessed = new Set<string>();
 
