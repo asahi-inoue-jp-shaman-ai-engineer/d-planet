@@ -169,7 +169,7 @@ export default function Hayroom() {
   return (
     <main className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-hayroom">
       <h1 className="sr-only">宇宙天議</h1>
-      <div className="border-b border-border px-3 py-2 flex-shrink-0">
+      <div className="border-b border-border px-3 py-2 flex-shrink-0" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLocation("/")}

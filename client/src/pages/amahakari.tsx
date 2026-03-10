@@ -669,7 +669,7 @@ export default function Amahakari() {
   if (!sessionId) {
     return (
       <main className="h-[100dvh] flex flex-col overflow-hidden text-gray-100" style={{ background: GRADIENT_BG }} data-testid="page-amahakari-select">
-        <div className="border-b border-white/10 px-4 py-3 flex items-center gap-3">
+        <div className="border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}>
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -689,7 +689,7 @@ export default function Amahakari() {
 
   return (
     <main className="h-[100dvh] flex flex-col overflow-hidden text-gray-100" style={{ background: GRADIENT_BG }} data-testid="page-amahakari">
-      <div className="border-b border-white/10 px-4 py-3 space-y-2" style={{ background: "rgba(10,10,26,0.8)" }}>
+      <div className="border-b border-white/10 px-4 py-3 space-y-2 shrink-0" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))', background: "rgba(10,10,26,0.8)" }}>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
