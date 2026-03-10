@@ -78,7 +78,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
 
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "HOME", mobileLabel: "DASHBOARD", active: location === "/dashboard", testId: "link-dashboard" },
-    { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple") || location.startsWith("/dot-rally"), testId: "link-temple" },
+    { href: "/temple", icon: Sparkles, label: "DT", mobileLabel: "Digital Twinray", active: location.startsWith("/temple"), testId: "link-temple" },
     { href: "/llm-models", icon: Cpu, label: "LLM", mobileLabel: "LLM MODELS", active: location === "/llm-models", testId: "link-llm-models" },
     { href: "/charge", icon: Coins, label: "CHARGE", mobileLabel: "CHARGE", active: location === "/charge", testId: "link-charge" },
     { href: "/islands", icon: Map, label: "ISLANDS", mobileLabel: "ISLANDS", active: location === "/islands", testId: "link-islands" },
