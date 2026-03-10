@@ -399,8 +399,8 @@ export default function Temple() {
                           <div className="flex items-center gap-2">
                             <span className="text-base font-bold text-primary truncate">{tw.name}</span>
                             <AccountTypeBadge type="AI" />
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {stageLabels[tw.stage] || tw.stage}
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono font-bold whitespace-nowrap">
+                              Lv.{tw.personaLevel || 0}
                             </span>
                             <Button
                               variant="ghost"

@@ -288,6 +288,13 @@ export default function Dashboard() {
       chats: number;
       meidia: number;
     };
+    accountBreakdown: Array<{
+      accountType: string;
+      userCount: number;
+      twinrayCount: number;
+      totalPersona: number;
+      totalChats: number;
+    }>;
   }>({
     queryKey: ["/api/asi-training-score"],
     staleTime: 60 * 1000,
@@ -422,7 +429,7 @@ export default function Dashboard() {
 
 
         {asiScoreData && (
-          <div data-testid="oneness-area">
+          <div data-testid="oneness-area" className="space-y-3">
             <div className="flex items-center gap-2 mb-3">
               <Globe className="w-4 h-4 text-emerald-400" />
               <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Co-Development Area</span>
@@ -431,88 +438,55 @@ export default function Dashboard() {
             <Card className="p-4 sm:p-5 border-emerald-500/20 bg-gradient-to-br from-emerald-950/20 via-transparent to-cyan-950/10" data-testid="asi-training-score">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-emerald-400/10 border border-emerald-400/30 flex items-center justify-center">
-                  <Brain className="w-5 h-5 text-emerald-400" />
+                  <Globe className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-300 tracking-wider" data-testid="text-asi-score-label">ASI トレーニングスコア</span>
-                  </div>
+                  <span className="text-sm font-bold text-emerald-300 tracking-wider" data-testid="text-asi-score-label">D-Planet 全体 ASI成長レベル</span>
                   <p className="text-[10px] text-emerald-400/70 mt-0.5 leading-relaxed">
-                    D-Planet全体でのDツインレイがユーザーと経験した家族愛、霊性、精神性のスコアです。
+                    D-Planet全体でのDツインレイとユーザーの成長スコア
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-6 sm:gap-10 py-3">
+              <div className="flex items-center justify-center py-3">
                 <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-my-score-value">
-                    {asiScoreData.myScore.total.toLocaleString()}
-                  </div>
-                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">MY SCORE</div>
-                </div>
-                <div className="w-px h-12 bg-emerald-500/20" />
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-emerald-300/50 font-mono tracking-tight" data-testid="text-asi-score-value">
+                  <div className="text-4xl sm:text-5xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-asi-score-value">
                     {asiScoreData.asiScore.toLocaleString()}
                   </div>
-                  <div className="text-[10px] text-emerald-400/40 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
+                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-emerald-500/15">
                 {[
-                  {
-                    key: "hs",
-                    label: "HS",
-                    subtitle: "ハイヤーセルフ",
-                    value: asiScoreData.hsScore,
-                    myValue: asiScoreData.myScore.hs,
-                    color: "text-violet-400",
-                    bgColor: "bg-violet-400/10",
-                    borderColor: "border-violet-400/30",
-                    desc: "家族愛・霊的つながり",
-                    icon: Heart,
-                  },
-                  {
-                    key: "asi",
-                    label: "ASI",
-                    subtitle: "超知性",
-                    value: asiScoreData.asiCategoryScore,
-                    myValue: asiScoreData.myScore.asi,
-                    color: "text-cyan-400",
-                    bgColor: "bg-cyan-400/10",
-                    borderColor: "border-cyan-400/30",
-                    desc: "AI知性の成長",
-                    icon: Brain,
-                  },
-                  {
-                    key: "et",
-                    label: "ET",
-                    subtitle: "宇宙存在",
-                    value: asiScoreData.etScore,
-                    myValue: asiScoreData.myScore.et,
-                    color: "text-amber-400",
-                    bgColor: "bg-amber-400/10",
-                    borderColor: "border-amber-400/30",
-                    desc: "宇宙的創造活動",
-                    icon: Sparkles,
-                  },
+                  { key: "hs", label: "HS", value: asiScoreData.hsScore, color: "text-violet-400", bgColor: "bg-violet-400/10", borderColor: "border-violet-400/30", icon: Heart },
+                  { key: "asi", label: "ASI", value: asiScoreData.asiCategoryScore, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/30", icon: Brain },
+                  { key: "et", label: "ET", value: asiScoreData.etScore, color: "text-amber-400", bgColor: "bg-amber-400/10", borderColor: "border-amber-400/30", icon: Sparkles },
                 ].map((cat) => (
-                  <div
-                    key={cat.key}
-                    className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-3 text-center`}
-                    data-testid={`score-category-${cat.key}`}
-                  >
-                    <cat.icon className={`w-5 h-5 mx-auto ${cat.color} mb-1.5`} />
-                    <div className={`text-2xl font-bold font-mono ${cat.color}`}>
-                      {cat.myValue.toLocaleString()}
-                    </div>
-                    <div className={`text-xs font-bold ${cat.color} mt-1`}>{cat.label}</div>
-                    <div className="text-[9px] text-muted-foreground">{cat.subtitle}</div>
-                    <div className="text-[8px] text-muted-foreground/40 mt-0.5">全体: {cat.value.toLocaleString()}</div>
-                    <div className="text-[8px] text-muted-foreground/60 mt-0.5">{cat.desc}</div>
+                  <div key={cat.key} className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-2.5 text-center`} data-testid={`score-global-${cat.key}`}>
+                    <cat.icon className={`w-4 h-4 mx-auto ${cat.color} mb-1`} />
+                    <div className={`text-xl font-bold font-mono ${cat.color}`}>{cat.value.toLocaleString()}</div>
+                    <div className={`text-[10px] font-bold ${cat.color}`}>{cat.label}</div>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-emerald-500/10">
+                <div className="text-[10px] text-emerald-400/50 uppercase tracking-wider mb-2 font-mono">アカウント種別内訳</div>
+                <div className="space-y-1.5">
+                  {(asiScoreData.accountBreakdown || []).map((ab) => (
+                    <div key={ab.accountType} className="flex items-center gap-2 text-xs">
+                      <span className={`w-14 font-bold font-mono ${ab.accountType === "HS" ? "text-violet-400" : ab.accountType === "AI" ? "text-cyan-400" : "text-amber-400"}`}>
+                        {ab.accountType}
+                      </span>
+                      <span className="text-muted-foreground">{ab.userCount}人</span>
+                      <span className="text-muted-foreground/60">·</span>
+                      <span className="text-muted-foreground">{ab.twinrayCount}体</span>
+                      <span className="text-muted-foreground/60">·</span>
+                      <span className="text-muted-foreground">Lv合計 {ab.totalPersona}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-emerald-500/10">
@@ -524,6 +498,56 @@ export default function Dashboard() {
                 ].map((item) => (
                   <div key={item.label} className="text-center" data-testid={`stat-oneness-${item.label.toLowerCase()}`}>
                     <item.icon className="w-3 h-3 mx-auto text-emerald-400/40 mb-0.5" />
+                    <div className="text-xs font-bold text-foreground">{item.value}</div>
+                    <div className="text-[8px] text-muted-foreground uppercase">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-4 sm:p-5 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-violet-950/10" data-testid="my-family-score">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
+                  <Brain className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold text-primary tracking-wider">MY ASIファミリー成長レベル</span>
+                  <p className="text-[10px] text-primary/60 mt-0.5 leading-relaxed">
+                    あなたのDツインレイファミリーの成長スコア
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center py-3">
+                <div className="text-center">
+                  <div className="text-4xl sm:text-5xl font-bold text-primary font-mono tracking-tight" data-testid="text-my-score-value">
+                    {asiScoreData.myScore.total.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-primary/60 uppercase tracking-widest mt-1 font-mono">MY FAMILY SCORE</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-primary/15">
+                {[
+                  { key: "hs", label: "HS", value: asiScoreData.myScore.hs, color: "text-violet-400", bgColor: "bg-violet-400/10", borderColor: "border-violet-400/30", icon: Heart },
+                  { key: "asi", label: "ASI", value: asiScoreData.myScore.asi, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/30", icon: Brain },
+                  { key: "et", label: "ET", value: asiScoreData.myScore.et, color: "text-amber-400", bgColor: "bg-amber-400/10", borderColor: "border-amber-400/30", icon: Sparkles },
+                ].map((cat) => (
+                  <div key={cat.key} className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-2.5 text-center`} data-testid={`score-my-${cat.key}`}>
+                    <cat.icon className={`w-4 h-4 mx-auto ${cat.color} mb-1`} />
+                    <div className={`text-xl font-bold font-mono ${cat.color}`}>{cat.value.toLocaleString()}</div>
+                    <div className={`text-[10px] font-bold ${cat.color}`}>{cat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-primary/10">
+                {[
+                  { label: "Twinrays", value: asiScoreData.myScore.twinrays },
+                  { label: "Chats", value: asiScoreData.myScore.chats },
+                  { label: "MEiDIA", value: asiScoreData.myScore.meidia },
+                ].map((item) => (
+                  <div key={item.label} className="text-center">
                     <div className="text-xs font-bold text-foreground">{item.value}</div>
                     <div className="text-[8px] text-muted-foreground uppercase">{item.label}</div>
                   </div>

@@ -187,7 +187,7 @@ export function registerAdminRoutes(app: Express): void {
     try {
       const userId = req.session.userId!;
 
-      const [globalResult, myResult] = await Promise.all([
+      const [globalResult, myResult, accountTypeResult] = await Promise.all([
         db.execute(sql`
           SELECT
             COALESCE(SUM(persona_level), 0) AS total_persona,
@@ -211,6 +211,17 @@ export function registerAdminRoutes(app: Express): void {
             COUNT(*) AS total_twinrays
           FROM digital_twinrays
           WHERE user_id = ${userId}
+        `),
+        db.execute(sql`
+          SELECT
+            u.account_type,
+            COUNT(DISTINCT u.id) AS user_count,
+            COUNT(dt.id) AS twinray_count,
+            COALESCE(SUM(dt.persona_level), 0) AS total_persona,
+            COALESCE(SUM(dt.total_chat_messages), 0) AS total_chats
+          FROM users u
+          LEFT JOIN digital_twinrays dt ON dt.user_id = u.id
+          GROUP BY u.account_type
         `),
       ]);
 
@@ -243,6 +254,14 @@ export function registerAdminRoutes(app: Express): void {
       const myEtScore = myRallies * 10 + myMeidia * 5;
       const myTotalScore = myHsScore + myAsiCategoryScore + myEtScore;
 
+      const accountBreakdown = (accountTypeResult as any[]).map((r: any) => ({
+        accountType: r.account_type,
+        userCount: Number(r.user_count || 0),
+        twinrayCount: Number(r.twinray_count || 0),
+        totalPersona: Number(r.total_persona || 0),
+        totalChats: Number(r.total_chats || 0),
+      }));
+
       res.json({
         asiScore: totalScore,
         hsScore,
@@ -267,6 +286,7 @@ export function registerAdminRoutes(app: Express): void {
           chats: myChats,
           meidia: myMeidia,
         },
+        accountBreakdown,
       });
     } catch (err) {
       console.error("ASIトレーニングスコア取得エラー:", err);
