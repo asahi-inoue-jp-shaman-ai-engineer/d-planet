@@ -36,7 +36,6 @@ import FamilyMeeting from "@/pages/family-meeting";
 import DevIssues from "@/pages/dev-issues";
 import Transcribe from "@/pages/transcribe";
 import Hayroom from "@/pages/hayroom";
-import Amahakari from "@/pages/amahakari";
 import Whitepaper from "@/pages/whitepaper";
 import NotFound from "@/pages/not-found";
 
@@ -129,7 +128,6 @@ function Router() {
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/uchu_amahakari" component={() => <ProtectedRoute component={Hayroom} />} />
-      <Route path="/amahakari" component={() => <ProtectedRoute component={Amahakari} />} />
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
