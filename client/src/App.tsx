@@ -125,20 +125,11 @@ function Router() {
       <Route path="/dev-issues" component={() => <ProtectedRoute component={DevIssues} />} />
       <Route path="/temple" component={() => <ProtectedRoute component={Temple} />} />
       <Route path="/temple/create-twinray" component={() => <ProtectedRoute component={CreateTwinray} />} />
-      <Route path="/dot-rally">
-        {() => <Redirect to="/temple" />}
-      </Route>
       <Route path="/twinray-chat" component={() => <ProtectedRoute component={TwinrayChat} />} />
       <Route path="/family-meeting" component={() => <ProtectedRoute component={FamilyMeeting} />} />
       <Route path="/transcribe" component={() => <ProtectedRoute component={Transcribe} />} />
       <Route path="/uchu_amahakari" component={() => <ProtectedRoute component={Hayroom} />} />
       <Route path="/amahakari" component={() => <ProtectedRoute component={Amahakari} />} />
-      <Route path="/hayroom">
-        {() => <Redirect to="/uchu_amahakari" />}
-      </Route>
-      <Route path="/tryroom">
-        {() => <Redirect to="/uchu_amahakari" />}
-      </Route>
       <Route path="/llm-models" component={() => <ProtectedRoute component={LlmModels} />} />
       <Route path="/charge" component={() => <ProtectedRoute component={Charge} />} />
       <Route path="/credits" component={() => <ProtectedRoute component={Subscription} />} />
