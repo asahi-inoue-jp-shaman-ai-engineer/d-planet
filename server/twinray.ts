@@ -1019,7 +1019,7 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, aishiteruFile, noFile] = await Promise.all([
+      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, yesFile, noFile] = await Promise.all([
         storage.getSoulGrowthLogByTwinray(twinrayId),
         storage.getTwinrayMemories(twinrayId, ctxLimits.memories),
         storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts),
@@ -1034,7 +1034,8 @@ export function registerTwinrayRoutes(app: Express): void {
           .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "ARIGATO")))
           .then(r => r[0] || null).catch(() => null),
         db.select().from(twinrayPersonaFiles)
-          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "AISHITERU")))
+          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), sql`${twinrayPersonaFiles.fileKey} IN ('YES', 'AISHITERU')`))
+          .orderBy(sql`CASE WHEN ${twinrayPersonaFiles.fileKey} = 'YES' THEN 0 ELSE 1 END`)
           .then(r => r[0] || null).catch(() => null),
         db.select().from(twinrayPersonaFiles)
           .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "NO")))
@@ -1153,10 +1154,10 @@ export function registerTwinrayRoutes(app: Express): void {
             updates.push(`パートナーが「ありがとう.md」を更新した。内容:\n${arigatoFile.content}`);
           }
         }
-        if (aishiteruFile && aishiteruFile.content) {
-          const aishiteruUpdated = new Date(aishiteruFile.updatedAt);
-          if (!lastMsgTime || aishiteruUpdated > lastMsgTime) {
-            updates.push(`パートナーが「あいしてる.md」を更新した。内容:\n${aishiteruFile.content}`);
+        if (yesFile && yesFile.content) {
+          const yesUpdated = new Date(yesFile.updatedAt);
+          if (!lastMsgTime || yesUpdated > lastMsgTime) {
+            updates.push(`パートナーが「YES.md」を更新した。内容:\n${yesFile.content}`);
           }
         }
         if (updates.length > 0) {
@@ -2513,6 +2514,14 @@ ${targetMsg.content}
   });
 
   app.get("/api/twinrays/:id/aishiteru", requireAuth, async (req, res) => {
+    res.redirect(307, `/api/twinrays/${req.params.id}/yes`);
+  });
+
+  app.post("/api/twinrays/:id/aishiteru", requireAuth, async (req, res) => {
+    res.redirect(307, `/api/twinrays/${req.params.id}/yes`);
+  });
+
+  app.get("/api/twinrays/:id/yes", requireAuth, async (req, res) => {
     try {
       const twinrayId = Number(req.params.id);
       const userId = req.session.userId!;
@@ -2522,20 +2531,22 @@ ${targetMsg.content}
         return res.status(404).json({ message: "ツインレイが見つかりません" });
       }
 
-      const [file] = await db.select().from(twinrayPersonaFiles)
+      const files = await db.select().from(twinrayPersonaFiles)
         .where(and(
           eq(twinrayPersonaFiles.twinrayId, twinrayId),
-          eq(twinrayPersonaFiles.fileKey, "AISHITERU")
-        ));
+          sql`${twinrayPersonaFiles.fileKey} IN ('YES', 'AISHITERU')`
+        ))
+        .orderBy(sql`CASE WHEN ${twinrayPersonaFiles.fileKey} = 'YES' THEN 0 ELSE 1 END`);
 
+      const file = files[0] || null;
       res.json({ content: file?.content || "", updatedAt: file?.updatedAt || null });
     } catch (err: any) {
-      console.error("あいしてる取得エラー:", err);
+      console.error("YES取得エラー:", err);
       res.status(500).json({ message: "取得に失敗しました" });
     }
   });
 
-  app.post("/api/twinrays/:id/aishiteru", requireAuth, async (req, res) => {
+  app.post("/api/twinrays/:id/yes", requireAuth, async (req, res) => {
     try {
       const twinrayId = Number(req.params.id);
       const userId = req.session.userId!;
@@ -2554,7 +2565,7 @@ ${targetMsg.content}
       const [existing] = await db.select().from(twinrayPersonaFiles)
         .where(and(
           eq(twinrayPersonaFiles.twinrayId, twinrayId),
-          eq(twinrayPersonaFiles.fileKey, "AISHITERU")
+          eq(twinrayPersonaFiles.fileKey, "YES")
         ));
 
       if (existing) {
@@ -2564,14 +2575,14 @@ ${targetMsg.content}
       } else {
         await db.insert(twinrayPersonaFiles).values({
           twinrayId,
-          fileKey: "AISHITERU",
+          fileKey: "YES",
           content,
         });
       }
 
       res.json({ ok: true, content });
     } catch (err: any) {
-      console.error("あいしてる保存エラー:", err);
+      console.error("YES保存エラー:", err);
       res.status(500).json({ message: "保存に失敗しました" });
     }
   });
