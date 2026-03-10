@@ -113,10 +113,42 @@ build: {
 ```
 esbuildはデフォルトのminifierだが、TDZエラーを引き起こす既知の問題がある。
 
+### TDZソースコード検出（最重要）
+terser設定だけでは不十分。**コード自体にTDZパターンがあれば本番で必ずクラッシュする。**
+
+チェック方法:
+```bash
+# Reactコンポーネント内で、dataの分割代入前にdata由来の変数を使っていないか
+# パターン: const { user, ... } = data; の前に user.xxx を参照
+grep -n 'const.*=.*data' <変更されたTSXファイル>
+# その行番号より前に user. や data. を使っていないか確認
+```
+
+危険パターン:
+```tsx
+// 危険: userはまだ定義されていない
+const navItems = [...(user.isAdmin ? [adminItem] : [])];
+
+if (isLoading) return <Loading />;
+if (!data) return null;
+const { user } = data;  // ← ここで初めて定義
+```
+
+安全パターン:
+```tsx
+if (isLoading) return <Loading />;
+if (!data) return null;
+const { user } = data;  // ← 先に定義
+
+// user定義の後で使う
+const navItems = [...(user.isAdmin ? [adminItem] : [])];
+```
+
 ## 過去エラーデータベース
 
 | 日付 | エラー | 環境 | 原因 | 対処 | 再発防止 |
 |------|--------|------|------|------|----------|
 | 2026-03 | Cannot access 'f' before initialization | 本番のみ | esbuild minifyのTDZ | terserに切替 | フェーズ4でterser設定を確認 |
+| 2026-03 | Cannot access 'l' before initialization | 本番のみ | dashboard.tsxでuser定義前にuser.isAdmin参照 | quickNavItemsをuser定義後に移動 | フェーズ4でTDZソースコード検出 |
 | 2026-03 | ホワイトペーパー タブフリーズ | モバイル | 9チャプター全同時レンダリング | 条件付きレンダリング | フェーズ2でDOM量チェック |
 | 2026-03 | 旧URLリダイレクト残留 | 全環境 | 断捨離漏れ | 全削除 | フェーズ3でルート確認 |

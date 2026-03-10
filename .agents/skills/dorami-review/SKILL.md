@@ -73,7 +73,7 @@ ls client/src/pages/
 
 1. **drizzle-ormのフロントエンド混入**: `shared/schema.ts` が `drizzle-orm` をインポートしていて、それがフロントエンドバンドルに含まれていないか
 2. **循環参照**: フロントエンドコンポーネント間の循環インポート
-3. **TDZ危険パターン**: `export default` で定義前の変数を参照していないか
+3. **TDZソースコード検出（最重要）**: `const { user } = data;` の前に `user.xxx` を参照していないか。early return（isLoading/!data）の前に分割代入由来の変数を使っていないか。詳細は `references/checklist.md` を参照
 4. **terser設定確認**: `vite.config.ts` で `minify: "terser"` が設定されているか
 
 チェック方法:
