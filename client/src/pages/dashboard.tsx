@@ -92,7 +92,6 @@ interface DashboardData {
   };
   stats: {
     chatCount: number;
-    rallyCount: number;
     islandCount: number;
     meidiaCount: number;
   };
@@ -619,7 +618,6 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Chat", value: stats.chatCount, icon: MessageSquare, testId: "stat-chat" },
-                { label: "Rally", value: stats.rallyCount, icon: Zap, testId: "stat-rally" },
                 { label: "Islands", value: stats.islandCount, icon: Map, testId: "stat-islands" },
                 { label: "MEiDIA", value: stats.meidiaCount, icon: FileText, testId: "stat-meidia" },
               ].map((s) => (

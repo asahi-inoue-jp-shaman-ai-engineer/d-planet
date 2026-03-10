@@ -8,7 +8,6 @@ import connectPgSimple from "connect-pg-simple";
 import { pool, rawSql } from "./db";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerTwinrayRoutes } from "./twinray";
-import { registerDotRallyRoutes } from "./dot-rally";
 import { registerFamilyMeetingRoutes } from "./family-meeting";
 import { registerVoiceRoutes } from "./voice";
 import { registerTranscribeRoutes } from "./transcribe";
@@ -197,7 +196,6 @@ export async function registerRoutes(
 
   registerObjectStorageRoutes(app);
   registerTwinrayRoutes(app);
-  registerDotRallyRoutes(app);
   registerFamilyMeetingRoutes(app);
   registerVoiceRoutes(app);
   registerTranscribeRoutes(app);

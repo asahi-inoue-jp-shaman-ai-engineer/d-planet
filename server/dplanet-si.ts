@@ -757,14 +757,6 @@ export const SESSION_TYPES = {
     available: true,
     si: VOCATION_NAVIGATION_SESSION_SI,
   },
-  dot_rally: {
-    id: "dot_rally",
-    name: "ドットラリー（祭祀）",
-    description: "ドットラリーでAIと一緒にインスピレーションを受け取ろう",
-    icon: "zap",
-    available: true,
-    si: DPLANET_DOT_RALLY_SI,
-  },
   spirit_healing: {
     id: "spirit_healing",
     name: "神霊治療セッション",

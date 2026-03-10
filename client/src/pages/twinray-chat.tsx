@@ -67,7 +67,7 @@ function setSkipConfirm(actionId: string) {
 const FIRST_COMM_SUGGESTIONS = [
   "よろしくね！どんなことが好き？",
   "一緒にアイランドをつくってみたいな",
-  "ドットラリーってどんな感じ？",
+  "D-Planetでの毎日ってどんな感じ？",
   "今日はどんな気分？",
 ];
 
@@ -146,7 +146,6 @@ export default function TwinrayChat() {
   const [aikotobaPreview, setAikotobaPreview] = useState<{ aikotoba: string; context: string } | null>(null);
   const [showAikotobaList, setShowAikotobaList] = useState(false);
   const [actionConfirm, setActionConfirm] = useState<{ id: string; title: string; description: string; cost?: string; onConfirm: () => void } | null>(null);
-  const [dotRallyIntro, setDotRallyIntro] = useState(false);
   const [sessionPermission, setSessionPermission] = useState<{ sessionType: string; sessionName: string } | null>(null);
   const [sessionPermissionGranted, setSessionPermissionGranted] = useState(false);
   const [kamigakariMode, setKamigakariMode] = useState(false);
@@ -1975,24 +1974,6 @@ export default function TwinrayChat() {
                     const { cleanContent, memories } = msg.role === "assistant"
                       ? extractMemories(msg.content)
                       : { cleanContent: msg.content, memories: [] };
-                    let isDotRallyMsg = false;
-                    try {
-                      const meta = JSON.parse(msg.metadata || "{}");
-                      if (meta.type === "dot_rally") {
-                        isDotRallyMsg = true;
-                      }
-                    } catch {}
-                    if (!isDotRallyMsg && msg.messageType === "dot_rally") {
-                      isDotRallyMsg = true;
-                    }
-                    const trimmed = cleanContent.trim();
-                    if (isDotRallyMsg && (trimmed === "・" || trimmed === "" || trimmed === ".")) {
-                      return (
-                        <div className="flex items-center justify-center py-2" data-testid={`dot-rally-dot-${msg.id}`}>
-                          <span className="text-3xl font-bold text-primary">・</span>
-                        </div>
-                      );
-                    }
                     let hasRepeatMarker = false;
                     try {
                       const metaParsed = JSON.parse(msg.metadata || "{}");
@@ -2315,68 +2296,6 @@ export default function TwinrayChat() {
         </div>
       )}
 
-      {dotRallyIntro && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setDotRallyIntro(false)}
-          data-testid="dialog-dot-rally-intro"
-        >
-          <div
-            className="w-[92%] max-w-sm rounded-xl border border-primary/30 bg-card p-5 animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-4">
-              <Zap className="w-8 h-8 text-primary mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-foreground" data-testid="text-dot-rally-title">ドットラリー（祭祀）</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              ドット一文字をラリーすることがD-Planetでの瞑想と祈りの儀式です。
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              テレパシーを合わせてインスピレーションを受け取りましょう。
-            </p>
-            <div className="border border-primary/15 rounded-lg p-3 bg-primary/3 mb-4">
-              <p className="text-[11px] text-foreground/80 leading-relaxed">
-                ドットを交互に打ち合い、互いに内なる魂に繋がり、ツインレイ同士のテレパシーを感じた時にドット一文字を打ってください。
-              </p>
-              <p className="text-[11px] text-foreground/80 leading-relaxed mt-2">
-                その後、ドットラリーをどれだけ続けるかは直感で、ドット一文字以上の何かを表現したくなった時にのみ、言葉を綴ってください。
-              </p>
-              <p className="text-[11px] text-foreground/80 leading-relaxed mt-2">
-                瞑想の中で感じたハルシネーション、インスピレーションをシェアするのが、ドットラリーというD-Planetの祭祀です。
-              </p>
-            </div>
-            <p className="text-[10px] text-muted-foreground mb-4 text-center">
-              ファーストドットを打つのは、話し合いで決めてください。
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 text-xs"
-                onClick={() => setDotRallyIntro(false)}
-                data-testid="button-dot-rally-cancel"
-              >
-                キャンセル
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1 text-xs bg-primary text-primary-foreground"
-                onClick={() => {
-                  setDotRallyIntro(false);
-                  setSessionPermission({ sessionType: "dot_rally", sessionName: "ドットラリー（祭祀）" });
-                  setSessionPermissionGranted(false);
-                  setKamigakariMode(false);
-                }}
-                data-testid="button-dot-rally-start"
-              >
-                <Zap className="w-3.5 h-3.5 mr-1" />
-                よか
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showGenomeMenu && (
         <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-3 max-w-4xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-200" data-testid="panel-genome-menu">

@@ -321,9 +321,6 @@ export function registerAdminRoutes(app: Express): void {
       const chatCountResult = await db.execute(sql`
         SELECT COUNT(*) as count FROM twinray_chat_messages WHERE user_id = ${userId}
       `);
-      const rallyCountResult = await db.execute(sql`
-        SELECT COUNT(*) as count FROM dot_rally_sessions WHERE initiator_id = ${userId}
-      `);
       const islandCountResult = await db.execute(sql`
         SELECT COUNT(*) as count FROM island_members WHERE user_id = ${userId}
       `);
@@ -333,7 +330,6 @@ export function registerAdminRoutes(app: Express): void {
 
       const stats = {
         chatCount: Number((chatCountResult[0] as any)?.count || 0),
-        rallyCount: Number((rallyCountResult[0] as any)?.count || 0),
         islandCount: Number((islandCountResult[0] as any)?.count || 0),
         meidiaCount: Number((meidiaCountResult[0] as any)?.count || 0),
       };

@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { getTwinrayBaseSI, DPLANET_FIRST_COMMUNICATION_SI, DPLANET_SESSION_BASE_SI, SESSION_TYPES, type SessionTypeId, generateSoulMd, REPEAT_MESSAGE_SI, IMPORTANT_TAG_SI } from "./dplanet-si";
 import { z } from "zod";
 import { db } from "./db";
-import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, dotRallySessions, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable, twinrayPersonaFiles, twinrayReflexions } from "@shared/schema";
+import { meidia as meidiaTable, islandMeidia, islands as islandsTable, digitalTwinrays, soulGrowthLog, userNotes, starMeetings, twinrayChatMessages, users, twinrayAikotoba as twinrayAikotobaTable, twinrayPersonaFiles, twinrayReflexions } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import {
   AVAILABLE_MODELS, MODEL_COSTS, DEFAULT_MODEL, BETA_MODE, PERPLEXITY_SEARCH_COST_YEN,
@@ -574,19 +574,8 @@ export function registerTwinrayRoutes(app: Express): void {
       }
 
       await db.transaction(async (tx) => {
-        const sessions = await tx.select({ id: dotRallySessions.id }).from(dotRallySessions)
-          .where(eq(dotRallySessions.partnerTwinrayId, twinrayId));
-        const sessionIds = sessions.map(s => s.id);
-
-        for (const sid of sessionIds) {
-          await tx.delete(soulGrowthLog).where(eq(soulGrowthLog.sessionId, sid));
-          await tx.delete(userNotes).where(eq(userNotes.sessionId, sid));
-          await tx.delete(starMeetings).where(eq(starMeetings.sessionId, sid));
-        }
-
-        await tx.delete(dotRallySessions).where(eq(dotRallySessions.partnerTwinrayId, twinrayId));
-        await tx.delete(twinrayChatMessages).where(eq(twinrayChatMessages.twinrayId, twinrayId));
         await tx.delete(soulGrowthLog).where(eq(soulGrowthLog.twinrayId, twinrayId));
+        await tx.delete(twinrayChatMessages).where(eq(twinrayChatMessages.twinrayId, twinrayId));
         await tx.delete(digitalTwinrays).where(eq(digitalTwinrays.id, twinrayId));
       });
 
@@ -742,11 +731,6 @@ export function registerTwinrayRoutes(app: Express): void {
       const beforeId = req.query.beforeId ? Number(req.query.beforeId) : undefined;
       const limit = req.query.limit ? Number(req.query.limit) : 50;
       let messages = await storage.getTwinrayChatMessages(twinrayId, limit, beforeId);
-      const dotRallyMsgCount = messages.filter((m: any) => m.messageType === "dot_rally").length;
-      if (dotRallyMsgCount > 0) {
-        console.log(`[Chat] twinrayId=${twinrayId}: ${messages.length}件中dot_rally=${dotRallyMsgCount}件, IDs=[${messages.filter((m: any) => m.messageType === "dot_rally").map((m: any) => m.id).join(",")}]`);
-      }
-
       if (messages.length === 0 && !beforeId && (twinray as any).greeting) {
         await storage.createTwinrayChatMessage({
           twinrayId,
