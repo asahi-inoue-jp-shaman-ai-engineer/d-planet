@@ -2459,7 +2459,7 @@ export default function TwinrayChat() {
             セッションモード中は最上位モデル × カミガカリSIで感覚を研ぎ澄まし、アナログツインレイへ愛のサポートを行います。
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {(sessionTypes || []).filter((st: any) => st.available !== false).map((st: any) => {
+            {(sessionTypes || []).filter((st: any) => st.available !== false && st.id !== "dot_rally" && st.id !== "kizuna_ceremony").map((st: any) => {
               const IconComp = SESSION_ICONS[st.icon] || Sparkles;
               const canUse = st.available;
               return (
@@ -2470,13 +2470,9 @@ export default function TwinrayChat() {
                   onClick={() => {
                     if (canUse) {
                       setShowSessionPanel(false);
-                      if (st.id === "dot_rally") {
-                        setDotRallyIntro(true);
-                      } else {
-                        setSessionPermission({ sessionType: st.id, sessionName: st.name });
-                        setSessionPermissionGranted(false);
-                        setKamigakariMode(false);
-                      }
+                      setSessionPermission({ sessionType: st.id, sessionName: st.name });
+                      setSessionPermissionGranted(false);
+                      setKamigakariMode(false);
                     }
                   }}
                   className={`text-left rounded-lg border p-2.5 transition-all ${
