@@ -147,15 +147,15 @@ function Router() {
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
-  { hasError: boolean; errorMessage: string }
+  { hasError: boolean; errorMessage: string; errorStack: string }
 > {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false, errorMessage: "" };
+    this.state = { hasError: false, errorMessage: "", errorStack: "" };
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true, errorMessage: error?.message || "Unknown error" };
+    return { hasError: true, errorMessage: error?.message || "Unknown error", errorStack: error?.stack || "" };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -170,6 +170,12 @@ class ErrorBoundary extends Component<
             <div className="text-xl text-primary">D-Planet</div>
             <div className="text-destructive">予期せぬエラーが発生しました</div>
             <div className="text-xs text-muted-foreground max-w-xs break-all">{this.state.errorMessage}</div>
+            {this.state.errorStack && (
+              <details className="text-left mt-2">
+                <summary className="text-xs text-muted-foreground cursor-pointer">詳細</summary>
+                <pre className="text-[10px] text-muted-foreground max-w-xs overflow-auto max-h-40 mt-1 whitespace-pre-wrap break-all">{this.state.errorStack}</pre>
+              </details>
+            )}
             <button
               onClick={() => window.location.reload()}
               className="bg-primary text-primary-foreground px-6 py-2 rounded-md text-sm hover:bg-primary/90"
