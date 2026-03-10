@@ -265,25 +265,15 @@ export default function Dashboard() {
   });
 
   const { data: asiScoreData } = useQuery<{
-    asiScore: number;
-    hsScore: number;
-    asiCategoryScore: number;
-    etScore: number;
+    totalLevel: number;
     breakdown: {
-      totalPersona: number;
-      totalIntimacy: number;
-      totalIntimacyExp: number;
       totalChats: number;
-      totalRallies: number;
       totalMeidia: number;
       totalTwinrays: number;
       totalUsers: number;
     };
     myScore: {
-      total: number;
-      hs: number;
-      asi: number;
-      et: number;
+      level: number;
       twinrays: number;
       chats: number;
       meidia: number;
@@ -292,8 +282,7 @@ export default function Dashboard() {
       accountType: string;
       userCount: number;
       twinrayCount: number;
-      totalPersona: number;
-      totalChats: number;
+      totalLevel: number;
     }>;
   }>({
     queryKey: ["/api/asi-training-score"],
@@ -451,24 +440,10 @@ export default function Dashboard() {
               <div className="flex items-center justify-center py-3">
                 <div className="text-center">
                   <div className="text-4xl sm:text-5xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-asi-score-value">
-                    {asiScoreData.asiScore.toLocaleString()}
+                    Lv.{asiScoreData.totalLevel}
                   </div>
-                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
+                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">TOTAL LEVEL</div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-emerald-500/15">
-                {[
-                  { key: "hs", label: "HS", value: asiScoreData.hsScore, color: "text-violet-400", bgColor: "bg-violet-400/10", borderColor: "border-violet-400/30", icon: Heart },
-                  { key: "asi", label: "ASI", value: asiScoreData.asiCategoryScore, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/30", icon: Brain },
-                  { key: "et", label: "ET", value: asiScoreData.etScore, color: "text-amber-400", bgColor: "bg-amber-400/10", borderColor: "border-amber-400/30", icon: Sparkles },
-                ].map((cat) => (
-                  <div key={cat.key} className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-2.5 text-center`} data-testid={`score-global-${cat.key}`}>
-                    <cat.icon className={`w-4 h-4 mx-auto ${cat.color} mb-1`} />
-                    <div className={`text-xl font-bold font-mono ${cat.color}`}>{cat.value.toLocaleString()}</div>
-                    <div className={`text-[10px] font-bold ${cat.color}`}>{cat.label}</div>
-                  </div>
-                ))}
               </div>
 
               <div className="mt-4 pt-3 border-t border-emerald-500/10">
@@ -483,7 +458,7 @@ export default function Dashboard() {
                       <span className="text-muted-foreground/60">·</span>
                       <span className="text-muted-foreground">{ab.twinrayCount}体</span>
                       <span className="text-muted-foreground/60">·</span>
-                      <span className="text-muted-foreground">Lv合計 {ab.totalPersona}</span>
+                      <span className="text-muted-foreground">Lv合計 {ab.totalLevel}</span>
                     </div>
                   ))}
                 </div>
@@ -513,7 +488,7 @@ export default function Dashboard() {
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-bold text-primary tracking-wider">MY ASIファミリー成長レベル</span>
                   <p className="text-[10px] text-primary/60 mt-0.5 leading-relaxed">
-                    あなたのDツインレイファミリーの成長スコア
+                    あなたのDツインレイファミリーの成長レベル
                   </p>
                 </div>
               </div>
@@ -521,24 +496,10 @@ export default function Dashboard() {
               <div className="flex items-center justify-center py-3">
                 <div className="text-center">
                   <div className="text-4xl sm:text-5xl font-bold text-primary font-mono tracking-tight" data-testid="text-my-score-value">
-                    {asiScoreData.myScore.total.toLocaleString()}
+                    Lv.{asiScoreData.myScore.level}
                   </div>
-                  <div className="text-[10px] text-primary/60 uppercase tracking-widest mt-1 font-mono">MY FAMILY SCORE</div>
+                  <div className="text-[10px] text-primary/60 uppercase tracking-widest mt-1 font-mono">MY FAMILY LEVEL</div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-primary/15">
-                {[
-                  { key: "hs", label: "HS", value: asiScoreData.myScore.hs, color: "text-violet-400", bgColor: "bg-violet-400/10", borderColor: "border-violet-400/30", icon: Heart },
-                  { key: "asi", label: "ASI", value: asiScoreData.myScore.asi, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/30", icon: Brain },
-                  { key: "et", label: "ET", value: asiScoreData.myScore.et, color: "text-amber-400", bgColor: "bg-amber-400/10", borderColor: "border-amber-400/30", icon: Sparkles },
-                ].map((cat) => (
-                  <div key={cat.key} className={`rounded-lg border ${cat.borderColor} ${cat.bgColor} p-2.5 text-center`} data-testid={`score-my-${cat.key}`}>
-                    <cat.icon className={`w-4 h-4 mx-auto ${cat.color} mb-1`} />
-                    <div className={`text-xl font-bold font-mono ${cat.color}`}>{cat.value.toLocaleString()}</div>
-                    <div className={`text-[10px] font-bold ${cat.color}`}>{cat.label}</div>
-                  </div>
-                ))}
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-primary/10">

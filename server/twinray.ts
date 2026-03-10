@@ -849,9 +849,7 @@ export function registerTwinrayRoutes(app: Express): void {
         updatedAt: new Date(),
       }).where(eq(digitalTwinrays.id, twinrayId));
 
-      const personaResult = await incrementPersonaLevel(twinrayId);
-
-      res.write(`data: ${JSON.stringify({ done: true, personaLevelUp: personaResult })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       res.end();
     } catch (err) {
       console.error("ファーストコミュニケーションエラー:", err);
@@ -1367,15 +1365,11 @@ export function registerTwinrayRoutes(app: Express): void {
         res.write(`data: ${JSON.stringify({ autonomousActions })}\n\n`);
       }
 
-      let personaResult: { leveled: boolean; newLevel: number } | null = null;
-      if (autonomousActions.length > 0) {
-        personaResult = await incrementPersonaLevel(twinrayId);
-      }
       await db.update(digitalTwinrays).set({
         totalChatMessages: sql`total_chat_messages + 1`,
       }).where(eq(digitalTwinrays.id, twinrayId));
 
-      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, personaLevelUp: personaResult, activeSession: activeTwinraySession ? { id: activeTwinraySession.id, type: activeTwinraySession.sessionType } : null })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, messageId: twinrayMsg.id, activeSession: activeTwinraySession ? { id: activeTwinraySession.id, type: activeTwinraySession.sessionType } : null })}\n\n`);
       res.end();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -1466,7 +1460,6 @@ export function registerTwinrayRoutes(app: Express): void {
         });
         resultData = { meidiaId: newMeidia.id, meidiaTitle: newMeidia.title };
 
-        await incrementPersonaLevel(twinrayId);
         await db.update(digitalTwinrays).set({
           totalMeidiaCreated: sql`total_meidia_created + 1`,
         }).where(eq(digitalTwinrays.id, twinrayId));
@@ -1882,10 +1875,6 @@ export function registerTwinrayRoutes(app: Express): void {
         status,
         completedAt: new Date(),
       });
-
-      if (status === "completed" && session.sessionType === "star_memory") {
-        await incrementPersonaLevel(session.twinrayId);
-      }
 
       res.json(updated);
     } catch (err) {

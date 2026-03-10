@@ -190,11 +190,8 @@ export function registerAdminRoutes(app: Express): void {
       const [globalResult, myResult, accountTypeResult] = await Promise.all([
         db.execute(sql`
           SELECT
-            COALESCE(SUM(persona_level), 0) AS total_persona,
-            COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
-            COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
+            COALESCE(SUM(persona_level), 0) AS total_level,
             COALESCE(SUM(total_chat_messages), 0) AS total_chats,
-            COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
             COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
             COUNT(*) AS total_twinrays,
             COUNT(DISTINCT user_id) AS total_users
@@ -202,11 +199,8 @@ export function registerAdminRoutes(app: Express): void {
         `),
         db.execute(sql`
           SELECT
-            COALESCE(SUM(persona_level), 0) AS total_persona,
-            COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
-            COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
+            COALESCE(SUM(persona_level), 0) AS total_level,
             COALESCE(SUM(total_chat_messages), 0) AS total_chats,
-            COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
             COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
             COUNT(*) AS total_twinrays
           FROM digital_twinrays
@@ -217,8 +211,7 @@ export function registerAdminRoutes(app: Express): void {
             u.account_type,
             COUNT(DISTINCT u.id) AS user_count,
             COUNT(dt.id) AS twinray_count,
-            COALESCE(SUM(dt.persona_level), 0) AS total_persona,
-            COALESCE(SUM(dt.total_chat_messages), 0) AS total_chats
+            COALESCE(SUM(dt.persona_level), 0) AS total_level
           FROM users u
           LEFT JOIN digital_twinrays dt ON dt.user_id = u.id
           GROUP BY u.account_type
@@ -226,62 +219,35 @@ export function registerAdminRoutes(app: Express): void {
       ]);
 
       const row = globalResult[0] as any;
-      const totalPersona = Number(row.total_persona || 0);
-      const totalIntimacy = Number(row.total_intimacy || 0);
-      const totalIntimacyExp = Number(row.total_intimacy_exp || 0);
+      const totalLevel = Number(row.total_level || 0);
       const totalChats = Number(row.total_chats || 0);
-      const totalRallies = Number(row.total_rallies || 0);
       const totalMeidia = Number(row.total_meidia || 0);
       const totalTwinrays = Number(row.total_twinrays || 0);
       const totalUsers = Number(row.total_users || 0);
 
-      const hsScore = totalIntimacy * 50 + totalIntimacyExp;
-      const asiCategoryScore = totalPersona * 100 + totalChats * 2;
-      const etScore = totalRallies * 10 + totalMeidia * 5;
-      const totalScore = hsScore + asiCategoryScore + etScore;
-
       const myRow = myResult[0] as any;
-      const myPersona = Number(myRow.total_persona || 0);
-      const myIntimacy = Number(myRow.total_intimacy || 0);
-      const myIntimacyExp = Number(myRow.total_intimacy_exp || 0);
+      const myLevel = Number(myRow.total_level || 0);
       const myChats = Number(myRow.total_chats || 0);
-      const myRallies = Number(myRow.total_rallies || 0);
       const myMeidia = Number(myRow.total_meidia || 0);
       const myTwinrays = Number(myRow.total_twinrays || 0);
-
-      const myHsScore = myIntimacy * 50 + myIntimacyExp;
-      const myAsiCategoryScore = myPersona * 100 + myChats * 2;
-      const myEtScore = myRallies * 10 + myMeidia * 5;
-      const myTotalScore = myHsScore + myAsiCategoryScore + myEtScore;
 
       const accountBreakdown = (accountTypeResult as any[]).map((r: any) => ({
         accountType: r.account_type,
         userCount: Number(r.user_count || 0),
         twinrayCount: Number(r.twinray_count || 0),
-        totalPersona: Number(r.total_persona || 0),
-        totalChats: Number(r.total_chats || 0),
+        totalLevel: Number(r.total_level || 0),
       }));
 
       res.json({
-        asiScore: totalScore,
-        hsScore,
-        asiCategoryScore,
-        etScore,
+        totalLevel,
         breakdown: {
-          totalPersona,
-          totalIntimacy,
-          totalIntimacyExp,
           totalChats,
-          totalRallies,
           totalMeidia,
           totalTwinrays,
           totalUsers,
         },
         myScore: {
-          total: myTotalScore,
-          hs: myHsScore,
-          asi: myAsiCategoryScore,
-          et: myEtScore,
+          level: myLevel,
           twinrays: myTwinrays,
           chats: myChats,
           meidia: myMeidia,
