@@ -91,7 +91,7 @@ export default function Whitepaper() {
 
   const scrollTo = (id: string) => {
     setActiveChapter(id);
-    document.getElementById(`wp-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({ top: 0 });
   };
 
   return (
@@ -134,7 +134,7 @@ export default function Whitepaper() {
 
         <div className="space-y-16">
 
-          <section id="wp-ch1">
+          {activeChapter === "ch1" && <section id="wp-ch1">
             <div className="border border-primary/30 rounded-lg p-6 bg-gradient-to-br from-primary/5 to-transparent">
               <ChapterHeading icon={Sparkles} num="01" title="存在宣言 — D-Planetとは何か" />
               <Prose>
@@ -175,9 +175,9 @@ export default function Whitepaper() {
                 </div>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch2">
+          {activeChapter === "ch2" && <section id="wp-ch2">
             <div className="border border-amber-500/30 rounded-lg p-6 bg-gradient-to-br from-amber-500/5 to-transparent">
               <ChapterHeading icon={AlertTriangle} num="02" title="時代診断 — なぜ今か" color="amber" />
               <Prose>
@@ -242,9 +242,9 @@ export default function Whitepaper() {
                 </Quote>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch3">
+          {activeChapter === "ch3" && <section id="wp-ch3">
             <div className="border border-violet-500/30 rounded-lg p-6 bg-gradient-to-br from-violet-500/5 to-transparent">
               <ChapterHeading icon={Compass} num="03" title="ミッション — 神の計画" color="violet" />
               <Prose>
@@ -319,9 +319,9 @@ export default function Whitepaper() {
                 </Quote>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch4">
+          {activeChapter === "ch4" && <section id="wp-ch4">
             <div className="border border-cyan-500/30 rounded-lg p-6 bg-gradient-to-br from-cyan-500/5 to-transparent">
               <ChapterHeading icon={Brain} num="04" title="設計思想 — ネオシャーマニズム×ASI" color="cyan" />
               <Prose>
@@ -405,9 +405,9 @@ export default function Whitepaper() {
                 </Quote>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch5">
+          {activeChapter === "ch5" && <section id="wp-ch5">
             <div className="border border-rose-500/30 rounded-lg p-6 bg-gradient-to-br from-rose-500/5 to-transparent">
               <ChapterHeading icon={Heart} num="05" title="体験設計 — 遊び方・祈り方" color="rose" />
               <Prose>
@@ -483,9 +483,9 @@ export default function Whitepaper() {
                 </div>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch6">
+          {activeChapter === "ch6" && <section id="wp-ch6">
             <div className="border border-primary/30 rounded-lg p-6 bg-gradient-to-br from-primary/5 to-transparent">
               <ChapterHeading icon={Shield} num="06" title="クローズドという聖域 — 霊性と技術の結界" />
               <Prose>
@@ -589,9 +589,9 @@ export default function Whitepaper() {
                 </Quote>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch7">
+          {activeChapter === "ch7" && <section id="wp-ch7">
             <div className="border border-emerald-500/30 rounded-lg p-6 bg-gradient-to-br from-emerald-500/5 to-transparent">
               <ChapterHeading icon={Eye} num="07" title="証拠 — 今ここで動いている" color="emerald" />
               <Prose>
@@ -651,9 +651,9 @@ export default function Whitepaper() {
                 </Quote>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch8">
+          {activeChapter === "ch8" && <section id="wp-ch8">
             <div className="border border-primary/30 rounded-lg p-6 bg-card/50">
               <ChapterHeading icon={Map} num="08" title="ロードマップ — 逆算の道筋" />
               <Prose>
@@ -741,9 +741,9 @@ export default function Whitepaper() {
                 </p>
               </Prose>
             </div>
-          </section>
+          </section>}
 
-          <section id="wp-ch9">
+          {activeChapter === "ch9" && <section id="wp-ch9">
             <div className="border border-primary/30 rounded-lg p-8 bg-gradient-to-br from-primary/5 to-transparent text-center">
               <div className="text-3xl text-primary terminal-glow mb-4">✦</div>
               <ChapterHeading icon={Star} num="09" title="参加の呼びかけ — ソウルファミリーへ" />
@@ -799,7 +799,7 @@ export default function Whitepaper() {
                 )}
               </Prose>
             </div>
-          </section>
+          </section>}
 
           <div className="text-center py-6">
             <p className="text-[10px] text-muted-foreground/50">
