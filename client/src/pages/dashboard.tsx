@@ -23,11 +23,8 @@ import {
   ChevronRight,
   Home,
   Shield,
-  BookOpen,
-  Rocket,
   Bug,
   Loader2,
-  ExternalLink,
   Cpu,
   GraduationCap,
   Lock,
@@ -303,6 +300,10 @@ export default function Dashboard() {
     { href: "/meidia", icon: FileText, label: "MEiDIA", color: "text-blue-400", testId: "nav-meidia" },
     { href: "/family-meeting", icon: Users, label: "FAMILY MEETING", color: "text-violet-400", testId: "nav-family-meeting" },
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
+    ...(user.isAdmin ? [
+      { href: "/transcribe", icon: Mic, label: "VOICE", color: "text-cyan-400", testId: "nav-transcribe" },
+      { href: "/hayroom", icon: Globe, label: "宇宙天議", color: "text-violet-400", testId: "nav-hayroom" },
+    ] : []),
   ];
 
 
@@ -567,6 +568,7 @@ export default function Dashboard() {
                 <span className="text-xs text-muted-foreground text-center leading-tight">{item.label}</span>
               </Card>
             ))}
+            {user.isAdmin && <QAWebhookButton />}
           </div>
         </div>
 
@@ -631,91 +633,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Card
-            className="p-4 cursor-pointer hover-elevate active-elevate-2 transition-colors border-primary/20"
-            onClick={() => setLocation("/about")}
-            data-testid="nav-tutorial"
-          >
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-foreground">D-Planetの遊び方</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">チュートリアル & ガイド</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </div>
-          </Card>
+        {user.isAdmin && <FestivalAdminPanel />}
 
-          {user.isAdmin && <FestivalAdminPanel />}
-
-          {user.isAdmin && (
-            <Link href="/feedback/history">
-              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-pink-500/20" data-testid="link-feedback-history">
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-8 h-8 text-pink-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">フィードバック履歴</span>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">ユーザーからの報告・要望の管理</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
-              </Card>
-            </Link>
-          )}
-
-          {user.isAdmin && (
-            <Link href="/transcribe">
-              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-cyan-500/20" data-testid="link-transcribe">
-                <div className="flex items-center gap-3">
-                  <Mic className="w-8 h-8 text-cyan-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">VOICE TRANSCRIPTION</span>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">音声ファイル → 高精度文字起こし → Markdown</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
-              </Card>
-            </Link>
-          )}
-          {user.isAdmin && <QAWebhookButton />}
-
-          {user.isAdmin && (
-            <Link href="/hayroom">
-              <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-violet-500/20" data-testid="link-hayroom">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl shrink-0">🛸</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">宇宙天議</span>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">あさひ・ドラ・アキの三者合議</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
-              </Card>
-            </Link>
-          )}
-
-          <ReferralPanel />
-
-          <a
-            href="https://replit.com/refer/ASI369"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-            data-testid="link-replit-referral"
-          >
-            <Card className="p-4 hover-elevate active-elevate-2 transition-colors border-blue-500/20 h-full">
-              <div className="flex items-center gap-3">
-                <Rocket className="w-8 h-8 text-blue-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground">Replitで開発する</span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">$10クレジット付き</p>
-                </div>
-                <ExternalLink className="w-4 h-4 text-blue-400 shrink-0" />
-              </div>
-            </Card>
-          </a>
-        </div>
+        <ReferralPanel />
       </div>
 
     </TerminalLayout>
@@ -746,20 +666,12 @@ function QAWebhookButton() {
 
   return (
     <Card
-      className="p-4 hover-elevate active-elevate-2 transition-colors border-green-500/20 cursor-pointer"
+      className="p-3 cursor-pointer hover-elevate active-elevate-2 transition-colors flex flex-col items-center gap-2"
       onClick={trigger}
       data-testid="button-qa-webhook"
     >
-      <div className="flex items-center gap-3">
-        {loading ? <Loader2 className="w-8 h-8 text-green-400 shrink-0 animate-spin" /> : <Bug className="w-8 h-8 text-green-400 shrink-0" />}
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-foreground">QA AUTO TEST</span>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            {done ? "ドラミが起動しました。フィードバックを確認してください。" : "ドラミを起動してD-Planetを自動テスト"}
-          </p>
-        </div>
-        {done ? <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
-      </div>
+      {loading ? <Loader2 className="w-5 h-5 text-green-400 animate-spin" /> : done ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Bug className="w-5 h-5 text-green-400" />}
+      <span className="text-xs text-muted-foreground text-center leading-tight">{done ? "QA起動済" : "QA TEST"}</span>
     </Card>
   );
 }
