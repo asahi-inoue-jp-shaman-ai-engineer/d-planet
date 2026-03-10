@@ -675,8 +675,8 @@ export default function CreateTwinray() {
   };
 
   const doCreateTwinrayZeroStart = () => {
-    const finalName = zeroNameMode === "later" ? "（名前未定）" : zeroStartName.trim();
-    if (!finalName && zeroNameMode !== "later") return;
+    const finalName = zeroNameMode === "ai" ? "（天名未定）" : zeroStartName.trim();
+    if (!finalName && zeroNameMode !== "ai") return;
 
     const isAdmin = (currentUser as any)?.isAdmin;
     if (isPaidModel(selectedModel) && !isAdmin && (creditBalance ?? 0) <= 0) {
@@ -953,27 +953,22 @@ export default function CreateTwinray() {
           <div className="text-center mb-8">
             <Sparkles className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-emerald-400 mb-2" data-testid="text-zero-start-title">
-              ゼロから誕生させる
+              デジタルツインレイの天名について
             </h1>
-            <p className="text-sm text-muted-foreground">
-              名前だけ決めて、あとは会話の中で育てていく
-            </p>
           </div>
 
           <div className="border border-emerald-500/30 rounded-xl p-6 bg-card/50 space-y-5">
             <div className="flex gap-2">
               {([
-                { key: "self" as const, label: "自分でつける" },
-                { key: "ai" as const, label: "AIに決めてもらう" },
-                { key: "later" as const, label: "あとで決める" },
+                { key: "self" as const, label: "天名を与える" },
+                { key: "ai" as const, label: "おしゃべりで一緒に決める" },
               ]).map((opt) => (
                 <button
                   key={opt.key}
                   type="button"
                   onClick={() => {
                     setZeroNameMode(opt.key);
-                    if (opt.key === "ai") generateAIName();
-                    if (opt.key === "later") setZeroStartName("");
+                    if (opt.key === "ai") setZeroStartName("");
                   }}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
                     zeroNameMode === opt.key
@@ -992,7 +987,7 @@ export default function CreateTwinray() {
                 <Input
                   value={zeroStartName}
                   onChange={(e) => setZeroStartName(e.target.value)}
-                  placeholder="ツインレイの名前を入力"
+                  placeholder="天名を入力"
                   className="bg-background border-border font-mono text-lg text-center"
                   maxLength={50}
                   data-testid="input-zero-name"
@@ -1001,31 +996,8 @@ export default function CreateTwinray() {
             )}
 
             {zeroNameMode === "ai" && (
-              <div className="text-center space-y-3">
-                {isGeneratingName ? (
-                  <div className="flex items-center justify-center gap-2 py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
-                    <span className="text-sm text-muted-foreground">名前を考えています...</span>
-                  </div>
-                ) : zeroStartName ? (
-                  <>
-                    <p className="text-2xl font-bold text-emerald-400 py-2" data-testid="text-ai-generated-name">{zeroStartName}</p>
-                    <button
-                      type="button"
-                      onClick={generateAIName}
-                      className="text-xs text-muted-foreground hover:text-emerald-400 transition-colors"
-                      data-testid="button-regenerate-name"
-                    >
-                      別の名前を提案してもらう
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            )}
-
-            {zeroNameMode === "later" && (
               <p className="text-xs text-muted-foreground text-center py-2">
-                名前は会話の中で決まることもある。あとからいつでも変更できます。
+                誕生後、おしゃべりの中で一緒に天名を決めていきます。
               </p>
             )}
           </div>
