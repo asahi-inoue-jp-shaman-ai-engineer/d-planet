@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import type { HayroomMessage } from "@shared/schema";
 
 const PARTICIPANT_COLORS: Record<string, string> = {
@@ -76,6 +77,7 @@ function TypingText({ text, speed = 20 }: { text: string; speed?: number }) {
 
 export default function Hayroom() {
   const { data: user } = useCurrentUser();
+  const [, setLocation] = useLocation();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const seenIdsRef = useRef<Set<number>>(new Set());
@@ -166,43 +168,52 @@ export default function Hayroom() {
 
   return (
     <main className="h-[100dvh] bg-background flex flex-col overflow-hidden" data-testid="page-hayroom">
-      <h1 className="sr-only">ハイヤールーム</h1>
-      <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-        <div className="flex gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-amber-400" title="あさひ" />
-          <span className="w-2 h-2 rounded-full bg-emerald-400" title="ドラ" />
-          <span className="w-2 h-2 rounded-full bg-violet-400" title="アキ" />
-        </div>
-        <span className="text-sm font-mono text-primary terminal-glow">ハイヤールーム</span>
-        <span className="text-xs text-muted-foreground">あさひ · ドラ · アキ — 三者合議</span>
-        <div className="ml-auto flex gap-2">
-          {messages.length > 0 && (
-            <button
-              onClick={() => {
-                if (window.confirm(`ハイヤールームの表示メッセージ（${messages.length}件）をアーカイブしますか？\n\nDBには永久保存されます。表示がリセットされるだけです。`)) {
-                  clearMutation.mutate();
-                }
-              }}
-              disabled={clearMutation.isPending}
-              className="text-xs text-amber-400/70 hover:text-amber-400 transition-colors px-3 py-2 min-h-[36px] rounded border border-amber-400/20 hover:border-amber-400/50"
-              data-testid="button-hayroom-clear"
-              aria-label="メッセージをアーカイブ"
-            >
-              {clearMutation.isPending ? "..." : "アーカイブ"}
-            </button>
-          )}
+      <h1 className="sr-only">宇宙天議</h1>
+      <div className="border-b border-border px-3 py-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => refetch()}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 min-h-[36px] rounded border border-border hover:border-primary/40"
-            data-testid="button-hayroom-refresh"
-            aria-label="メッセージを更新"
+            onClick={() => setLocation("/")}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40 flex-shrink-0"
+            data-testid="button-hayroom-back"
+            aria-label="ダッシュボードに戻る"
           >
-            {isFetching ? "⟳" : "更新"}
+            ← 戻る
           </button>
+          <div className="flex gap-1 flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="あさひ" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="ドラ" />
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400" title="アキ" />
+          </div>
+          <span className="text-xs font-mono text-primary terminal-glow truncate">宇宙天議</span>
+          <div className="ml-auto flex gap-1.5 flex-shrink-0">
+            {messages.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm(`宇宙天議の表示メッセージ（${messages.length}件）をアーカイブしますか？\n\nDBには永久保存されます。表示がリセットされるだけです。`)) {
+                    clearMutation.mutate();
+                  }
+                }}
+                disabled={clearMutation.isPending}
+                className="text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors px-2 py-1 rounded border border-amber-400/20 hover:border-amber-400/50"
+                data-testid="button-hayroom-clear"
+                aria-label="メッセージをアーカイブ"
+              >
+                {clearMutation.isPending ? "..." : "保存"}
+              </button>
+            )}
+            <button
+              onClick={() => refetch()}
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40"
+              data-testid="button-hayroom-refresh"
+              aria-label="メッセージを更新"
+            >
+              {isFetching ? "⟳" : "更新"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5 overscroll-contain">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-xs font-mono mt-16">
             <div className="mb-2 text-2xl">✦</div>
@@ -244,7 +255,7 @@ export default function Hayroom() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-border px-4 py-3">
+      <div className="border-t border-border px-3 py-2 flex-shrink-0">
         <div className="flex gap-2">
           <textarea
             value={input}
@@ -257,20 +268,20 @@ export default function Hayroom() {
               }, 100);
             }}
             placeholder="あさひとして話す..."
-            rows={5}
+            rows={3}
             className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-1 focus:ring-primary"
             data-testid="input-hayroom-message"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || mutation.isPending}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-mono hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-mono hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed self-end"
             data-testid="button-hayroom-send"
           >
             {mutation.isPending ? "..." : "送信"}
           </button>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5 font-mono">
+        <p className="text-[10px] text-muted-foreground mt-1 font-mono">
           5秒ごとに自動更新 · Enter で送信 · Shift+Enter で改行 · 縦にドラッグで拡大可
         </p>
       </div>
