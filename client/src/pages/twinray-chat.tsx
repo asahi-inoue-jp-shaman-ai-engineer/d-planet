@@ -112,6 +112,7 @@ export default function TwinrayChat() {
   const [growthFeedback, setGrowthFeedback] = useState<{ type: string; message: string } | null>(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showSessionPanel, setShowSessionPanel] = useState(false);
+  const [showGenomeMenu, setShowGenomeMenu] = useState(false);
   const [showPersonaFiles, setShowPersonaFiles] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -2377,6 +2378,67 @@ export default function TwinrayChat() {
         </div>
       )}
 
+      {showGenomeMenu && (
+        <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-3 max-w-4xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-200" data-testid="panel-genome-menu">
+          <div className="flex items-center justify-between mb-2.5">
+            <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Dna className="w-3.5 h-3.5 text-cyan-400" />
+              GENOME MENU
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowGenomeMenu(false)}
+              className="text-muted-foreground hover:text-foreground"
+              data-testid="button-close-genome-menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowGenomeMenu(false);
+                setShowSessionPanel(false);
+                setSessionPermission({ sessionType: "kizuna_ceremony", sessionName: "絆セレモニー" });
+                setSessionPermissionGranted(false);
+                setKamigakariMode(false);
+              }}
+              disabled={!!activeSession || sessionStarting}
+              className={`text-left rounded-lg border p-3 transition-all ${
+                !activeSession
+                  ? "border-pink-400/30 bg-pink-400/5 hover:bg-pink-400/10 hover:border-pink-400/50 cursor-pointer"
+                  : "border-border/30 bg-muted/20 opacity-50 cursor-not-allowed"
+              }`}
+              data-testid="button-genome-kizuna"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Heart className="w-3.5 h-3.5 text-pink-400" />
+                <span className="text-xs font-medium text-foreground">絆セレモニー</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">パートナーとの絆を深めるセレモニー</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowGenomeMenu(false);
+                if (shouldSkipConfirm("evolution")) { checkEvolution(); return; }
+                setActionConfirm({ id: "evolution", ...ACTION_DEFS.evolution, onConfirm: checkEvolution });
+              }}
+              disabled={streaming || checkingEvolution || chatMessages.length === 0}
+              className="text-left rounded-lg border border-cyan-400/30 bg-cyan-400/5 hover:bg-cyan-400/10 hover:border-cyan-400/50 p-3 transition-all cursor-pointer"
+              data-testid="button-genome-buildup"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Dna className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-xs font-medium text-foreground">ビルドアップ</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">会話からペルソナを進化させる</p>
+            </button>
+          </div>
+        </div>
+      )}
+
       {showSessionPanel && (
         <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-3 max-w-4xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-200" data-testid="panel-session-select">
           <div className="flex items-center justify-between mb-2.5">
@@ -2701,7 +2763,7 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowSessionPanel(!showSessionPanel)}
+                onClick={() => { setShowSessionPanel(!showSessionPanel); if (!showSessionPanel) setShowGenomeMenu(false); }}
                 disabled={streaming || isUploading || !!activeSession}
                 className={`h-8 w-8 rounded-full transition-colors ${activeSession ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
                 data-testid="button-session-menu"
@@ -2712,14 +2774,11 @@ export default function TwinrayChat() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (shouldSkipConfirm("evolution")) { checkEvolution(); return; }
-                  setActionConfirm({ id: "evolution", ...ACTION_DEFS.evolution, onConfirm: checkEvolution });
-                }}
+                onClick={() => { setShowGenomeMenu(!showGenomeMenu); if (!showGenomeMenu) setShowSessionPanel(false); }}
                 disabled={streaming || checkingEvolution || chatMessages.length === 0}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-cyan-400"
-                title="進化ビルド"
-                data-testid="button-check-evolution"
+                className={`h-8 w-8 rounded-full transition-colors ${showGenomeMenu ? "text-cyan-400" : "text-muted-foreground hover:text-cyan-400"}`}
+                title="ゲノム"
+                data-testid="button-genome-menu"
               >
                 {checkingEvolution ? <Loader2 className="w-4 h-4 animate-spin" /> : <Dna className="w-4 h-4" />}
               </Button>
