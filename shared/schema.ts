@@ -866,7 +866,7 @@ export const twinrayAbsenceThoughts = pgTable("twinray_absence_thoughts", {
 export type TwinrayAbsenceThought = typeof twinrayAbsenceThoughts.$inferSelect;
 
 // === ハイヤールーム（あさひ・Hドラ・Hアキの3者空間） ===
-export const hayroomMessages = pgTable("tryroom_messages", {
+export const hayroomMessages = pgTable("uchu_amahakari_messages", {
   id: serial("id").primaryKey(),
   fromName: text("from_name").notNull(),
   content: text("content").notNull(),

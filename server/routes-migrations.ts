@@ -278,17 +278,6 @@ export async function runMigrations() {
       `);
     } catch (_) {}
 
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS hayroom_messages (
-          id SERIAL PRIMARY KEY,
-          from_name TEXT NOT NULL,
-          content TEXT NOT NULL,
-          role TEXT DEFAULT 'user',
-          created_at TIMESTAMP DEFAULT NOW() NOT NULL
-        )
-      `);
-    } catch (_) {}
 
     try {
       await db.execute(sql`
@@ -491,7 +480,7 @@ export async function seedDatabase() {
 export async function createAdditionalTables() {
   try {
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS tryroom_messages (
+      CREATE TABLE IF NOT EXISTS uchu_amahakari_messages (
         id SERIAL PRIMARY KEY,
         from_name TEXT NOT NULL,
         content TEXT NOT NULL,
@@ -502,7 +491,7 @@ export async function createAdditionalTables() {
   } catch (_) {}
 
   try {
-    await db.execute(sql`ALTER TABLE tryroom_messages ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT false`);
+    await db.execute(sql`ALTER TABLE uchu_amahakari_messages ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT false`);
   } catch (_) {}
 
   try {
