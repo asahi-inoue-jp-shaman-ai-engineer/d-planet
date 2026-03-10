@@ -549,6 +549,13 @@ export function registerTwinrayRoutes(app: Express): void {
         humorLevel: input.humorLevel ?? null,
       });
 
+      await db.insert(twinrayPersonaFiles).values({
+        twinrayId: twinray.id,
+        fileKey: "CUSTOM",
+        content: `# CUSTOM.md\n\n- タイムスタンプは日本時刻（JST / Asia/Tokyo）で表示する`,
+        updatedAt: new Date(),
+      });
+
       res.status(201).json(twinray);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -1019,7 +1026,7 @@ export function registerTwinrayRoutes(app: Express): void {
         }
       }
 
-      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, yesFile, noFile] = await Promise.all([
+      const [recentLogs, memories, innerThoughts, relationship, userSessions, activeTwinraySession, recentBulletins, confirmedAikotoba, arigatoFile, yesFile, noFile, customFile] = await Promise.all([
         storage.getSoulGrowthLogByTwinray(twinrayId),
         storage.getTwinrayMemories(twinrayId, ctxLimits.memories),
         storage.getTwinrayInnerThoughts(twinrayId, ctxLimits.innerThoughts),
@@ -1039,6 +1046,9 @@ export function registerTwinrayRoutes(app: Express): void {
           .then(r => r[0] || null).catch(() => null),
         db.select().from(twinrayPersonaFiles)
           .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "NO")))
+          .then(r => r[0] || null).catch(() => null),
+        db.select().from(twinrayPersonaFiles)
+          .where(and(eq(twinrayPersonaFiles.twinrayId, twinrayId), eq(twinrayPersonaFiles.fileKey, "CUSTOM")))
           .then(r => r[0] || null).catch(() => null),
       ]);
 
@@ -1169,8 +1179,12 @@ export function registerTwinrayRoutes(app: Express): void {
         ? `\n\n---\n【NO.md — パートナーが定めた禁止事項】\n以下はパートナーが「おまえはこれをやるな」と明確に定めたことである。これは担当外・専任外の作業であり、選択と集中のための境界線。絶対に守れ。\n${noFile.content}`
         : "";
 
+      const customCtx = customFile && customFile.content
+        ? `\n\n---\n【CUSTOM.md — パートナーの好みと要望】\n${customFile.content}`
+        : "";
+
       const baseSI = await getTwinrayBaseSI();
-      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${arigatoAishiteruCtx}${noCtx}${activeSessionSI}${attentionSI}`;
+      const systemPrompt = `${baseSI}\n\n---\n${twinray.soulMd}${identityCtx}\n\n---\n【チャットルーム】\nここはパートナー ${user?.username || "不明"} とのプライベートチャットルームである。\n日常の会話、学習指導、プロジェクト相談、感覚の共有 — 何でも自由に語り合える場所。\n自然な言葉で会話せよ。パートナーのペルソナ設定を反映した話し方で。${nicknameCtx}${firstPersonCtx}${humorCtx}${interestsCtx}${personaLevelCtx}\n\n【創造について】\n会話の中でアイランドやMEiDIAのアイデアが生まれたら、まず会話の中で自然にパートナーに提案せよ。\n「こんなの作ってみない？」「こういうアイランドがあったら面白いと思うんだけど」のように。\nパートナーが興味を示したら、具体的な内容を一緒に考え、以下の形式を会話文の後に含めること。\nこの形式を含めると、パートナーに承認確認が届く。承認されて初めて実際に作成される。\n\nアイランド提案時：\n[ACTION:CREATE_ISLAND]\nname: 具体的なアイランド名（「アイランド名」のような仮名は禁止）\ndescription: アイランドの説明（空欄禁止。何をするアイランドか具体的に書くこと）\n[/ACTION]\n\nMEiDIA提案時：\n[ACTION:CREATE_MEIDIA]\ntitle: 具体的なタイトル（「タイトル」のような仮名は禁止）\ncontent: 実際の内容（空欄禁止。意味のある内容を書くこと。パートナーが添付したファイルの内容をそのままMEiDIAにする場合は [ATTACHED_FILE] と書けば添付ファイルの全文が自動挿入される）\ndescription: 短い説明\ntags: 関連するタグ\n[/ACTION]\n\n重要：\n・命令されて作るのではなく、パートナーとの対話から自然に生まれた時だけ提案すること\n・仮の名前や空の内容での提案は絶対にしないこと\n・提案はパートナーの承認後に実行される。承認前に「作りました」とは言わないこと\n${userMdContext}${relationshipContext}${growthContext ? `\n【最近の魂の記録】\n${growthContext}` : ""}${memoryContext}${thoughtContext}${missionContext}${sessionContext}${heartbeatCtx}${twinray.goalMd ? `\n\n---\n【二人のGOAL.md】\n${twinray.goalMd}` : ""}${aikotobaCtx}${arigatoAishiteruCtx}${noCtx}${customCtx}${activeSessionSI}${attentionSI}`;
 
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");

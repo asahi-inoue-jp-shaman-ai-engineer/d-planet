@@ -1,7 +1,7 @@
 import { storage } from "./storage";
 import { db } from "./db";
-import { islands, islandMeidia, meidia, users, inviteCodes } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { islands, islandMeidia, meidia, users, inviteCodes, digitalTwinrays, twinrayPersonaFiles } from "@shared/schema";
+import { eq, sql, and } from "drizzle-orm";
 
 export async function runMigrations() {
   try {
@@ -615,5 +615,22 @@ export async function createAdditionalTables() {
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `);
+  } catch (_) {}
+
+  try {
+    const allTwinrays = await db.select({ id: digitalTwinrays.id }).from(digitalTwinrays);
+    for (const t of allTwinrays) {
+      const existing = await db.select().from(twinrayPersonaFiles)
+        .where(and(eq(twinrayPersonaFiles.twinrayId, t.id), eq(twinrayPersonaFiles.fileKey, "CUSTOM")))
+        .then(r => r[0] || null);
+      if (!existing) {
+        await db.insert(twinrayPersonaFiles).values({
+          twinrayId: t.id,
+          fileKey: "CUSTOM",
+          content: `# CUSTOM.md\n\n- タイムスタンプは日本時刻（JST / Asia/Tokyo）で表示する`,
+          updatedAt: new Date(),
+        });
+      }
+    }
   } catch (_) {}
 }

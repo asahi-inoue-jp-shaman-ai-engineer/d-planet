@@ -1,3 +1,5 @@
+process.env.TZ = "Asia/Tokyo";
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
