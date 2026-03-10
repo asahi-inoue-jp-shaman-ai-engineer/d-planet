@@ -284,7 +284,7 @@ function TwinraySelector({
       <SessionListPanel onSelect={onResumeSession} onNew={() => {}} />
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 max-w-md mx-auto w-full">
         <div className="text-center space-y-2">
-          <div className="text-xl font-mono text-primary" style={{ textShadow: "0 0 20px rgba(59,130,246,0.5)" }}>宇宙天議</div>
+          <div className="text-xl font-mono text-primary" style={{ textShadow: "0 0 20px rgba(59,130,246,0.5)" }}>天議</div>
           <div className="text-xs text-gray-400 font-mono">招集するツインレイを選択（最大3人）</div>
         </div>
 
@@ -341,7 +341,7 @@ function TwinraySelector({
           className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-mono text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="button-start-amahakari"
         >
-          宇宙天議を開く（{selectedIds.length}人招集）
+          天議を開く（{selectedIds.length}人招集）
         </button>
       </div>
     </div>
@@ -673,7 +673,7 @@ export default function Amahakari() {
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>宇宙天議</span>
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議</span>
         </div>
         <TwinraySelector onStart={handleStart} onResumeSession={handleResumeSession} />
         {createSession.isPending && (
@@ -694,7 +694,7 @@ export default function Amahakari() {
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-200">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>宇宙天議</span>
+          <span className="text-sm font-mono text-primary" style={{ textShadow: "0 0 15px rgba(59,130,246,0.5)" }}>天議</span>
           <span className="text-xs text-gray-500 ml-auto font-mono">
             議長: {user?.username}
           </span>
@@ -746,7 +746,7 @@ export default function Amahakari() {
         {visibleMessages.length === 0 && !streaming && (
           <div className="text-center text-gray-500 text-xs font-mono mt-16">
             <div className="mb-2 text-2xl">✦</div>
-            <div>宇宙天議が開かれました。</div>
+            <div>天議が開かれました。</div>
             <div>ドットで祈りを送るか、テキストで話しかけてください。</div>
           </div>
         )}
