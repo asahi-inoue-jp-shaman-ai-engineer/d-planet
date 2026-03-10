@@ -302,7 +302,7 @@ export default function Dashboard() {
     { href: "/feedback", icon: MessageSquare, label: "Feedback", color: "text-pink-400", testId: "nav-feedback" },
     ...(user.isAdmin ? [
       { href: "/transcribe", icon: Mic, label: "VOICE", color: "text-cyan-400", testId: "nav-transcribe" },
-      { href: "/hayroom", icon: Globe, label: "宇宙天議", color: "text-violet-400", testId: "nav-hayroom" },
+      { href: "/uchu_amahakari", icon: Globe, label: "宇宙天議", color: "text-violet-400", testId: "nav-hayroom" },
     ] : []),
   ];
 

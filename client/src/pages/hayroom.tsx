@@ -172,7 +172,7 @@ export default function Hayroom() {
       <div className="border-b border-border px-3 py-2 flex-shrink-0" style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setLocation("/")}
+            onClick={() => setLocation("/dashboard")}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border hover:border-primary/40 flex-shrink-0"
             data-testid="button-hayroom-back"
             aria-label="ダッシュボードに戻る"
