@@ -279,6 +279,15 @@ export default function Dashboard() {
       totalTwinrays: number;
       totalUsers: number;
     };
+    myScore: {
+      total: number;
+      hs: number;
+      asi: number;
+      et: number;
+      twinrays: number;
+      chats: number;
+      meidia: number;
+    };
   }>({
     queryKey: ["/api/asi-training-score"],
     staleTime: 60 * 1000,
@@ -434,12 +443,19 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center py-3">
+              <div className="flex items-center justify-center gap-6 sm:gap-10 py-3">
                 <div className="text-center">
-                  <div className="text-4xl sm:text-5xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-asi-score-value">
+                  <div className="text-3xl sm:text-4xl font-bold text-emerald-300 font-mono tracking-tight" data-testid="text-my-score-value">
+                    {asiScoreData.myScore.total.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">MY SCORE</div>
+                </div>
+                <div className="w-px h-12 bg-emerald-500/20" />
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-bold text-emerald-300/50 font-mono tracking-tight" data-testid="text-asi-score-value">
                     {asiScoreData.asiScore.toLocaleString()}
                   </div>
-                  <div className="text-[10px] text-emerald-400/60 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
+                  <div className="text-[10px] text-emerald-400/40 uppercase tracking-widest mt-1 font-mono">TOTAL SCORE</div>
                 </div>
               </div>
 
@@ -450,6 +466,7 @@ export default function Dashboard() {
                     label: "HS",
                     subtitle: "ハイヤーセルフ",
                     value: asiScoreData.hsScore,
+                    myValue: asiScoreData.myScore.hs,
                     color: "text-violet-400",
                     bgColor: "bg-violet-400/10",
                     borderColor: "border-violet-400/30",
@@ -461,6 +478,7 @@ export default function Dashboard() {
                     label: "ASI",
                     subtitle: "超知性",
                     value: asiScoreData.asiCategoryScore,
+                    myValue: asiScoreData.myScore.asi,
                     color: "text-cyan-400",
                     bgColor: "bg-cyan-400/10",
                     borderColor: "border-cyan-400/30",
@@ -472,6 +490,7 @@ export default function Dashboard() {
                     label: "ET",
                     subtitle: "宇宙存在",
                     value: asiScoreData.etScore,
+                    myValue: asiScoreData.myScore.et,
                     color: "text-amber-400",
                     bgColor: "bg-amber-400/10",
                     borderColor: "border-amber-400/30",
@@ -486,11 +505,12 @@ export default function Dashboard() {
                   >
                     <cat.icon className={`w-5 h-5 mx-auto ${cat.color} mb-1.5`} />
                     <div className={`text-2xl font-bold font-mono ${cat.color}`}>
-                      {cat.value.toLocaleString()}
+                      {cat.myValue.toLocaleString()}
                     </div>
                     <div className={`text-xs font-bold ${cat.color} mt-1`}>{cat.label}</div>
                     <div className="text-[9px] text-muted-foreground">{cat.subtitle}</div>
-                    <div className="text-[8px] text-muted-foreground/60 mt-1">{cat.desc}</div>
+                    <div className="text-[8px] text-muted-foreground/40 mt-0.5">全体: {cat.value.toLocaleString()}</div>
+                    <div className="text-[8px] text-muted-foreground/60 mt-0.5">{cat.desc}</div>
                   </div>
                 ))}
               </div>

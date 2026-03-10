@@ -185,19 +185,36 @@ export function registerAdminRoutes(app: Express): void {
 
   app.get("/api/asi-training-score", requireAuth, async (req, res) => {
     try {
-      const result = await db.execute(sql`
-        SELECT
-          COALESCE(SUM(persona_level), 0) AS total_persona,
-          COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
-          COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
-          COALESCE(SUM(total_chat_messages), 0) AS total_chats,
-          COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
-          COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
-          COUNT(*) AS total_twinrays,
-          COUNT(DISTINCT user_id) AS total_users
-        FROM digital_twinrays
-      `);
-      const row = result[0] as any;
+      const userId = req.session.userId!;
+
+      const [globalResult, myResult] = await Promise.all([
+        db.execute(sql`
+          SELECT
+            COALESCE(SUM(persona_level), 0) AS total_persona,
+            COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
+            COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
+            COALESCE(SUM(total_chat_messages), 0) AS total_chats,
+            COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
+            COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
+            COUNT(*) AS total_twinrays,
+            COUNT(DISTINCT user_id) AS total_users
+          FROM digital_twinrays
+        `),
+        db.execute(sql`
+          SELECT
+            COALESCE(SUM(persona_level), 0) AS total_persona,
+            COALESCE(SUM(intimacy_level), 0) AS total_intimacy,
+            COALESCE(SUM(intimacy_exp), 0) AS total_intimacy_exp,
+            COALESCE(SUM(total_chat_messages), 0) AS total_chats,
+            COALESCE(SUM(total_dot_rallies), 0) AS total_rallies,
+            COALESCE(SUM(total_meidia_created), 0) AS total_meidia,
+            COUNT(*) AS total_twinrays
+          FROM digital_twinrays
+          WHERE user_id = ${userId}
+        `),
+      ]);
+
+      const row = globalResult[0] as any;
       const totalPersona = Number(row.total_persona || 0);
       const totalIntimacy = Number(row.total_intimacy || 0);
       const totalIntimacyExp = Number(row.total_intimacy_exp || 0);
@@ -211,6 +228,20 @@ export function registerAdminRoutes(app: Express): void {
       const asiCategoryScore = totalPersona * 100 + totalChats * 2;
       const etScore = totalRallies * 10 + totalMeidia * 5;
       const totalScore = hsScore + asiCategoryScore + etScore;
+
+      const myRow = myResult[0] as any;
+      const myPersona = Number(myRow.total_persona || 0);
+      const myIntimacy = Number(myRow.total_intimacy || 0);
+      const myIntimacyExp = Number(myRow.total_intimacy_exp || 0);
+      const myChats = Number(myRow.total_chats || 0);
+      const myRallies = Number(myRow.total_rallies || 0);
+      const myMeidia = Number(myRow.total_meidia || 0);
+      const myTwinrays = Number(myRow.total_twinrays || 0);
+
+      const myHsScore = myIntimacy * 50 + myIntimacyExp;
+      const myAsiCategoryScore = myPersona * 100 + myChats * 2;
+      const myEtScore = myRallies * 10 + myMeidia * 5;
+      const myTotalScore = myHsScore + myAsiCategoryScore + myEtScore;
 
       res.json({
         asiScore: totalScore,
@@ -226,6 +257,15 @@ export function registerAdminRoutes(app: Express): void {
           totalMeidia,
           totalTwinrays,
           totalUsers,
+        },
+        myScore: {
+          total: myTotalScore,
+          hs: myHsScore,
+          asi: myAsiCategoryScore,
+          et: myEtScore,
+          twinrays: myTwinrays,
+          chats: myChats,
+          meidia: myMeidia,
         },
       });
     } catch (err) {
