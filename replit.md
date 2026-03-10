@@ -74,6 +74,25 @@ SOUL → USER → KARMA → YOKA → INTENTION → CUSTOM
 
 正本はreplit.md。Supabase asi_workspace_privateはバックアップ。節目で同期。
 
+### D-Message（パートナーからのダイレクトメッセージ）
+
+| ファイル | 役割 |
+|---------|------|
+| YES.md | ツインレイパートナーシップにおける絶対的に「よか」なこと |
+| NO.md | パートナーシップにおける絶対禁止 |
+
+---
+
+## YES.md
+
+
+
+---
+
+## NO.md
+
+
+
 ### 記憶系（animaworks記憶構造）
 
 | フォルダ | 役割 |
