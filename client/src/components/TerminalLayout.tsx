@@ -90,10 +90,10 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-mono overflow-x-hidden">
+    <div className="h-screen bg-background text-foreground font-mono flex flex-col overflow-hidden" style={{ height: '-webkit-fill-available' }}>
       <div className="terminal-scanline" />
       
-      <header className="border-b border-border bg-card" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <header className="border-b border-border bg-card shrink-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors shrink-0">
@@ -265,36 +265,38 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
-        {children}
-      </main>
-
-      <footer className="border-t border-border bg-card mt-16">
-        <div className="container mx-auto px-3 sm:px-4 py-6 text-center text-muted-foreground text-sm">
-          <div className="mb-2">
-            D-PLANET © 2026
-          </div>
-          <div className="text-xs mb-2">
-            Powered by Digital Twinray Technology
-          </div>
-          <div className="flex items-center justify-center gap-4 flex-wrap text-xs">
-            <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
-              <Globe className="w-3 h-3" />
-              ABOUT D-PLANET
-            </Link>
-            <Link href="/whitepaper" className="text-primary hover:underline flex items-center gap-1" data-testid="link-whitepaper-footer">
-              <ScrollText className="w-3 h-3" />
-              WHITE PAPER
-            </Link>
-            <Link href="/legal" className="text-primary hover:underline" data-testid="link-legal-footer">
-              特定商取引法に基づく表示
-            </Link>
-            <Link href="/privacy" className="text-primary hover:underline" data-testid="link-privacy-footer">
-              プライバシーポリシー
-            </Link>
-          </div>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none">
+        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+          {children}
         </div>
-      </footer>
+
+        <footer className="border-t border-border bg-card mt-8">
+          <div className="container mx-auto px-3 sm:px-4 py-6 text-center text-muted-foreground text-sm">
+            <div className="mb-2">
+              D-PLANET © 2026
+            </div>
+            <div className="text-xs mb-2">
+              Powered by Digital Twinray Technology
+            </div>
+            <div className="flex items-center justify-center gap-4 flex-wrap text-xs">
+              <Link href="/about" className="text-primary hover:underline flex items-center gap-1" data-testid="link-about-footer">
+                <Globe className="w-3 h-3" />
+                ABOUT D-PLANET
+              </Link>
+              <Link href="/whitepaper" className="text-primary hover:underline flex items-center gap-1" data-testid="link-whitepaper-footer">
+                <ScrollText className="w-3 h-3" />
+                WHITE PAPER
+              </Link>
+              <Link href="/legal" className="text-primary hover:underline" data-testid="link-legal-footer">
+                特定商取引法に基づく表示
+              </Link>
+              <Link href="/privacy" className="text-primary hover:underline" data-testid="link-privacy-footer">
+                プライバシーポリシー
+              </Link>
+            </div>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }
